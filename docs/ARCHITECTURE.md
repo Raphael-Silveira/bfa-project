@@ -310,6 +310,23 @@ Usuario
 
 Tenant authorization is server-side and mandatory.
 
+### Authentication and authorization boundary
+
+ASP.NET Core Identity is infrastructure for authentication only. The technical user is `UsuarioIdentity`, keyed by `Guid`, and contains no organization, unit, profile, or other business data.
+
+The Identity model uses `IdentityUserContext<UsuarioIdentity, Guid>` without global Identity Roles. BFA authorization will be implemented later through contextual memberships and permissions associated with `Organizacao` and `Unidade`. A single user may have multiple memberships and profiles.
+
+Current Identity schema version is explicitly v2 and contains:
+
+```text
+usuarios
+usuario_claims
+usuario_logins
+usuario_tokens
+```
+
+Passkey schema v3 is not enabled in this phase. No role, user-role, or role-claim table is part of the model. This decision is recorded in `docs/adr/0005-identity-sem-roles-globais.md`.
+
 ---
 
 ## 9. PostgreSQL
@@ -345,7 +362,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase` and registers `BfaDbContext` with `UseNpgsql`. The context currently exposes `Organizacoes` and `Unidades`; their mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and continues to expose `Organizacoes` and `Unidades`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -385,7 +402,7 @@ Example:
 
 ```text
 V001__criar_organizacoes_e_unidades.sql
-V002__proxima_alteracao_de_schema.sql
+V002__criar_identidade.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.

@@ -1,11 +1,13 @@
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Unidades;
+using BFA.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace BFA.Infrastructure.Persistence;
 
 public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
-    : DbContext(options)
+    : IdentityUserContext<UsuarioIdentity, Guid>(options)
 {
     public DbSet<Organizacao> Organizacoes => Set<Organizacao>();
 

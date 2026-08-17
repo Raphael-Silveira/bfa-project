@@ -16,13 +16,14 @@ Development e Staging nunca podem apontar para `bfa_prod`. Consulte `docs/ENVIRO
 
 ## Migrations SQL
 
-O schema é gerenciado por scripts SQL imutáveis e versionados em `database/migrations`. A primeira migration do projeto é:
+O schema é gerenciado por scripts SQL imutáveis e versionados em `database/migrations`. As migrations atuais são:
 
 ```text
 V001__criar_organizacoes_e_unidades.sql
+V002__criar_identidade.sql
 ```
 
-Ela cria o histórico de schema e a fundação de multi-tenancy formada por `organizacoes` e `unidades`. Depois de aplicada em qualquer ambiente compartilhado, uma migration nunca deve ser editada ou removida; correções são feitas por novos scripts versionados.
+V001 cria o histórico de schema e a fundação de multi-tenancy formada por `organizacoes` e `unidades`. V002 cria a persistência técnica de autenticação do ASP.NET Core Identity. Depois de aplicada em qualquer ambiente compartilhado, uma migration nunca deve ser editada ou removida; correções são feitas por novos scripts versionados.
 
 A tabela `bfa_schema_history` registra a versão aplicada, sua descrição, o instante UTC e o usuário de deploy responsável. Somente o processo de deploy controla esse histórico; `bfa_app_role` não recebe permissões nessa tabela.
 
@@ -35,6 +36,23 @@ Database.Migrate();
 ```
 
 Migrations do Entity Framework não são a fonte de verdade do schema. Nenhuma migration SQL ou EF é executada automaticamente pela aplicação.
+
+## Autenticação e autorização
+
+ASP.NET Core Identity é responsável somente por autenticação. O modelo utiliza `Guid` e não utiliza Identity Roles.
+
+V002 corresponde ao schema v2 do Identity sem roles e cria apenas:
+
+```text
+usuarios
+usuario_claims
+usuario_logins
+usuario_tokens
+```
+
+O schema v3 de passkeys é opt-in no .NET 10 e não está habilitado nesta etapa; portanto, V002 não cria `usuario_passkeys`. Também não existem tabelas de roles ou de vínculos usuário-role.
+
+Perfis e permissões da BFA serão modelados posteriormente como vínculos contextuais por `Organizacao` e `Unidade`. Eles não serão roles globais do Identity.
 
 ## Papéis PostgreSQL
 
@@ -61,6 +79,8 @@ DELETE
 ```
 
 Não será proprietário do schema e não terá permissão para `CREATE`, `ALTER` ou `DROP`.
+
+V002 concede ao role as permissões DML necessárias nas tabelas Identity e acesso à sequence usada pelo identificador de `usuario_claims`. O role continua sem permissão para escrever em `bfa_schema_history`.
 
 Migrations nunca devem referenciar diretamente `bfa_dev_app`, `bfa_staging_app` ou `bfa_prod_app`. A criação de `bfa_app_role`, dos logins e dos vínculos entre eles faz parte do provisionamento PostgreSQL de cada ambiente, não das migrations de schema da aplicação.
 

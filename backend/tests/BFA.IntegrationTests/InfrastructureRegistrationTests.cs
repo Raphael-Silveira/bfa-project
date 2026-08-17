@@ -1,5 +1,8 @@
+using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace BFA.IntegrationTests;
 
@@ -29,5 +32,24 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
         var probe = scope.ServiceProvider.GetService<IDatabaseConnectionProbe>();
 
         Assert.NotNull(probe);
+    }
+
+    [Fact]
+    public void Identity_user_store_is_registered_without_role_services()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        var userStore = scope.ServiceProvider.GetService<IUserStore<UsuarioIdentity>>();
+        var userManager = scope.ServiceProvider.GetService<UserManager<UsuarioIdentity>>();
+        var roleStore = scope.ServiceProvider.GetService<IRoleStore<IdentityRole<Guid>>>();
+        var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole<Guid>>>();
+        var identityOptions = scope.ServiceProvider.GetRequiredService<IOptions<IdentityOptions>>().Value;
+
+        Assert.NotNull(userStore);
+        Assert.NotNull(userManager);
+        Assert.Null(roleStore);
+        Assert.Null(roleManager);
+        Assert.Equal(128, identityOptions.Stores.MaxLengthForKeys);
+        Assert.Equal(IdentitySchemaVersions.Version2, identityOptions.Stores.SchemaVersion);
     }
 }

@@ -1,4 +1,6 @@
+using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +30,13 @@ public static class DependencyInjection
 
             options.UseNpgsql(connectionString);
         });
+
+        services.AddIdentityCore<UsuarioIdentity>(options =>
+        {
+            options.Stores.MaxLengthForKeys = 128;
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version2;
+        })
+            .AddEntityFrameworkStores<BfaDbContext>();
 
         services.AddScoped<IDatabaseConnectionProbe, DatabaseConnectionProbe>();
 
