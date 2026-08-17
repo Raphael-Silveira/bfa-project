@@ -9,6 +9,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>BFA.Web-9e214e6c-2aca-4dc3-b7bb-d4ce90d76ca0</UserSecretsId>
   </PropertyGroup>
 
 </Project>

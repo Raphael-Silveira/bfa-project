@@ -345,6 +345,8 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase` and registers `BfaDbContext` with `UseNpgsql`. The context initially has no `DbSet`.
+
 ```text
 BFA.Web
    |

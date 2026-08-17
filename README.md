@@ -31,7 +31,7 @@ tests/BFA.IntegrationTests
 ## Pré-requisitos
 
 - SDK .NET 10
-- PostgreSQL para fases futuras; nenhum banco é necessário para executar esta fundação
+- PostgreSQL quando um fluxo utilizar persistência; build e testes básicos não acessam um banco real
 
 ## Executar a aplicação
 
@@ -57,7 +57,7 @@ dotnet test backend/BFA.sln
 
 ## Configuração
 
-A aplicação reconhece os ambientes `Development`, `Staging` e `Production` pelos arquivos `appsettings.{Environment}.json`. Configurações sensíveis devem vir de variáveis de ambiente ou .NET User Secrets; por exemplo, a futura conexão PostgreSQL usará a chave:
+A aplicação reconhece os ambientes `Development`, `Staging` e `Production` pelos arquivos `appsettings.{Environment}.json`. Configurações sensíveis devem vir de variáveis de ambiente ou .NET User Secrets. A conexão PostgreSQL usa a chave:
 
 ```text
 ConnectionStrings__BfaDatabase
@@ -65,9 +65,11 @@ ConnectionStrings__BfaDatabase
 
 Nenhuma credencial real deve ser versionada.
 
+Em Development, configure `ConnectionStrings:BfaDatabase` com .NET User Secrets. Staging e Production usam a variável de ambiente `ConnectionStrings__BfaDatabase`. Consulte `docs/ENVIRONMENTS.md` para o procedimento completo.
+
 ## PostgreSQL e evolução de schema
 
-Entity Framework Core com Npgsql será usado apenas para persistência em runtime. O schema de PostgreSQL será controlado por scripts SQL imutáveis e versionados em `database/migrations`.
+Entity Framework Core com Npgsql é usado apenas para persistência em runtime dentro de `BFA.Infrastructure`. `BfaDbContext` é registrado por `AddInfrastructure` e ainda não possui `DbSet`.
 
 A aplicação nunca executará `EnsureCreated`, `EnsureDeleted` ou `Database.Migrate` na inicialização. O deploy da aplicação e o deploy do schema são operações separadas.
 
