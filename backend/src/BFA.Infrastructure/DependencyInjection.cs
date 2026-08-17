@@ -22,12 +22,14 @@ public static class DependencyInjection
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
-                throw new InvalidOperationException(
-                    $"Connection string '{DatabaseConnectionName}' was not configured.");
+                options.UseNpgsql();
+                return;
             }
 
             options.UseNpgsql(connectionString);
         });
+
+        services.AddScoped<IDatabaseConnectionProbe, DatabaseConnectionProbe>();
 
         return services;
     }

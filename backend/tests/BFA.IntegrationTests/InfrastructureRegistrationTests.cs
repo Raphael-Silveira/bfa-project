@@ -20,4 +20,14 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
 
         Assert.Equal("Npgsql.EntityFrameworkCore.PostgreSQL", dbContext.Database.ProviderName);
     }
+
+    [Fact]
+    public void Database_connection_probe_is_registered()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        var probe = scope.ServiceProvider.GetService<IDatabaseConnectionProbe>();
+
+        Assert.NotNull(probe);
+    }
 }
