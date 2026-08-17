@@ -2,8 +2,6 @@
 
 PostgreSQL é o banco de dados oficial e persistente da BFA Platform. O Entity Framework Core com Npgsql é usado somente para persistência em runtime dentro de `BFA.Infrastructure`.
 
-Esta etapa não cria banco, tabela, entidade, seed ou migration inicial.
-
 ## Ambientes
 
 Cada ambiente possui banco e credenciais próprios:
@@ -18,14 +16,15 @@ Development e Staging nunca podem apontar para `bfa_prod`. Consulte `docs/ENVIRO
 
 ## Migrations SQL
 
-O schema será gerenciado por scripts SQL imutáveis e versionados em `database/migrations`, usando nomes como:
+O schema é gerenciado por scripts SQL imutáveis e versionados em `database/migrations`. A primeira migration do projeto é:
 
 ```text
-V001__initial_schema.sql
-V002__create_organizacoes.sql
+V001__criar_organizacoes_e_unidades.sql
 ```
 
-Ainda não existe `V001`. Uma migration aplicada em ambiente compartilhado nunca deve ser editada ou removida; correções são feitas por novos scripts.
+Ela cria o histórico de schema e a fundação de multi-tenancy formada por `organizacoes` e `unidades`. Depois de aplicada em qualquer ambiente compartilhado, uma migration nunca deve ser editada ou removida; correções são feitas por novos scripts versionados.
+
+A tabela `bfa_schema_history` registra a versão aplicada, sua descrição, o instante UTC e o usuário de deploy responsável. Somente o processo de deploy controla esse histórico; `bfa_app_role` não recebe permissões nessa tabela.
 
 O deploy do schema é uma operação controlada e separada do deploy da aplicação. O runtime nunca chama:
 
@@ -35,13 +34,24 @@ Database.EnsureDeleted();
 Database.Migrate();
 ```
 
-Migrations do Entity Framework não são a fonte de verdade do schema e não são executadas automaticamente.
+Migrations do Entity Framework não são a fonte de verdade do schema. Nenhuma migration SQL ou EF é executada automaticamente pela aplicação.
 
 ## Papéis PostgreSQL
 
-### `bfa_app`
+### `bfa_app_role`
 
-Usuário de runtime utilizado pela aplicação em Production. Receberá apenas as permissões DML necessárias:
+Role comum, sem login, que concentra as permissões de runtime da aplicação. Migrations podem referenciar esse role porque seu nome é igual em todos os ambientes.
+
+Os usuários de login específicos de ambiente são membros dele:
+
+```text
+bfa_app_role (NOLOGIN)
+├── bfa_dev_app (LOGIN)
+├── bfa_staging_app (LOGIN)
+└── bfa_prod_app (LOGIN)
+```
+
+`bfa_app_role` recebe apenas as permissões DML necessárias sobre as tabelas de negócio:
 
 ```text
 SELECT
@@ -52,11 +62,13 @@ DELETE
 
 Não será proprietário do schema e não terá permissão para `CREATE`, `ALTER` ou `DROP`.
 
-### `bfa_deploy`
+Migrations nunca devem referenciar diretamente `bfa_dev_app`, `bfa_staging_app` ou `bfa_prod_app`. A criação de `bfa_app_role`, dos logins e dos vínculos entre eles faz parte do provisionamento PostgreSQL de cada ambiente, não das migrations de schema da aplicação.
 
-Usuário separado para aplicar scripts SQL revisados e executar DDL de forma controlada. Suas credenciais nunca ficam disponíveis para `BFA.Web`.
+### `bfa_*_deploy`
 
-Nenhum usuário PostgreSQL real é criado nesta etapa.
+Usuário separado de cada ambiente, como `bfa_dev_deploy`, usado para aplicar manualmente scripts SQL revisados e executar DDL de forma controlada. Suas credenciais nunca ficam disponíveis para `BFA.Web`.
+
+O deploy de schema é sempre separado do deploy da aplicação.
 
 ## Seeds
 

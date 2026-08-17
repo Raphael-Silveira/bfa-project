@@ -345,7 +345,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase` and registers `BfaDbContext` with `UseNpgsql`. The context initially has no `DbSet`.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase` and registers `BfaDbContext` with `UseNpgsql`. The context currently exposes `Organizacoes` and `Unidades`; their mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -384,11 +384,22 @@ database/migrations/
 Example:
 
 ```text
-V001__initial_schema.sql
-V002__create_organization.sql
-V003__create_unit.sql
-V004__create_user_identity.sql
+V001__criar_organizacoes_e_unidades.sql
+V002__proxima_alteracao_de_schema.sql
 ```
+
+`bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.
+
+Runtime permissions are assigned to one portable PostgreSQL role without login. Environment-specific login users are members of that role:
+
+```text
+bfa_app_role (NOLOGIN)
+├── bfa_dev_app (LOGIN)
+├── bfa_staging_app (LOGIN)
+└── bfa_prod_app (LOGIN)
+```
+
+Versioned migrations may reference `bfa_app_role`, but never environment-specific login names. Roles and memberships are provisioned separately from application schema migrations.
 
 Process:
 
