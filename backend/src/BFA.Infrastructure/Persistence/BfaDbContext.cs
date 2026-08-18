@@ -1,3 +1,4 @@
+using BFA.Domain.Acessos;
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Unidades;
 using BFA.Infrastructure.Identity;
@@ -12,6 +13,8 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
     public DbSet<Organizacao> Organizacoes => Set<Organizacao>();
 
     public DbSet<Unidade> Unidades => Set<Unidade>();
+
+    public DbSet<VinculoAcesso> VinculosAcesso => Set<VinculoAcesso>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

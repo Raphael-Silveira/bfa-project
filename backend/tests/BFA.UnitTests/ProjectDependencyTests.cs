@@ -22,7 +22,7 @@ public sealed class ProjectDependencyTests
     }
 
     [Fact]
-    public void Domain_does_not_reference_persistence_frameworks()
+    public void Domain_does_not_reference_persistence_or_identity_frameworks()
     {
         var references = Assembly.Load("BFA.Domain")
             .GetReferencedAssemblies()
@@ -30,6 +30,7 @@ public sealed class ProjectDependencyTests
 
         Assert.DoesNotContain(references, reference =>
             reference.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal)
+            || reference.StartsWith("Microsoft.AspNetCore.Identity", StringComparison.Ordinal)
             || reference.StartsWith("Npgsql", StringComparison.Ordinal));
     }
 

@@ -1,5 +1,7 @@
+using BFA.Domain.Acessos;
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Unidades;
+using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -77,11 +79,20 @@ public sealed class PersistenceModelTests
             "atualizado_em_utc",
             "timestamp with time zone");
 
-        var alternateKey = entityType.GetKeys().Single(key => !key.IsPrimaryKey());
-        Assert.Equal("uq_unidades_organizacao_id_slug", alternateKey.GetName());
+        var alternateKeys = entityType.GetKeys()
+            .Where(key => !key.IsPrimaryKey())
+            .ToDictionary(key => key.GetName()!);
+        Assert.Equal(2, alternateKeys.Count);
         Assert.Equal(
             [nameof(Unidade.OrganizacaoId), nameof(Unidade.Slug)],
-            alternateKey.Properties.Select(property => property.Name));
+            alternateKeys["uq_unidades_organizacao_id_slug"]
+                .Properties
+                .Select(property => property.Name));
+        Assert.Equal(
+            [nameof(Unidade.OrganizacaoId), nameof(Unidade.Id)],
+            alternateKeys["uq_unidades_organizacao_id_id"]
+                .Properties
+                .Select(property => property.Name));
 
         var index = Assert.Single(entityType.GetIndexes());
         Assert.Equal("ix_unidades_organizacao_id", index.GetDatabaseName());
@@ -107,6 +118,114 @@ public sealed class PersistenceModelTests
                 .OrderBy(name => name));
     }
 
+    [Fact]
+    public void Vinculo_acesso_possui_mapeamento_relacional_e_tenancy_explicitos()
+    {
+        using var context = CreateContext();
+        var entityType = GetDesignTimeModel(context).FindEntityType(typeof(VinculoAcesso));
+
+        Assert.NotNull(entityType);
+        Assert.Equal("vinculos_acesso", entityType.GetTableName());
+        Assert.Equal("pk_vinculos_acesso", entityType.FindPrimaryKey()!.GetName());
+
+        AssertColumn(entityType, nameof(VinculoAcesso.Id), "id", "uuid");
+        AssertColumn(entityType, nameof(VinculoAcesso.UsuarioId), "usuario_id", "uuid");
+        AssertColumn(entityType, nameof(VinculoAcesso.OrganizacaoId), "organizacao_id", "uuid");
+        AssertColumn(
+            entityType,
+            nameof(VinculoAcesso.UnidadeId),
+            "unidade_id",
+            "uuid",
+            isNullable: true);
+        AssertColumn(
+            entityType,
+            nameof(VinculoAcesso.Perfil),
+            "perfil",
+            "varchar(50)",
+            50);
+        AssertColumn(entityType, nameof(VinculoAcesso.Ativo), "ativo", "boolean");
+        AssertColumn(
+            entityType,
+            nameof(VinculoAcesso.CriadoEmUtc),
+            "criado_em_utc",
+            "timestamp with time zone");
+        AssertColumn(
+            entityType,
+            nameof(VinculoAcesso.AtualizadoEmUtc),
+            "atualizado_em_utc",
+            "timestamp with time zone");
+
+        var perfil = entityType.FindProperty(nameof(VinculoAcesso.Perfil));
+        Assert.NotNull(perfil);
+        var converter = perfil.GetTypeMapping().Converter;
+        Assert.NotNull(converter);
+        Assert.Equal(typeof(string), converter.ProviderClrType);
+        Assert.Equal("Professor", converter.ConvertToProvider(PerfilAcesso.Professor));
+
+        Assert.Equal(
+            ["ck_vinculos_acesso_escopo_perfil", "ck_vinculos_acesso_perfil_valido"],
+            entityType.GetCheckConstraints()
+                .Select(constraint => constraint.Name)
+                .OrderBy(name => name));
+
+        var indexes = entityType.GetIndexes()
+            .ToDictionary(index => index.GetDatabaseName()!);
+        Assert.Equal(4, indexes.Count);
+        AssertIndex(
+            indexes["ix_vinculos_acesso_usuario_id_ativo"],
+            false,
+            nameof(VinculoAcesso.UsuarioId),
+            nameof(VinculoAcesso.Ativo));
+        AssertIndex(
+            indexes["ix_vinculos_acesso_organizacao_id_unidade_id"],
+            false,
+            nameof(VinculoAcesso.OrganizacaoId),
+            nameof(VinculoAcesso.UnidadeId));
+        AssertIndex(
+            indexes["ix_vinculos_acesso_unidade_id"],
+            false,
+            nameof(VinculoAcesso.UnidadeId));
+
+        var uniqueIndex = indexes["uq_vinculos_acesso_usuario_organizacao_unidade_perfil"];
+        AssertIndex(
+            uniqueIndex,
+            true,
+            nameof(VinculoAcesso.UsuarioId),
+            nameof(VinculoAcesso.OrganizacaoId),
+            nameof(VinculoAcesso.UnidadeId),
+            nameof(VinculoAcesso.Perfil));
+        Assert.Equal(false, uniqueIndex.GetAreNullsDistinct());
+
+        var foreignKeys = entityType.GetForeignKeys()
+            .ToDictionary(foreignKey => foreignKey.GetConstraintName()!);
+        Assert.Equal(3, foreignKeys.Count);
+
+        var usuarioForeignKey = foreignKeys["fk_vinculos_acesso_usuarios_usuario_id"];
+        AssertForeignKey(
+            usuarioForeignKey,
+            typeof(UsuarioIdentity),
+            nameof(VinculoAcesso.UsuarioId));
+
+        var organizacaoForeignKey =
+            foreignKeys["fk_vinculos_acesso_organizacoes_organizacao_id"];
+        AssertForeignKey(
+            organizacaoForeignKey,
+            typeof(Organizacao),
+            nameof(VinculoAcesso.OrganizacaoId));
+
+        var unidadeForeignKey =
+            foreignKeys["fk_vinculos_acesso_unidades_organizacao_id_unidade_id"];
+        AssertForeignKey(
+            unidadeForeignKey,
+            typeof(Unidade),
+            nameof(VinculoAcesso.OrganizacaoId),
+            nameof(VinculoAcesso.UnidadeId));
+        Assert.Equal(
+            [nameof(Unidade.OrganizacaoId), nameof(Unidade.Id)],
+            unidadeForeignKey.PrincipalKey.Properties.Select(property => property.Name));
+        Assert.Equal("uq_unidades_organizacao_id_id", unidadeForeignKey.PrincipalKey.GetName());
+    }
+
     private static BfaDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<BfaDbContext>()
@@ -126,7 +245,8 @@ public sealed class PersistenceModelTests
         string propertyName,
         string columnName,
         string columnType,
-        int? maxLength = null)
+        int? maxLength = null,
+        bool isNullable = false)
     {
         var property = entityType.FindProperty(propertyName);
 
@@ -134,6 +254,25 @@ public sealed class PersistenceModelTests
         Assert.Equal(columnName, property.GetColumnName());
         Assert.Equal(columnType, property.GetColumnType());
         Assert.Equal(maxLength, property.GetMaxLength());
-        Assert.False(property.IsNullable);
+        Assert.Equal(isNullable, property.IsNullable);
+    }
+
+    private static void AssertIndex(
+        IIndex index,
+        bool isUnique,
+        params string[] propertyNames)
+    {
+        Assert.Equal(isUnique, index.IsUnique);
+        Assert.Equal(propertyNames, index.Properties.Select(property => property.Name));
+    }
+
+    private static void AssertForeignKey(
+        IForeignKey foreignKey,
+        Type principalType,
+        params string[] propertyNames)
+    {
+        Assert.Equal(DeleteBehavior.Restrict, foreignKey.DeleteBehavior);
+        Assert.Equal(principalType, foreignKey.PrincipalEntityType.ClrType);
+        Assert.Equal(propertyNames, foreignKey.Properties.Select(property => property.Name));
     }
 }

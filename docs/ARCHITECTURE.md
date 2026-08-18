@@ -298,23 +298,45 @@ Organizacao
 └── Unidade
 ```
 
-User authorization uses memberships rather than a single hard-coded unit.
+User authorization uses contextual access links rather than a single hard-coded unit.
 
 ```text
-Usuario
-└── VinculoUsuario
+UsuarioIdentity
+└── VinculoAcesso
     ├── OrganizacaoId
     ├── UnidadeId?
-    └── Papel/Permissoes
+    └── Perfil
 ```
 
 Tenant authorization is server-side and mandatory.
+
+The initial access profiles are `AdministradorRede`, `AdministradorUnidade`, `Professor`, `Aluno`, and `Responsavel`. A user may have multiple links, including links to different units and links with different profiles.
+
+Initial cases:
+
+- **Administrador da rede:** organization-wide access; `UnidadeId` is null.
+- **Administrador de Unidade:** access to one or more units according to their active links.
+- **Professor:** future access to operational features of the linked units.
+- **Aluno:** future access to the student experience in the linked units.
+
+`Responsavel` is reserved from the initial model and currently also requires a unit-scoped link.
 
 ### Authentication and authorization boundary
 
 ASP.NET Core Identity is infrastructure for authentication only. The technical user is `UsuarioIdentity`, keyed by `Guid`, and contains no organization, unit, profile, or other business data.
 
-The Identity model uses `IdentityUserContext<UsuarioIdentity, Guid>` without global Identity Roles. BFA authorization will be implemented later through contextual memberships and permissions associated with `Organizacao` and `Unidade`. A single user may have multiple memberships and profiles.
+The Identity model uses `IdentityUserContext<UsuarioIdentity, Guid>` without global Identity Roles. BFA authorization context is represented by `VinculoAcesso`, associated with `Organizacao` and optionally `Unidade`; policies and permissions will be implemented later. A single user may have multiple links and profiles.
+
+The responsibility boundary is:
+
+```text
+Identity        = authentication
+VinculoAcesso   = authorization context
+Policies        = next authorization stage
+Permissions     = next authorization stage
+```
+
+`VinculoAcesso` belongs to Domain and references the technical user only through `UsuarioId` as a `Guid`; Domain does not reference ASP.NET Core Identity. Database integrity ensures that a unit-scoped link uses a unit from the same organization through the composite foreign key `(organizacao_id, unidade_id)`.
 
 Current Identity schema version is explicitly v2 and contains:
 
@@ -326,6 +348,8 @@ usuario_tokens
 ```
 
 Passkey schema v3 is not enabled in this phase. No role, user-role, or role-claim table is part of the model. This decision is recorded in `docs/adr/0005-identity-sem-roles-globais.md`.
+
+The access-link schema is introduced separately by `V003__criar_vinculos_acesso.sql`. It is not an Identity Role schema and does not add global roles.
 
 ---
 
@@ -362,7 +386,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and continues to expose `Organizacoes` and `Unidades`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, and `VinculosAcesso`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -403,6 +427,7 @@ Example:
 ```text
 V001__criar_organizacoes_e_unidades.sql
 V002__criar_identidade.sql
+V003__criar_vinculos_acesso.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.
@@ -495,6 +520,7 @@ Planned sequence:
 Identidade
 Organizacoes
 Unidades
+Acessos
 Alunos
 Responsaveis
 Professores

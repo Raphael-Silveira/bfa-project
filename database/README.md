@@ -21,9 +21,10 @@ O schema é gerenciado por scripts SQL imutáveis e versionados em `database/mig
 ```text
 V001__criar_organizacoes_e_unidades.sql
 V002__criar_identidade.sql
+V003__criar_vinculos_acesso.sql
 ```
 
-V001 cria o histórico de schema e a fundação de multi-tenancy formada por `organizacoes` e `unidades`. V002 cria a persistência técnica de autenticação do ASP.NET Core Identity. Depois de aplicada em qualquer ambiente compartilhado, uma migration nunca deve ser editada ou removida; correções são feitas por novos scripts versionados.
+V001 cria o histórico de schema e a fundação de multi-tenancy formada por `organizacoes` e `unidades`. V002 cria a persistência técnica de autenticação do ASP.NET Core Identity. V003 cria `vinculos_acesso`, o contexto multi-tenant de autorização associado a usuários, organizações, unidades e perfis. Depois de aplicada em qualquer ambiente compartilhado, uma migration nunca deve ser editada ou removida; correções são feitas por novos scripts versionados.
 
 A tabela `bfa_schema_history` registra a versão aplicada, sua descrição, o instante UTC e o usuário de deploy responsável. Somente o processo de deploy controla esse histórico; `bfa_app_role` não recebe permissões nessa tabela.
 
@@ -52,7 +53,7 @@ usuario_tokens
 
 O schema v3 de passkeys é opt-in no .NET 10 e não está habilitado nesta etapa; portanto, V002 não cria `usuario_passkeys`. Também não existem tabelas de roles ou de vínculos usuário-role.
 
-Perfis e permissões da BFA serão modelados posteriormente como vínculos contextuais por `Organizacao` e `Unidade`. Eles não serão roles globais do Identity.
+Os perfis da BFA são representados por `VinculoAcesso`, com contexto de `Organizacao` e, quando aplicável, `Unidade`. Eles não são roles globais do Identity. Policies e permissões serão implementadas em etapa posterior.
 
 ## Papéis PostgreSQL
 
@@ -80,7 +81,7 @@ DELETE
 
 Não será proprietário do schema e não terá permissão para `CREATE`, `ALTER` ou `DROP`.
 
-V002 concede ao role as permissões DML necessárias nas tabelas Identity e acesso à sequence usada pelo identificador de `usuario_claims`. O role continua sem permissão para escrever em `bfa_schema_history`.
+V002 concede ao role as permissões DML necessárias nas tabelas Identity e acesso à sequence usada pelo identificador de `usuario_claims`. V003 concede DML somente em `vinculos_acesso`. O role continua sem permissão para escrever em `bfa_schema_history`.
 
 Migrations nunca devem referenciar diretamente `bfa_dev_app`, `bfa_staging_app` ou `bfa_prod_app`. A criação de `bfa_app_role`, dos logins e dos vínculos entre eles faz parte do provisionamento PostgreSQL de cada ambiente, não das migrations de schema da aplicação.
 
