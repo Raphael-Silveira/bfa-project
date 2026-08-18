@@ -92,3 +92,139 @@
 .bfa-text-accent {
   color: var(--bfa-accent);
 }
+
+.bfa-auth-page {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top, rgba(255, 193, 7, 0.12), transparent 34rem),
+    linear-gradient(145deg, var(--bfa-black), var(--bfa-dark));
+  color: var(--bfa-text-primary);
+}
+
+.bfa-auth-container {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.bfa-auth-card {
+  width: min(100%, 28rem);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  background-color: rgba(30, 30, 30, 0.96);
+  border: 1px solid var(--bfa-border);
+  border-top: 0.25rem solid var(--bfa-accent);
+  border-radius: 0.75rem;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.45);
+}
+
+.bfa-auth-logo {
+  display: block;
+  width: min(100%, 12rem);
+  height: auto;
+  margin: 0 auto 2rem;
+  object-fit: contain;
+}
+
+.bfa-auth-heading {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.bfa-auth-title {
+  margin-bottom: 0.5rem;
+  color: var(--bfa-text-primary);
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.bfa-auth-subtitle {
+  margin-bottom: 0;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-form-label {
+  margin-bottom: 0.5rem;
+  color: var(--bfa-text-primary);
+  font-weight: 600;
+}
+
+.bfa-form-control {
+  min-height: 3rem;
+  background-color: var(--bfa-black);
+  border-color: var(--bfa-border);
+  color: var(--bfa-text-primary);
+}
+
+.bfa-form-control:focus {
+  background-color: var(--bfa-black);
+  border-color: var(--bfa-accent);
+  box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.2);
+  color: var(--bfa-text-primary);
+}
+
+.bfa-form-control::placeholder {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-auth-remember {
+  margin: 1.25rem 0;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-auth-remember .form-check-input:checked {
+  background-color: var(--bfa-accent);
+  border-color: var(--bfa-accent);
+}
+
+.bfa-auth-submit {
+  width: 100%;
+  min-height: 3rem;
+}
+
+.bfa-validation-message {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--bfa-danger);
+  font-size: 0.875rem;
+}
+
+.bfa-validation-message:empty,
+.bfa-validation-message ul:empty {
+  display: none;
+}
+
+.bfa-validation-message ul {
+  margin-bottom: 1rem;
+  padding-left: 1.25rem;
+}
+
+.bfa-auth-message {
+  text-align: center;
+}
+
+.bfa-auth-message .bfa-auth-subtitle {
+  margin: 1rem 0 1.75rem;
+}
+
+@media (max-width: 35rem) {
+  .bfa-auth-container {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .bfa-auth-card {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+}

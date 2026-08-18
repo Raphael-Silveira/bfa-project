@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace BFA.IntegrationTests;
 
-public sealed class BfaWebApplicationFactory : WebApplicationFactory<Program>
+public class BfaWebApplicationFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

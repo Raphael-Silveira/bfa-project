@@ -1,5 +1,6 @@
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -36,7 +37,23 @@ public static class DependencyInjection
             options.Stores.MaxLengthForKeys = 128;
             options.Stores.SchemaVersion = IdentitySchemaVersions.Version2;
         })
-            .AddEntityFrameworkStores<BfaDbContext>();
+            .AddEntityFrameworkStores<BfaDbContext>()
+            .AddSignInManager();
+
+        services.AddAuthentication(IdentityConstants.ApplicationScheme)
+            .AddIdentityCookies();
+
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.Name = "BFA.Auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.LoginPath = "/conta/entrar";
+            options.AccessDeniedPath = "/conta/acesso-negado";
+            options.SlidingExpiration = true;
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        });
 
         services.AddScoped<IDatabaseConnectionProbe, DatabaseConnectionProbe>();
 

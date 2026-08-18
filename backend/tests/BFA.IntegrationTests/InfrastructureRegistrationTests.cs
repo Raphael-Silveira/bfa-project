@@ -41,12 +41,14 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
 
         var userStore = scope.ServiceProvider.GetService<IUserStore<UsuarioIdentity>>();
         var userManager = scope.ServiceProvider.GetService<UserManager<UsuarioIdentity>>();
+        var signInManager = scope.ServiceProvider.GetService<SignInManager<UsuarioIdentity>>();
         var roleStore = scope.ServiceProvider.GetService<IRoleStore<IdentityRole<Guid>>>();
         var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole<Guid>>>();
         var identityOptions = scope.ServiceProvider.GetRequiredService<IOptions<IdentityOptions>>().Value;
 
         Assert.NotNull(userStore);
         Assert.NotNull(userManager);
+        Assert.NotNull(signInManager);
         Assert.Null(roleStore);
         Assert.Null(roleManager);
         Assert.Equal(128, identityOptions.Stores.MaxLengthForKeys);
