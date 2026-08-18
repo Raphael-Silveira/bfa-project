@@ -1,0 +1,94 @@
+:root {
+  --bfa-black: #0D0D0D;
+  --bfa-dark: #1E1E1E;
+  --bfa-gold: #FFC107;
+  --bfa-gray: #BDBDBD;
+  --bfa-white: #FFFFFF;
+  --bfa-bg-primary: var(--bfa-black);
+  --bfa-bg-secondary: var(--bfa-dark);
+  --bfa-text-primary: var(--bfa-white);
+  --bfa-text-muted: var(--bfa-gray);
+  --bfa-accent: var(--bfa-gold);
+  --bfa-border: rgba(189, 189, 189, 0.35);
+  --bfa-danger: #DC3545;
+  --bfa-success: #198754;
+}
+
+.bfa-brand-logo,
+.bfa-brand-logo-horizontal,
+.bfa-brand-symbol {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.bfa-brand-logo {
+  width: 20rem;
+}
+
+.bfa-brand-logo-horizontal {
+  width: 36rem;
+}
+
+.bfa-brand-symbol {
+  width: 6rem;
+}
+
+.bfa-btn-primary,
+.bfa-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.25rem;
+  border: 1px solid var(--bfa-accent);
+  border-radius: 0.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.bfa-btn-primary {
+  background-color: var(--bfa-accent);
+  color: var(--bfa-black);
+}
+
+.bfa-btn-primary:hover {
+  background-color: var(--bfa-white);
+  border-color: var(--bfa-white);
+  color: var(--bfa-black);
+}
+
+.bfa-btn-secondary {
+  background-color: transparent;
+  color: var(--bfa-accent);
+}
+
+.bfa-btn-secondary:hover {
+  background-color: var(--bfa-accent);
+  color: var(--bfa-black);
+}
+
+.bfa-btn-primary:focus-visible,
+.bfa-btn-secondary:focus-visible {
+  outline: 3px solid var(--bfa-white);
+  outline-offset: 2px;
+}
+
+.bfa-card {
+  padding: 1.5rem;
+  background-color: var(--bfa-bg-secondary);
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.5rem;
+  color: var(--bfa-text-primary);
+}
+
+.bfa-page-dark {
+  min-height: 100%;
+  background-color: var(--bfa-bg-primary);
+  color: var(--bfa-text-primary);
+}
+
+.bfa-text-accent {
+  color: var(--bfa-accent);
+}
