@@ -1,4 +1,5 @@
 using BFA.Infrastructure.Identity;
+using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Conta;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -91,5 +92,12 @@ public sealed class ContaController : Controller
     public IActionResult Autenticado()
     {
         return Content("Usuário autenticado.");
+    }
+
+    [Authorize(Policy = PoliticasAcesso.AdministradorRede)]
+    [HttpGet("conta/admin-rede")]
+    public IActionResult AdministradorRede()
+    {
+        return Content("Administrador de rede autorizado.");
     }
 }

@@ -325,16 +325,28 @@ Initial cases:
 
 ASP.NET Core Identity is infrastructure for authentication only. The technical user is `UsuarioIdentity`, keyed by `Guid`, and contains no organization, unit, profile, or other business data.
 
-The Identity model uses `IdentityUserContext<UsuarioIdentity, Guid>` without global Identity Roles. BFA authorization context is represented by `VinculoAcesso`, associated with `Organizacao` and optionally `Unidade`; policies and permissions will be implemented later. A single user may have multiple links and profiles.
+The Identity model uses `IdentityUserContext<UsuarioIdentity, Guid>` without global Identity Roles. BFA authorization context is represented by `VinculoAcesso`, associated with `Organizacao` and optionally `Unidade`. A single user may have multiple links and profiles.
 
 The responsibility boundary is:
 
 ```text
-Identity        = authentication
-VinculoAcesso   = authorization context
-Policies        = next authorization stage
-Permissions     = next authorization stage
+Identity          = who the user is (authentication)
+VinculoAcesso     = which contexts and profiles the user has
+Policies/Handlers = authorization decision
 ```
+
+Only active access links participate in authorization. Profiles, `OrganizacaoId`, and `UnidadeId` are not copied into the authentication cookie; handlers consult the persistent source for every decision, without an authorization cache at this stage.
+
+The initial policies provide generic entry checks for `AdministradorRede`, administration (`AdministradorRede` or `AdministradorUnidade`), `Professor`, `Aluno`, and `Responsavel`. Access to a specific unit is resource-based: Web supplies a persistence-independent `ContextoUnidade` containing `OrganizacaoId` and `UnidadeId`, and the handler compares both identifiers with the user's active links.
+
+Context rules:
+
+- `AdministradorRede` has transversal access to all units in the organization of its active organization-wide link, but no implicit access to another organization.
+- `AdministradorUnidade` has access only to the exact organization/unit pairs in its active links.
+- `Professor`, `Aluno`, and `Responsavel` have access only to the contexts in their active links.
+- A user with several links is authorized independently in each matching context; one unit link never grants access to another unit.
+
+For operations that also require a profile in a unit, `AcessoUnidadePorPerfilRequirement` combines the exact resource context with the allowed profiles. `AdministradorRede` remains a superaccess profile only inside its own organization.
 
 `VinculoAcesso` belongs to Domain and references the technical user only through `UsuarioId` as a `Guid`; Domain does not reference ASP.NET Core Identity. Database integrity ensures that a unit-scoped link uses a unit from the same organization through the composite foreign key `(organizacao_id, unidade_id)`.
 

@@ -1,9 +1,11 @@
 using BFA.Infrastructure;
+using BFA.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddBfaAuthorization();
 
 var app = builder.Build();
 

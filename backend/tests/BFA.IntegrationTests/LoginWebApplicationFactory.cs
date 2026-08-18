@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BFA.IntegrationTests;
 
-public sealed class LoginWebApplicationFactory : BfaWebApplicationFactory
+public class LoginWebApplicationFactory : BfaWebApplicationFactory
 {
     public TestUsuarioStore UsuarioStore => Services.GetRequiredService<TestUsuarioStore>();
 

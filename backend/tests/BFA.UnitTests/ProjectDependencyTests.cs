@@ -22,6 +22,17 @@ public sealed class ProjectDependencyTests
     }
 
     [Fact]
+    public void Application_does_not_reference_aspnet_core()
+    {
+        var references = Assembly.Load("BFA.Application")
+            .GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? string.Empty);
+
+        Assert.DoesNotContain(references, reference =>
+            reference.StartsWith("Microsoft.AspNetCore", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Domain_does_not_reference_persistence_or_identity_frameworks()
     {
         var references = Assembly.Load("BFA.Domain")
