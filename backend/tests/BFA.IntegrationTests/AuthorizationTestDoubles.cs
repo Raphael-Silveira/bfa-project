@@ -14,6 +14,14 @@ public sealed class TestAcessoUsuarioConsulta : IAcessoUsuarioConsulta
 {
     private readonly List<TestVinculoAcesso> _vinculos = [];
 
+    public int QuantidadeConsultasAdministradorRede { get; private set; }
+
+    public void Limpar()
+    {
+        _vinculos.Clear();
+        QuantidadeConsultasAdministradorRede = 0;
+    }
+
     public void Adicionar(
         Guid usuarioId,
         Guid organizacaoId,
@@ -34,6 +42,7 @@ public sealed class TestAcessoUsuarioConsulta : IAcessoUsuarioConsulta
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        QuantidadeConsultasAdministradorRede++;
         return Task.FromResult(VinculosAtivos(usuarioId).Any(vinculo =>
             vinculo.Perfil == PerfilAcesso.AdministradorRede
             && vinculo.UnidadeId == null));

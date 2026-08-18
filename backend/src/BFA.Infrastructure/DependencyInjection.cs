@@ -1,7 +1,9 @@
 using BFA.Application.Acessos;
 using BFA.Application.Bootstrap;
+using BFA.Application.Franqueadora;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Bootstrap;
+using BFA.Infrastructure.Franqueadora;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
@@ -62,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IDatabaseConnectionProbe, DatabaseConnectionProbe>();
         services.AddScoped<IAcessoUsuarioConsulta, AcessoUsuarioConsulta>();
         services.AddScoped<IBootstrapInicial, BootstrapInicial>();
+        services.AddScoped<IPainelFranqueadoraConsulta, PainelFranqueadoraConsulta>();
 
         return services;
     }

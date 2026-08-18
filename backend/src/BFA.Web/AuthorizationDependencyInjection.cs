@@ -14,6 +14,7 @@ public static class AuthorizationDependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<IUsuarioAtual, UsuarioAtual>();
+        services.AddScoped<IDestinoPosLogin, DestinoPosLogin>();
 
         services.AddAuthorization(options =>
         {

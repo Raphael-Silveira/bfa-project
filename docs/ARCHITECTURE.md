@@ -113,11 +113,17 @@ Public brand experience:
 
 ### Area: Franqueadora
 
-Network-wide management.
+Global administrative experience for an organization.
 
-Route prefix: `/Franqueadora`.
+Main route: `/franqueadora`.
 
 Controller namespace: `BFA.Web.Areas.Franqueadora.Controllers`.
+
+Access requires the `AdministradorRede` policy backed by an active organization-wide `VinculoAcesso`. `AdministradorUnidade` and the operational profiles do not receive access to this global area. The initial dashboard resolves the organization from the authenticated user's links and shows only real counts for units and active administrative links.
+
+When a user administers more than one organization, the area returns a controlled selection-pending state instead of choosing a context implicitly. Organization selection is not implemented yet.
+
+`GET /conta/admin-rede` remains a temporary authorization diagnostic endpoint and is not the Franqueadora experience.
 
 ### Area: Unidade
 
@@ -334,6 +340,12 @@ Identity          = who the user is (authentication)
 VinculoAcesso     = which contexts and profiles the user has
 Policies/Handlers = authorization decision
 ```
+
+The post-login functional destination is selected by `IDestinoPosLogin` in Application from the user's active access links. Application returns a typed `DestinoAcesso` and does not know MVC URLs; Web maps `AdministradorRede` to `/franqueadora` and the default destination to `/`. A local `ReturnUrl`, validated with `Url.IsLocalUrl`, always has priority over this normal landing decision, and external return URLs are never followed.
+
+`GET /acessar` is the central authenticated entry point exposed by the public navigation. Anonymous users are sent to `/login`; authenticated users are routed through `IUsuarioAtual`, `IDestinoPosLogin`, and the Web URL mapper. An authenticated user who requests `GET /login` follows the same destination mechanism instead of seeing the login form again. The public Home only chooses between the `Login` and `Acessar sistema` calls to action based on authentication state and contains no profile rule.
+
+The `/acessar` mechanism may later be expanded for `AdministradorUnidade`, `Professor`, `Aluno`, and `Responsavel`, with possible experiences under `/unidade`, `/professor`, `/aluno`, and `/responsavel`. Those destinations and routes do not exist yet. Priority among different profiles is intentionally undefined; when a user has multiple possible experiences, an appropriate context-selection flow will be designed instead of choosing one implicitly.
 
 Only active access links participate in authorization. Profiles, `OrganizacaoId`, and `UnidadeId` are not copied into the authentication cookie; handlers consult the persistent source for every decision, without an authorization cache at this stage.
 

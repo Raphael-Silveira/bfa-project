@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Franqueadora BFA</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/bfa-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/franqueadora.css" asp-append-version="true" />
+</head>
+<body class="bfa-franqueadora-page">
+    <header class="bfa-franqueadora-header">
+        <div class="bfa-franqueadora-header__content">
+            <a class="bfa-franqueadora-brand" href="/franqueadora" aria-label="Ir para a visão geral da Franqueadora">
+                <img class="bfa-franqueadora-brand__logo"
+                     src="~/images/brand/bfa-logo-horizontal-dark.png"
+                     alt="Brazilian Footvolley Academy" />
+                <span class="bfa-franqueadora-brand__area">Franqueadora</span>
+            </a>
+
+            <form action="/logout" method="post" class="bfa-franqueadora-logout">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bfa-franqueadora-logout__button">Sair</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="bfa-franqueadora-shell">
+        <aside class="bfa-franqueadora-sidebar" aria-label="Navegação da Franqueadora">
+            <p class="bfa-franqueadora-sidebar__label">Administração</p>
+            <nav>
+                <a class="bfa-franqueadora-nav-link" href="/franqueadora" aria-current="page">
+                    Visão Geral
+                </a>
+            </nav>
+        </aside>
+
+        <main class="bfa-franqueadora-main" id="conteudo-principal">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="bfa-franqueadora-footer">
+        <span>Brazilian Footvolley Academy</span>
+        <span>Rede de Futevôlei</span>
+    </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

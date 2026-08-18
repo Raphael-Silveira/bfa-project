@@ -1,4 +1,6 @@
+using BFA.Application.Acessos;
 using BFA.Infrastructure.Identity;
+using BFA.Web.Acessos;
 using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Conta;
 using Microsoft.AspNetCore.Authorization;
@@ -12,22 +14,30 @@ public sealed class ContaController : Controller
     private const string CredenciaisInvalidas = "Email ou senha inválidos.";
     private readonly UserManager<UsuarioIdentity> _userManager;
     private readonly SignInManager<UsuarioIdentity> _signInManager;
+    private readonly IUsuarioAtual _usuarioAtual;
+    private readonly IDestinoPosLogin _destinoPosLogin;
 
     public ContaController(
         UserManager<UsuarioIdentity> userManager,
-        SignInManager<UsuarioIdentity> signInManager)
+        SignInManager<UsuarioIdentity> signInManager,
+        IUsuarioAtual usuarioAtual,
+        IDestinoPosLogin destinoPosLogin)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _usuarioAtual = usuarioAtual;
+        _destinoPosLogin = destinoPosLogin;
     }
 
     [AllowAnonymous]
     [HttpGet("login")]
-    public IActionResult Entrar(string? returnUrl = null)
+    public async Task<IActionResult> Entrar(
+        string? returnUrl = null,
+        CancellationToken cancellationToken = default)
     {
-        if (User.Identity?.IsAuthenticated == true)
+        if (_usuarioAtual.Autenticado)
         {
-            return Redirect("/");
+            return await RedirecionarUsuarioAtualAsync(cancellationToken);
         }
 
         return View(new LoginViewModel { ReturnUrl = returnUrl });
@@ -36,7 +46,9 @@ public sealed class ContaController : Controller
     [AllowAnonymous]
     [HttpPost("login")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Entrar(LoginViewModel model)
+    public async Task<IActionResult> Entrar(
+        LoginViewModel model,
+        CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -68,7 +80,19 @@ public sealed class ContaController : Controller
             return LocalRedirect(model.ReturnUrl);
         }
 
-        return Redirect("/");
+        return await RedirecionarParaDestinoAsync(usuario.Id, cancellationToken);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("acessar")]
+    public async Task<IActionResult> Acessar(CancellationToken cancellationToken)
+    {
+        if (!_usuarioAtual.Autenticado)
+        {
+            return Redirect("/login");
+        }
+
+        return await RedirecionarUsuarioAtualAsync(cancellationToken);
     }
 
     [HttpPost("logout")]
@@ -99,5 +123,22 @@ public sealed class ContaController : Controller
     public IActionResult AdministradorRede()
     {
         return Content("Administrador de rede autorizado.");
+    }
+
+    private async Task<IActionResult> RedirecionarUsuarioAtualAsync(
+        CancellationToken cancellationToken)
+    {
+        return _usuarioAtual.UsuarioId is { } usuarioId
+            ? await RedirecionarParaDestinoAsync(usuarioId, cancellationToken)
+            : Redirect("/");
+    }
+
+    private async Task<IActionResult> RedirecionarParaDestinoAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        var destino = await _destinoPosLogin.ObterAsync(usuarioId, cancellationToken);
+
+        return Redirect(DestinoPosLoginUrl.Obter(destino));
     }
 }

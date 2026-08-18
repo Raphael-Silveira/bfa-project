@@ -5,4 +5,15 @@
 <div class="text-center">
     <h1 class="display-4">Brazilian Footvolley Academy</h1>
     <p class="lead">Fundação técnica da BFA Platform.</p>
+
+    <div class="mt-4">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a class="bfa-btn-primary" href="/acessar">Acessar sistema</a>
+        }
+        else
+        {
+            <a class="bfa-btn-primary" href="/login">Login</a>
+        }
+    </div>
 </div>

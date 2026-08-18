@@ -1,3 +1,4 @@
+using BFA.Application.Franqueadora;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -32,6 +33,16 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
         var probe = scope.ServiceProvider.GetService<IDatabaseConnectionProbe>();
 
         Assert.NotNull(probe);
+    }
+
+    [Fact]
+    public void Painel_franqueadora_consulta_is_registered()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        var consulta = scope.ServiceProvider.GetService<IPainelFranqueadoraConsulta>();
+
+        Assert.NotNull(consulta);
     }
 
     [Fact]

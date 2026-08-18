@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using BFA.Domain.Acessos;
 using BFA.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -29,6 +30,72 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
         using var response = await client.GetAsync("/login");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Home_anonima_exibe_link_login()
+    {
+        using var client = CreateClient();
+
+        var html = await client.GetStringAsync("/");
+
+        Assert.Contains("href=\"/login\"", html, StringComparison.Ordinal);
+        Assert.Contains(">Login</a>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Acessar sistema", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Home_autenticada_exibe_apenas_link_acessar_sistema()
+    {
+        using var client = CreateClient();
+        ConfigurarAdministradorRede(ativo: true);
+        await AutenticarAsync(client);
+
+        var html = await client.GetStringAsync("/");
+
+        Assert.Contains("href=\"/acessar\"", html, StringComparison.Ordinal);
+        Assert.Contains("Acessar sistema", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("href=\"/login\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(">Login</a>", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Get_acessar_anonimo_redireciona_para_login()
+    {
+        using var client = CreateClient();
+
+        using var response = await client.GetAsync("/acessar");
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/login", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Get_acessar_administrador_rede_redireciona_para_franqueadora()
+    {
+        using var client = CreateClient();
+        ConfigurarAdministradorRede(ativo: true);
+        await AutenticarAsync(client);
+
+        using var response = await client.GetAsync("/acessar");
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/franqueadora", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Get_login_administrador_rede_autenticado_redireciona_para_franqueadora()
+    {
+        using var client = CreateClient();
+        ConfigurarAdministradorRede(ativo: true);
+        await AutenticarAsync(client);
+
+        using var response = await client.GetAsync("/login");
+        var content = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/franqueadora", response.Headers.Location?.OriginalString);
+        Assert.DoesNotContain("action=\"/login\"", content, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -108,12 +175,14 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     {
         using var client = CreateClient();
         const string returnUrl = "/conta/autenticado";
+        ConfigurarAdministradorRede(ativo: true);
         var token = await GetAntiforgeryTokenAsync(client, returnUrl);
 
         using var response = await PostLoginAsync(client, token, returnUrl);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(returnUrl, response.Headers.Location?.OriginalString);
+        Assert.Equal(0, _application.AcessosLogin.QuantidadeConsultasAdministradorRede);
     }
 
     [Fact]
@@ -121,9 +190,50 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     {
         using var client = CreateClient();
         const string returnUrl = "https://example.invalid/destino";
+        ConfigurarAdministradorRede(ativo: true);
         var token = await GetAntiforgeryTokenAsync(client, returnUrl);
 
         using var response = await PostLoginAsync(client, token, returnUrl);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/franqueadora", response.Headers.Location?.OriginalString);
+        Assert.Equal(1, _application.AcessosLogin.QuantidadeConsultasAdministradorRede);
+    }
+
+    [Fact]
+    public async Task Administrador_rede_sem_return_url_vai_para_franqueadora()
+    {
+        using var client = CreateClient();
+        ConfigurarAdministradorRede(ativo: true);
+        var token = await GetAntiforgeryTokenAsync(client);
+
+        using var response = await PostLoginAsync(client, token, string.Empty);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/franqueadora", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Usuario_sem_administrador_rede_sem_return_url_vai_para_inicio()
+    {
+        using var client = CreateClient();
+        _application.AcessosLogin.Limpar();
+        var token = await GetAntiforgeryTokenAsync(client);
+
+        using var response = await PostLoginAsync(client, token, string.Empty);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Vinculo_administrador_rede_inativo_sem_return_url_vai_para_inicio()
+    {
+        using var client = CreateClient();
+        ConfigurarAdministradorRede(ativo: false);
+        var token = await GetAntiforgeryTokenAsync(client);
+
+        using var response = await PostLoginAsync(client, token, string.Empty);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal("/", response.Headers.Location?.OriginalString);
@@ -236,6 +346,18 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
         });
     }
 
+    private void ConfigurarAdministradorRede(bool ativo)
+    {
+        var acessos = _application.AcessosLogin;
+        acessos.Limpar();
+        acessos.Adicionar(
+            _application.UsuarioStore.Usuario.Id,
+            Guid.NewGuid(),
+            unidadeId: null,
+            PerfilAcesso.AdministradorRede,
+            ativo);
+    }
+
     private async Task<HttpResponseMessage> PostLoginAsync(
         HttpClient client,
         string token,
@@ -252,6 +374,15 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
         });
 
         return await client.PostAsync("/login", form);
+    }
+
+    private async Task AutenticarAsync(HttpClient client)
+    {
+        var token = await GetAntiforgeryTokenAsync(client);
+
+        using var response = await PostLoginAsync(client, token, string.Empty);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
     }
 
     private static async Task<string> GetAntiforgeryTokenAsync(

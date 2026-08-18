@@ -1,0 +1,62 @@
+@model PainelFranqueadoraViewModel
+
+@{
+    ViewData["Title"] = "Visão Geral";
+    Layout = "_FranqueadoraLayout";
+}
+
+<section class="bfa-franqueadora-intro" aria-labelledby="titulo-painel">
+    <p class="bfa-franqueadora-eyebrow">Painel administrativo</p>
+    <h1 id="titulo-painel">Visão Geral</h1>
+
+    @if (!Model.SelecaoOrganizacaoNecessaria)
+    {
+        <p class="bfa-franqueadora-organization">@Model.NomeOrganizacao</p>
+    }
+</section>
+
+@if (Model.SelecaoOrganizacaoNecessaria)
+{
+    <section class="bfa-franqueadora-notice" role="status">
+        <span class="bfa-franqueadora-notice__marker" aria-hidden="true"></span>
+        <div>
+            <h2>Seleção de Organização necessária</h2>
+            <p>
+                Seu usuário administra mais de uma Organização. A seleção do contexto será
+                disponibilizada em uma próxima etapa.
+            </p>
+        </div>
+    </section>
+}
+else
+{
+    <section class="bfa-franqueadora-metrics" aria-label="Resumo da Organização">
+        <article class="bfa-franqueadora-metric-card">
+            <p>Total de Unidades</p>
+            <strong>@Model.TotalUnidades</strong>
+        </article>
+        <article class="bfa-franqueadora-metric-card">
+            <p>Unidades Ativas</p>
+            <strong>@Model.UnidadesAtivas</strong>
+        </article>
+        <article class="bfa-franqueadora-metric-card">
+            <p>Administradores da Rede</p>
+            <strong>@Model.AdministradoresRedeAtivos</strong>
+        </article>
+        <article class="bfa-franqueadora-metric-card">
+            <p>Administradores de Unidade</p>
+            <strong>@Model.AdministradoresUnidadeAtivos</strong>
+        </article>
+    </section>
+
+    @if (Model.TotalUnidades == 0)
+    {
+        <section class="bfa-franqueadora-empty" aria-labelledby="titulo-sem-unidades">
+            <div class="bfa-franqueadora-empty__symbol" aria-hidden="true">BFA</div>
+            <div>
+                <h2 id="titulo-sem-unidades">Nenhuma unidade cadastrada ainda.</h2>
+                <p>O gerenciamento de unidades será disponibilizado posteriormente.</p>
+            </div>
+        </section>
+    }
+}
