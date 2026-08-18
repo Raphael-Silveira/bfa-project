@@ -186,4 +186,60 @@ public sealed class VinculoAcessoTests
         Assert.Equal(administradorRede.UsuarioId, professor.UsuarioId);
         Assert.NotEqual(administradorRede.Perfil, professor.Perfil);
     }
+
+    [Fact]
+    public void Desativar_e_reativar_preserva_registro_e_atualiza_data_utc()
+    {
+        var vinculo = new VinculoAcesso(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            PerfilAcesso.AdministradorUnidade,
+            CriadoEmUtc);
+        var desativadoEmUtc = CriadoEmUtc.AddHours(1);
+        var reativadoEmUtc = CriadoEmUtc.AddHours(2);
+
+        vinculo.Desativar(desativadoEmUtc);
+
+        Assert.False(vinculo.Ativo);
+        Assert.Equal(desativadoEmUtc, vinculo.AtualizadoEmUtc);
+
+        vinculo.Ativar(reativadoEmUtc);
+
+        Assert.True(vinculo.Ativo);
+        Assert.Equal(reativadoEmUtc, vinculo.AtualizadoEmUtc);
+        Assert.Equal(CriadoEmUtc, vinculo.CriadoEmUtc);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Alteracao_de_estado_rejeita_data_fora_de_utc(bool ativar)
+    {
+        var vinculo = new VinculoAcesso(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            PerfilAcesso.AdministradorUnidade,
+            CriadoEmUtc);
+        var dataInvalida = DateTime.SpecifyKind(
+            CriadoEmUtc.AddHours(1),
+            DateTimeKind.Unspecified);
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+        {
+            if (ativar)
+            {
+                vinculo.Ativar(dataInvalida);
+            }
+            else
+            {
+                vinculo.Desativar(dataInvalida);
+            }
+        });
+
+        Assert.Equal("atualizadoEmUtc", exception.ParamName);
+    }
 }

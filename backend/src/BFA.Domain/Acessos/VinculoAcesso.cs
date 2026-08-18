@@ -81,4 +81,28 @@ public sealed class VinculoAcesso
     public DateTime CriadoEmUtc { get; private set; }
 
     public DateTime AtualizadoEmUtc { get; private set; }
+
+    public void Ativar(DateTime atualizadoEmUtc)
+    {
+        ValidarDataAtualizacao(atualizadoEmUtc);
+        Ativo = true;
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
+    public void Desativar(DateTime atualizadoEmUtc)
+    {
+        ValidarDataAtualizacao(atualizadoEmUtc);
+        Ativo = false;
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
+    private static void ValidarDataAtualizacao(DateTime atualizadoEmUtc)
+    {
+        if (atualizadoEmUtc.Kind != DateTimeKind.Utc)
+        {
+            throw new ArgumentException(
+                "A data de atualizacao deve estar em UTC.",
+                nameof(atualizadoEmUtc));
+        }
+    }
 }

@@ -72,6 +72,65 @@
   margin-bottom: 0;
 }
 
+.bfa-acessos-lista {
+  margin-top: 1.5rem;
+}
+
+.bfa-acesso-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-acesso-card__label {
+  margin: 0 0 0.3rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bfa-acesso-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.bfa-acesso-card__details {
+  margin: 1.2rem 0;
+}
+
+.bfa-acesso-card__details dt,
+.bfa-acesso-card__footer > span {
+  margin-bottom: 0.35rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-acesso-card__details dd {
+  margin: 0;
+  color: var(--bfa-text-primary);
+}
+
+.bfa-acesso-card__footer {
+  display: flex;
+  padding-top: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-acesso-card__footer > span {
+  margin-bottom: 0;
+}
+
 @media (max-width: 23rem) {
   .bfa-unidade-card__details {
     grid-template-columns: minmax(0, 1fr);

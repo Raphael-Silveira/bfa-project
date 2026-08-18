@@ -79,6 +79,10 @@ public sealed partial class UnidadesFranqueadoraEndpointTests
         Assert.Contains("bfa-admin-icon-action", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Editar unidade BFA Tietê\"", html, StringComparison.Ordinal);
         Assert.Contains("title=\"Editar unidade BFA Tietê\"", html, StringComparison.Ordinal);
+        Assert.Contains(
+            "aria-label=\"Gerenciar acessos da unidade BFA Tietê\"",
+            html,
+            StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Desativar unidade BFA Tietê\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Ativar unidade BFA Inativa\"", html, StringComparison.Ordinal);
         Assert.Contains("<svg", html, StringComparison.Ordinal);

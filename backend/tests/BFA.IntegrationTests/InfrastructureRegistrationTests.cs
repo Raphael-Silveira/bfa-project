@@ -1,4 +1,6 @@
+using BFA.Application.Acessos;
 using BFA.Application.Franqueadora;
+using BFA.Application.Franqueadora.AcessosUnidade;
 using BFA.Application.Franqueadora.Unidades;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
@@ -59,6 +61,23 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
         Assert.NotNull(consulta);
         Assert.NotNull(servico);
         Assert.NotNull(repositorio);
+        Assert.Same(consulta, servico);
+    }
+
+    [Fact]
+    public void Gerenciamento_acessos_unidade_is_registered()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        var consulta = scope.ServiceProvider.GetService<IAcessosUnidadeConsulta>();
+        var servico = scope.ServiceProvider.GetService<IAcessosUnidadeServico>();
+        var repositorio = scope.ServiceProvider.GetService<IAcessosUnidadeRepositorio>();
+        var usuarioPorEmail = scope.ServiceProvider.GetService<IUsuarioPorEmailConsulta>();
+
+        Assert.NotNull(consulta);
+        Assert.NotNull(servico);
+        Assert.NotNull(repositorio);
+        Assert.NotNull(usuarioPorEmail);
         Assert.Same(consulta, servico);
     }
 

@@ -1,0 +1,33 @@
+@model AdministradorUnidadeItemViewModel
+
+<div class="bfa-admin-actions">
+    @if (Model.Ativo)
+    {
+        <form action="/franqueadora/unidades/@Model.UnidadeId/acessos/@Model.VinculoId/desativar" method="post">
+            @Html.AntiForgeryToken()
+            <button class="bfa-admin-icon-action is-deactivate"
+                    type="submit"
+                    aria-label="Desativar acesso de @Model.Email"
+                    title="Desativar acesso de @Model.Email">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M9 5v14"></path>
+                    <path d="M15 5v14"></path>
+                </svg>
+            </button>
+        </form>
+    }
+    else
+    {
+        <form action="/franqueadora/unidades/@Model.UnidadeId/acessos/@Model.VinculoId/ativar" method="post">
+            @Html.AntiForgeryToken()
+            <button class="bfa-admin-icon-action is-activate"
+                    type="submit"
+                    aria-label="Ativar acesso de @Model.Email"
+                    title="Ativar acesso de @Model.Email">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="m5 12 4 4L19 6"></path>
+                </svg>
+            </button>
+        </form>
+    }
+</div>

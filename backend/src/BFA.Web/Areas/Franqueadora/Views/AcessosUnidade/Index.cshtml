@@ -1,0 +1,157 @@
+@model AcessosUnidadeViewModel
+
+@{
+    ViewData["Title"] = "Acessos administrativos";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Unidade</p>
+        <h1 class="bfa-admin-page-header__title">Acessos administrativos</h1>
+        <p class="bfa-admin-page-header__description">
+            Gerencie os administradores da unidade <strong>@Model.UnidadeNome</strong>.
+            Status da unidade:
+            <span class="bfa-admin-badge @(Model.UnidadeAtiva ? "is-active" : "is-inactive")">
+                @(Model.UnidadeAtiva ? "Ativa" : "Inativa")
+            </span>
+        </p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-primary bfa-admin-button"
+           href="#adicionar-administrador"
+           aria-label="Adicionar administrador à unidade @Model.UnidadeNome"
+           title="Adicionar administrador">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+            </svg>
+            <span>Adicionar administrador</span>
+        </a>
+    </div>
+</header>
+
+<section class="bfa-admin-card bfa-admin-form-card" id="adicionar-administrador" aria-labelledby="titulo-adicionar-administrador">
+    <h2 id="titulo-adicionar-administrador">Adicionar administrador</h2>
+    <p class="bfa-admin-form-help">
+        O usuário precisa possuir cadastro na BFA. Convites para novos usuários serão implementados futuramente.
+    </p>
+
+    <form class="bfa-admin-form"
+          action="/franqueadora/unidades/@Model.UnidadeId/acessos/adicionar"
+          method="post"
+          novalidate>
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="bfa-validation-message" role="alert"></div>
+
+        <div class="mb-4">
+            <label asp-for="Email" class="bfa-form-label"></label>
+            <input asp-for="Email"
+                   class="form-control bfa-form-control"
+                   type="email"
+                   maxlength="256"
+                   autocomplete="email" />
+            <span asp-validation-for="Email" class="bfa-validation-message"></span>
+        </div>
+
+        <div class="bfa-admin-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button"
+                    type="submit"
+                    aria-label="Adicionar administrador"
+                    title="Adicionar administrador">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M19 8v6"></path>
+                    <path d="M16 11h6"></path>
+                </svg>
+                <span>Adicionar</span>
+            </button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               href="/franqueadora/unidades"
+               aria-label="Voltar para unidades"
+               title="Voltar para unidades">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                <span>Voltar</span>
+            </a>
+        </div>
+    </form>
+</section>
+
+@if (Model.Administradores.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhum administrador vinculado.</h2>
+            <p>Adicione um usuário cadastrado para administrar esta unidade.</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list bfa-acessos-lista">
+        <table class="bfa-admin-table">
+            <thead>
+                <tr>
+                    <th scope="col">Email</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Desde</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var administrador in Model.Administradores)
+                {
+                    <tr>
+                        <td>@administrador.Email</td>
+                        <td>
+                            <span class="bfa-admin-badge @(administrador.Ativo ? "is-active" : "is-inactive")">
+                                @(administrador.Ativo ? "Ativo" : "Inativo")
+                            </span>
+                        </td>
+                        <td>@administrador.CriadoEmUtc.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <partial name="_AdministradorUnidadeAcoes" model="administrador" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <section class="bfa-admin-mobile-list bfa-acessos-lista" aria-label="Administradores da unidade">
+        @foreach (var administrador in Model.Administradores)
+        {
+            <article class="bfa-admin-card bfa-acesso-card">
+                <header class="bfa-acesso-card__header">
+                    <div>
+                        <p class="bfa-acesso-card__label">Administrador</p>
+                        <h2>@administrador.Email</h2>
+                    </div>
+                    <span class="bfa-admin-badge @(administrador.Ativo ? "is-active" : "is-inactive")">
+                        @(administrador.Ativo ? "Ativo" : "Inativo")
+                    </span>
+                </header>
+
+                <dl class="bfa-acesso-card__details">
+                    <div>
+                        <dt>Desde</dt>
+                        <dd>@administrador.CriadoEmUtc.ToString("dd/MM/yyyy")</dd>
+                    </div>
+                </dl>
+
+                <footer class="bfa-acesso-card__footer">
+                    <span>Ações</span>
+                    <partial name="_AdministradorUnidadeAcoes" model="administrador" />
+                </footer>
+            </article>
+        }
+    </section>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -129,7 +129,9 @@ An `AdministradorRede` manages Units only inside the Organization resolved from 
 
 The initial Unit management routes live under `/franqueadora/unidades`. Units are created active and may be activated or deactivated, but are never physically deleted in this phase. The `(organizacao_id, slug)` database constraint remains the definitive uniqueness protection, with an application pre-check for a friendly validation response.
 
-The reusable administrative shell and its visual component conventions are documented in `docs/ADMIN-VISUAL.md`. Area-specific styling extends that shared contract without placing administrative rules in the global public-site stylesheet.
+An `AdministradorRede` may assign an existing `UsuarioIdentity` as `AdministradorUnidade` in one or more Units owned by the current Organization. Access management always scopes queries and mutations by both `OrganizacaoId` and `UnidadeId`, uses the existing `VinculoAcesso`, and activates or deactivates links without physical deletion. An inactive equivalent link is reactivated instead of duplicated. Users that do not yet exist are not created implicitly; invitation and user-provisioning flows are deferred to a future phase.
+
+The mandatory administrative UI standard is documented in `docs/UI-ADMIN-STANDARDS.md`; `docs/ADMIN-VISUAL.md` remains its concise implementation companion. Area-specific styling extends that shared contract without placing administrative rules in the global public-site stylesheet.
 
 ### Area: Unidade
 
