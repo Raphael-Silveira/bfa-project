@@ -1,13 +1,23 @@
 using BFA.Infrastructure;
 using BFA.Web;
+using BFA.Web.Bootstrap;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddBfaAuthorization();
+builder.Services.AddScoped<BootstrapInicialCommand>();
 
 var app = builder.Build();
+
+if (BootstrapInicialCommand.Solicitado(args))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var command = scope.ServiceProvider.GetRequiredService<BootstrapInicialCommand>();
+    Environment.ExitCode = await command.ExecutarAsync(Console.Out, Console.Error);
+    return;
+}
 
 if (!app.Environment.IsDevelopment())
 {

@@ -1,5 +1,7 @@
 using BFA.Application.Acessos;
+using BFA.Application.Bootstrap;
 using BFA.Infrastructure.Acessos;
+using BFA.Infrastructure.Bootstrap;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
@@ -59,6 +61,7 @@ public static class DependencyInjection
 
         services.AddScoped<IDatabaseConnectionProbe, DatabaseConnectionProbe>();
         services.AddScoped<IAcessoUsuarioConsulta, AcessoUsuarioConsulta>();
+        services.AddScoped<IBootstrapInicial, BootstrapInicial>();
 
         return services;
     }

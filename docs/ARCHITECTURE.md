@@ -520,6 +520,12 @@ bfa_prod
 
 Never share databases across environments.
 
+### Controlled initial bootstrap
+
+The first BFA organization and its first two network administrators are provisioned only through the explicit `--bootstrap-inicial` command in `Development`. Normal web startup never runs this operation. Credentials come from secure configuration, users are created through ASP.NET Core Identity `UserManager`, and the organization/users/access links are committed in one database transaction.
+
+The bootstrap performs runtime DML only: it does not create schema, execute migrations, create units, or expose an HTTP endpoint. Operational instructions are documented in `docs/BOOTSTRAP-INICIAL.md`.
+
 ---
 
 ## 14. Initial Modules
