@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BFA.Web.Controllers;
 
-[Route("conta")]
 public sealed class ContaController : Controller
 {
     private const string CredenciaisInvalidas = "Email ou senha inválidos.";
@@ -22,7 +21,7 @@ public sealed class ContaController : Controller
     }
 
     [AllowAnonymous]
-    [HttpGet("entrar")]
+    [HttpGet("login")]
     public IActionResult Entrar(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
@@ -34,7 +33,7 @@ public sealed class ContaController : Controller
     }
 
     [AllowAnonymous]
-    [HttpPost("entrar")]
+    [HttpPost("login")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Entrar(LoginViewModel model)
     {
@@ -71,7 +70,7 @@ public sealed class ContaController : Controller
         return Redirect("/");
     }
 
-    [HttpPost("sair")]
+    [HttpPost("logout")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Sair()
     {
@@ -88,7 +87,7 @@ public sealed class ContaController : Controller
     }
 
     [Authorize]
-    [HttpGet("autenticado")]
+    [HttpGet("conta/autenticado")]
     public IActionResult Autenticado()
     {
         return Content("Usuário autenticado.");

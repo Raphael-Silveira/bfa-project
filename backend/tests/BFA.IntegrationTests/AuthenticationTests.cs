@@ -22,13 +22,52 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     }
 
     [Fact]
-    public async Task Get_entrar_retorna_ok()
+    public async Task Get_login_retorna_ok()
     {
         using var client = CreateClient();
 
-        using var response = await client.GetAsync("/conta/entrar");
+        using var response = await client.GetAsync("/login");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_acesso_negado_retorna_ok()
+    {
+        using var client = CreateClient();
+
+        var html = await client.GetStringAsync("/acesso-negado");
+
+        Assert.Contains(
+            "Você não tem permissão para acessar esta página.",
+            WebUtility.HtmlDecode(html),
+            StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/conta/entrar")]
+    [InlineData("/conta/acesso-negado")]
+    public async Task Rotas_get_antigas_nao_estao_disponiveis(string requestUri)
+    {
+        using var client = CreateClient();
+
+        using var response = await client.GetAsync(requestUri);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/conta/entrar")]
+    [InlineData("/conta/sair")]
+    public async Task Rotas_post_antigas_nao_estao_disponiveis(string requestUri)
+    {
+        using var client = CreateClient();
+
+        using var response = await client.PostAsync(
+            requestUri,
+            new FormUrlEncodedContent([]));
+
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
     }
 
     [Fact]
@@ -36,9 +75,11 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     {
         using var client = CreateClient();
 
-        var html = await client.GetStringAsync("/conta/entrar");
+        var html = await client.GetStringAsync("/login");
 
         Assert.Contains("<body class=\"bfa-auth-page\">", html, StringComparison.Ordinal);
+        Assert.Contains("action=\"/login\"", html, StringComparison.Ordinal);
+        Assert.Contains("method=\"post\"", html, StringComparison.Ordinal);
         Assert.Contains(
             "/images/brand/bfa-logo-principal-dark.png",
             html,
@@ -55,7 +96,7 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         var location = Assert.IsType<Uri>(response.Headers.Location).PathAndQuery;
-        Assert.StartsWith("/conta/entrar?", location, StringComparison.Ordinal);
+        Assert.StartsWith("/login?", location, StringComparison.Ordinal);
         Assert.Contains(
             "ReturnUrl=%2Fconta%2Fautenticado",
             location,
@@ -102,7 +143,7 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
             ["__RequestVerificationToken"] = token
         });
 
-        using var response = await client.PostAsync("/conta/entrar", form);
+        using var response = await client.PostAsync("/login", form);
         var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -124,8 +165,8 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
         Assert.True(cookie.Cookie.HttpOnly);
         Assert.Equal(SameSiteMode.Lax, cookie.Cookie.SameSite);
         Assert.Equal(CookieSecurePolicy.Always, cookie.Cookie.SecurePolicy);
-        Assert.Equal("/conta/entrar", cookie.LoginPath);
-        Assert.Equal("/conta/acesso-negado", cookie.AccessDeniedPath);
+        Assert.Equal("/login", cookie.LoginPath);
+        Assert.Equal("/acesso-negado", cookie.AccessDeniedPath);
         Assert.True(cookie.SlidingExpiration);
         Assert.Equal(TimeSpan.FromHours(8), cookie.ExpireTimeSpan);
     }
@@ -135,9 +176,9 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     {
         using var client = CreateClient();
 
-        using var getResponse = await client.GetAsync("/conta/sair");
+        using var getResponse = await client.GetAsync("/logout");
         using var postResponse = await client.PostAsync(
-            "/conta/sair",
+            "/logout",
             new FormUrlEncodedContent([]));
 
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
@@ -154,7 +195,7 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
             ["__RequestVerificationToken"] = token
         });
 
-        using var response = await client.PostAsync("/conta/sair", form);
+        using var response = await client.PostAsync("/logout", form);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal("/", response.Headers.Location?.OriginalString);
@@ -207,14 +248,14 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
             ["__RequestVerificationToken"] = token
         });
 
-        return await client.PostAsync("/conta/entrar", form);
+        return await client.PostAsync("/login", form);
     }
 
     private static async Task<string> GetAntiforgeryTokenAsync(
         HttpClient client,
         string? returnUrl = null)
     {
-        var requestUri = "/conta/entrar";
+        var requestUri = "/login";
 
         if (returnUrl is not null)
         {

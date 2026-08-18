@@ -49,8 +49,8 @@ public static class DependencyInjection
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Lax;
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.LoginPath = "/conta/entrar";
-            options.AccessDeniedPath = "/conta/acesso-negado";
+            options.LoginPath = "/login";
+            options.AccessDeniedPath = "/acesso-negado";
             options.SlidingExpiration = true;
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
         });
