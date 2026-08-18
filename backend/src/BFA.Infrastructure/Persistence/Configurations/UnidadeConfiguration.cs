@@ -62,11 +62,12 @@ public sealed class UnidadeConfiguration : IEntityTypeConfiguration<Unidade>
             .HasColumnType("timestamp with time zone")
             .IsRequired();
 
-        builder.HasAlternateKey(unidade => new { unidade.OrganizacaoId, unidade.Slug })
-            .HasName("uq_unidades_organizacao_id_slug");
-
         builder.HasAlternateKey(unidade => new { unidade.OrganizacaoId, unidade.Id })
             .HasName("uq_unidades_organizacao_id_id");
+
+        builder.HasIndex(unidade => new { unidade.OrganizacaoId, unidade.Slug })
+            .IsUnique()
+            .HasDatabaseName("uq_unidades_organizacao_id_slug");
 
         builder.HasIndex(unidade => unidade.OrganizacaoId)
             .HasDatabaseName("ix_unidades_organizacao_id");

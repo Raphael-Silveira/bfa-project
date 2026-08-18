@@ -82,24 +82,25 @@ public sealed class PersistenceModelTests
         var alternateKeys = entityType.GetKeys()
             .Where(key => !key.IsPrimaryKey())
             .ToDictionary(key => key.GetName()!);
-        Assert.Equal(2, alternateKeys.Count);
-        Assert.Equal(
-            [nameof(Unidade.OrganizacaoId), nameof(Unidade.Slug)],
-            alternateKeys["uq_unidades_organizacao_id_slug"]
-                .Properties
-                .Select(property => property.Name));
+        Assert.Single(alternateKeys);
         Assert.Equal(
             [nameof(Unidade.OrganizacaoId), nameof(Unidade.Id)],
             alternateKeys["uq_unidades_organizacao_id_id"]
                 .Properties
                 .Select(property => property.Name));
 
-        var index = Assert.Single(entityType.GetIndexes());
-        Assert.Equal("ix_unidades_organizacao_id", index.GetDatabaseName());
-        Assert.False(index.IsUnique);
-        Assert.Equal(
-            [nameof(Unidade.OrganizacaoId)],
-            index.Properties.Select(property => property.Name));
+        var indexes = entityType.GetIndexes()
+            .ToDictionary(index => index.GetDatabaseName()!);
+        Assert.Equal(2, indexes.Count);
+        AssertIndex(
+            indexes["uq_unidades_organizacao_id_slug"],
+            true,
+            nameof(Unidade.OrganizacaoId),
+            nameof(Unidade.Slug));
+        AssertIndex(
+            indexes["ix_unidades_organizacao_id"],
+            false,
+            nameof(Unidade.OrganizacaoId));
 
         var foreignKey = Assert.Single(entityType.GetForeignKeys());
         Assert.Equal("fk_unidades_organizacoes_organizacao_id", foreignKey.GetConstraintName());

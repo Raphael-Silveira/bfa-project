@@ -1,159 +1,3 @@
-.bfa-franqueadora-page,
-.bfa-franqueadora-page * {
-  box-sizing: border-box;
-}
-
-.bfa-franqueadora-page {
-  min-width: 0;
-  min-height: 100vh;
-  margin: 0;
-  overflow-x: hidden;
-  background:
-    radial-gradient(circle at 85% 5%, rgba(255, 193, 7, 0.1), transparent 25rem),
-    var(--bfa-bg-primary);
-  color: var(--bfa-text-primary);
-}
-
-.bfa-franqueadora-header {
-  border-bottom: 1px solid var(--bfa-border);
-  background: rgba(13, 13, 13, 0.96);
-  box-shadow: 0 0.75rem 2.5rem rgba(0, 0, 0, 0.24);
-}
-
-.bfa-franqueadora-header__content {
-  display: flex;
-  width: min(100%, 90rem);
-  min-height: 5rem;
-  margin: 0 auto;
-  padding: 0.85rem 2rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-
-.bfa-franqueadora-brand {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 1.25rem;
-  color: var(--bfa-text-primary);
-  text-decoration: none;
-}
-
-.bfa-franqueadora-brand:hover {
-  color: var(--bfa-text-primary);
-}
-
-.bfa-franqueadora-brand:focus-visible,
-.bfa-franqueadora-nav-link:focus-visible,
-.bfa-franqueadora-logout__button:focus-visible {
-  outline: 3px solid var(--bfa-accent);
-  outline-offset: 3px;
-}
-
-.bfa-franqueadora-brand__logo {
-  display: block;
-  width: clamp(9.5rem, 18vw, 13rem);
-  max-width: 100%;
-  height: clamp(2.2rem, 5vw, 3rem);
-  object-fit: cover;
-  object-position: center;
-}
-
-.bfa-franqueadora-brand__area {
-  padding-left: 1.25rem;
-  border-left: 1px solid var(--bfa-border);
-  color: var(--bfa-text-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.bfa-franqueadora-logout {
-  flex: 0 0 auto;
-}
-
-.bfa-franqueadora-logout__button {
-  min-height: 2.7rem;
-  padding: 0.55rem 1.1rem;
-  border: 1px solid var(--bfa-border);
-  border-radius: 0.35rem;
-  background: transparent;
-  color: var(--bfa-text-primary);
-  font-weight: 700;
-  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
-}
-
-.bfa-franqueadora-logout__button:hover {
-  border-color: var(--bfa-accent);
-  background: rgba(255, 193, 7, 0.08);
-  color: var(--bfa-accent);
-}
-
-.bfa-franqueadora-shell {
-  display: grid;
-  width: min(100%, 90rem);
-  min-width: 0;
-  min-height: calc(100vh - 9rem);
-  margin: 0 auto;
-  grid-template-columns: 14rem minmax(0, 1fr);
-}
-
-.bfa-franqueadora-sidebar {
-  padding: 2.25rem 1.5rem 2rem 2rem;
-  border-right: 1px solid var(--bfa-border);
-}
-
-.bfa-franqueadora-sidebar__label {
-  margin: 0 0 0.9rem;
-  color: var(--bfa-text-muted);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.bfa-franqueadora-nav-link {
-  display: block;
-  padding: 0.8rem 1rem;
-  border-left: 0.2rem solid var(--bfa-accent);
-  border-radius: 0 0.35rem 0.35rem 0;
-  background: linear-gradient(90deg, rgba(255, 193, 7, 0.15), transparent);
-  color: var(--bfa-text-primary);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.bfa-franqueadora-nav-link:hover {
-  color: var(--bfa-accent);
-}
-
-.bfa-franqueadora-main {
-  min-width: 0;
-  padding: clamp(2rem, 4vw, 4rem);
-}
-
-.bfa-franqueadora-intro {
-  margin-bottom: 2rem;
-}
-
-.bfa-franqueadora-eyebrow {
-  margin: 0 0 0.65rem;
-  color: var(--bfa-accent);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.bfa-franqueadora-intro h1 {
-  margin: 0;
-  font-size: clamp(2rem, 5vw, 3.6rem);
-  font-weight: 800;
-  letter-spacing: -0.035em;
-}
-
 .bfa-franqueadora-organization {
   margin: 0.75rem 0 0;
   color: var(--bfa-text-muted);
@@ -161,186 +5,75 @@
   overflow-wrap: anywhere;
 }
 
-.bfa-franqueadora-metrics {
-  display: grid;
-  min-width: 0;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.bfa-unidade-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 1rem;
 }
 
-.bfa-franqueadora-metric-card {
-  min-width: 0;
-  min-height: 10rem;
-  padding: 1.4rem;
-  border: 1px solid var(--bfa-border);
-  border-top: 0.2rem solid var(--bfa-accent);
-  border-radius: 0.65rem;
-  background: linear-gradient(145deg, rgba(30, 30, 30, 0.98), rgba(13, 13, 13, 0.96));
-  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.2);
-}
-
-.bfa-franqueadora-metric-card p {
-  min-height: 2.8rem;
-  margin: 0;
+.bfa-unidade-card__label {
+  margin: 0 0 0.3rem;
   color: var(--bfa-text-muted);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-.bfa-franqueadora-metric-card strong {
-  display: block;
-  margin-top: 1rem;
-  color: var(--bfa-text-primary);
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1;
-}
-
-.bfa-franqueadora-empty,
-.bfa-franqueadora-notice {
-  display: flex;
-  margin-top: 1.25rem;
-  padding: clamp(1.4rem, 3vw, 2rem);
-  align-items: center;
-  gap: 1.25rem;
-  border: 1px solid var(--bfa-border);
-  border-radius: 0.65rem;
-  background: rgba(30, 30, 30, 0.72);
-}
-
-.bfa-franqueadora-empty__symbol {
-  display: grid;
-  width: 3.5rem;
-  height: 3.5rem;
-  flex: 0 0 3.5rem;
-  place-items: center;
-  border: 1px solid var(--bfa-accent);
-  border-radius: 50%;
-  color: var(--bfa-accent);
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-
-.bfa-franqueadora-notice__marker {
-  width: 0.3rem;
-  min-height: 4.5rem;
-  align-self: stretch;
-  flex: 0 0 0.3rem;
-  border-radius: 1rem;
-  background: var(--bfa-accent);
-}
-
-.bfa-franqueadora-empty h2,
-.bfa-franqueadora-notice h2 {
-  margin: 0 0 0.4rem;
-  font-size: clamp(1.1rem, 2.5vw, 1.45rem);
-}
-
-.bfa-franqueadora-empty p,
-.bfa-franqueadora-notice p {
+.bfa-unidade-card h2 {
   margin: 0;
-  color: var(--bfa-text-muted);
+  font-size: 1.18rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
-.bfa-franqueadora-footer {
-  display: flex;
-  min-height: 4rem;
-  padding: 1rem 2rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  border-top: 1px solid var(--bfa-border);
-  color: var(--bfa-text-muted);
-  font-size: 0.78rem;
+.bfa-unidade-card__details {
+  display: grid;
+  margin: 1.2rem 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
 }
 
-.bfa-franqueadora-footer span + span::before {
-  margin-right: 0.75rem;
+.bfa-unidade-card__details div {
+  min-width: 0;
+}
+
+.bfa-unidade-card__details dt,
+.bfa-unidade-card__footer > span {
+  margin-bottom: 0.35rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-unidade-card__details dd {
+  margin: 0;
+  color: var(--bfa-text-primary);
+}
+
+.bfa-unidade-card__details code {
   color: var(--bfa-accent);
-  content: "•";
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 64rem) {
-  .bfa-franqueadora-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.bfa-unidade-card__footer {
+  display: flex;
+  padding-top: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--bfa-border);
 }
 
-@media (max-width: 48rem) {
-  .bfa-franqueadora-header__content {
-    padding-inline: 1.25rem;
-  }
+.bfa-unidade-card__footer > span {
+  margin-bottom: 0;
+}
 
-  .bfa-franqueadora-shell {
-    min-height: auto;
+@media (max-width: 23rem) {
+  .bfa-unidade-card__details {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .bfa-franqueadora-sidebar {
-    padding: 1rem 1.25rem;
-    border-right: 0;
-    border-bottom: 1px solid var(--bfa-border);
-  }
-
-  .bfa-franqueadora-sidebar__label {
-    margin-bottom: 0.55rem;
-  }
-
-  .bfa-franqueadora-nav-link {
-    display: inline-block;
-    padding-block: 0.65rem;
-  }
-
-  .bfa-franqueadora-main {
-    padding: 2rem 1.25rem 3rem;
-  }
-}
-
-@media (max-width: 30rem) {
-  .bfa-franqueadora-header__content {
-    flex-wrap: wrap;
-    gap: 0.8rem;
-  }
-
-  .bfa-franqueadora-brand {
-    width: 100%;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .bfa-franqueadora-brand__area {
-    padding-left: 0.75rem;
-    font-size: 0.66rem;
-    letter-spacing: 0.1em;
-  }
-
-  .bfa-franqueadora-logout,
-  .bfa-franqueadora-logout__button {
-    width: 100%;
-  }
-
-  .bfa-franqueadora-metrics {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .bfa-franqueadora-metric-card {
-    min-height: 8.5rem;
-  }
-
-  .bfa-franqueadora-empty,
-  .bfa-franqueadora-notice {
-    align-items: flex-start;
-  }
-
-  .bfa-franqueadora-footer {
-    flex-direction: column;
-    gap: 0.2rem;
-    text-align: center;
-  }
-
-  .bfa-franqueadora-footer span + span::before {
-    content: none;
   }
 }

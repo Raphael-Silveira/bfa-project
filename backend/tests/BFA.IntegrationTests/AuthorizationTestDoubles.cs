@@ -60,6 +60,22 @@ public sealed class TestAcessoUsuarioConsulta : IAcessoUsuarioConsulta
             && vinculo.UnidadeId == null));
     }
 
+    public Task<IReadOnlyList<Guid>> ListarOrganizacoesAdministradorRedeAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<Guid> organizacoes = VinculosAtivos(usuarioId)
+            .Where(vinculo => vinculo.Perfil == PerfilAcesso.AdministradorRede
+                && vinculo.UnidadeId == null)
+            .Select(vinculo => vinculo.OrganizacaoId)
+            .Distinct()
+            .Take(2)
+            .ToArray();
+
+        return Task.FromResult(organizacoes);
+    }
+
     public Task<bool> PossuiAlgumPerfilAsync(
         Guid usuarioId,
         IReadOnlyCollection<PerfilAcesso> perfis,

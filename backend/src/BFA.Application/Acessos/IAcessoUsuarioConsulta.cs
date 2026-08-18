@@ -13,6 +13,10 @@ public interface IAcessoUsuarioConsulta
         Guid organizacaoId,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Guid>> ListarOrganizacoesAdministradorRedeAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken);
+
     Task<bool> PossuiAlgumPerfilAsync(
         Guid usuarioId,
         IReadOnlyCollection<PerfilAcesso> perfis,

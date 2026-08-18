@@ -81,4 +81,57 @@ public sealed class UnidadeTests
 
         Assert.Equal("criadoEmUtc", exception.ParamName);
     }
+
+    [Fact]
+    public void Atualizacao_altera_nome_slug_e_data_em_utc()
+    {
+        var unidade = CriarUnidade();
+        var atualizadoEmUtc = CriadoEmUtc.AddHours(2);
+
+        unidade.Atualizar("  BFA Sorocaba  ", "  BFA-SOROCABA  ", atualizadoEmUtc);
+
+        Assert.Equal("BFA Sorocaba", unidade.Nome);
+        Assert.Equal("bfa-sorocaba", unidade.Slug);
+        Assert.Equal(atualizadoEmUtc, unidade.AtualizadoEmUtc);
+    }
+
+    [Fact]
+    public void Ativar_e_desativar_alteram_estado_sem_excluir_unidade()
+    {
+        var unidade = CriarUnidade();
+        var desativadoEmUtc = CriadoEmUtc.AddHours(1);
+        var ativadoEmUtc = CriadoEmUtc.AddHours(2);
+
+        unidade.Desativar(desativadoEmUtc);
+
+        Assert.False(unidade.Ativa);
+        Assert.Equal(desativadoEmUtc, unidade.AtualizadoEmUtc);
+
+        unidade.Ativar(ativadoEmUtc);
+
+        Assert.True(unidade.Ativa);
+        Assert.Equal(ativadoEmUtc, unidade.AtualizadoEmUtc);
+    }
+
+    [Fact]
+    public void Criacao_rejeita_nome_e_slug_acima_do_schema()
+    {
+        var nome = new string('n', Unidade.NomeTamanhoMaximo + 1);
+        var slug = new string('s', Unidade.SlugTamanhoMaximo + 1);
+
+        Assert.Throws<ArgumentException>(() =>
+            new Unidade(Guid.NewGuid(), Guid.NewGuid(), nome, "slug", CriadoEmUtc));
+        Assert.Throws<ArgumentException>(() =>
+            new Unidade(Guid.NewGuid(), Guid.NewGuid(), "Nome", slug, CriadoEmUtc));
+    }
+
+    private static Unidade CriarUnidade()
+    {
+        return new Unidade(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "BFA Tiete",
+            "bfa-tiete",
+            CriadoEmUtc);
+    }
 }

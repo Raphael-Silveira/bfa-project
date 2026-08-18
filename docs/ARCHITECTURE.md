@@ -125,6 +125,12 @@ When a user administers more than one organization, the area returns a controlle
 
 `GET /conta/admin-rede` remains a temporary authorization diagnostic endpoint and is not the Franqueadora experience.
 
+An `AdministradorRede` manages Units only inside the Organization resolved from that user's active organization-wide access link. Unit listing, lookup, editing, activation, and deactivation are always scoped by `OrganizacaoId`; resource operations combine `OrganizacaoId` and the Unit identifier so another Organization's Unit is reported as not found. `OrganizacaoId` is never accepted from an MVC form as authorization context.
+
+The initial Unit management routes live under `/franqueadora/unidades`. Units are created active and may be activated or deactivated, but are never physically deleted in this phase. The `(organizacao_id, slug)` database constraint remains the definitive uniqueness protection, with an application pre-check for a friendly validation response.
+
+The reusable administrative shell and its visual component conventions are documented in `docs/ADMIN-VISUAL.md`. Area-specific styling extends that shared contract without placing administrative rules in the global public-site stylesheet.
+
 ### Area: Unidade
 
 Franchise/unit operation.

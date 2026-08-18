@@ -13,6 +13,14 @@ Before changing code:
 3. Inspect the existing code related to the task.
 4. Make the smallest change that satisfies the task.
 
+Before creating or modifying any administrative interface in `BFA.Web`:
+
+1. Read `brand/guide/brand-guide.md`.
+2. Read `docs/UI-ADMIN-STANDARDS.md`.
+3. Reuse the existing Admin Shell, components, partials, and visual classes before creating new patterns.
+
+If a requested administrative interface must diverge from these standards, make the reason explicit and document it before implementation.
+
 If a requested change conflicts with these rules, do not silently bypass the architecture.
 
 ---

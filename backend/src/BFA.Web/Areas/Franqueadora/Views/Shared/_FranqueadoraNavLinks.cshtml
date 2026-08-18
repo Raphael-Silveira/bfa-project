@@ -1,0 +1,32 @@
+@{
+    var caminhoAtual = Context.Request.Path.Value?.TrimEnd('/') ?? string.Empty;
+    var visaoGeralAtiva = string.Equals(
+        caminhoAtual,
+        "/franqueadora",
+        StringComparison.OrdinalIgnoreCase);
+    var unidadesAtiva = caminhoAtual.StartsWith(
+        "/franqueadora/unidades",
+        StringComparison.OrdinalIgnoreCase);
+}
+
+<a class="bfa-admin-nav-link @(visaoGeralAtiva ? "is-active" : null)"
+   href="/franqueadora"
+   aria-current="@(visaoGeralAtiva ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 4h6v6H4z"></path>
+        <path d="M14 4h6v6h-6z"></path>
+        <path d="M4 14h6v6H4z"></path>
+        <path d="M14 14h6v6h-6z"></path>
+    </svg>
+    <span>Visão Geral</span>
+</a>
+<a class="bfa-admin-nav-link @(unidadesAtiva ? "is-active" : null)"
+   href="/franqueadora/unidades"
+   aria-current="@(unidadesAtiva ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 20V8l8-4 8 4v12"></path>
+        <path d="M9 20v-6h6v6"></path>
+        <path d="M2 20h20"></path>
+    </svg>
+    <span>Unidades</span>
+</a>

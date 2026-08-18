@@ -29,6 +29,19 @@ public sealed class AcessoUsuarioConsulta(BfaDbContext dbContext) : IAcessoUsuar
             cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Guid>> ListarOrganizacoesAdministradorRedeAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        return await VinculosAtivos(usuarioId)
+            .Where(vinculo => vinculo.Perfil == PerfilAcesso.AdministradorRede
+                && vinculo.UnidadeId == null)
+            .Select(vinculo => vinculo.OrganizacaoId)
+            .Distinct()
+            .Take(2)
+            .ToArrayAsync(cancellationToken);
+    }
+
     public Task<bool> PossuiAlgumPerfilAsync(
         Guid usuarioId,
         IReadOnlyCollection<PerfilAcesso> perfis,

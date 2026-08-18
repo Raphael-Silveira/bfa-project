@@ -1,0 +1,61 @@
+@model EditarUnidadeViewModel
+
+@{
+    ViewData["Title"] = "Editar unidade";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Unidades</p>
+        <h1 class="bfa-admin-page-header__title">Editar unidade</h1>
+        <p class="bfa-admin-page-header__description">Atualize o nome e o identificador curto da Unidade.</p>
+    </div>
+</header>
+
+<section class="bfa-admin-card bfa-admin-form-card">
+    <form class="bfa-admin-form" action="/franqueadora/unidades/@Model.Id/editar" method="post" novalidate>
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="bfa-validation-message" role="alert"></div>
+
+        <div class="mb-4">
+            <label asp-for="Nome" class="bfa-form-label"></label>
+            <input asp-for="Nome" class="form-control bfa-form-control" maxlength="150" />
+            <span asp-validation-for="Nome" class="bfa-validation-message"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Slug" class="bfa-form-label"></label>
+            <input asp-for="Slug" class="form-control bfa-form-control" maxlength="100" />
+            <span class="bfa-admin-form-help">Identificador curto da Unidade, em letras minúsculas. Exemplo: bfa-tiete.</span>
+            <span asp-validation-for="Slug" class="bfa-validation-message"></span>
+        </div>
+
+        <div class="bfa-admin-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button"
+                    type="submit"
+                    aria-label="Salvar alterações da unidade"
+                    title="Salvar alterações da unidade">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M5 4h12l2 2v14H5z"></path>
+                    <path d="M8 4v6h8V4"></path>
+                    <path d="M8 20v-6h8v6"></path>
+                </svg>
+                <span>Salvar</span>
+            </button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               href="/franqueadora/unidades"
+               aria-label="Voltar para unidades"
+               title="Voltar para unidades">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                <span>Voltar</span>
+            </a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,104 @@
+@model UnidadesFranqueadoraIndexViewModel
+
+@{
+    ViewData["Title"] = "Unidades";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Rede BFA</p>
+        <h1 class="bfa-admin-page-header__title">Unidades</h1>
+        <p class="bfa-admin-page-header__description">Gerencie as unidades vinculadas à sua Organização.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-primary bfa-admin-button"
+           href="/franqueadora/unidades/nova"
+           aria-label="Cadastrar nova unidade"
+           title="Cadastrar nova unidade">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+            </svg>
+            <span>Nova unidade</span>
+        </a>
+    </div>
+</header>
+
+@if (Model.Unidades.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhuma unidade cadastrada.</h2>
+            <p>Use o botão “Nova unidade” para iniciar o cadastro.</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table">
+            <thead>
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Slug</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Data de criação</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var unidade in Model.Unidades)
+                {
+                    <tr>
+                        <td>@unidade.Nome</td>
+                        <td><code>@unidade.Slug</code></td>
+                        <td>
+                            <span class="bfa-admin-badge @(unidade.Ativa ? "is-active" : "is-inactive")">
+                                @(unidade.Ativa ? "Ativa" : "Inativa")
+                            </span>
+                        </td>
+                        <td>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <partial name="_UnidadeAcoes" model="unidade" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <section class="bfa-admin-mobile-list" aria-label="Unidades cadastradas">
+        @foreach (var unidade in Model.Unidades)
+        {
+            <article class="bfa-admin-card bfa-unidade-card">
+                <header class="bfa-unidade-card__header">
+                    <div>
+                        <p class="bfa-unidade-card__label">Unidade</p>
+                        <h2>@unidade.Nome</h2>
+                    </div>
+                    <span class="bfa-admin-badge @(unidade.Ativa ? "is-active" : "is-inactive")">
+                        @(unidade.Ativa ? "Ativa" : "Inativa")
+                    </span>
+                </header>
+
+                <dl class="bfa-unidade-card__details">
+                    <div>
+                        <dt>Slug</dt>
+                        <dd><code>@unidade.Slug</code></dd>
+                    </div>
+                    <div>
+                        <dt>Data de criação</dt>
+                        <dd>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</dd>
+                    </div>
+                </dl>
+
+                <footer class="bfa-unidade-card__footer">
+                    <span>Ações</span>
+                    <partial name="_UnidadeAcoes" model="unidade" />
+                </footer>
+            </article>
+        }
+    </section>
+}

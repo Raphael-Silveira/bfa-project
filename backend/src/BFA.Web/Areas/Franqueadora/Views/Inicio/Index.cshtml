@@ -5,20 +5,22 @@
     Layout = "_FranqueadoraLayout";
 }
 
-<section class="bfa-franqueadora-intro" aria-labelledby="titulo-painel">
-    <p class="bfa-franqueadora-eyebrow">Painel administrativo</p>
-    <h1 id="titulo-painel">Visão Geral</h1>
+<header class="bfa-admin-page-header" aria-labelledby="titulo-painel">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Painel administrativo</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-painel">Visão Geral</h1>
 
-    @if (!Model.SelecaoOrganizacaoNecessaria)
-    {
-        <p class="bfa-franqueadora-organization">@Model.NomeOrganizacao</p>
-    }
-</section>
+        @if (!Model.SelecaoOrganizacaoNecessaria)
+        {
+            <p class="bfa-franqueadora-organization">@Model.NomeOrganizacao</p>
+        }
+    </div>
+</header>
 
 @if (Model.SelecaoOrganizacaoNecessaria)
 {
-    <section class="bfa-franqueadora-notice" role="status">
-        <span class="bfa-franqueadora-notice__marker" aria-hidden="true"></span>
+    <section class="bfa-admin-notice" role="status">
+        <span class="bfa-admin-notice__marker" aria-hidden="true"></span>
         <div>
             <h2>Seleção de Organização necessária</h2>
             <p>
@@ -30,32 +32,32 @@
 }
 else
 {
-    <section class="bfa-franqueadora-metrics" aria-label="Resumo da Organização">
-        <article class="bfa-franqueadora-metric-card">
-            <p>Total de Unidades</p>
-            <strong>@Model.TotalUnidades</strong>
+    <section class="bfa-admin-card-grid" aria-label="Resumo da Organização">
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Total de Unidades</p>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalUnidades</strong>
         </article>
-        <article class="bfa-franqueadora-metric-card">
-            <p>Unidades Ativas</p>
-            <strong>@Model.UnidadesAtivas</strong>
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Unidades Ativas</p>
+            <strong class="bfa-admin-metric-card__value">@Model.UnidadesAtivas</strong>
         </article>
-        <article class="bfa-franqueadora-metric-card">
-            <p>Administradores da Rede</p>
-            <strong>@Model.AdministradoresRedeAtivos</strong>
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Administradores da Rede</p>
+            <strong class="bfa-admin-metric-card__value">@Model.AdministradoresRedeAtivos</strong>
         </article>
-        <article class="bfa-franqueadora-metric-card">
-            <p>Administradores de Unidade</p>
-            <strong>@Model.AdministradoresUnidadeAtivos</strong>
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Administradores de Unidade</p>
+            <strong class="bfa-admin-metric-card__value">@Model.AdministradoresUnidadeAtivos</strong>
         </article>
     </section>
 
     @if (Model.TotalUnidades == 0)
     {
-        <section class="bfa-franqueadora-empty" aria-labelledby="titulo-sem-unidades">
-            <div class="bfa-franqueadora-empty__symbol" aria-hidden="true">BFA</div>
+        <section class="bfa-admin-empty-state" aria-labelledby="titulo-sem-unidades">
+            <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
             <div>
                 <h2 id="titulo-sem-unidades">Nenhuma unidade cadastrada ainda.</h2>
-                <p>O gerenciamento de unidades será disponibilizado posteriormente.</p>
+                <p><a href="/franqueadora/unidades/nova">Cadastre a primeira unidade da Organização.</a></p>
             </div>
         </section>
     }

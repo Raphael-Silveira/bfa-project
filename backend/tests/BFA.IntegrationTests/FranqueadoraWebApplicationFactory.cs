@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BFA.IntegrationTests;
 
-public sealed class FranqueadoraWebApplicationFactory : LoginWebApplicationFactory
+public class FranqueadoraWebApplicationFactory : LoginWebApplicationFactory
 {
     public TestAcessoUsuarioConsulta Acessos =>
         Services.GetRequiredService<TestAcessoUsuarioConsulta>();

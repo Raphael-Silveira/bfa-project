@@ -1,6 +1,7 @@
 using BFA.Application.Acessos;
 using BFA.Application.Bootstrap;
 using BFA.Application.Franqueadora;
+using BFA.Application.Franqueadora.Unidades;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Bootstrap;
 using BFA.Infrastructure.Franqueadora;
@@ -65,6 +66,13 @@ public static class DependencyInjection
         services.AddScoped<IAcessoUsuarioConsulta, AcessoUsuarioConsulta>();
         services.AddScoped<IBootstrapInicial, BootstrapInicial>();
         services.AddScoped<IPainelFranqueadoraConsulta, PainelFranqueadoraConsulta>();
+        services.AddScoped<IUnidadesFranqueadoraRepositorio, UnidadesFranqueadoraRepositorio>();
+        services.AddScoped<UnidadesFranqueadoraServico>();
+        services.AddScoped<IUnidadesFranqueadoraConsulta>(serviceProvider =>
+            serviceProvider.GetRequiredService<UnidadesFranqueadoraServico>());
+        services.AddScoped<IUnidadesFranqueadoraServico>(serviceProvider =>
+            serviceProvider.GetRequiredService<UnidadesFranqueadoraServico>());
+        services.AddSingleton(TimeProvider.System);
 
         return services;
     }
