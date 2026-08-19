@@ -185,6 +185,15 @@
   min-height: 3rem;
 }
 
+.bfa-auth-success {
+  margin: 0 0 1.25rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(117, 215, 164, 0.45);
+  border-radius: 0.45rem;
+  background: rgba(25, 135, 84, 0.16);
+  color: #9be3bc;
+}
+
 .bfa-validation-message {
   display: block;
   margin-top: 0.4rem;

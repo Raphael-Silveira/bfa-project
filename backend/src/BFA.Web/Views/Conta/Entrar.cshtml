@@ -14,6 +14,11 @@
         <p class="bfa-auth-subtitle">Acesse sua conta BFA.</p>
     </div>
 
+    @if (TempData[nameof(BFA.Web.Controllers.PrimeiroAcessoController.MensagemSenhaDefinida)] is string mensagem)
+    {
+        <p class="bfa-auth-success" role="status">@mensagem</p>
+    }
+
     <form asp-controller="Conta" asp-action="Entrar" method="post" novalidate>
         @Html.AntiForgeryToken()
         <input asp-for="ReturnUrl" type="hidden" />

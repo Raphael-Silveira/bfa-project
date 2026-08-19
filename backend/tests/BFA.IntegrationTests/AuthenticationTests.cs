@@ -321,6 +321,9 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     [InlineData(
         "V003__criar_vinculos_acesso.sql",
         "4B347730B498F0A449CB8EE57BA1752A6350E9C884F485223858F51B1D5CACF9")]
+    [InlineData(
+        "V004__criar_usuarios_e_franqueados.sql",
+        "AA42F834A90BA7777F27D1AB87E208C66DC6D205EA2AB3AACD888A4F4ED3AFA7")]
     public async Task Migration_executada_permanece_inalterada(
         string fileName,
         string expectedHash)

@@ -1,0 +1,67 @@
+@model UsuarioFranqueadoraCriadoViewModel
+
+@{
+    ViewData["Title"] = "Usuário cadastrado";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Cadastro concluído</p>
+        <h1 class="bfa-admin-page-header__title">Usuário cadastrado</h1>
+        <p class="bfa-admin-page-header__description">Compartilhe o link temporário por um canal seguro para que o usuário defina a própria senha.</p>
+    </div>
+</header>
+
+<section class="bfa-admin-card bfa-usuario-created" aria-labelledby="usuario-criado-title">
+    <div class="bfa-usuario-created__status" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+            <path d="m5 12 4 4L19 6"></path>
+        </svg>
+    </div>
+    <div>
+        <h2 id="usuario-criado-title">@Model.NomeCompleto</h2>
+        <p>@Model.Email · @Model.TipoCadastro</p>
+    </div>
+
+    <div class="bfa-usuario-created__link">
+        <label for="link-primeiro-acesso" class="bfa-form-label">Link temporário de primeiro acesso</label>
+        <div class="bfa-copy-field">
+            <input id="link-primeiro-acesso"
+                   class="form-control bfa-form-control"
+                   value="@Model.LinkDefinicaoSenha"
+                   readonly />
+            <button class="bfa-btn-primary bfa-admin-button" type="button" data-copy-link>
+                <span>Copiar link</span>
+            </button>
+        </div>
+        <p class="bfa-admin-form-help" data-copy-status role="status">Este link é exibido somente nesta tela e não fica disponível na listagem.</p>
+    </div>
+
+    <div class="bfa-admin-form-actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/franqueadora/usuarios">
+            <span>Voltar para usuários</span>
+        </a>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const button = document.querySelector('[data-copy-link]');
+            const field = document.querySelector('#link-primeiro-acesso');
+            const status = document.querySelector('[data-copy-status]');
+
+            button.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(field.value);
+                    status.textContent = 'Link copiado.';
+                    button.querySelector('span').textContent = 'Copiado';
+                } catch {
+                    field.select();
+                    status.textContent = 'Selecione e copie o link manualmente.';
+                }
+            });
+        })();
+    </script>
+}

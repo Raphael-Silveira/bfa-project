@@ -1,6 +1,8 @@
 using BFA.Domain.Acessos;
+using BFA.Domain.Franqueados;
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Unidades;
+using BFA.Domain.Usuarios;
 using BFA.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,14 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
     public DbSet<Unidade> Unidades => Set<Unidade>();
 
     public DbSet<VinculoAcesso> VinculosAcesso => Set<VinculoAcesso>();
+
+    public DbSet<PerfilUsuario> PerfisUsuario => Set<PerfilUsuario>();
+
+    public DbSet<Franqueado> Franqueados => Set<Franqueado>();
+
+    public DbSet<FranqueadoUsuario> FranqueadosUsuarios => Set<FranqueadoUsuario>();
+
+    public DbSet<FranqueadoUnidade> FranqueadosUnidades => Set<FranqueadoUnidade>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

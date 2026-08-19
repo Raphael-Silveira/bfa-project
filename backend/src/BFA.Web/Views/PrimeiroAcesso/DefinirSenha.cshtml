@@ -1,0 +1,50 @@
+@model BFA.Web.ViewModels.Conta.DefinirSenhaViewModel
+@{
+    ViewData["Title"] = "Definir senha";
+    Layout = "_AuthLayout";
+}
+
+<section class="bfa-auth-card" aria-labelledby="definir-senha-title">
+    <img class="bfa-auth-logo"
+         src="~/images/brand/bfa-logo-principal-dark.png"
+         alt="Brazilian Footvolley Academy" />
+
+    @if (!Model.LinkValido)
+    {
+        <div class="bfa-auth-message">
+            <h1 id="definir-senha-title" class="bfa-auth-title">Link inválido</h1>
+            <p class="bfa-auth-subtitle">O link de definição de senha é inválido ou expirou. Solicite um novo acesso à Franqueadora.</p>
+            <a class="bfa-btn-secondary" href="/login">Voltar para o login</a>
+        </div>
+    }
+    else
+    {
+        <div class="bfa-auth-heading">
+            <h1 id="definir-senha-title" class="bfa-auth-title">Defina sua senha</h1>
+            <p class="bfa-auth-subtitle">Crie a senha que será usada para acessar sua conta BFA.</p>
+        </div>
+
+        <form action="/definir-senha" method="post" novalidate>
+            @Html.AntiForgeryToken()
+            <input asp-for="UsuarioId" type="hidden" />
+            <input asp-for="Token" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly" class="bfa-validation-message" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="NovaSenha" class="bfa-form-label"></label>
+                <input asp-for="NovaSenha" class="form-control bfa-form-control" autocomplete="new-password" />
+                <span asp-validation-for="NovaSenha" class="bfa-validation-message"></span>
+            </div>
+            <div class="mb-4">
+                <label asp-for="ConfirmacaoSenha" class="bfa-form-label"></label>
+                <input asp-for="ConfirmacaoSenha" class="form-control bfa-form-control" autocomplete="new-password" />
+                <span asp-validation-for="ConfirmacaoSenha" class="bfa-validation-message"></span>
+            </div>
+            <button class="bfa-btn-primary bfa-auth-submit" type="submit">Definir senha</button>
+        </form>
+    }
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

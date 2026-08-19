@@ -3,6 +3,8 @@ using BFA.Application.Bootstrap;
 using BFA.Application.Franqueadora;
 using BFA.Application.Franqueadora.AcessosUnidade;
 using BFA.Application.Franqueadora.Unidades;
+using BFA.Application.Franqueadora.Usuarios;
+using BFA.Application.Identidade;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Bootstrap;
 using BFA.Infrastructure.Franqueadora;
@@ -46,6 +48,7 @@ public static class DependencyInjection
             options.Stores.SchemaVersion = IdentitySchemaVersions.Version2;
         })
             .AddEntityFrameworkStores<BfaDbContext>()
+            .AddDefaultTokenProviders()
             .AddSignInManager();
 
         services.AddAuthentication(IdentityConstants.ApplicationScheme)
@@ -66,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IDatabaseConnectionProbe, DatabaseConnectionProbe>();
         services.AddScoped<IAcessoUsuarioConsulta, AcessoUsuarioConsulta>();
         services.AddScoped<IUsuarioPorEmailConsulta, UsuarioPorEmailConsulta>();
+        services.AddScoped<IPrimeiroAcessoServico, PrimeiroAcessoServico>();
         services.AddScoped<IBootstrapInicial, BootstrapInicial>();
         services.AddScoped<IPainelFranqueadoraConsulta, PainelFranqueadoraConsulta>();
         services.AddScoped<IAcessosUnidadeRepositorio, AcessosUnidadeRepositorio>();
@@ -80,6 +84,12 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<UnidadesFranqueadoraServico>());
         services.AddScoped<IUnidadesFranqueadoraServico>(serviceProvider =>
             serviceProvider.GetRequiredService<UnidadesFranqueadoraServico>());
+        services.AddScoped<IUsuariosFranqueadoraRepositorio, UsuariosFranqueadoraRepositorio>();
+        services.AddScoped<UsuariosFranqueadoraServico>();
+        services.AddScoped<IUsuariosFranqueadoraConsulta>(serviceProvider =>
+            serviceProvider.GetRequiredService<UsuariosFranqueadoraServico>());
+        services.AddScoped<IUsuariosFranqueadoraServico>(serviceProvider =>
+            serviceProvider.GetRequiredService<UsuariosFranqueadoraServico>());
         services.AddSingleton(TimeProvider.System);
 
         return services;

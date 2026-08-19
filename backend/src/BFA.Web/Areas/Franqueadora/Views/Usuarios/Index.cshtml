@@ -1,0 +1,139 @@
+@model UsuariosFranqueadoraIndexViewModel
+
+@{
+    ViewData["Title"] = "Usuários";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Acessos da rede</p>
+        <h1 class="bfa-admin-page-header__title">Usuários</h1>
+        <p class="bfa-admin-page-header__description">Consulte as pessoas relacionadas à Organização e cadastre novos acessos.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-primary bfa-admin-button"
+           href="/franqueadora/usuarios/novo"
+           aria-label="Cadastrar novo usuário"
+           title="Cadastrar novo usuário">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 5v14"></path>
+                <path d="M5 12h14"></path>
+            </svg>
+            <span>Novo usuário</span>
+        </a>
+    </div>
+</header>
+
+@if (TempData[nameof(BFA.Web.Areas.Franqueadora.Controllers.UsuariosController.MensagemUsuarioAtualizado)] is string mensagem)
+{
+    <section class="bfa-admin-notice" role="status">
+        <span class="bfa-admin-notice__marker" aria-hidden="true"></span>
+        <div>
+            <h2>Atualização concluída</h2>
+            <p>@mensagem</p>
+        </div>
+    </section>
+}
+
+@if (Model.Usuarios.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhum usuário relacionado.</h2>
+            <p>Use o botão “Novo usuário” para iniciar o cadastro.</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table bfa-usuarios-table">
+            <thead>
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Função</th>
+                    <th scope="col">Unidade(s)</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var usuario in Model.Usuarios)
+                {
+                    <tr>
+                        <td><strong>@usuario.Nome</strong></td>
+                        <td>@usuario.Email</td>
+                        <td>
+                            <div class="bfa-usuario-tags">
+                                @foreach (var funcao in usuario.Funcoes)
+                                {
+                                    <span class="bfa-usuario-tag">@funcao</span>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            @if (usuario.Unidades.Count == 0)
+                            {
+                                <span class="bfa-usuario-empty-value">Toda a rede</span>
+                            }
+                            else
+                            {
+                                <span>@string.Join(", ", usuario.Unidades)</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="bfa-admin-badge @(usuario.Ativo ? "is-active" : "is-inactive")">
+                                @(usuario.Ativo ? "Ativo" : "Inativo")
+                            </span>
+                        </td>
+                        <td>
+                            <partial name="_UsuarioAcoes" model="usuario" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <section class="bfa-admin-mobile-list" aria-label="Usuários relacionados">
+        @foreach (var usuario in Model.Usuarios)
+        {
+            <article class="bfa-admin-card bfa-usuario-card">
+                <header class="bfa-usuario-card__header">
+                    <div>
+                        <p class="bfa-usuario-card__label">Usuário</p>
+                        <h2>@usuario.Nome</h2>
+                        <p class="bfa-usuario-card__email">@usuario.Email</p>
+                    </div>
+                    <span class="bfa-admin-badge @(usuario.Ativo ? "is-active" : "is-inactive")">
+                        @(usuario.Ativo ? "Ativo" : "Inativo")
+                    </span>
+                </header>
+                <dl class="bfa-usuario-card__details">
+                    <div>
+                        <dt>Função</dt>
+                        <dd>
+                            <div class="bfa-usuario-tags">
+                                @foreach (var funcao in usuario.Funcoes)
+                                {
+                                    <span class="bfa-usuario-tag">@funcao</span>
+                                }
+                            </div>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Unidade(s)</dt>
+                        <dd>@(usuario.Unidades.Count == 0 ? "Toda a rede" : string.Join(", ", usuario.Unidades))</dd>
+                    </div>
+                </dl>
+                <footer class="bfa-usuario-card__actions">
+                    <span>Ações</span>
+                    <partial name="_UsuarioAcoes" model="usuario" />
+                </footer>
+            </article>
+        }
+    </section>
+}

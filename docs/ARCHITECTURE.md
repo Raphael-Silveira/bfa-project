@@ -129,7 +129,13 @@ An `AdministradorRede` manages Units only inside the Organization resolved from 
 
 The initial Unit management routes live under `/franqueadora/unidades`. Units are created active and may be activated or deactivated, but are never physically deleted in this phase. The `(organizacao_id, slug)` database constraint remains the definitive uniqueness protection, with an application pre-check for a friendly validation response.
 
-An `AdministradorRede` may assign an existing `UsuarioIdentity` as `AdministradorUnidade` in one or more Units owned by the current Organization. Access management always scopes queries and mutations by both `OrganizacaoId` and `UnidadeId`, uses the existing `VinculoAcesso`, and activates or deactivates links without physical deletion. An inactive equivalent link is reactivated instead of duplicated. Users that do not yet exist are not created implicitly; invitation and user-provisioning flows are deferred to a future phase.
+An `AdministradorRede` may assign an existing `UsuarioIdentity` as `AdministradorUnidade` in one or more Units owned by the current Organization. Access management always scopes queries and mutations by both `OrganizacaoId` and `UnidadeId`, uses the existing `VinculoAcesso`, and activates or deactivates links without physical deletion. An inactive equivalent link is reactivated instead of duplicated. The Unit access screen continues to require an existing user and never provisions one implicitly.
+
+Franchisor user management lives at `GET /franqueadora/usuarios`, `GET /franqueadora/usuarios/novo`, `POST /franqueadora/usuarios/novo`, `GET /franqueadora/usuarios/{usuarioId}/editar`, and `POST /franqueadora/usuarios/{usuarioId}/editar`. All routes require `AdministradorRede`; the active organization-wide access link supplies the Organization context, and no `OrganizacaoId` is accepted from the browser. The listing combines organization-scoped `VinculoAcesso` records with `FranqueadoUsuario` commercial relationships, removes duplicate people produced by multiple links, and falls back to the Identity email for bootstrap administrators that do not yet have a `PerfilUsuario`.
+
+User editing changes only the global name, login email, and contact phone. Application and Infrastructure require an active relationship between the target user and the current Organization, through `VinculoAcesso` and/or an active `FranqueadoUsuario`/`Franqueado`; an identifier from another tenant is reported as not found. A user with active relationships in more than one Organization receives a controlled conflict because `UsuarioIdentity` and `PerfilUsuario` are global. Infrastructure revalidates this scope inside the same explicit transaction used by `UserManager<UsuarioIdentity>` and `BfaDbContext`, keeps `Email` and `UserName` synchronized through Identity, and creates `PerfilUsuario` only on a valid POST when a bootstrap user does not yet have one. Editing does not mutate `VinculoAcesso`, `FranqueadoUsuario`, or `FranqueadoUnidade`.
+
+`TipoCadastroUsuario` is an Application-only orchestration choice, not a persisted user classification. The current choices are `AdministradorRede` and `Franqueado`. Application validates the tenant context and selected Units, creates the Domain graph, and sends one aggregate to Infrastructure. Infrastructure uses the shared `BfaDbContext` and `UserManager<UsuarioIdentity>` inside one explicit database transaction, so Identity, `PerfilUsuario`, commercial relationships, Unit relationships, and access links either commit together or roll back together.
 
 The mandatory administrative UI standard is documented in `docs/UI-ADMIN-STANDARDS.md`; `docs/ADMIN-VISUAL.md` remains its concise implementation companion. Area-specific styling extends that shared contract without placing administrative rules in the global public-site stylesheet.
 
@@ -383,6 +389,54 @@ Passkey schema v3 is not enabled in this phase. No role, user-role, or role-clai
 
 The access-link schema is introduced separately by `V003__criar_vinculos_acesso.sql`. It is not an Identity Role schema and does not add global roles.
 
+### Complementary user and franchisee registration
+
+Authentication, registration data, authorization, and commercial relationships remain separate:
+
+```text
+UsuarioIdentity     = authentication and credentials
+PerfilUsuario       = complementary registration data for the person using the system
+VinculoAcesso       = contextual authorization
+Franqueado          = commercial and contractual entity of an Organizacao
+FranqueadoUsuario   = association between a Franqueado and one or more technical users
+FranqueadoUnidade   = current or historical commercial association with a Unidade
+```
+
+`PerfilUsuario` has a one-to-one relationship with `UsuarioIdentity` and does not contain password, Identity normalization fields, access profiles, `OrganizacaoId`, or `UnidadeId`. There is no immutable `TipoUsuario`: the same technical user may accumulate business relationships and active access links over time.
+
+`Franqueado` belongs to one `Organizacao`, while `FranqueadoUsuario` allows both a Franqueado to have several system users and a user to be associated with more than one Franqueado. `FranqueadoUnidade` carries `OrganizacaoId` explicitly and uses composite foreign keys so the related Franqueado and Unidade must belong to that same organization. One Franqueado may operate several Units.
+
+Commercial Unit relationships are not physically replaced. The unique `(organizacao_id, franqueado_id, unidade_id)` relationship is reactivated when needed instead of being duplicated, while its inactive state preserves history. A PostgreSQL partial unique index on `(organizacao_id, unidade_id) WHERE ativo = true` permits only one current active Franqueado per Unit. The full `(organizacao_id, unidade_id, ativo)` index supports both current and historical lookups; the unique relationship index also covers the organization/franchisee prefix required by the tenant-integrity foreign key. The independent `franqueado_id` index remains useful for queries across the Franqueado's Units without an `OrganizacaoId` predicate.
+
+A Franqueado may have several associated system users, but a partial unique index on `franqueado_id WHERE principal = true AND ativo = true` permits at most one active principal user. Non-principal users and inactive former principal users may coexist.
+
+The manually reviewed `V004__criar_usuarios_e_franqueados.sql` defines `perfis_usuario`, `franqueados`, `franqueados_usuarios`, and `franqueados_unidades`. It is never executed automatically by EF Core or application startup.
+
+For a `PessoaFisica` Franqueado, Application derives `nome_razao_social`, commercial email, and commercial phone from the associated user's name, login email, and profile phone; company-only fields are discarded even if a client posts them manually. For a `PessoaJuridica`, the company fields remain explicit. CPF is stored as 11 digits. CNPJ is stored as 14 uppercase characters: the first 12 are ASCII letters or digits and the last 2 are digits. Numeric legacy CNPJs remain valid. `V005__adequar_cnpj_alfanumerico.sql` changes only this database check constraint; it does not change the `varchar(14)` column.
+
+The implemented creation flows coordinate the concepts without merging them:
+
+```text
+New AdministradorRede
+├── UsuarioIdentity
+├── PerfilUsuario
+└── VinculoAcesso: AdministradorRede
+
+New Franqueado user
+├── UsuarioIdentity
+├── PerfilUsuario
+├── Franqueado
+├── FranqueadoUsuario
+├── FranqueadoUnidade (one or more)
+└── VinculoAcesso: AdministradorUnidade for each selected Unit
+```
+
+An `AdministradorRede` does not create a password for a new user. `UsuarioIdentity` is created with email as username and without a password. ASP.NET Core Identity generates its standard password-reset token, which Web transports with URL-safe Base64 encoding in a one-time displayed link. The token and link are not persisted in custom tables, stored in `usuario_tokens`, logged, or displayed in the user listing.
+
+The public `GET /definir-senha` and `POST /definir-senha` endpoints validate the Identity token and apply the current Identity password policy. The POST requires antiforgery, never authenticates the user automatically, and redirects to `/login` with a generic success message. Invalid, expired, or already-used links return a controlled response without internal details. Email delivery and invitation persistence remain deferred.
+
+Franchise contracts, contractual documents, royalties, fixed fees, adhesion fees, due dates, and uploads remain deferred to a future dedicated migration and are not part of the V004/V005 model.
+
 ---
 
 ## 9. PostgreSQL
@@ -418,7 +472,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, and `VinculosAcesso`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, and `FranqueadosUnidades`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -460,6 +514,8 @@ Example:
 V001__criar_organizacoes_e_unidades.sql
 V002__criar_identidade.sql
 V003__criar_vinculos_acesso.sql
+V004__criar_usuarios_e_franqueados.sql
+V005__adequar_cnpj_alfanumerico.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.
@@ -556,9 +612,11 @@ Planned sequence:
 
 ```text
 Identidade
+Usuarios
 Organizacoes
 Unidades
 Acessos
+Franqueados
 Alunos
 Responsaveis
 Professores

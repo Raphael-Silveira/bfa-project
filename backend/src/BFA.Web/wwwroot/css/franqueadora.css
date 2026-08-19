@@ -131,6 +131,257 @@
   margin-bottom: 0;
 }
 
+.bfa-usuarios-table {
+  min-width: 68rem;
+}
+
+.bfa-usuario-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.bfa-usuario-tag {
+  display: inline-flex;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid rgba(255, 193, 7, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 193, 7, 0.08);
+  color: var(--bfa-text-primary);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.bfa-usuario-empty-value,
+.bfa-usuario-card__email {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-usuario-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-usuario-card__label {
+  margin: 0 0 0.3rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bfa-usuario-card h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  overflow-wrap: anywhere;
+}
+
+.bfa-usuario-card__email {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.bfa-usuario-card__details {
+  display: grid;
+  margin: 1.2rem 0 0;
+  padding-top: 1rem;
+  gap: 1rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-usuario-card__details dt {
+  margin-bottom: 0.4rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-usuario-card__details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.bfa-usuario-card__actions {
+  display: flex;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-usuario-card__actions > span {
+  color: var(--bfa-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-usuario-form {
+  display: grid;
+  width: min(100%, 64rem);
+  gap: 1.25rem;
+}
+
+.bfa-usuario-form__section {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.bfa-usuario-form__heading p {
+  margin: 0 0 0.35rem;
+  color: var(--bfa-accent);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bfa-usuario-form__heading h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 3vw, 1.55rem);
+}
+
+.bfa-usuario-form__heading span {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-usuario-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.bfa-form-field {
+  min-width: 0;
+}
+
+.bfa-usuario-form__wide {
+  grid-column: 1 / -1;
+}
+
+.bfa-usuario-form__actions {
+  padding-top: 0.5rem;
+}
+
+.bfa-usuario-edit__back {
+  margin-top: 1.25rem;
+}
+
+.bfa-admin-form-summary {
+  margin-top: 0;
+}
+
+.bfa-unidade-selection {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.bfa-unidade-selection__item {
+  display: flex;
+  min-height: 3.5rem;
+  padding: 0.8rem 0.9rem;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.5rem;
+  background: rgba(13, 13, 13, 0.45);
+  cursor: pointer;
+}
+
+.bfa-unidade-selection__item:has(input:checked) {
+  border-color: rgba(255, 193, 7, 0.55);
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.bfa-unidade-selection__item input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--bfa-accent);
+}
+
+.bfa-usuario-form__empty-units {
+  margin: 0;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-usuario-created {
+  display: grid;
+  width: min(100%, 48rem);
+  gap: 1.25rem;
+}
+
+.bfa-usuario-created__status {
+  display: grid;
+  width: 3.2rem;
+  height: 3.2rem;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(25, 135, 84, 0.2);
+  color: #75d7a4;
+}
+
+.bfa-usuario-created__status svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bfa-usuario-created h2,
+.bfa-usuario-created p {
+  margin: 0;
+}
+
+.bfa-usuario-created p {
+  margin-top: 0.35rem;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-usuario-created__link {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-copy-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+}
+
+.bfa-copy-field input {
+  min-width: 0;
+}
+
+@media (max-width: 44rem) {
+  .bfa-usuario-form__grid,
+  .bfa-unidade-selection,
+  .bfa-copy-field {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bfa-usuario-form__wide {
+    grid-column: auto;
+  }
+
+  .bfa-copy-field .bfa-admin-button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 23rem) {
   .bfa-unidade-card__details {
     grid-template-columns: minmax(0, 1fr);

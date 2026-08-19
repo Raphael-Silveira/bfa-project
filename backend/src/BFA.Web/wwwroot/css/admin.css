@@ -546,6 +546,12 @@
   width: min(100%, 42rem);
 }
 
+.bfa-admin-form-sections {
+  display: grid;
+  min-width: 0;
+  gap: 1.5rem;
+}
+
 .bfa-admin-form .form-control {
   width: 100%;
   min-height: 3rem;
@@ -666,6 +672,10 @@
 }
 
 @media (max-width: 44rem) {
+  .bfa-admin-form-sections {
+    gap: 1rem;
+  }
+
   .bfa-admin-page-header {
     align-items: flex-start;
     flex-direction: column;

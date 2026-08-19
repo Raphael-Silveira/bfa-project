@@ -13,6 +13,11 @@ Before changing code:
 3. Inspect the existing code related to the task.
 4. Make the smallest change that satisfies the task.
 
+Before implementing or modifying any BFA business functionality:
+
+1. Read `docs/PRODUCT-VISION.md`.
+2. Read `docs/ARCHITECTURE.md`.
+
 Before creating or modifying any administrative interface in `BFA.Web`:
 
 1. Read `brand/guide/brand-guide.md`.

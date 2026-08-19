@@ -1,0 +1,112 @@
+@model EditarUsuarioFranqueadoraViewModel
+
+@{
+    ViewData["Title"] = "Editar usuário";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Usuários</p>
+        <h1 class="bfa-admin-page-header__title">Editar usuário</h1>
+        <p class="bfa-admin-page-header__description">Atualize os dados de acesso e contato deste usuário.</p>
+    </div>
+</header>
+
+@if (Model.EdicaoBloqueada)
+{
+    <section class="bfa-admin-notice" role="alert">
+        <span class="bfa-admin-notice__marker" aria-hidden="true"></span>
+        <div>
+            <h2>Edição indisponível</h2>
+            <p>@Model.MensagemBloqueio</p>
+        </div>
+    </section>
+    <div class="bfa-admin-form-actions bfa-usuario-edit__back">
+        <a class="bfa-btn-secondary bfa-admin-button"
+           href="/franqueadora/usuarios"
+           aria-label="Voltar para usuários"
+           title="Voltar para usuários">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            <span>Voltar</span>
+        </a>
+    </div>
+}
+else
+{
+    <form class="bfa-admin-form bfa-usuario-form"
+          action="/franqueadora/usuarios/@Model.UsuarioId/editar"
+          method="post"
+          novalidate>
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly"
+             class="bfa-validation-message bfa-admin-form-summary"
+             role="alert"></div>
+
+        <section class="bfa-admin-card bfa-usuario-form__section" aria-labelledby="dados-usuario-title">
+            <header class="bfa-usuario-form__heading">
+                <h2 id="dados-usuario-title">Dados do usuário</h2>
+            </header>
+            <div class="bfa-usuario-form__grid">
+                <div class="bfa-form-field bfa-usuario-form__wide">
+                    <label asp-for="NomeCompleto" class="bfa-form-label"></label>
+                    <input asp-for="NomeCompleto"
+                           class="form-control bfa-form-control"
+                           autocomplete="name"
+                           maxlength="150" />
+                    <span asp-validation-for="NomeCompleto" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Email" class="bfa-form-label"></label>
+                    <input asp-for="Email"
+                           class="form-control bfa-form-control"
+                           autocomplete="email"
+                           inputmode="email"
+                           maxlength="256" />
+                    <span asp-validation-for="Email" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Telefone" class="bfa-form-label"></label>
+                    <input asp-for="Telefone"
+                           class="form-control bfa-form-control"
+                           autocomplete="tel"
+                           inputmode="numeric"
+                           maxlength="15"
+                           placeholder="(00) 00000-0000"
+                           data-bfa-mask="phone" />
+                    <span asp-validation-for="Telefone" class="bfa-validation-message"></span>
+                </div>
+            </div>
+        </section>
+
+        <div class="bfa-admin-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button"
+                    type="submit"
+                    aria-label="Salvar alterações do usuário"
+                    title="Salvar alterações do usuário">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M5 4h12l2 2v14H5z"></path>
+                    <path d="M8 4v6h8V4"></path>
+                    <path d="M8 20v-6h8v6"></path>
+                </svg>
+                <span>Salvar alterações</span>
+            </button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               href="/franqueadora/usuarios"
+               aria-label="Voltar para usuários"
+               title="Voltar para usuários">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                <span>Voltar</span>
+            </a>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-input-masks.js" asp-append-version="true"></script>
+}

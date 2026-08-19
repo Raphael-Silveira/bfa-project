@@ -1,0 +1,298 @@
+@using BFA.Application.Franqueadora.Usuarios
+@using BFA.Domain.Franqueados
+@model NovoUsuarioFranqueadoraViewModel
+
+@{
+    ViewData["Title"] = "Novo usuário";
+    Layout = "_FranqueadoraLayout";
+    var exibirFranqueado = Model.TipoCadastro == TipoCadastroUsuario.Franqueado;
+    var exibirPessoaJuridica = Model.TipoPessoa == TipoPessoaFranqueado.PessoaJuridica;
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Usuários</p>
+        <h1 class="bfa-admin-page-header__title">Novo usuário</h1>
+        <p class="bfa-admin-page-header__description">Cadastre um Administrador de rede ou o usuário principal de um Franqueado.</p>
+    </div>
+</header>
+
+<form class="bfa-admin-form bfa-usuario-form" action="/franqueadora/usuarios/novo" method="post" novalidate>
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-validation-message bfa-admin-form-summary" role="alert"></div>
+
+    <div class="bfa-admin-form-sections">
+    <section class="bfa-admin-card bfa-usuario-form__section" aria-labelledby="tipo-cadastro-title">
+        <header class="bfa-usuario-form__heading">
+            <p>Etapa 1</p>
+            <h2 id="tipo-cadastro-title">Tipo de cadastro</h2>
+            <span>Escolha a relação inicial deste usuário com a BFA.</span>
+        </header>
+        <div>
+            <label asp-for="TipoCadastro" class="bfa-form-label"></label>
+            <select asp-for="TipoCadastro" class="form-select bfa-form-control" data-tipo-cadastro>
+                <option value="">Selecione</option>
+                <option value="@TipoCadastroUsuario.AdministradorRede">Administrador de rede</option>
+                <option value="@TipoCadastroUsuario.Franqueado">Franqueado</option>
+            </select>
+            <span asp-validation-for="TipoCadastro" class="bfa-validation-message"></span>
+        </div>
+    </section>
+
+    <section class="bfa-admin-card bfa-usuario-form__section" aria-labelledby="dados-acesso-title">
+        <header class="bfa-usuario-form__heading">
+            <p>Etapa 2</p>
+            <h2 id="dados-acesso-title">Dados do usuário</h2>
+            <span>O email será usado como nome de usuário. A senha será definida no primeiro acesso.</span>
+        </header>
+        <div class="bfa-usuario-form__grid">
+            <div class="bfa-form-field bfa-usuario-form__wide">
+                <label asp-for="NomeCompleto" class="bfa-form-label"></label>
+                <input asp-for="NomeCompleto" class="form-control bfa-form-control" autocomplete="name" maxlength="150" />
+                <span asp-validation-for="NomeCompleto" class="bfa-validation-message"></span>
+            </div>
+            <div class="bfa-form-field">
+                <label asp-for="Email" class="bfa-form-label"></label>
+                <input asp-for="Email" class="form-control bfa-form-control" autocomplete="email" inputmode="email" maxlength="256" />
+                <span asp-validation-for="Email" class="bfa-validation-message"></span>
+            </div>
+            <div class="bfa-form-field">
+                <label asp-for="Telefone" class="bfa-form-label"></label>
+                <input asp-for="Telefone"
+                       class="form-control bfa-form-control"
+                       autocomplete="tel"
+                       inputmode="numeric"
+                       maxlength="15"
+                       placeholder="(00) 00000-0000"
+                       data-bfa-mask="phone" />
+                <span asp-validation-for="Telefone" class="bfa-validation-message"></span>
+            </div>
+        </div>
+    </section>
+
+    <div class="bfa-admin-form-sections" data-franqueado-section @(exibirFranqueado ? null : "hidden")>
+        <section class="bfa-admin-card bfa-usuario-form__section" aria-labelledby="dados-franqueado-title">
+            <header class="bfa-usuario-form__heading">
+                <p>Etapa 3</p>
+                <h2 id="dados-franqueado-title" data-franqueado-title>@(exibirPessoaJuridica ? "Dados da Empresa" : "Dados do Franqueado")</h2>
+                <span data-franqueado-description>@(exibirPessoaJuridica ? "Informe os dados fiscais e comerciais da empresa." : "Informe o CPF e, se desejar, um email financeiro.")</span>
+            </header>
+            <div class="bfa-usuario-form__grid">
+                <div class="bfa-form-field">
+                    <label asp-for="TipoPessoa" class="bfa-form-label"></label>
+                    <select asp-for="TipoPessoa" class="form-select bfa-form-control" data-tipo-pessoa>
+                        <option value="">Selecione</option>
+                        <option value="@TipoPessoaFranqueado.PessoaFisica" data-bfa-document-type="cpf">Pessoa física</option>
+                        <option value="@TipoPessoaFranqueado.PessoaJuridica" data-bfa-document-type="cnpj">Pessoa jurídica</option>
+                    </select>
+                    <span asp-validation-for="TipoPessoa" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Documento" class="bfa-form-label" data-documento-label>@(exibirPessoaJuridica ? "CNPJ" : "CPF")</label>
+                    <input asp-for="Documento"
+                           class="form-control bfa-form-control"
+                           inputmode="@(exibirPessoaJuridica ? "text" : "numeric")"
+                           maxlength="18"
+                           placeholder="@(exibirPessoaJuridica ? "XX.XXX.XXX/XXXX-00" : "000.000.000-00")"
+                           required
+                           aria-required="true"
+                           data-bfa-mask="document"
+                           data-bfa-document-type-target="#TipoPessoa" />
+                    <span class="bfa-admin-form-help" data-documento-help>@(exibirPessoaJuridica ? "Os 12 primeiros caracteres aceitam letras ou números; os 2 últimos devem ser números." : "Informe os 11 dígitos, com ou sem pontuação.")</span>
+                    <span asp-validation-for="Documento" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field bfa-usuario-form__wide" data-pessoa-juridica @(exibirPessoaJuridica ? null : "hidden")>
+                    <label asp-for="NomeRazaoSocial" class="bfa-form-label"></label>
+                    <input asp-for="NomeRazaoSocial"
+                           class="form-control bfa-form-control"
+                           maxlength="200"
+                           required="@exibirPessoaJuridica"
+                           aria-required="@exibirPessoaJuridica.ToString().ToLowerInvariant()" />
+                    <span asp-validation-for="NomeRazaoSocial" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field" data-pessoa-juridica @(exibirPessoaJuridica ? null : "hidden")>
+                    <label asp-for="NomeFantasia" class="bfa-form-label"></label>
+                    <input asp-for="NomeFantasia" class="form-control bfa-form-control" maxlength="200" />
+                    <span asp-validation-for="NomeFantasia" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field" data-pessoa-juridica @(exibirPessoaJuridica ? null : "hidden")>
+                    <label asp-for="ResponsavelLegal" class="bfa-form-label"></label>
+                    <input asp-for="ResponsavelLegal" class="form-control bfa-form-control" maxlength="150" />
+                    <span asp-validation-for="ResponsavelLegal" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field" data-pessoa-juridica @(exibirPessoaJuridica ? null : "hidden")>
+                    <label asp-for="TelefoneFranqueado" class="bfa-form-label"></label>
+                    <input asp-for="TelefoneFranqueado"
+                           class="form-control bfa-form-control"
+                           autocomplete="tel"
+                           inputmode="numeric"
+                           maxlength="15"
+                           placeholder="(00) 00000-0000"
+                           data-bfa-mask="phone" />
+                    <span asp-validation-for="TelefoneFranqueado" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field" data-pessoa-juridica @(exibirPessoaJuridica ? null : "hidden")>
+                    <label asp-for="EmailFranqueado" class="bfa-form-label"></label>
+                    <input asp-for="EmailFranqueado"
+                           class="form-control bfa-form-control"
+                           inputmode="email"
+                           maxlength="256"
+                           required="@exibirPessoaJuridica"
+                           aria-required="@exibirPessoaJuridica.ToString().ToLowerInvariant()" />
+                    <span asp-validation-for="EmailFranqueado" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="EmailFinanceiro" class="bfa-form-label"></label>
+                    <input asp-for="EmailFinanceiro" class="form-control bfa-form-control" inputmode="email" maxlength="256" />
+                    <span asp-validation-for="EmailFinanceiro" class="bfa-validation-message"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bfa-admin-card bfa-usuario-form__section" aria-labelledby="endereco-title">
+            <header class="bfa-usuario-form__heading">
+                <p>Etapa 4</p>
+                <h2 id="endereco-title">Endereço e observações</h2>
+            </header>
+            <div class="bfa-usuario-form__grid">
+                <div class="bfa-form-field bfa-usuario-form__wide">
+                    <label asp-for="Logradouro" class="bfa-form-label"></label>
+                    <input asp-for="Logradouro" class="form-control bfa-form-control" autocomplete="street-address" maxlength="200" />
+                    <span asp-validation-for="Logradouro" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Numero" class="bfa-form-label"></label>
+                    <input asp-for="Numero" class="form-control bfa-form-control" maxlength="30" />
+                    <span asp-validation-for="Numero" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Complemento" class="bfa-form-label"></label>
+                    <input asp-for="Complemento" class="form-control bfa-form-control" maxlength="100" />
+                    <span asp-validation-for="Complemento" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Bairro" class="bfa-form-label"></label>
+                    <input asp-for="Bairro" class="form-control bfa-form-control" maxlength="100" />
+                    <span asp-validation-for="Bairro" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Cidade" class="bfa-form-label"></label>
+                    <input asp-for="Cidade" class="form-control bfa-form-control" autocomplete="address-level2" maxlength="100" />
+                    <span asp-validation-for="Cidade" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Estado" class="bfa-form-label"></label>
+                    <input asp-for="Estado" class="form-control bfa-form-control" autocomplete="address-level1" maxlength="2" />
+                    <span asp-validation-for="Estado" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="Cep" class="bfa-form-label"></label>
+                    <input asp-for="Cep"
+                           class="form-control bfa-form-control"
+                           autocomplete="postal-code"
+                           inputmode="numeric"
+                           maxlength="9"
+                           placeholder="00000-000"
+                           data-bfa-mask="cep" />
+                    <span asp-validation-for="Cep" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-form-field bfa-usuario-form__wide">
+                    <label asp-for="Observacoes" class="bfa-form-label"></label>
+                    <textarea asp-for="Observacoes" class="form-control bfa-form-control" rows="4" maxlength="2000"></textarea>
+                    <span asp-validation-for="Observacoes" class="bfa-validation-message"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bfa-admin-card bfa-usuario-form__section" aria-labelledby="unidades-title">
+            <header class="bfa-usuario-form__heading">
+                <p>Etapa 5</p>
+                <h2 id="unidades-title">Unidades</h2>
+                <span>Selecione uma ou mais Unidades ativas da Organização atual.</span>
+            </header>
+            <span asp-validation-for="UnidadesIds" class="bfa-validation-message"></span>
+            @if (Model.Unidades.Count == 0)
+            {
+                <p class="bfa-usuario-form__empty-units" role="status">Não há Unidades ativas disponíveis para associação.</p>
+            }
+            else
+            {
+                <div class="bfa-unidade-selection">
+                    @foreach (var unidade in Model.Unidades)
+                    {
+                        <label class="bfa-unidade-selection__item">
+                            <input type="checkbox"
+                                   name="UnidadesIds"
+                                   value="@unidade.Id"
+                                   checked="@unidade.Selecionada" />
+                            <span>@unidade.Nome</span>
+                        </label>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+    </div>
+
+    <div class="bfa-admin-form-actions bfa-usuario-form__actions">
+        <button class="bfa-btn-primary bfa-admin-button" type="submit">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 4h12l2 2v14H5z"></path>
+                <path d="M8 4v6h8V4"></path>
+                <path d="M8 20v-6h8v6"></path>
+            </svg>
+            <span>Cadastrar usuário</span>
+        </button>
+        <a class="bfa-btn-secondary bfa-admin-button" href="/franqueadora/usuarios">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            <span>Cancelar</span>
+        </a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-input-masks.js" asp-append-version="true"></script>
+    <script>
+        (() => {
+            const tipoCadastro = document.querySelector('[data-tipo-cadastro]');
+            const secaoFranqueado = document.querySelector('[data-franqueado-section]');
+            const tipoPessoa = document.querySelector('[data-tipo-pessoa]');
+            const documentoLabel = document.querySelector('[data-documento-label]');
+            const documentoHelp = document.querySelector('[data-documento-help]');
+            const franqueadoTitle = document.querySelector('[data-franqueado-title]');
+            const franqueadoDescription = document.querySelector('[data-franqueado-description]');
+            const camposPessoaJuridica = document.querySelectorAll('[data-pessoa-juridica]');
+            const camposObrigatoriosPessoaJuridica = document.querySelectorAll('#NomeRazaoSocial, #EmailFranqueado');
+
+            const atualizarCadastro = () => {
+                secaoFranqueado.hidden = tipoCadastro.value !== '@TipoCadastroUsuario.Franqueado';
+            };
+            const atualizarPessoa = () => {
+                const juridica = tipoPessoa.value === '@TipoPessoaFranqueado.PessoaJuridica';
+                documentoLabel.textContent = juridica ? 'CNPJ' : 'CPF';
+                documentoHelp.textContent = juridica
+                    ? 'Os 12 primeiros caracteres aceitam letras ou números; os 2 últimos devem ser números.'
+                    : 'Informe os 11 dígitos, com ou sem pontuação.';
+                franqueadoTitle.textContent = juridica ? 'Dados da Empresa' : 'Dados do Franqueado';
+                franqueadoDescription.textContent = juridica
+                    ? 'Informe os dados fiscais e comerciais da empresa.'
+                    : 'Informe o CPF e, se desejar, um email financeiro.';
+                camposPessoaJuridica.forEach((campo) => {
+                    campo.hidden = !juridica;
+                });
+                camposObrigatoriosPessoaJuridica.forEach((campo) => {
+                    campo.required = juridica;
+                    campo.setAttribute('aria-required', juridica.toString());
+                });
+            };
+
+            tipoCadastro.addEventListener('change', atualizarCadastro);
+            tipoPessoa.addEventListener('change', atualizarPessoa);
+            atualizarCadastro();
+            atualizarPessoa();
+        })();
+    </script>
+}

@@ -284,6 +284,8 @@ Regras obrigatórias:
 
 Views recebem ViewModels e contêm somente apresentação. Não consulte banco, não aplique regra de negócio e não use entidades de domínio como modelos de formulário.
 
+Cards ou etapas consecutivas de um formulário devem ser agrupados pelo contêiner reutilizável `.bfa-admin-form-sections`, com espaçamento vertical consistente e um `gap` discretamente menor no mobile. Máscaras de CPF, CNPJ, telefone e CEP são melhoria progressiva de digitação, implementada pelo script compartilhado e atributos `data-bfa-mask`; elas nunca substituem validação e normalização no servidor, que também deve aceitar submissões manuais sem JavaScript. A máscara de CNPJ aceita letras ASCII ou números nas 12 primeiras posições, converte letras para maiúsculas e restringe as 2 posições finais a números.
+
 ## 12. Estado vazio
 
 Quando não houver dados, use `.bfa-admin-empty-state`.
