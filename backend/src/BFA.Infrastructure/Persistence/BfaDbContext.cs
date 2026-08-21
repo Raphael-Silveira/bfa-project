@@ -1,4 +1,5 @@
 using BFA.Domain.Acessos;
+using BFA.Domain.Contratos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Localidades;
 using BFA.Domain.Organizacoes;
@@ -30,6 +31,14 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
     public DbSet<Estado> Estados => Set<Estado>();
 
     public DbSet<Municipio> Municipios => Set<Municipio>();
+
+    public DbSet<ContratoFranquia> ContratosFranquia => Set<ContratoFranquia>();
+
+    public DbSet<ContratoFranquiaVersao> ContratosFranquiaVersoes =>
+        Set<ContratoFranquiaVersao>();
+
+    public DbSet<DocumentoContratoFranquia> DocumentosContratoFranquia =>
+        Set<DocumentoContratoFranquia>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

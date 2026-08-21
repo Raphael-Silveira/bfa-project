@@ -131,7 +131,7 @@ The initial Unit management routes live under `/franqueadora/unidades`. Units ar
 
 An `AdministradorRede` may assign an existing `UsuarioIdentity` as `AdministradorUnidade` in one or more Units owned by the current Organization. Access management always scopes queries and mutations by both `OrganizacaoId` and `UnidadeId`, uses the existing `VinculoAcesso`, and activates or deactivates links without physical deletion. An inactive equivalent link is reactivated instead of duplicated. The Unit access screen continues to require an existing user and never provisions one implicitly.
 
-Franchisor user management lives at `GET /franqueadora/usuarios`, `GET /franqueadora/usuarios/novo`, `POST /franqueadora/usuarios/novo`, `GET /franqueadora/usuarios/{usuarioId}/editar`, and `POST /franqueadora/usuarios/{usuarioId}/editar`. All routes require `AdministradorRede`; the active organization-wide access link supplies the Organization context, and no `OrganizacaoId` is accepted from the browser. The listing combines organization-scoped `VinculoAcesso` records with `FranqueadoUsuario` commercial relationships, removes duplicate people produced by multiple links, and falls back to the Identity email for bootstrap administrators that do not yet have a `PerfilUsuario`.
+Franchisor user management lives at `GET /franqueadora/usuarios`, `GET /franqueadora/usuarios/novo`, `POST /franqueadora/usuarios/novo`, `GET /franqueadora/usuarios/{usuarioId}/editar`, and `POST /franqueadora/usuarios/{usuarioId}/editar`. All routes require `AdministradorRede`; the active organization-wide access link supplies the Organization context, and no `OrganizacaoId` is accepted from the browser. The listing combines organization-scoped `VinculoAcesso` records with `FranqueadoUsuario` relationships to identify people and their functions, removes duplicates produced by multiple links, and falls back to the Identity email for bootstrap administrators that do not yet have a `PerfilUsuario`. Its "Acesso às unidades" column is derived exclusively from active `VinculoAcesso` records; `FranqueadoUnidade` never grants or implies authorization in that listing.
 
 User editing changes only the global name, login email, and contact phone. Application and Infrastructure require an active relationship between the target user and the current Organization, through `VinculoAcesso` and/or an active `FranqueadoUsuario`/`Franqueado`; an identifier from another tenant is reported as not found. A user with active relationships in more than one Organization receives a controlled conflict because `UsuarioIdentity` and `PerfilUsuario` are global. Infrastructure revalidates this scope inside the same explicit transaction used by `UserManager<UsuarioIdentity>` and `BfaDbContext`, keeps `Email` and `UserName` synchronized through Identity, and creates `PerfilUsuario` only on a valid POST when a bootstrap user does not yet have one. Editing does not mutate `VinculoAcesso`, `FranqueadoUsuario`, or `FranqueadoUnidade`.
 
@@ -143,9 +143,15 @@ The mandatory administrative UI standard is documented in `docs/UI-ADMIN-STANDAR
 
 Franchise/unit operation.
 
-Route prefix: `/Unidade`.
+Context route: `/unidade/{unidadeId}`.
 
 Controller namespace: `BFA.Web.Areas.Unidade.Controllers`.
+
+The first version is available to an active `AdministradorUnidade` only for the exact Organization/Unit pair in its active `VinculoAcesso`. An `AdministradorRede` keeps transversal superaccess to active Units inside its own Organization, but never to another Organization. The route identifier is not authorization: Web resolves the active Unit and Organization from the current persistence source, creates `ContextoUnidade`, and invokes the existing resource-based `AcessoUnidadePorPerfilRequirement` on every request.
+
+The initial dashboard identifies the current Unit and renders a controlled empty state without invented metrics. It reuses the shared Admin Shell, drawer, logout, responsive behavior, and visual tokens. Its navigation contains only `Visão Geral`; modules for Professores, Alunos, Turmas, Matriculas, Presencas, and finance are not created by this first version.
+
+Users with one active `AdministradorUnidade` context are sent directly to `/unidade/{unidadeId}` after login. Users with more than one active Unit are sent to `GET /selecionar-unidade`; `POST /selecionar-unidade` requires antiforgery and revalidates the selected Unit against the authenticated user's current active links. The browser never supplies an `OrganizacaoId` as authorization context. `Trocar unidade` is shown only when more than one active administered Unit is available.
 
 ### Area: Aluno
 
@@ -355,13 +361,13 @@ VinculoAcesso     = which contexts and profiles the user has
 Policies/Handlers = authorization decision
 ```
 
-The post-login functional destination is selected by `IDestinoPosLogin` in Application from the user's active access links. Application returns a typed `DestinoAcesso` and does not know MVC URLs; Web maps `AdministradorRede` to `/franqueadora` and the default destination to `/`. A local `ReturnUrl`, validated with `Url.IsLocalUrl`, always has priority over this normal landing decision, and external return URLs are never followed.
+The post-login functional destination is selected by `IDestinoPosLogin` in Application from the user's active access links and active Unit contexts. Application returns a typed `DestinoPosLoginResultado` and does not know MVC URLs. `AdministradorRede` has priority and Web maps it to `/franqueadora`; one `AdministradorUnidade` context maps to `/unidade/{unidadeId}`; multiple contexts map to `/selecionar-unidade`; no valid administrative context maps to `/acesso-negado`. A local `ReturnUrl`, validated with `Url.IsLocalUrl`, always has priority over this normal landing decision, and external return URLs are never followed.
 
 `GET /acessar` is the central authenticated entry point exposed by the public navigation. Anonymous users are sent to `/login`; authenticated users are routed through `IUsuarioAtual`, `IDestinoPosLogin`, and the Web URL mapper. An authenticated user who requests `GET /login` follows the same destination mechanism instead of seeing the login form again. The public Home only chooses between the `Login` and `Acessar sistema` calls to action based on authentication state and contains no profile rule.
 
-The `/acessar` mechanism may later be expanded for `AdministradorUnidade`, `Professor`, `Aluno`, and `Responsavel`, with possible experiences under `/unidade`, `/professor`, `/aluno`, and `/responsavel`. Those destinations and routes do not exist yet. Priority among different profiles is intentionally undefined; when a user has multiple possible experiences, an appropriate context-selection flow will be designed instead of choosing one implicitly.
+The `/acessar` mechanism now supports `AdministradorRede` and `AdministradorUnidade`. It may later be expanded for `Professor`, `Aluno`, and `Responsavel`, with possible experiences under `/professor`, `/aluno`, and `/responsavel`; those destinations and routes do not exist yet. Priority among different future operational profiles remains intentionally undefined. The current Unit selection resolves only multiple `AdministradorUnidade` contexts and does not choose between different product experiences.
 
-Only active access links participate in authorization. Profiles, `OrganizacaoId`, and `UnidadeId` are not copied into the authentication cookie; handlers consult the persistent source for every decision, without an authorization cache at this stage.
+Only active access links associated with an active Unit and active Organization participate in the Unit destination and context selection. Profiles, `OrganizacaoId`, `UnidadeId`, and the list of Units are not copied into the authentication cookie; handlers and context queries consult the persistent source for every decision, without an authorization cache at this stage. Deactivating a link or Unit therefore takes effect on the next request of an existing authenticated session.
 
 The initial policies provide generic entry checks for `AdministradorRede`, administration (`AdministradorRede` or `AdministradorUnidade`), `Professor`, `Aluno`, and `Responsavel`. Access to a specific unit is resource-based: Web supplies a persistence-independent `ContextoUnidade` containing `OrganizacaoId` and `UnidadeId`, and the handler compares both identifiers with the user's active links.
 
@@ -408,6 +414,12 @@ FranqueadoUnidade   = current or historical commercial association with a Unidad
 
 Commercial Unit relationships are not physically replaced. The unique `(organizacao_id, franqueado_id, unidade_id)` relationship is reactivated when needed instead of being duplicated, while its inactive state preserves history. A PostgreSQL partial unique index on `(organizacao_id, unidade_id) WHERE ativo = true` permits only one current active Franqueado per Unit. The full `(organizacao_id, unidade_id, ativo)` index supports both current and historical lookups; the unique relationship index also covers the organization/franchisee prefix required by the tenant-integrity foreign key. The independent `franqueado_id` index remains useful for queries across the Franqueado's Units without an `OrganizacaoId` predicate.
 
+The Franqueadora management flow keeps this relationship separate from the Unit's own lifecycle. Both initial Franqueado registration and later Unit linking use the same Application rule: for every selected Unit, the operation creates or reactivates one `FranqueadoUnidade` and the exact `AdministradorUnidade` access of the active principal `FranqueadoUsuario`. Both records are persisted atomically in one explicit transaction; an equivalent inactive record is reactivated and an equivalent active record is not duplicated. The Franqueado detail page derives its Unit list exclusively from `FranqueadoUnidade`.
+
+Unlinking performs a soft deactivation of that commercial relationship and of that principal user's corresponding access; it never deactivates the `Unidade` and never changes access links held by other Unit administrators. Managers, secretaries, other administrators, and future operational users may have an explicit `VinculoAcesso` without being a `FranqueadoUsuario` and without having a `FranqueadoUnidade`. Therefore no generic synchronization, inference, or background process may create a commercial relationship from an access link, or an access link from a commercial relationship. The paired rule is invoked only by the explicit Franqueado registration and Unit-linking use cases.
+
+Development offers the explicit, read-only command `--diagnosticar-vinculos-franqueados`. It reports active principal `AdministradorUnidade` accesses without a corresponding active commercial relationship and the inverse condition. It never changes data or runs automatically.
+
 A Franqueado may have several associated system users, but a partial unique index on `franqueado_id WHERE principal = true AND ativo = true` permits at most one active principal user. Non-principal users and inactive former principal users may coexist.
 
 The manually reviewed `V004__criar_usuarios_e_franqueados.sql` defines `perfis_usuario`, `franqueados`, `franqueados_usuarios`, and `franqueados_unidades`. It is never executed automatically by EF Core or application startup.
@@ -435,7 +447,87 @@ An `AdministradorRede` does not create a password for a new user. `UsuarioIdenti
 
 The public `GET /definir-senha` and `POST /definir-senha` endpoints validate the Identity token and apply the current Identity password policy. The POST requires antiforgery, never authenticates the user automatically, and redirects to `/login` with a generic success message. Invalid, expired, or already-used links return a controlled response without internal details. Email delivery and invitation persistence remain deferred.
 
-Franchise contracts, contractual documents, royalties, fixed fees, adhesion fees, due dates, and uploads remain deferred to a future dedicated migration and are not part of the V004/V005 model.
+### Versioned franchise contracts and private documents
+
+The contractual aggregate begins from the commercial relationship and preserves every
+formalized condition as a separate historical record:
+
+```text
+FranqueadoUnidade
+└── ContratoFranquia
+    └── ContratoFranquiaVersao
+        └── DocumentoContratoFranquia
+```
+
+`ContratoFranquia` is the identity of the contract over time and does not carry commercial
+values. `ContratoFranquiaVersao` records effective dates, royalties, fixed monthly fee,
+optional adhesion fee, optional due day, change reason, and observations. Royalties are
+stored as the percentage itself (`8.00` means 8%, not `0.08`); royalties and a fixed fee may
+coexist. A partial unique index permits at most one `Ativo` contract for each
+`FranqueadoUnidade`, and another permits at most one `Vigente` version for each contract.
+
+After insertion, a contract's `Id`, `FranqueadoUnidadeId`, and creation timestamp are
+immutable in both Domain and PostgreSQL; a historical contract can never be moved to another
+commercial Unit relationship. Its number may be adjusted only while the previous status is
+`Rascunho`, while `AtualizadoEmUtc` records every permitted administrative change. The
+`proteger_contrato_franquia()` trigger function enforces the minimum transitions
+`Rascunho -> Ativo|Cancelado` and `Ativo -> Encerrado|Cancelado`; `Encerrado` and `Cancelado`
+are terminal. Keeping the same status remains valid.
+
+Formalized conditions are never overwritten. A future contractual change must mark the
+previous version as `Substituida` and insert the next version as `Vigente` in one database
+transaction. The pair `(contrato_franquia_id, numero_versao)` is unique and provides the
+per-contract sequence without a global version sequence. This task establishes the model;
+the change use case is not implemented yet.
+
+The Domain exposes term editing only while a version is `Rascunho`. Identity and creation
+audit (`Id`, parent contract, version number, creation timestamp, and creating user) never
+change after insertion. V007 repeats this protection in PostgreSQL through the
+`proteger_versao_contrato_formalizada()` trigger function: once the previous status is
+`Vigente`, `Substituida`, or `Cancelada`, all commercial terms and effective dates are frozen.
+The minimum status transitions are `Rascunho -> Vigente|Cancelada`,
+`Vigente -> Substituida|Cancelada`; `Substituida` and `Cancelada` are terminal. Keeping the
+same status is allowed, but does not bypass the frozen-term rule.
+
+`DocumentoContratoFranquia` belongs to the exact contract version and stores only metadata:
+original name, logical storage key, content type, size, optional lowercase hexadecimal
+SHA-256, timestamps, and responsible user. The globally unique key follows a server-generated
+logical form such as `contratos/{contratoId}/versoes/{versaoId}/{documentoId}.pdf`; it is not
+an absolute filesystem path and never derives its physical name from the uploaded original
+name. PostgreSQL does not store PDF bytes, Base64, BLOBs, or large objects.
+Document evidence is append-only for the runtime role: `bfa_app_role` receives only `SELECT`
+and `INSERT` on `documentos_contrato_franquia`. A correction or aditivo creates another
+metadata row and another physical file; existing document metadata is not updated or deleted.
+
+Application owns the storage port `IArmazenamentoDocumentosContrato`, with save, read, and
+existence operations. Infrastructure provides `ArmazenamentoLocalDocumentosContrato`, which
+resolves validated relative keys beneath a configured private base directory and rejects
+absolute paths, `..`, invalid segments, and any normalized path that escapes that base. No
+contract document directory is placed under `wwwroot`, exposed by a direct public URL, or
+served directly by Nginx. HTTP upload/download and document authorization remain deferred.
+
+In Contabo production, `Armazenamento__Documentos__DiretorioBase` configures the private root;
+the planned value is `/var/lib/bfa/storage`, with contract files beneath its `contratos`
+subtree. The Linux account running BFA.Web requires read/write access to this private
+directory. The path is operational configuration and is not hardcoded in application code
+or committed with a secret.
+
+PostgreSQL and the filesystem do not share one ACID transaction. A future upload flow must
+therefore define compensating/staged steps so metadata is not committed without its file and
+failed operations do not leave orphan files. That coordination is intentionally not
+implemented by V007.
+
+```text
+BFA.Web
+├── PostgreSQL       (contract data and document metadata)
+└── private storage  (document content)
+```
+
+A complete BFA backup and restore must treat PostgreSQL and the private storage directory as
+one recoverable set. The database contains each `ChaveArmazenamento`, so restoration must
+preserve the pairing between that metadata and the corresponding physical file. V007 creates
+the three tables and their metadata constraints; it does not execute the migration or create
+physical storage in an environment.
 
 ---
 
@@ -472,7 +564,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, and `Municipios`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, and `DocumentosContratoFranquia`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -527,6 +619,7 @@ V003__criar_vinculos_acesso.sql
 V004__criar_usuarios_e_franqueados.sql
 V005__adequar_cnpj_alfanumerico.sql
 V006__criar_catalogo_localidades.sql
+V007__criar_contratos_franquia.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.
@@ -578,6 +671,8 @@ Contabo Linux VPS
     │   └── HTTPS / reverse proxy
     ├── BFA.Web
     │   └── ASP.NET Core 10 / Kestrel
+    ├── private storage
+    │   └── /var/lib/bfa/storage (not served by Nginx)
     ├── systemd
     │   └── bfa-web.service
     └── PostgreSQL
@@ -628,6 +723,7 @@ Organizacoes
 Unidades
 Acessos
 Franqueados
+Contratos
 Alunos
 Responsaveis
 Professores

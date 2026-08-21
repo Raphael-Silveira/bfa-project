@@ -16,6 +16,7 @@ public sealed record UsuarioFranqueadoraItemViewModel(
     string Email,
     IReadOnlyList<string> Funcoes,
     IReadOnlyList<string> Unidades,
+    bool AcessoTodaRede,
     bool Ativo);
 
 public sealed class EditarUsuarioFranqueadoraViewModel
@@ -43,8 +44,12 @@ public sealed class EditarUsuarioFranqueadoraViewModel
 
     public string? MensagemBloqueio { get; set; }
 
+    public IReadOnlyList<FranqueadoVinculoUsuarioViewModel> Franqueados { get; set; } = [];
+
     public bool EdicaoBloqueada => !string.IsNullOrWhiteSpace(MensagemBloqueio);
 }
+
+public sealed record FranqueadoVinculoUsuarioViewModel(Guid Id, string NomeRazaoSocial);
 
 public sealed class NovoUsuarioFranqueadoraViewModel : IValidatableObject
 {

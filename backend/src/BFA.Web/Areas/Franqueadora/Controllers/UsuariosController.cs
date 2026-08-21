@@ -45,6 +45,7 @@ public sealed class UsuariosController(
                     usuario.Email,
                     usuario.Funcoes,
                     usuario.Unidades,
+                    usuario.AcessoTodaRede,
                     usuario.Ativo))
                 .ToArray()
         });
@@ -210,7 +211,11 @@ public sealed class UsuariosController(
         ModelState.AddModelError(
             campo,
             resultado.Mensagem ?? "Não foi possível atualizar o usuário.");
-        return View("Editar", model);
+        return await ExibirEdicaoAsync(
+            usuarioAtualId,
+            usuarioId,
+            model,
+            cancellationToken);
     }
 
     private async Task<IActionResult> ExibirFormularioAsync(
@@ -304,6 +309,11 @@ public sealed class UsuariosController(
             Telefone = usuario.Telefone
         };
         model.UsuarioId = usuarioId;
+        model.Franqueados = usuario.Franqueados
+            .Select(franqueado => new FranqueadoVinculoUsuarioViewModel(
+                franqueado.Id,
+                franqueado.NomeRazaoSocial))
+            .ToArray();
         return View("Editar", model);
     }
 

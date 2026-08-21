@@ -1,4 +1,5 @@
 using BFA.Application.Acessos;
+using BFA.Application.Unidades;
 using BFA.Domain.Acessos;
 
 namespace BFA.IntegrationTests;
@@ -8,6 +9,60 @@ public sealed class TestUsuarioAtual : IUsuarioAtual
     public bool Autenticado { get; set; }
 
     public Guid? UsuarioId { get; set; }
+}
+
+public sealed class TestUnidadesUsuarioConsulta : IUnidadesUsuarioConsulta
+{
+    private readonly List<TestUnidadeUsuario> _unidades = [];
+
+    public void Limpar()
+    {
+        _unidades.Clear();
+    }
+
+    public void Adicionar(
+        Guid usuarioId,
+        Guid organizacaoId,
+        Guid unidadeId,
+        string nome,
+        bool ativa = true)
+    {
+        _unidades.Add(new TestUnidadeUsuario(
+            usuarioId,
+            new UnidadeAcessoResumo(organizacaoId, unidadeId, nome),
+            ativa));
+    }
+
+    public Task<IReadOnlyList<UnidadeAcessoResumo>> ListarAdministradasAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<UnidadeAcessoResumo> unidades = _unidades
+            .Where(item => item.UsuarioId == usuarioId && item.Ativa)
+            .Select(item => item.Unidade)
+            .OrderBy(unidade => unidade.Nome)
+            .ToArray();
+        return Task.FromResult(unidades);
+    }
+
+    public Task<UnidadeAcessoResumo?> ObterAdministradaAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var unidade = _unidades
+            .Where(item => item.UsuarioId == usuarioId && item.Ativa)
+            .Select(item => item.Unidade)
+            .SingleOrDefault(item => item.UnidadeId == unidadeId);
+        return Task.FromResult(unidade);
+    }
+
+    private sealed record TestUnidadeUsuario(
+        Guid UsuarioId,
+        UnidadeAcessoResumo Unidade,
+        bool Ativa);
 }
 
 public sealed class TestAcessoUsuarioConsulta : IAcessoUsuarioConsulta

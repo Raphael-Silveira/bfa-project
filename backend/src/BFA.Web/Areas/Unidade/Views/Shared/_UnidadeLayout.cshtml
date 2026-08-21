@@ -1,0 +1,27 @@
+@using BFA.Web.ViewModels.Shared
+@model IUnidadeContextoViewModel
+@{
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+    ViewData[AdminShellViewData.Chave] = new AdminShellViewModel
+    {
+        AreaNome = "Unidade",
+        ContextoNome = Model.NomeUnidade,
+        HomeUrl = $"/unidade/{Model.UnidadeId:D}",
+        HomeAriaLabel = $"Ir para a visão geral da Unidade {Model.NomeUnidade}",
+        NavegacaoAriaLabel = $"Navegação da Unidade {Model.NomeUnidade}",
+        NavegacaoPartial = "/Areas/Unidade/Views/Shared/_UnidadeNavLinks.cshtml",
+        TrocarContextoUrl = Model.PodeTrocarUnidade ? "/selecionar-unidade" : null,
+        TrocarContextoTexto = Model.PodeTrocarUnidade ? "Trocar unidade" : null
+    };
+}
+
+@RenderBody()
+
+@section AreaStyles {
+    <link rel="stylesheet" href="~/css/unidade.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+}
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

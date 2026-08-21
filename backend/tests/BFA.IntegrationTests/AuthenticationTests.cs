@@ -214,20 +214,21 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     }
 
     [Fact]
-    public async Task Usuario_sem_administrador_rede_sem_return_url_vai_para_inicio()
+    public async Task Usuario_sem_vinculo_ativo_sem_return_url_vai_para_acesso_negado()
     {
         using var client = CreateClient();
         _application.AcessosLogin.Limpar();
+        _application.UnidadesLogin.Limpar();
         var token = await GetAntiforgeryTokenAsync(client);
 
         using var response = await PostLoginAsync(client, token, string.Empty);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
-        Assert.Equal("/", response.Headers.Location?.OriginalString);
+        Assert.Equal("/acesso-negado", response.Headers.Location?.OriginalString);
     }
 
     [Fact]
-    public async Task Vinculo_administrador_rede_inativo_sem_return_url_vai_para_inicio()
+    public async Task Vinculo_administrador_rede_inativo_sem_return_url_vai_para_acesso_negado()
     {
         using var client = CreateClient();
         ConfigurarAdministradorRede(ativo: false);
@@ -236,7 +237,49 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
         using var response = await PostLoginAsync(client, token, string.Empty);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
-        Assert.Equal("/", response.Headers.Location?.OriginalString);
+        Assert.Equal("/acesso-negado", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Administrador_de_uma_unidade_sem_return_url_vai_direto_para_unidade()
+    {
+        using var client = CreateClient();
+        var unidadeId = ConfigurarUnidadeAdministrada();
+        var token = await GetAntiforgeryTokenAsync(client);
+
+        using var response = await PostLoginAsync(client, token, string.Empty);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(
+            $"/unidade/{unidadeId:D}",
+            response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Administrador_de_multiplas_unidades_sem_return_url_vai_para_selecao()
+    {
+        using var client = CreateClient();
+        ConfigurarUnidadeAdministrada("BFA Tietê");
+        ConfigurarUnidadeAdministrada("BFA Sorocaba", limpar: false);
+        var token = await GetAntiforgeryTokenAsync(client);
+
+        using var response = await PostLoginAsync(client, token, string.Empty);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/selecionar-unidade", response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Administrador_de_unidade_inativa_sem_return_url_vai_para_acesso_negado()
+    {
+        using var client = CreateClient();
+        ConfigurarUnidadeAdministrada(ativa: false);
+        var token = await GetAntiforgeryTokenAsync(client);
+
+        using var response = await PostLoginAsync(client, token, string.Empty);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal("/acesso-negado", response.Headers.Location?.OriginalString);
     }
 
     [Fact]
@@ -353,12 +396,34 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
     {
         var acessos = _application.AcessosLogin;
         acessos.Limpar();
+        _application.UnidadesLogin.Limpar();
         acessos.Adicionar(
             _application.UsuarioStore.Usuario.Id,
             Guid.NewGuid(),
             unidadeId: null,
             PerfilAcesso.AdministradorRede,
             ativo);
+    }
+
+    private Guid ConfigurarUnidadeAdministrada(
+        string nome = "BFA Tietê",
+        bool ativa = true,
+        bool limpar = true)
+    {
+        if (limpar)
+        {
+            _application.AcessosLogin.Limpar();
+            _application.UnidadesLogin.Limpar();
+        }
+
+        var unidadeId = Guid.NewGuid();
+        _application.UnidadesLogin.Adicionar(
+            _application.UsuarioStore.Usuario.Id,
+            Guid.NewGuid(),
+            unidadeId,
+            nome,
+            ativa);
+        return unidadeId;
     }
 
     private async Task<HttpResponseMessage> PostLoginAsync(

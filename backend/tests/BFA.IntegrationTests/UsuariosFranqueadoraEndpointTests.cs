@@ -57,6 +57,15 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
             unidade,
             "Pessoa da Rede",
             "pessoa@bfa.test");
+        var unidadeAcessoAdicional = await AdicionarUnidadeAsync(
+            application,
+            organizacaoId,
+            "BFA Porto Feliz");
+        await AdicionarAcessoUsuarioAsync(
+            application,
+            usuarioId,
+            organizacaoId,
+            unidadeAcessoAdicional.Id);
         var administradorUnidadeId = await AdicionarAdministradorUnidadeAsync(
             application,
             organizacaoId,
@@ -76,23 +85,26 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
         Assert.Equal(3, usuarios.Count);
         var bootstrap = Assert.Single(usuarios, item => item.Id == application.AdministradorId);
         Assert.Equal(application.AdministradorEmail, bootstrap.Nome);
+        Assert.True(bootstrap.AcessoTodaRede);
         var relacionado = Assert.Single(usuarios, item => item.Id == usuarioId);
         Assert.Equal("Pessoa da Rede", relacionado.Nome);
         Assert.Contains("Administrador de unidade", relacionado.Funcoes);
         Assert.Contains("Professor", relacionado.Funcoes);
         Assert.Contains("Franqueado", relacionado.Funcoes);
-        Assert.Equal(["BFA Tietê"], relacionado.Unidades);
+        Assert.Equal(["BFA Porto Feliz", "BFA Tietê"], relacionado.Unidades);
         var administradorUnidade = Assert.Single(
             usuarios,
             item => item.Id == administradorUnidadeId);
         Assert.Contains("Administrador de unidade", administradorUnidade.Funcoes);
         Assert.DoesNotContain("Franqueado", administradorUnidade.Funcoes);
+        Assert.False(administradorUnidade.AcessoTodaRede);
 
         var html = WebUtility.HtmlDecode(
             await client.GetStringAsync("/franqueadora/usuarios"));
         Assert.Contains("bfa-admin-desktop-list", html, StringComparison.Ordinal);
         Assert.Contains("bfa-admin-mobile-list", html, StringComparison.Ordinal);
         Assert.Contains("Novo usuário", html, StringComparison.Ordinal);
+        Assert.Contains("Acesso às unidades", html, StringComparison.Ordinal);
         Assert.Contains("Franqueado", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Usuário externo", html, StringComparison.Ordinal);
         Assert.Contains(
@@ -142,6 +154,11 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
         Assert.DoesNotContain("name=\"Estado\"", html, StringComparison.Ordinal);
         Assert.DoesNotContain("name=\"Cidade\"", html, StringComparison.Ordinal);
         Assert.Contains("Dados da Empresa", html, StringComparison.Ordinal);
+        Assert.Contains("Unidades da franquia", html, StringComparison.Ordinal);
+        Assert.Contains(
+            "Selecione as unidades que serão operadas por este franqueado. O usuário principal receberá acesso administrativo às unidades selecionadas.",
+            WebUtility.HtmlDecode(html),
+            StringComparison.Ordinal);
         Assert.DoesNotContain("name=\"OrganizacaoId\"", html, StringComparison.Ordinal);
         var mascaras = await client.GetStringAsync("/js/bfa-input-masks.js");
         Assert.Contains("XX.XXX.XXX/XXXX-00", mascaras, StringComparison.Ordinal);
@@ -375,15 +392,39 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
     {
         using var application = new UsuariosFranqueadoraWebApplicationFactory();
         var organizacaoId = await application.InicializarAdministradorAsync();
+        var unidade = await AdicionarUnidadeAsync(
+            application,
+            organizacaoId,
+            "Unidade apenas comercial");
         var usuarioId = await AdicionarUsuarioComRelacaoComercialAsync(
             application,
-            organizacaoId);
+            organizacaoId,
+            unidade);
         using var client = CriarCliente(application);
         await LoginAsync(client, application);
 
         using var get = await client.GetAsync(
             $"/franqueadora/usuarios/{usuarioId}/editar");
         Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+
+        await using (var consultaScope = application.Services.CreateAsyncScope())
+        {
+            var consulta = consultaScope.ServiceProvider
+                .GetRequiredService<IUsuariosFranqueadoraConsulta>();
+            var listagem = await consulta.ListarAsync(
+                application.AdministradorId,
+                CancellationToken.None);
+            var usuarios = Assert.IsAssignableFrom<IReadOnlyList<UsuarioFranqueadoraResumo>>(
+                listagem.Valor);
+            var comercial = Assert.Single(usuarios, item => item.Id == usuarioId);
+            Assert.Empty(comercial.Unidades);
+            Assert.False(comercial.AcessoTodaRede);
+        }
+
+        var htmlListagem = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/usuarios"));
+        Assert.Contains("Sem acesso a unidades", htmlListagem, StringComparison.Ordinal);
+        Assert.DoesNotContain("Unidade apenas comercial", htmlListagem, StringComparison.Ordinal);
 
         using var post = await EditarUsuarioAsync(
             client,
@@ -1070,7 +1111,8 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
 
     private static async Task<Guid> AdicionarUsuarioComRelacaoComercialAsync(
         UsuariosFranqueadoraWebApplicationFactory application,
-        Guid organizacaoId)
+        Guid organizacaoId,
+        Unidade? unidade = null)
     {
         var agoraUtc = DateTime.UtcNow;
         var usuarioId = Guid.NewGuid();
@@ -1105,6 +1147,15 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
             usuarioId,
             principal: true,
             agoraUtc));
+        if (unidade is not null)
+        {
+            dbContext.FranqueadosUnidades.Add(new FranqueadoUnidade(
+                Guid.NewGuid(),
+                franqueadoId,
+                organizacaoId,
+                unidade.Id,
+                agoraUtc));
+        }
         await dbContext.SaveChangesAsync();
         return usuarioId;
     }
@@ -1133,6 +1184,24 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
             agoraUtc));
         await dbContext.SaveChangesAsync();
         return usuarioId;
+    }
+
+    private static async Task AdicionarAcessoUsuarioAsync(
+        UsuariosFranqueadoraWebApplicationFactory application,
+        Guid usuarioId,
+        Guid organizacaoId,
+        Guid unidadeId)
+    {
+        await using var scope = application.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+        dbContext.VinculosAcesso.Add(new VinculoAcesso(
+            Guid.NewGuid(),
+            usuarioId,
+            organizacaoId,
+            unidadeId,
+            PerfilAcesso.AdministradorUnidade,
+            DateTime.UtcNow));
+        await dbContext.SaveChangesAsync();
     }
 
     private static async Task AdicionarFranqueadoAtivoAsync(

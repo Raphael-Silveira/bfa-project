@@ -366,10 +366,161 @@
   min-width: 0;
 }
 
+.bfa-franqueados-table {
+  min-width: 62rem;
+}
+
+.bfa-franqueado-card__header,
+.bfa-franqueado-section-heading,
+.bfa-franqueado-related-card header,
+.bfa-usuario-franqueado__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-franqueado-card__label,
+.bfa-franqueado-section-heading p,
+.bfa-usuario-franqueado header p {
+  margin: 0 0 0.35rem;
+  color: var(--bfa-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bfa-franqueado-card h2,
+.bfa-franqueado-section-heading h2,
+.bfa-franqueado-related-card h3,
+.bfa-franqueado-user h3,
+.bfa-usuario-franqueado h2 {
+  margin: 0;
+}
+
+.bfa-franqueado-card__header p:not(.bfa-franqueado-card__label),
+.bfa-franqueado-related-card p,
+.bfa-franqueado-user p,
+.bfa-franqueado-muted {
+  margin: 0.35rem 0 0;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-franqueado-card__details,
+.bfa-franqueado-data-grid {
+  display: grid;
+  margin: 1.25rem 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.bfa-franqueado-card__details div,
+.bfa-franqueado-data-grid div {
+  min-width: 0;
+}
+
+.bfa-franqueado-card__details dt,
+.bfa-franqueado-data-grid dt {
+  color: var(--bfa-text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-franqueado-card__details dd,
+.bfa-franqueado-data-grid dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.bfa-franqueado-data-grid .is-wide {
+  grid-column: 1 / -1;
+}
+
+.bfa-franqueado-card__footer {
+  display: flex;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-franqueado-card__footer > span {
+  color: var(--bfa-text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bfa-franqueado-detail {
+  gap: 1.25rem;
+}
+
+.bfa-franqueado-link-form {
+  display: grid;
+  margin-top: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.bfa-franqueado-related-list {
+  margin-top: 1.25rem;
+}
+
+.bfa-franqueado-related-card,
+.bfa-franqueado-user {
+  padding: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.55rem;
+  background: rgba(13, 13, 13, 0.42);
+}
+
+.bfa-franqueado-related-card form {
+  margin-top: 1rem;
+}
+
+.bfa-franqueado-users {
+  display: grid;
+  margin-top: 1.25rem;
+  gap: 0.75rem;
+}
+
+.bfa-franqueado-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-franqueado-status-readonly {
+  display: flex;
+  margin-bottom: 1.25rem;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-usuario-franqueado {
+  margin-bottom: 1.25rem;
+}
+
+.bfa-usuario-franqueado__item {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  align-items: center;
+  border-top: 1px solid var(--bfa-border);
+}
+
 @media (max-width: 44rem) {
   .bfa-usuario-form__grid,
   .bfa-unidade-selection,
-  .bfa-copy-field {
+  .bfa-copy-field,
+  .bfa-franqueado-data-grid,
+  .bfa-franqueado-link-form {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -379,6 +530,21 @@
 
   .bfa-copy-field .bfa-admin-button {
     width: 100%;
+  }
+
+  .bfa-franqueado-data-grid .is-wide {
+    grid-column: auto;
+  }
+
+  .bfa-franqueado-link-form .bfa-admin-button,
+  .bfa-franqueado-related-card .bfa-admin-button {
+    width: 100%;
+  }
+
+  .bfa-franqueado-user,
+  .bfa-usuario-franqueado__item {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

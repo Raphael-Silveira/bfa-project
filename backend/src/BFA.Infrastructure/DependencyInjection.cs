@@ -1,17 +1,24 @@
 using BFA.Application.Acessos;
 using BFA.Application.Bootstrap;
+using BFA.Application.Contratos;
 using BFA.Application.Franqueadora;
 using BFA.Application.Franqueadora.AcessosUnidade;
+using BFA.Application.Franqueadora.Franqueados;
 using BFA.Application.Franqueadora.Unidades;
 using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Identidade;
 using BFA.Application.Localidades;
+using BFA.Application.Unidades;
+using BFA.Application.Usuarios;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Bootstrap;
+using BFA.Infrastructure.Armazenamento;
 using BFA.Infrastructure.Franqueadora;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Localidades;
 using BFA.Infrastructure.Persistence;
+using BFA.Infrastructure.Unidades;
+using BFA.Infrastructure.Usuarios;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -69,7 +76,18 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IDatabaseConnectionProbe, DatabaseConnectionProbe>();
+        services.Configure<ArmazenamentoDocumentosContratoOptions>(
+            configuration.GetSection(
+                ArmazenamentoDocumentosContratoOptions.SecaoConfiguracao));
+        services.AddScoped<IArmazenamentoDocumentosContrato,
+            ArmazenamentoLocalDocumentosContrato>();
         services.AddScoped<IAcessoUsuarioConsulta, AcessoUsuarioConsulta>();
+        services.AddScoped<UnidadesUsuarioConsulta>();
+        services.AddScoped<IUnidadesUsuarioConsulta>(serviceProvider =>
+            serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
+        services.AddScoped<IUnidadeContextoConsulta>(serviceProvider =>
+            serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
+        services.AddScoped<IUsuarioApresentacaoConsulta, UsuarioApresentacaoConsulta>();
         services.AddScoped<IUsuarioPorEmailConsulta, UsuarioPorEmailConsulta>();
         services.AddScoped<IPrimeiroAcessoServico, PrimeiroAcessoServico>();
         services.AddScoped<IBootstrapInicial, BootstrapInicial>();
@@ -92,6 +110,16 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<UsuariosFranqueadoraServico>());
         services.AddScoped<IUsuariosFranqueadoraServico>(serviceProvider =>
             serviceProvider.GetRequiredService<UsuariosFranqueadoraServico>());
+        services.AddScoped<FranqueadosRepositorio>();
+        services.AddScoped<IFranqueadosRepositorio>(serviceProvider =>
+            serviceProvider.GetRequiredService<FranqueadosRepositorio>());
+        services.AddScoped<IDiagnosticoVinculosFranqueadoConsulta>(serviceProvider =>
+            serviceProvider.GetRequiredService<FranqueadosRepositorio>());
+        services.AddScoped<FranqueadosServico>();
+        services.AddScoped<IFranqueadosConsulta>(serviceProvider =>
+            serviceProvider.GetRequiredService<FranqueadosServico>());
+        services.AddScoped<IFranqueadosServico>(serviceProvider =>
+            serviceProvider.GetRequiredService<FranqueadosServico>());
         services.AddHttpClient<IIbgeLocalidadesClient, IbgeLocalidadesClient>(httpClient =>
         {
             const string configurationKey = "Integracoes:Ibge:BaseUrl";

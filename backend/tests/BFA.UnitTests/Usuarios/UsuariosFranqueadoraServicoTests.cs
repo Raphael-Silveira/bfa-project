@@ -1,4 +1,5 @@
 using BFA.Application.Acessos;
+using BFA.Application.Franqueadora.Franqueados;
 using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
@@ -608,6 +609,15 @@ public sealed class UsuariosFranqueadoraServicoTests
         {
             cancellationToken.ThrowIfCancellationRequested();
             return Task.FromResult(Edicao);
+        }
+
+        public Task<IReadOnlyList<FranqueadoVinculoUsuarioResumo>> ListarFranqueadosUsuarioAsync(
+            Guid organizacaoId,
+            Guid usuarioId,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<FranqueadoVinculoUsuarioResumo>>([]);
         }
 
         public Task<ResultadoPersistenciaEdicaoUsuario> AtualizarAsync(

@@ -1,0 +1,148 @@
+@using BFA.Web.ViewModels.Shared
+@{
+    if (ViewData[AdminShellViewData.Chave] is not AdminShellViewModel shell)
+    {
+        throw new InvalidOperationException("O contexto do Admin Shell não foi configurado.");
+    }
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @shell.AreaNome BFA</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/bfa-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("AreaStyles", required: false)
+</head>
+<body class="bfa-admin">
+    <a class="bfa-admin-skip-link" href="#conteudo-principal">Ir para o conteúdo principal</a>
+
+    <header class="bfa-admin-header">
+        <div class="bfa-admin-header__content">
+            <a class="bfa-admin-brand" href="@shell.HomeUrl" aria-label="@shell.HomeAriaLabel">
+                <img class="bfa-admin-brand__logo"
+                     src="~/images/brand/bfa-logo-horizontal-dark.png"
+                     alt="Brazilian Footvolley Academy" />
+                <span class="bfa-admin-brand__identity @(!string.IsNullOrWhiteSpace(shell.ContextoNome) ? "has-context" : null)">
+                    <span class="bfa-admin-brand__area">@shell.AreaNome</span>
+                    @if (!string.IsNullOrWhiteSpace(shell.ContextoNome))
+                    {
+                        <span class="bfa-admin-brand__context">@shell.ContextoNome</span>
+                    }
+                </span>
+            </a>
+
+            <div class="bfa-admin-header__actions">
+                @if (!string.IsNullOrWhiteSpace(shell.TrocarContextoUrl))
+                {
+                    <a class="bfa-admin-context-switch bfa-admin-context-switch--desktop"
+                       href="@shell.TrocarContextoUrl">@shell.TrocarContextoTexto</a>
+                }
+
+                <form action="/logout" method="post" class="bfa-admin-logout bfa-admin-logout--desktop">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bfa-admin-logout__button">Sair</button>
+                </form>
+
+                <button class="bfa-admin-menu-toggle"
+                        type="button"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#bfaAdminMobileMenu"
+                        aria-controls="bfaAdminMobileMenu"
+                        aria-label="Abrir menu administrativo"
+                        title="Abrir menu administrativo">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 7h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 17h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="bfa-admin-shell">
+        <aside class="bfa-admin-sidebar" aria-label="@shell.NavegacaoAriaLabel">
+            <p class="bfa-admin-nav-label">Administração</p>
+            <nav class="bfa-admin-nav">
+                @await Html.PartialAsync(shell.NavegacaoPartial)
+            </nav>
+        </aside>
+
+        <main class="bfa-admin-main" id="conteudo-principal">
+            @RenderBody()
+        </main>
+    </div>
+
+    <div class="offcanvas offcanvas-start bfa-admin-drawer"
+         tabindex="-1"
+         id="bfaAdminMobileMenu"
+         data-bs-backdrop="true"
+         data-bs-scroll="false"
+         aria-labelledby="bfaAdminMobileMenuTitle">
+        <div class="bfa-admin-drawer__header">
+            <div>
+                <p class="bfa-admin-drawer__eyebrow">Área administrativa</p>
+                <h2 id="bfaAdminMobileMenuTitle">@shell.AreaNome</h2>
+                @if (!string.IsNullOrWhiteSpace(shell.ContextoNome))
+                {
+                    <p class="bfa-admin-drawer__context">@shell.ContextoNome</p>
+                }
+            </div>
+            <button class="bfa-admin-drawer__close"
+                    type="button"
+                    data-bs-dismiss="offcanvas"
+                    aria-label="Fechar menu administrativo"
+                    title="Fechar menu administrativo">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="m6 6 12 12"></path>
+                    <path d="m18 6-12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="bfa-admin-drawer__body">
+            <nav class="bfa-admin-nav bfa-admin-drawer__nav" aria-label="Menu administrativo mobile">
+                @await Html.PartialAsync(shell.NavegacaoPartial)
+            </nav>
+
+            @if (!string.IsNullOrWhiteSpace(shell.TrocarContextoUrl))
+            {
+                <div class="bfa-admin-drawer__context-switch">
+                    <a class="bfa-admin-nav-link" href="@shell.TrocarContextoUrl">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M7 7h11l-3-3"></path>
+                            <path d="m18 7-3 3"></path>
+                            <path d="M17 17H6l3 3"></path>
+                            <path d="m6 17 3-3"></path>
+                        </svg>
+                        <span>@shell.TrocarContextoTexto</span>
+                    </a>
+                </div>
+            }
+
+            <form action="/logout" method="post" class="bfa-admin-drawer__logout">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bfa-admin-nav-link bfa-admin-nav-link--logout">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M10 5H5v14h5"></path>
+                        <path d="M14 8l4 4-4 4"></path>
+                        <path d="M18 12H9"></path>
+                    </svg>
+                    <span>Sair</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bfa-admin-footer">
+        <span>Brazilian Footvolley Academy</span>
+        <span>Rede de Futevôlei</span>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

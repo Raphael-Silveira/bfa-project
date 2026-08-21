@@ -36,6 +36,28 @@
 }
 else
 {
+    @if (Model.Franqueados.Count > 0)
+    {
+        <section class="bfa-admin-card bfa-usuario-franqueado" aria-labelledby="vinculo-franqueado-title">
+            <header>
+                <p>Relação comercial</p>
+                <h2 id="vinculo-franqueado-title">Vínculo de Franqueado</h2>
+            </header>
+            @foreach (var franqueado in Model.Franqueados)
+            {
+                <div class="bfa-usuario-franqueado__item">
+                    <strong>@franqueado.NomeRazaoSocial</strong>
+                    <a class="bfa-btn-secondary bfa-admin-button"
+                       href="/franqueadora/franqueados/@franqueado.Id"
+                       aria-label="Gerenciar franqueado @franqueado.NomeRazaoSocial"
+                       title="Gerenciar franqueado @franqueado.NomeRazaoSocial">
+                        <span>Gerenciar franqueado</span>
+                    </a>
+                </div>
+            }
+        </section>
+    }
+
     <form class="bfa-admin-form bfa-usuario-form"
           action="/franqueadora/usuarios/@Model.UsuarioId/editar"
           method="post"

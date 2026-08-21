@@ -1,10 +1,13 @@
 using BFA.Application.Acessos;
 using BFA.Application.Franqueadora;
 using BFA.Application.Franqueadora.AcessosUnidade;
+using BFA.Application.Franqueadora.Franqueados;
 using BFA.Application.Franqueadora.Unidades;
 using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Identidade;
 using BFA.Application.Localidades;
+using BFA.Application.Unidades;
+using BFA.Application.Usuarios;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -102,6 +105,21 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
     }
 
     [Fact]
+    public void Gerenciamento_franqueados_e_registrado()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        var consulta = scope.ServiceProvider.GetService<IFranqueadosConsulta>();
+        var servico = scope.ServiceProvider.GetService<IFranqueadosServico>();
+        var repositorio = scope.ServiceProvider.GetService<IFranqueadosRepositorio>();
+
+        Assert.NotNull(consulta);
+        Assert.NotNull(servico);
+        Assert.NotNull(repositorio);
+        Assert.Same(consulta, servico);
+    }
+
+    [Fact]
     public void Catalogo_localidades_possui_cliente_consulta_repositorio_e_servico()
     {
         using var scope = _application.Services.CreateScope();
@@ -117,6 +135,27 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
         Assert.NotNull(consulta);
         Assert.NotNull(repositorio);
         Assert.NotNull(servico);
+    }
+
+    [Fact]
+    public void Consultas_de_unidade_do_usuario_compartilham_a_mesma_implementacao()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        var unidadesUsuario = scope.ServiceProvider.GetService<IUnidadesUsuarioConsulta>();
+        var contextoUnidade = scope.ServiceProvider.GetService<IUnidadeContextoConsulta>();
+
+        Assert.NotNull(unidadesUsuario);
+        Assert.NotNull(contextoUnidade);
+        Assert.Same(unidadesUsuario, contextoUnidade);
+    }
+
+    [Fact]
+    public void Consulta_de_apresentacao_do_usuario_esta_registrada()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<IUsuarioApresentacaoConsulta>());
     }
 
     [Fact]

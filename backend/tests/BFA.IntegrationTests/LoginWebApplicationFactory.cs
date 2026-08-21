@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using BFA.Application.Acessos;
+using BFA.Application.Unidades;
 using BFA.Infrastructure.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +16,9 @@ public class LoginWebApplicationFactory : BfaWebApplicationFactory
     public TestAcessoUsuarioConsulta AcessosLogin =>
         (TestAcessoUsuarioConsulta)Services.GetRequiredService<IAcessoUsuarioConsulta>();
 
+    public TestUnidadesUsuarioConsulta UnidadesLogin =>
+        (TestUnidadesUsuarioConsulta)Services.GetRequiredService<IUnidadesUsuarioConsulta>();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
@@ -23,10 +27,12 @@ public class LoginWebApplicationFactory : BfaWebApplicationFactory
         {
             services.RemoveAll<IUserStore<UsuarioIdentity>>();
             services.RemoveAll<IAcessoUsuarioConsulta>();
+            services.RemoveAll<IUnidadesUsuarioConsulta>();
             services.AddSingleton<TestUsuarioStore>();
             services.AddSingleton<IUserStore<UsuarioIdentity>>(serviceProvider =>
                 serviceProvider.GetRequiredService<TestUsuarioStore>());
             services.AddSingleton<IAcessoUsuarioConsulta, TestAcessoUsuarioConsulta>();
+            services.AddSingleton<IUnidadesUsuarioConsulta, TestUnidadesUsuarioConsulta>();
         });
     }
 }

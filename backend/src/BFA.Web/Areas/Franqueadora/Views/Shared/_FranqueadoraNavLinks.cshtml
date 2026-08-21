@@ -10,6 +10,9 @@
     var usuariosAtiva = caminhoAtual.StartsWith(
         "/franqueadora/usuarios",
         StringComparison.OrdinalIgnoreCase);
+    var franqueadosAtiva = caminhoAtual.StartsWith(
+        "/franqueadora/franqueados",
+        StringComparison.OrdinalIgnoreCase);
 }
 
 <a class="bfa-admin-nav-link @(visaoGeralAtiva ? "is-active" : null)"
@@ -43,4 +46,14 @@
         <path d="M2 20h20"></path>
     </svg>
     <span>Unidades</span>
+</a>
+<a class="bfa-admin-nav-link @(franqueadosAtiva ? "is-active" : null)"
+   href="/franqueadora/franqueados"
+   aria-current="@(franqueadosAtiva ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 20V9l8-5 8 5v11"></path>
+        <path d="M8 20v-6h8v6"></path>
+        <path d="M9 10h6"></path>
+    </svg>
+    <span>Franqueados</span>
 </a>

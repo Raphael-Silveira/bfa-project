@@ -1,0 +1,91 @@
+@model FranqueadosIndexViewModel
+
+@{
+    ViewData["Title"] = "Franqueados";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Rede BFA</p>
+        <h1 class="bfa-admin-page-header__title">Franqueados</h1>
+        <p class="bfa-admin-page-header__description">Consulte os dados comerciais, usuários e Unidades relacionados aos Franqueados.</p>
+    </div>
+</header>
+
+@if (Model.Franqueados.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhum franqueado cadastrado.</h2>
+            <p>Os Franqueados são criados pelo fluxo de cadastro de usuários.</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table bfa-franqueados-table">
+            <thead>
+                <tr>
+                    <th scope="col">Nome / Razão social</th>
+                    <th scope="col">Nome fantasia</th>
+                    <th scope="col">CPF / CNPJ</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Unidades ativas</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var franqueado in Model.Franqueados)
+                {
+                    <tr>
+                        <td><strong>@franqueado.NomeRazaoSocial</strong></td>
+                        <td>@(franqueado.NomeFantasia ?? "—")</td>
+                        <td>@franqueado.DocumentoFormatado</td>
+                        <td>@franqueado.TipoPessoa</td>
+                        <td>@franqueado.QuantidadeUnidadesAtivas</td>
+                        <td>
+                            <span class="bfa-admin-badge @(franqueado.Ativo ? "is-active" : "is-inactive")">
+                                @(franqueado.Ativo ? "Ativo" : "Inativo")
+                            </span>
+                        </td>
+                        <td><partial name="_FranqueadoAcoes" model="franqueado" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <section class="bfa-admin-mobile-list" aria-label="Franqueados cadastrados">
+        @foreach (var franqueado in Model.Franqueados)
+        {
+            <article class="bfa-admin-card bfa-franqueado-card">
+                <header class="bfa-franqueado-card__header">
+                    <div>
+                        <p class="bfa-franqueado-card__label">Franqueado</p>
+                        <h2>@franqueado.NomeRazaoSocial</h2>
+                        @if (!string.IsNullOrWhiteSpace(franqueado.NomeFantasia))
+                        {
+                            <p>@franqueado.NomeFantasia</p>
+                        }
+                    </div>
+                    <span class="bfa-admin-badge @(franqueado.Ativo ? "is-active" : "is-inactive")">
+                        @(franqueado.Ativo ? "Ativo" : "Inativo")
+                    </span>
+                </header>
+                <dl class="bfa-franqueado-card__details">
+                    <div><dt>CPF / CNPJ</dt><dd>@franqueado.DocumentoFormatado</dd></div>
+                    <div><dt>Tipo</dt><dd>@franqueado.TipoPessoa</dd></div>
+                    <div><dt>Unidades ativas</dt><dd>@franqueado.QuantidadeUnidadesAtivas</dd></div>
+                </dl>
+                <footer class="bfa-franqueado-card__footer">
+                    <span>Ações</span>
+                    <partial name="_FranqueadoAcoes" model="franqueado" />
+                </footer>
+            </article>
+        }
+    </section>
+}

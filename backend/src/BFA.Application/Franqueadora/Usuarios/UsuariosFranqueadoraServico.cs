@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BFA.Application.Acessos;
+using BFA.Application.Franqueadora.Franqueados;
 using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
@@ -79,13 +80,19 @@ public sealed class UsuariosFranqueadoraServico(
                 "Este usuário possui vínculos ativos com mais de uma Organização e não pode ser editado por esta tela.");
         }
 
+        var franqueados = await repositorio.ListarFranqueadosUsuarioAsync(
+            organizacaoId,
+            usuarioId,
+            cancellationToken);
+
         return new(
             EstadoGerenciamentoUsuario.Sucesso,
             new UsuarioFranqueadoraEdicao(
                 usuario.UsuarioId,
                 usuario.NomeCompleto ?? string.Empty,
                 usuario.Email,
-                usuario.Telefone));
+                usuario.Telefone,
+                franqueados));
     }
 
     public async Task<ResultadoCriacaoUsuarioFranqueadora> CriarAsync(
@@ -340,22 +347,21 @@ public sealed class UsuariosFranqueadoraServico(
                 usuarioId,
                 principal: true,
                 agoraUtc);
-            var franqueadosUnidades = unidadesIds
-                .Select(unidadeId => new FranqueadoUnidade(
-                    Guid.NewGuid(),
+            var vinculosFranquia = unidadesIds
+                .Select(unidadeId => RegraVinculosFranqueadoUnidade.GarantirAtivos(
                     franqueadoId,
                     organizacaoId,
                     unidadeId,
+                    usuarioId,
+                    vinculoComercial: null,
+                    acessoAdministradorUnidade: null,
                     agoraUtc))
                 .ToArray();
-            var vinculos = unidadesIds
-                .Select(unidadeId => new VinculoAcesso(
-                    Guid.NewGuid(),
-                    usuarioId,
-                    organizacaoId,
-                    unidadeId,
-                    PerfilAcesso.AdministradorUnidade,
-                    agoraUtc))
+            var franqueadosUnidades = vinculosFranquia
+                .Select(resultado => resultado.VinculoComercial)
+                .ToArray();
+            var vinculos = vinculosFranquia
+                .Select(resultado => resultado.AcessoAdministradorUnidade)
                 .ToArray();
             var cadastro = new CadastroUsuarioFranqueadora(
                 usuarioId,

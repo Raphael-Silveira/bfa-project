@@ -1,6 +1,7 @@
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Usuarios;
+using BFA.Application.Franqueadora.Franqueados;
 
 namespace BFA.Application.Franqueadora.Usuarios;
 
@@ -33,6 +34,7 @@ public sealed record UsuarioFranqueadoraResumo(
     string Email,
     IReadOnlyList<string> Funcoes,
     IReadOnlyList<string> Unidades,
+    bool AcessoTodaRede,
     bool Ativo);
 
 public sealed record UnidadeSelecaoUsuarioResumo(
@@ -75,7 +77,8 @@ public sealed record UsuarioFranqueadoraEdicao(
     Guid UsuarioId,
     string NomeCompleto,
     string Email,
-    string? Telefone);
+    string? Telefone,
+    IReadOnlyList<FranqueadoVinculoUsuarioResumo> Franqueados);
 
 public sealed record UsuarioFranqueadoraEdicaoContexto(
     Guid UsuarioId,

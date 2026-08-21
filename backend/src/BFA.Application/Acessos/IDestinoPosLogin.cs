@@ -3,12 +3,19 @@ namespace BFA.Application.Acessos;
 public enum DestinoAcesso
 {
     Padrao = 1,
-    AdministradorRede = 2
+    AdministradorRede = 2,
+    Unidade = 3,
+    SelecionarUnidade = 4,
+    SemAcesso = 5
 }
+
+public sealed record DestinoPosLoginResultado(
+    DestinoAcesso Destino,
+    Guid? UnidadeId = null);
 
 public interface IDestinoPosLogin
 {
-    Task<DestinoAcesso> ObterAsync(
+    Task<DestinoPosLoginResultado> ObterAsync(
         Guid usuarioId,
         CancellationToken cancellationToken);
 }

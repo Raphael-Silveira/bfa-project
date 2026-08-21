@@ -1,6 +1,7 @@
 using BFA.Infrastructure;
 using BFA.Web;
 using BFA.Web.Bootstrap;
+using BFA.Web.Franqueados;
 using BFA.Web.Localidades;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddBfaAuthorization();
 builder.Services.AddScoped<BootstrapInicialCommand>();
 builder.Services.AddScoped<SincronizarLocalidadesIbgeCommand>();
+builder.Services.AddScoped<DiagnosticarVinculosFranqueadoCommand>();
 
 var app = builder.Build();
 
@@ -25,6 +27,15 @@ if (SincronizarLocalidadesIbgeCommand.Solicitado(args))
 {
     await using var scope = app.Services.CreateAsyncScope();
     var command = scope.ServiceProvider.GetRequiredService<SincronizarLocalidadesIbgeCommand>();
+    Environment.ExitCode = await command.ExecutarAsync(Console.Out, Console.Error);
+    return;
+}
+
+if (DiagnosticarVinculosFranqueadoCommand.Solicitado(args))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var command = scope.ServiceProvider
+        .GetRequiredService<DiagnosticarVinculosFranqueadoCommand>();
     Environment.ExitCode = await command.ExecutarAsync(Console.Out, Console.Error);
     return;
 }

@@ -1,4 +1,5 @@
 using BFA.Application.Franqueadora.Usuarios;
+using BFA.Application.Franqueadora.Franqueados;
 using BFA.Domain.Acessos;
 using BFA.Domain.Usuarios;
 using BFA.Infrastructure.Identity;
@@ -73,25 +74,9 @@ public sealed class UsuariosFranqueadoraRepositorio(
                 perfil.Ativo))
             .ToDictionaryAsync(perfil => perfil.UsuarioId, cancellationToken);
 
-        var unidadesAcessoIds = vinculos
+        var unidadesIds = vinculos
             .Where(vinculo => vinculo.Ativo && vinculo.UnidadeId.HasValue)
-            .Select(vinculo => vinculo.UnidadeId!.Value);
-        var franqueadosAtivosIds = relacoesComerciais
-            .Where(relacao => relacao.Ativo)
-            .Select(relacao => relacao.FranqueadoId)
-            .Distinct()
-            .ToArray();
-        var unidadesComerciais = await dbContext.FranqueadosUnidades
-            .AsNoTracking()
-            .Where(relacao => relacao.OrganizacaoId == organizacaoId
-                && relacao.Ativo
-                && franqueadosAtivosIds.Contains(relacao.FranqueadoId))
-            .Select(relacao => new UnidadeComercialListagem(
-                relacao.FranqueadoId,
-                relacao.UnidadeId))
-            .ToArrayAsync(cancellationToken);
-        var unidadesIds = unidadesAcessoIds
-            .Concat(unidadesComerciais.Select(relacao => relacao.UnidadeId))
+            .Select(vinculo => vinculo.UnidadeId!.Value)
             .Distinct()
             .ToArray();
         var nomesUnidades = await dbContext.Unidades
@@ -109,7 +94,6 @@ public sealed class UsuariosFranqueadoraRepositorio(
                 perfis.GetValueOrDefault(usuario.Id),
                 vinculos,
                 relacoesComerciais,
-                unidadesComerciais,
                 nomesUnidades))
             .OrderBy(usuario => usuario.Nome, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(usuario => usuario.Email, StringComparer.OrdinalIgnoreCase)
@@ -396,6 +380,26 @@ public sealed class UsuariosFranqueadoraRepositorio(
         }
     }
 
+    public async Task<IReadOnlyList<FranqueadoVinculoUsuarioResumo>>
+        ListarFranqueadosUsuarioAsync(
+            Guid organizacaoId,
+            Guid usuarioId,
+            CancellationToken cancellationToken)
+    {
+        return await (
+            from relacao in dbContext.FranqueadosUsuarios.AsNoTracking()
+            join franqueado in dbContext.Franqueados.AsNoTracking()
+                on relacao.FranqueadoId equals franqueado.Id
+            where franqueado.OrganizacaoId == organizacaoId
+                && relacao.UsuarioId == usuarioId
+                && relacao.Ativo
+            orderby relacao.Principal descending, franqueado.NomeRazaoSocial
+            select new FranqueadoVinculoUsuarioResumo(
+                franqueado.Id,
+                franqueado.NomeRazaoSocial))
+            .ToArrayAsync(cancellationToken);
+    }
+
     private async Task<IReadOnlyList<Guid>> ListarOrganizacoesAtivasAsync(
         Guid usuarioId,
         CancellationToken cancellationToken)
@@ -428,7 +432,6 @@ public sealed class UsuariosFranqueadoraRepositorio(
         PerfilListagem? perfil,
         IReadOnlyCollection<VinculoListagem> vinculos,
         IReadOnlyCollection<RelacaoComercialListagem> relacoesComerciais,
-        IReadOnlyCollection<UnidadeComercialListagem> unidadesComerciais,
         IReadOnlyDictionary<Guid, string> nomesUnidades)
     {
         var vinculosUsuario = vinculos
@@ -443,15 +446,9 @@ public sealed class UsuariosFranqueadoraRepositorio(
             .Distinct(StringComparer.Ordinal)
             .OrderBy(funcao => funcao, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
-        var franqueadosIds = relacoesUsuario
-            .Select(relacao => relacao.FranqueadoId)
-            .ToHashSet();
         var unidadesIds = vinculosUsuario
             .Where(vinculo => vinculo.UnidadeId.HasValue)
             .Select(vinculo => vinculo.UnidadeId!.Value)
-            .Concat(unidadesComerciais
-                .Where(relacao => franqueadosIds.Contains(relacao.FranqueadoId))
-                .Select(relacao => relacao.UnidadeId))
             .Distinct();
         var unidades = unidadesIds
             .Where(nomesUnidades.ContainsKey)
@@ -470,6 +467,9 @@ public sealed class UsuariosFranqueadoraRepositorio(
             email,
             funcoes.Length == 0 ? ["Sem função ativa"] : funcoes,
             unidades,
+            vinculosUsuario.Any(vinculo =>
+                vinculo.Perfil == PerfilAcesso.AdministradorRede
+                && vinculo.UnidadeId is null),
             perfil?.Ativo ?? true);
     }
 
@@ -518,10 +518,6 @@ public sealed class UsuariosFranqueadoraRepositorio(
         Guid UsuarioId,
         Guid FranqueadoId,
         bool Ativo);
-
-    private sealed record UnidadeComercialListagem(
-        Guid FranqueadoId,
-        Guid UnidadeId);
 
     private sealed record UsuarioIdentityListagem(Guid Id, string Email);
 

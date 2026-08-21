@@ -1,0 +1,173 @@
+@model FranqueadoDetalheViewModel
+
+@{
+    ViewData["Title"] = Model.NomeRazaoSocial;
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Franqueado</p>
+        <h1 class="bfa-admin-page-header__title">@Model.NomeRazaoSocial</h1>
+        <p class="bfa-admin-page-header__description">Dados comerciais, usuários e Unidades vinculadas.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-primary bfa-admin-button"
+           href="/franqueadora/franqueados/@Model.Id/editar"
+           aria-label="Editar dados do franqueado"
+           title="Editar dados do franqueado">
+            <span>Editar dados</span>
+        </a>
+    </div>
+</header>
+
+@if (TempData[nameof(BFA.Web.Areas.Franqueadora.Controllers.FranqueadosController.MensagemSucesso)] is string sucesso)
+{
+    <section class="bfa-admin-notice" role="status">
+        <span class="bfa-admin-notice__marker" aria-hidden="true"></span>
+        <div><h2>Operação concluída</h2><p>@sucesso</p></div>
+    </section>
+}
+@if (TempData[nameof(BFA.Web.Areas.Franqueadora.Controllers.FranqueadosController.MensagemErro)] is string erro)
+{
+    <section class="bfa-admin-notice" role="alert">
+        <span class="bfa-admin-notice__marker" aria-hidden="true"></span>
+        <div><h2>Não foi possível concluir</h2><p>@erro</p></div>
+    </section>
+}
+
+<div class="bfa-admin-form-sections bfa-franqueado-detail">
+    <section class="bfa-admin-card" aria-labelledby="dados-cadastrais-title">
+        <header class="bfa-franqueado-section-heading">
+            <div><p>Cadastro</p><h2 id="dados-cadastrais-title">Dados cadastrais</h2></div>
+            <span class="bfa-admin-badge @(Model.Ativo ? "is-active" : "is-inactive")">
+                @(Model.Ativo ? "Ativo" : "Inativo")
+            </span>
+        </header>
+        <dl class="bfa-franqueado-data-grid">
+            <div><dt>Tipo de pessoa</dt><dd>@Model.TipoPessoa</dd></div>
+            <div><dt>CPF / CNPJ</dt><dd>@Model.DocumentoFormatado</dd></div>
+            <div><dt>Nome fantasia</dt><dd>@(Model.NomeFantasia ?? "—")</dd></div>
+            <div><dt>Representante legal</dt><dd>@(Model.ResponsavelLegal ?? "—")</dd></div>
+            <div><dt>Telefone comercial</dt><dd>@(Model.Telefone ?? "—")</dd></div>
+            <div><dt>Email comercial</dt><dd>@Model.Email</dd></div>
+            <div><dt>Email financeiro</dt><dd>@(Model.EmailFinanceiro ?? "—")</dd></div>
+            <div class="is-wide"><dt>Endereço</dt><dd>@(string.IsNullOrWhiteSpace(Model.Endereco) ? "—" : Model.Endereco)</dd></div>
+            <div class="is-wide"><dt>Observações</dt><dd>@(Model.Observacoes ?? "—")</dd></div>
+        </dl>
+    </section>
+
+    <section class="bfa-admin-card" aria-labelledby="unidades-franqueado-title">
+        <header class="bfa-franqueado-section-heading">
+            <div><p>Operação</p><h2 id="unidades-franqueado-title">Unidades</h2></div>
+        </header>
+
+        @if (Model.UnidadesDisponiveis.Count > 0)
+        {
+            <form class="bfa-franqueado-link-form"
+                  action="/franqueadora/franqueados/@Model.Id/unidades/adicionar"
+                  method="post">
+                @Html.AntiForgeryToken()
+                <div class="bfa-form-field">
+                    <label asp-for="UnidadeId" class="bfa-form-label">Vincular unidade</label>
+                    <select asp-for="UnidadeId"
+                            class="form-select bfa-form-control"
+                            data-bfa-combobox
+                            data-placeholder="Pesquise ou selecione uma Unidade">
+                        <option value="">Pesquise ou selecione uma Unidade</option>
+                        @foreach (var unidade in Model.UnidadesDisponiveis)
+                        {
+                            <option value="@unidade.Id">@unidade.Nome</option>
+                        }
+                    </select>
+                    <span asp-validation-for="UnidadeId" class="bfa-validation-message"></span>
+                </div>
+                <button class="bfa-btn-primary bfa-admin-button" type="submit">Vincular unidade</button>
+            </form>
+        }
+        else
+        {
+            <p class="bfa-franqueado-muted">Não há Unidades ativas e disponíveis para vínculo.</p>
+        }
+
+        @if (Model.Unidades.Count == 0)
+        {
+            <div class="bfa-admin-empty-state" role="status">
+                <div><h3>Nenhuma Unidade vinculada.</h3><p>Use a seleção acima quando houver uma Unidade disponível.</p></div>
+            </div>
+        }
+        else
+        {
+            <div class="bfa-admin-table-container bfa-admin-desktop-list bfa-franqueado-related-list">
+                <table class="bfa-admin-table">
+                    <thead><tr><th scope="col">Unidade</th><th scope="col">Vínculo</th><th scope="col">Unidade</th><th scope="col">Desde</th><th scope="col">Ações</th></tr></thead>
+                    <tbody>
+                    @foreach (var unidade in Model.Unidades)
+                    {
+                        <tr>
+                            <td><strong>@unidade.Nome</strong></td>
+                            <td><span class="bfa-admin-badge @(unidade.VinculoAtivo ? "is-active" : "is-inactive")">@(unidade.VinculoAtivo ? "Ativo" : "Inativo")</span></td>
+                            <td><span class="bfa-admin-badge @(unidade.UnidadeAtiva ? "is-active" : "is-inactive")">@(unidade.UnidadeAtiva ? "Ativa" : "Inativa")</span></td>
+                            <td>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (unidade.VinculoAtivo)
+                                {
+                                    <form action="/franqueadora/franqueados/@Model.Id/unidades/@unidade.UnidadeId/desativar" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button class="bfa-admin-icon-action is-deactivate" type="submit" aria-label="Desvincular unidade @unidade.Nome" title="Desvincular unidade @unidade.Nome">
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg>
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div class="bfa-admin-mobile-list bfa-franqueado-related-list">
+                @foreach (var unidade in Model.Unidades)
+                {
+                    <article class="bfa-franqueado-related-card">
+                        <header><h3>@unidade.Nome</h3><span class="bfa-admin-badge @(unidade.VinculoAtivo ? "is-active" : "is-inactive")">Vínculo @(unidade.VinculoAtivo ? "ativo" : "inativo")</span></header>
+                        <p>Unidade @(unidade.UnidadeAtiva ? "ativa" : "inativa") · Desde @unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</p>
+                        @if (unidade.VinculoAtivo)
+                        {
+                            <form action="/franqueadora/franqueados/@Model.Id/unidades/@unidade.UnidadeId/desativar" method="post">
+                                @Html.AntiForgeryToken()
+                                <button class="bfa-btn-secondary bfa-admin-button" type="submit">Desvincular</button>
+                            </form>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="bfa-admin-card" aria-labelledby="usuarios-franqueado-title">
+        <header class="bfa-franqueado-section-heading"><div><p>Acesso</p><h2 id="usuarios-franqueado-title">Usuários vinculados</h2></div></header>
+        @if (Model.Usuarios.Count == 0)
+        {
+            <p class="bfa-franqueado-muted">Nenhum usuário vinculado.</p>
+        }
+        else
+        {
+            <div class="bfa-franqueado-users">
+                @foreach (var usuario in Model.Usuarios)
+                {
+                    <article class="bfa-franqueado-user">
+                        <div><h3>@usuario.Nome</h3><p>@usuario.Email</p></div>
+                        <div class="bfa-usuario-tags">
+                            @if (usuario.Principal) { <span class="bfa-usuario-tag">Principal</span> }
+                            <span class="bfa-admin-badge @(usuario.Ativo ? "is-active" : "is-inactive")">@(usuario.Ativo ? "Ativo" : "Inativo")</span>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/bfa-searchable-combobox.js" asp-append-version="true"></script>
+}

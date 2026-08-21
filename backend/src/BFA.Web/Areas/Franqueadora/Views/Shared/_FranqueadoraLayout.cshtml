@@ -1,110 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Franqueadora BFA</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/bfa-theme.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+@using BFA.Web.ViewModels.Shared
+@{
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+    ViewData[AdminShellViewData.Chave] = new AdminShellViewModel
+    {
+        AreaNome = "Franqueadora",
+        HomeUrl = "/franqueadora",
+        HomeAriaLabel = "Ir para a visão geral da Franqueadora",
+        NavegacaoAriaLabel = "Navegação da Franqueadora",
+        NavegacaoPartial = "/Areas/Franqueadora/Views/Shared/_FranqueadoraNavLinks.cshtml"
+    };
+}
+
+@RenderBody()
+
+@section AreaStyles {
     <link rel="stylesheet" href="~/css/franqueadora.css" asp-append-version="true" />
-</head>
-<body class="bfa-admin">
-    <a class="bfa-admin-skip-link" href="#conteudo-principal">Ir para o conteúdo principal</a>
+    @await RenderSectionAsync("Styles", required: false)
+}
 
-    <header class="bfa-admin-header">
-        <div class="bfa-admin-header__content">
-            <a class="bfa-admin-brand" href="/franqueadora" aria-label="Ir para a visão geral da Franqueadora">
-                <img class="bfa-admin-brand__logo"
-                     src="~/images/brand/bfa-logo-horizontal-dark.png"
-                     alt="Brazilian Footvolley Academy" />
-                <span class="bfa-admin-brand__area">Franqueadora</span>
-            </a>
-
-            <div class="bfa-admin-header__actions">
-                <form action="/logout" method="post" class="bfa-admin-logout bfa-admin-logout--desktop">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="bfa-admin-logout__button">Sair</button>
-                </form>
-
-                <button class="bfa-admin-menu-toggle"
-                        type="button"
-                        data-bs-toggle="offcanvas"
-                        data-bs-target="#bfaAdminMobileMenu"
-                        aria-controls="bfaAdminMobileMenu"
-                        aria-label="Abrir menu administrativo"
-                        title="Abrir menu administrativo">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M4 7h16"></path>
-                        <path d="M4 12h16"></path>
-                        <path d="M4 17h16"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <div class="bfa-admin-shell">
-        <aside class="bfa-admin-sidebar" aria-label="Navegação da Franqueadora">
-            <p class="bfa-admin-nav-label">Administração</p>
-            <nav class="bfa-admin-nav">
-                <partial name="_FranqueadoraNavLinks" />
-            </nav>
-        </aside>
-
-        <main class="bfa-admin-main" id="conteudo-principal">
-            @RenderBody()
-        </main>
-    </div>
-
-    <div class="offcanvas offcanvas-start bfa-admin-drawer"
-         tabindex="-1"
-         id="bfaAdminMobileMenu"
-         data-bs-backdrop="true"
-         data-bs-scroll="false"
-         aria-labelledby="bfaAdminMobileMenuTitle">
-        <div class="bfa-admin-drawer__header">
-            <div>
-                <p class="bfa-admin-drawer__eyebrow">Área administrativa</p>
-                <h2 id="bfaAdminMobileMenuTitle">Franqueadora</h2>
-            </div>
-            <button class="bfa-admin-drawer__close"
-                    type="button"
-                    data-bs-dismiss="offcanvas"
-                    aria-label="Fechar menu administrativo"
-                    title="Fechar menu administrativo">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="m6 6 12 12"></path>
-                    <path d="m18 6-12 12"></path>
-                </svg>
-            </button>
-        </div>
-        <div class="bfa-admin-drawer__body">
-            <nav class="bfa-admin-nav bfa-admin-drawer__nav" aria-label="Menu administrativo mobile">
-                <partial name="_FranqueadoraNavLinks" />
-            </nav>
-
-            <form action="/logout" method="post" class="bfa-admin-drawer__logout">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="bfa-admin-nav-link bfa-admin-nav-link--logout">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M10 5H5v14h5"></path>
-                        <path d="M14 8l4 4-4 4"></path>
-                        <path d="M18 12H9"></path>
-                    </svg>
-                    <span>Sair</span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <footer class="bfa-admin-footer">
-        <span>Brazilian Footvolley Academy</span>
-        <span>Rede de Futevôlei</span>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@section Scripts {
     @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
+}

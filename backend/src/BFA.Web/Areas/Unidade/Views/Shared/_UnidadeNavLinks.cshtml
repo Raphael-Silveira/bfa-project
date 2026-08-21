@@ -1,0 +1,18 @@
+@{
+    var caminhoAtual = Context.Request.Path.Value?.TrimEnd('/') ?? string.Empty;
+    var visaoGeralAtiva = caminhoAtual.StartsWith(
+        "/unidade/",
+        StringComparison.OrdinalIgnoreCase);
+}
+
+<a class="bfa-admin-nav-link @(visaoGeralAtiva ? "is-active" : null)"
+   href="@Context.Request.Path"
+   aria-current="@(visaoGeralAtiva ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 4h6v6H4z"></path>
+        <path d="M14 4h6v6h-6z"></path>
+        <path d="M4 14h6v6H4z"></path>
+        <path d="M14 14h6v6h-6z"></path>
+    </svg>
+    <span>Visão Geral</span>
+</a>

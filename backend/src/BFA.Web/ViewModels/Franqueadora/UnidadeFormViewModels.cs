@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using BFA.Domain.Unidades;
+using UnidadeDomain = BFA.Domain.Unidades.Unidade;
 
 namespace BFA.Web.ViewModels.Franqueadora;
 
@@ -7,14 +7,14 @@ public sealed class NovaUnidadeViewModel
 {
     [Required(ErrorMessage = "Informe o nome da unidade.")]
     [StringLength(
-        Unidade.NomeTamanhoMaximo,
+        UnidadeDomain.NomeTamanhoMaximo,
         ErrorMessage = "O nome deve possuir no máximo {1} caracteres.")]
     [Display(Name = "Nome")]
     public string Nome { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe o slug da unidade.")]
     [StringLength(
-        Unidade.SlugTamanhoMaximo,
+        UnidadeDomain.SlugTamanhoMaximo,
         ErrorMessage = "O slug deve possuir no máximo {1} caracteres.")]
     [Display(Name = "Slug")]
     public string Slug { get; set; } = string.Empty;
@@ -26,14 +26,14 @@ public sealed class EditarUnidadeViewModel
 
     [Required(ErrorMessage = "Informe o nome da unidade.")]
     [StringLength(
-        Unidade.NomeTamanhoMaximo,
+        UnidadeDomain.NomeTamanhoMaximo,
         ErrorMessage = "O nome deve possuir no máximo {1} caracteres.")]
     [Display(Name = "Nome")]
     public string Nome { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe o slug da unidade.")]
     [StringLength(
-        Unidade.SlugTamanhoMaximo,
+        UnidadeDomain.SlugTamanhoMaximo,
         ErrorMessage = "O slug deve possuir no máximo {1} caracteres.")]
     [Display(Name = "Slug")]
     public string Slug { get; set; } = string.Empty;

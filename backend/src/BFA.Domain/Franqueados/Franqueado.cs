@@ -155,6 +155,80 @@ public sealed class Franqueado
 
     public DateTime AtualizadoEmUtc { get; private set; }
 
+    public void AtualizarDados(
+        TipoPessoaFranqueado tipoPessoa,
+        string nomeRazaoSocial,
+        string? nomeFantasia,
+        string documento,
+        string? telefone,
+        string email,
+        string? emailFinanceiro,
+        string? responsavelLegal,
+        string? logradouro,
+        string? numero,
+        string? complemento,
+        string? bairro,
+        string? cidade,
+        string? estado,
+        string? cep,
+        string? observacoes,
+        DateTime atualizadoEmUtc)
+    {
+        if (!Enum.IsDefined(tipoPessoa))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(tipoPessoa),
+                tipoPessoa,
+                "O tipo de pessoa do franqueado e invalido.");
+        }
+
+        if (atualizadoEmUtc.Kind != DateTimeKind.Utc)
+        {
+            throw new ArgumentException(
+                "A data de atualizacao deve estar em UTC.",
+                nameof(atualizadoEmUtc));
+        }
+
+        TipoPessoa = tipoPessoa;
+        NomeRazaoSocial = NormalizarObrigatorio(
+            nomeRazaoSocial,
+            NomeRazaoSocialTamanhoMaximo,
+            nameof(nomeRazaoSocial));
+        NomeFantasia = NormalizarOpcional(
+            nomeFantasia,
+            NomeFantasiaTamanhoMaximo,
+            nameof(nomeFantasia));
+        Documento = NormalizarDocumento(documento, tipoPessoa);
+        Telefone = NormalizarOpcional(telefone, TelefoneTamanhoMaximo, nameof(telefone));
+        Email = NormalizarObrigatorio(email, EmailTamanhoMaximo, nameof(email));
+        EmailFinanceiro = NormalizarOpcional(
+            emailFinanceiro,
+            EmailFinanceiroTamanhoMaximo,
+            nameof(emailFinanceiro));
+        ResponsavelLegal = NormalizarOpcional(
+            responsavelLegal,
+            ResponsavelLegalTamanhoMaximo,
+            nameof(responsavelLegal));
+        Logradouro = NormalizarOpcional(
+            logradouro,
+            LogradouroTamanhoMaximo,
+            nameof(logradouro));
+        Numero = NormalizarOpcional(numero, NumeroTamanhoMaximo, nameof(numero));
+        Complemento = NormalizarOpcional(
+            complemento,
+            ComplementoTamanhoMaximo,
+            nameof(complemento));
+        Bairro = NormalizarOpcional(bairro, BairroTamanhoMaximo, nameof(bairro));
+        Cidade = NormalizarOpcional(cidade, CidadeTamanhoMaximo, nameof(cidade));
+        Estado = NormalizarOpcional(estado, EstadoTamanhoMaximo, nameof(estado));
+        Cep = NormalizarCep(cep);
+        Observacoes = NormalizarOpcional(
+            observacoes,
+            ObservacoesTamanhoMaximo,
+            nameof(observacoes));
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
     private static string NormalizarDocumento(
         string documento,
         TipoPessoaFranqueado tipoPessoa)

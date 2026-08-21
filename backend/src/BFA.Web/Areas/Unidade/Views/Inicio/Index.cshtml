@@ -1,0 +1,25 @@
+@model PainelUnidadeViewModel
+
+@{
+    ViewData["Title"] = "Visão Geral";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-painel-unidade">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-painel-unidade">@Model.NomeUnidade</h1>
+        <p class="bfa-admin-page-header__description">Visão geral da operação da Unidade.</p>
+    </div>
+</header>
+
+<section class="bfa-admin-empty-state bfa-unidade-empty-state"
+         aria-labelledby="titulo-primeiros-modulos">
+    <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+    <div>
+        <h2 id="titulo-primeiros-modulos">Sua área de gestão está pronta.</h2>
+        <p>
+            Os módulos operacionais aparecerão aqui conforme forem disponibilizados para a Unidade.
+        </p>
+    </div>
+</section>

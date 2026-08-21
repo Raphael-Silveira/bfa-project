@@ -1,0 +1,72 @@
+@using BFA.Web.ViewModels.Unidade
+@model SelecaoUnidadeViewModel
+
+@{
+    ViewData["Title"] = "Selecionar Unidade";
+    Layout = "_AuthLayout";
+}
+
+<section class="bfa-unidade-selection" aria-labelledby="titulo-selecao-unidade">
+    <header class="bfa-unidade-selection__header">
+        <img class="bfa-unidade-selection__logo"
+             src="~/images/brand/bfa-logo-horizontal-dark.png"
+             alt="Brazilian Footvolley Academy" />
+        @if (!string.IsNullOrWhiteSpace(Model.PrimeiroNomeUsuario))
+        {
+            <p class="bfa-unidade-selection__welcome">Bem-vindo, @Model.PrimeiroNomeUsuario</p>
+        }
+        <h1 id="titulo-selecao-unidade">Selecione uma unidade</h1>
+        @if (Model.Unidades.Count > 0)
+        {
+            <p>Escolha a unidade que deseja administrar.</p>
+        }
+    </header>
+
+    @if (Model.Unidades.Count == 0)
+    {
+        <div class="bfa-unidade-selection__empty" role="status">
+            <span aria-hidden="true">BFA</span>
+            <div>
+                <h2>Nenhuma Unidade disponível</h2>
+                <p>Seu usuário não possui acesso ativo a uma Unidade disponível.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <form action="/selecionar-unidade" method="post" class="bfa-unidade-selection__list">
+            @Html.AntiForgeryToken()
+            @foreach (var unidade in Model.Unidades)
+            {
+                <button type="submit"
+                        name="unidadeId"
+                        value="@unidade.UnidadeId"
+                        aria-label="Acessar unidade @unidade.Nome"
+                        class="bfa-unidade-selection__item">
+                    <span class="bfa-unidade-selection__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                            <path d="M4 20V8l8-4 8 4v12"></path>
+                            <path d="M9 20v-6h6v6"></path>
+                            <path d="M2 20h20"></path>
+                        </svg>
+                    </span>
+                    <span class="bfa-unidade-selection__item-copy">
+                        <strong>@unidade.Nome</strong>
+                        <small>Acessar unidade</small>
+                    </span>
+                    <span class="bfa-unidade-selection__arrow" aria-hidden="true">→</span>
+                </button>
+            }
+        </form>
+    }
+
+    <form action="/logout" method="post" class="bfa-unidade-selection__logout">
+        @Html.AntiForgeryToken()
+        <button type="submit">Sair da conta</button>
+    </form>
+</section>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/unidade.css" asp-append-version="true" />
+}

@@ -55,7 +55,7 @@ else
                     <th scope="col">Nome</th>
                     <th scope="col">Email</th>
                     <th scope="col">Função</th>
-                    <th scope="col">Unidade(s)</th>
+                    <th scope="col">Acesso às unidades</th>
                     <th scope="col">Status</th>
                     <th scope="col">Ações</th>
                 </tr>
@@ -75,9 +75,13 @@ else
                             </div>
                         </td>
                         <td>
-                            @if (usuario.Unidades.Count == 0)
+                            @if (usuario.AcessoTodaRede)
                             {
                                 <span class="bfa-usuario-empty-value">Toda a rede</span>
+                            }
+                            else if (usuario.Unidades.Count == 0)
+                            {
+                                <span class="bfa-usuario-empty-value">Sem acesso a unidades</span>
                             }
                             else
                             {
@@ -125,8 +129,8 @@ else
                         </dd>
                     </div>
                     <div>
-                        <dt>Unidade(s)</dt>
-                        <dd>@(usuario.Unidades.Count == 0 ? "Toda a rede" : string.Join(", ", usuario.Unidades))</dd>
+                        <dt>Acesso às unidades</dt>
+                        <dd>@(usuario.AcessoTodaRede ? "Toda a rede" : usuario.Unidades.Count == 0 ? "Sem acesso a unidades" : string.Join(", ", usuario.Unidades))</dd>
                     </div>
                 </dl>
                 <footer class="bfa-usuario-card__actions">

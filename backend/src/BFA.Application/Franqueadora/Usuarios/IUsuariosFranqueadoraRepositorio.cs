@@ -1,3 +1,5 @@
+using BFA.Application.Franqueadora.Franqueados;
+
 namespace BFA.Application.Franqueadora.Usuarios;
 
 public interface IUsuariosFranqueadoraRepositorio
@@ -34,6 +36,11 @@ public interface IUsuariosFranqueadoraRepositorio
         CancellationToken cancellationToken);
 
     Task<UsuarioFranqueadoraEdicaoContexto?> ObterEdicaoAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<FranqueadoVinculoUsuarioResumo>> ListarFranqueadosUsuarioAsync(
+        Guid organizacaoId,
         Guid usuarioId,
         CancellationToken cancellationToken);
 
