@@ -1,5 +1,6 @@
 using BFA.Application.Franqueadora.Franqueados;
 using BFA.Domain.Acessos;
+using BFA.Domain.Contratos;
 using BFA.Domain.Franqueados;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -117,7 +118,15 @@ public sealed class FranqueadosRepositorio(BfaDbContext dbContext)
                 unidade.Nome,
                 relacao.Ativo,
                 unidade.Ativa,
-                relacao.CriadoEmUtc))
+                relacao.CriadoEmUtc,
+                dbContext.ContratosFranquia
+                    .Where(contrato => contrato.FranqueadoUnidadeId == relacao.Id)
+                    .OrderBy(contrato => contrato.Status == StatusContratoFranquia.Ativo ? 0
+                        : contrato.Status == StatusContratoFranquia.Rascunho ? 1
+                        : 2)
+                    .ThenByDescending(contrato => contrato.CriadoEmUtc)
+                    .Select(contrato => (StatusContratoFranquia?)contrato.Status)
+                    .FirstOrDefault()))
             .ToArrayAsync(cancellationToken);
     }
 

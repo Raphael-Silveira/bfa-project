@@ -1,0 +1,41 @@
+@model ContratoVersaoDetalheViewModel
+
+@{
+    ViewData["Title"] = $"Versão {Model.Versao.NumeroVersao}";
+    Layout = "_FranqueadoraLayout";
+    var rotaBase = $"/franqueadora/franqueados/{Model.FranqueadoId}/unidades/{Model.UnidadeId}/contrato";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Histórico contratual</p><h1 class="bfa-admin-page-header__title">Versão @Model.Versao.NumeroVersao</h1><p class="bfa-admin-page-header__description">@Model.UnidadeNome · @Model.FranqueadoNome</p></div>
+    <div class="bfa-admin-page-header__actions"><a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase">Voltar ao contrato</a></div>
+</header>
+
+<div class="bfa-admin-form-sections bfa-contrato-sections">
+    <section class="bfa-admin-card">
+        <header class="bfa-contrato-heading"><div><p>@(Model.NumeroContrato ?? "Contrato sem número")</p><h2>Condições formalizadas</h2></div><span class="bfa-admin-badge @(Model.Versao.Status == BFA.Domain.Contratos.StatusVersaoContratoFranquia.Vigente ? "is-active" : "is-inactive")">@Model.Versao.Status</span></header>
+        <dl class="bfa-contrato-summary-grid">
+            <div><dt>Vigência</dt><dd>@Model.Versao.DataInicio.ToString("dd/MM/yyyy") a @(Model.Versao.DataFim?.ToString("dd/MM/yyyy") ?? "prazo indeterminado")</dd></div>
+            <div><dt>Royalties</dt><dd>@Model.Versao.PercentualRoyalties.ToString("N2")%</dd></div>
+            <div><dt>Mensalidade</dt><dd>@Model.Versao.MensalidadeFixa.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</dd></div>
+            <div><dt>Taxa de adesão</dt><dd>@(Model.Versao.TaxaAdesao is { } taxa ? taxa.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")) : "—")</dd></div>
+            <div><dt>Dia de vencimento</dt><dd>@(Model.Versao.DiaVencimento?.ToString() ?? "—")</dd></div>
+            <div><dt>Criada em</dt><dd>@Model.Versao.CriadoEmUtc.ToString("dd/MM/yyyy HH:mm") por @Model.Versao.CriadoPor</dd></div>
+            <div class="is-wide"><dt>Motivo da alteração</dt><dd>@(Model.Versao.MotivoAlteracao ?? "—")</dd></div>
+            <div class="is-wide"><dt>Observações</dt><dd>@(Model.Versao.Observacoes ?? "—")</dd></div>
+        </dl>
+    </section>
+    <section class="bfa-admin-card">
+        <header class="bfa-contrato-heading"><div><p>Arquivos privados</p><h2>Documentos</h2></div></header>
+        @if (Model.Versao.Documentos.Count == 0) { <div class="bfa-admin-empty-state"><div><h3>Nenhum documento nesta versão.</h3></div></div> }
+        else
+        {
+            <div class="bfa-contrato-documents">
+                @foreach (var documento in Model.Versao.Documentos)
+                {
+                    <div class="bfa-contrato-document"><div><strong>@documento.NomeOriginal</strong><span>@documento.TipoDocumento · enviado em @documento.CriadoEmUtc.ToString("dd/MM/yyyy HH:mm") por @documento.EnviadoPor</span></div><div class="bfa-admin-actions"><a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase/@Model.ContratoId/versoes/@Model.Versao.Id/documentos/@documento.Id/visualizar" target="_blank" rel="noopener">Visualizar</a><a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase/@Model.ContratoId/versoes/@Model.Versao.Id/documentos/@documento.Id/baixar">Baixar</a></div></div>
+                }
+            </div>
+        }
+    </section>
+</div>

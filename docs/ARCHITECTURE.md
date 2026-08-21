@@ -477,8 +477,9 @@ are terminal. Keeping the same status remains valid.
 Formalized conditions are never overwritten. A future contractual change must mark the
 previous version as `Substituida` and insert the next version as `Vigente` in one database
 transaction. The pair `(contrato_franquia_id, numero_versao)` is unique and provides the
-per-contract sequence without a global version sequence. This task establishes the model;
-the change use case is not implemented yet.
+per-contract sequence without a global version sequence. The Franqueadora flow now creates
+the next number from the current contract history and treats a concurrent unique violation as
+a controlled conflict; it does not use a global sequence.
 
 The Domain exposes term editing only while a version is `Rascunho`. Identity and creation
 audit (`Id`, parent contract, version number, creation timestamp, and creating user) never
@@ -499,12 +500,37 @@ Document evidence is append-only for the runtime role: `bfa_app_role` receives o
 and `INSERT` on `documentos_contrato_franquia`. A correction or aditivo creates another
 metadata row and another physical file; existing document metadata is not updated or deleted.
 
-Application owns the storage port `IArmazenamentoDocumentosContrato`, with save, read, and
-existence operations. Infrastructure provides `ArmazenamentoLocalDocumentosContrato`, which
+Application owns the storage port `IArmazenamentoDocumentosContrato`, including staged save,
+confirmation, technical discard, read, and existence operations. Infrastructure provides
+`ArmazenamentoLocalDocumentosContrato`, which
 resolves validated relative keys beneath a configured private base directory and rejects
 absolute paths, `..`, invalid segments, and any normalized path that escapes that base. No
 contract document directory is placed under `wwwroot`, exposed by a direct public URL, or
-served directly by Nginx. HTTP upload/download and document authorization remain deferred.
+served directly by Nginx. The Franqueadora endpoints authorize the complete
+Organizacao/Franqueado/Unidade/Contrato/Versao/Documento chain and stream PDFs through the
+application; storage keys and physical paths never become public URLs.
+
+The implemented lifecycle is:
+
+```text
+Contrato Rascunho + Versao 1 Rascunho
+        |
+        +--> PDFs append-only
+        |
+        v
+Contrato Ativo + Versao Vigente
+        |
+        +--> Nova Versao Rascunho + documento Contrato/Aditivo
+        |
+        v
+Versao anterior Substituida + nova Versao Vigente
+```
+
+Activation requires a `Contrato` document. Formalizing a later version requires a `Contrato`
+or `Aditivo`. Draft and active contracts may be canceled without physical deletion; ending an
+active contract changes only its aggregate lifecycle to `Encerrado`. Its last version remains
+`Vigente` to mean “last formalized set of terms”, not that the commercial operation remains
+active.
 
 In Contabo production, `Armazenamento__Documentos__DiretorioBase` configures the private root;
 the planned value is `/var/lib/bfa/storage`, with contract files beneath its `contratos`
@@ -512,10 +538,19 @@ subtree. The Linux account running BFA.Web requires read/write access to this pr
 directory. The path is operational configuration and is not hardcoded in application code
 or committed with a secret.
 
-PostgreSQL and the filesystem do not share one ACID transaction. A future upload flow must
-therefore define compensating/staged steps so metadata is not committed without its file and
-failed operations do not leave orphan files. That coordination is intentionally not
-implemented by V007.
+PostgreSQL and the filesystem do not share one ACID transaction. Upload therefore streams to
+a private temporary file first while enforcing the configured size, checking `%PDF-`, and
+calculating lowercase SHA-256. Only after validation does Infrastructure open the database
+transaction, move the temporary file to its server-generated final key, insert metadata, and
+commit. A failure before confirmation discards the temporary file; a database failure after
+the move rolls back metadata and technically removes the unconfirmed final file. This cleanup
+is compensation for an operation that never committed, not a document-delete use case.
+
+Development configures `.storage/` outside `wwwroot` and Git ignores it. Production supplies
+`Armazenamento__Documentos__DiretorioBase` (planned `/var/lib/bfa/storage`) and may override
+`Armazenamento__Documentos__TamanhoMaximoBytes`. Malware scanning and a future metadata versus
+filesystem reconciliation tool remain explicit future hardening; persisted documents are not
+automatically deleted when a physical file is missing.
 
 ```text
 BFA.Web
@@ -525,9 +560,9 @@ BFA.Web
 
 A complete BFA backup and restore must treat PostgreSQL and the private storage directory as
 one recoverable set. The database contains each `ChaveArmazenamento`, so restoration must
-preserve the pairing between that metadata and the corresponding physical file. V007 creates
-the three tables and their metadata constraints; it does not execute the migration or create
-physical storage in an environment.
+preserve the pairing between that metadata and the corresponding physical file. V007 created
+the three tables and their metadata constraints and is immutable after deployment; physical
+storage remains provisioned independently per environment.
 
 ---
 

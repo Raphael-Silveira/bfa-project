@@ -1,0 +1,40 @@
+@model ContratoFranquiaFormViewModel
+
+@{
+    var novo = Model.ContratoId is null;
+    ViewData["Title"] = novo ? "Novo contrato" : $"Editar versão {Model.NumeroVersao}";
+    Layout = "_FranqueadoraLayout";
+    var rotaBase = $"/franqueadora/franqueados/{Model.FranqueadoId}/unidades/{Model.UnidadeId}/contrato";
+    var action = novo ? $"{rotaBase}/novo" : $"{rotaBase}/{Model.ContratoId}/versoes/{Model.VersaoId}/editar";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">@(novo ? "Novo contrato" : $"Versão {Model.NumeroVersao} · Rascunho")</p>
+        <h1 class="bfa-admin-page-header__title">@Model.UnidadeNome</h1>
+        <p class="bfa-admin-page-header__description">@Model.FranqueadoNome</p>
+    </div>
+</header>
+
+<form class="bfa-admin-form bfa-contrato-form" action="@action" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+    <section class="bfa-admin-card bfa-admin-form-card">
+        <header class="bfa-contrato-heading"><div><p>Identificação</p><h2>Condições contratuais</h2></div></header>
+        <div class="bfa-contrato-form-grid">
+            <div class="bfa-form-field bfa-contrato-form-wide"><label asp-for="NumeroContrato" class="bfa-form-label"></label><input asp-for="NumeroContrato" class="form-control bfa-form-control" readonly="@(Model.NumeroVersao > 1 ? "readonly" : null)" /><span asp-validation-for="NumeroContrato" class="bfa-validation-message"></span>@if (Model.NumeroVersao > 1) { <span class="bfa-admin-form-help">O número é imutável após a ativação do contrato.</span> }</div>
+            <div class="bfa-form-field"><label asp-for="DataInicio" class="bfa-form-label"></label><input asp-for="DataInicio" class="form-control bfa-form-control" type="date" required /><span asp-validation-for="DataInicio" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="DataFim" class="bfa-form-label"></label><input asp-for="DataFim" class="form-control bfa-form-control" type="date" /><span asp-validation-for="DataFim" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="PercentualRoyalties" class="bfa-form-label"></label><input asp-for="PercentualRoyalties" class="form-control bfa-form-control" inputmode="decimal" placeholder="8,00" required /><span asp-validation-for="PercentualRoyalties" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="MensalidadeFixa" class="bfa-form-label"></label><div class="bfa-contrato-money"><span>R$</span><input asp-for="MensalidadeFixa" class="form-control bfa-form-control" inputmode="decimal" placeholder="500,00" required /></div><span asp-validation-for="MensalidadeFixa" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="TaxaAdesao" class="bfa-form-label"></label><div class="bfa-contrato-money"><span>R$</span><input asp-for="TaxaAdesao" class="form-control bfa-form-control" inputmode="decimal" placeholder="0,00" /></div><span asp-validation-for="TaxaAdesao" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="DiaVencimento" class="bfa-form-label"></label><input asp-for="DiaVencimento" class="form-control bfa-form-control" type="number" min="1" max="31" /><span asp-validation-for="DiaVencimento" class="bfa-validation-message"></span></div>
+            @if (Model.NumeroVersao > 1)
+            {
+                <div class="bfa-form-field bfa-contrato-form-wide"><label asp-for="MotivoAlteracao" class="bfa-form-label"></label><textarea asp-for="MotivoAlteracao" class="form-control bfa-form-control" rows="3" required></textarea><span asp-validation-for="MotivoAlteracao" class="bfa-validation-message"></span></div>
+            }
+            <div class="bfa-form-field bfa-contrato-form-wide"><label asp-for="Observacoes" class="bfa-form-label"></label><textarea asp-for="Observacoes" class="form-control bfa-form-control" rows="5"></textarea><span asp-validation-for="Observacoes" class="bfa-validation-message"></span></div>
+        </div>
+    </section>
+    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar rascunho</button><a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase">Cancelar</a></div>
+</form>

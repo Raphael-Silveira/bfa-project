@@ -51,6 +51,8 @@ appsettings.*.Local.json
 *.bak
 *.swp
 ~$*
+.storage/
+**/.storage/
 
 # Operating systems
 .DS_Store

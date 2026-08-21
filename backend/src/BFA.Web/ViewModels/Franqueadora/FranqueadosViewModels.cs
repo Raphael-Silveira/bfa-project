@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BFA.Domain.Franqueados;
+using BFA.Domain.Contratos;
 
 namespace BFA.Web.ViewModels.Franqueadora;
 
@@ -65,7 +66,8 @@ public sealed record FranqueadoUnidadeItemViewModel(
     string Nome,
     bool VinculoAtivo,
     bool UnidadeAtiva,
-    DateTime CriadoEmUtc);
+    DateTime CriadoEmUtc,
+    StatusContratoFranquia? StatusContrato);
 
 public sealed record UnidadeDisponivelFranqueadoViewModel(Guid Id, string Nome);
 

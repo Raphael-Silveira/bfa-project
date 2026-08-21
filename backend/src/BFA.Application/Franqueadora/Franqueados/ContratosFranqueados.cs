@@ -1,4 +1,5 @@
 using BFA.Domain.Franqueados;
+using BFA.Domain.Contratos;
 
 namespace BFA.Application.Franqueadora.Franqueados;
 
@@ -79,7 +80,8 @@ public sealed record FranqueadoUnidadeResumo(
     string Nome,
     bool VinculoAtivo,
     bool UnidadeAtiva,
-    DateTime CriadoEmUtc);
+    DateTime CriadoEmUtc,
+    StatusContratoFranquia? StatusContrato);
 
 public sealed record UnidadeDisponivelFranqueadoResumo(Guid Id, string Nome);
 

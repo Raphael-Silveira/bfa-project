@@ -1,0 +1,205 @@
+@using BFA.Domain.Contratos
+@model ContratoFranquiaPainelViewModel
+
+@{
+    ViewData["Title"] = $"Contrato · {Model.UnidadeNome}";
+    Layout = "_FranqueadoraLayout";
+    var rotaBase = $"/franqueadora/franqueados/{Model.FranqueadoId}/unidades/{Model.UnidadeId}/contrato";
+    var rascunho = Model.Versoes.FirstOrDefault(item => item.Status == StatusVersaoContratoFranquia.Rascunho);
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Contrato de franquia</p>
+        <h1 class="bfa-admin-page-header__title">@Model.UnidadeNome</h1>
+        <p class="bfa-admin-page-header__description">@Model.FranqueadoNome</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        @if ((Model.ContratoId is null || Model.Status is StatusContratoFranquia.Cancelado or StatusContratoFranquia.Encerrado) && Model.VinculoAtivo)
+        {
+            <a class="bfa-btn-primary bfa-admin-button" href="@rotaBase/novo">@(Model.ContratoId is null ? "Criar contrato" : "Criar novo contrato")</a>
+        }
+        else if (Model.ContratoId is { } contratoId && rascunho is not null && Model.VinculoAtivo)
+        {
+            <a class="bfa-btn-primary bfa-admin-button"
+               href="@rotaBase/@contratoId/versoes/@rascunho.Id/editar">Editar rascunho</a>
+        }
+        <a class="bfa-btn-secondary bfa-admin-button" href="/franqueadora/franqueados/@Model.FranqueadoId">Voltar ao franqueado</a>
+    </div>
+</header>
+
+@if (TempData[BFA.Web.Areas.Franqueadora.Controllers.ContratosController.MensagemSucesso] is string sucesso)
+{
+    <section class="bfa-admin-notice" role="status"><span class="bfa-admin-notice__marker" aria-hidden="true"></span><div><h2>Operação concluída</h2><p>@sucesso</p></div></section>
+}
+@if (TempData[BFA.Web.Areas.Franqueadora.Controllers.ContratosController.MensagemErro] is string erro)
+{
+    <section class="bfa-admin-notice" role="alert"><span class="bfa-admin-notice__marker" aria-hidden="true"></span><div><h2>Não foi possível concluir</h2><p>@erro</p></div></section>
+}
+@if (!Model.VinculoAtivo)
+{
+    <section class="bfa-admin-notice" role="status"><span class="bfa-admin-notice__marker" aria-hidden="true"></span><div><h2>Vínculo comercial inativo</h2><p>O histórico permanece disponível, mas não é possível criar, editar ou formalizar contratos.</p></div></section>
+}
+
+@if (Model.ContratoId is null)
+{
+    <section class="bfa-admin-card bfa-admin-empty-state" role="status" aria-labelledby="contrato-vazio-title">
+        <div><h2 id="contrato-vazio-title">Nenhum contrato cadastrado para esta unidade.</h2><p>Crie um rascunho para registrar as condições comerciais e adicionar o PDF.</p></div>
+        @if (Model.VinculoAtivo) { <a class="bfa-btn-primary bfa-admin-button" href="@rotaBase/novo">Criar contrato</a> }
+    </section>
+}
+else
+{
+    var contratoId = Model.ContratoId.Value;
+    <div class="bfa-admin-form-sections bfa-contrato-sections">
+        <section class="bfa-admin-card" aria-labelledby="contrato-resumo-title">
+            <header class="bfa-contrato-heading">
+                <div><p>Contrato atual</p><h2 id="contrato-resumo-title">@(Model.Numero ?? "Sem número informado")</h2></div>
+                <span class="bfa-admin-badge @StatusContratoClasse(Model.Status)">@NomeStatusContrato(Model.Status)</span>
+            </header>
+            @if (Model.VersaoAtual is { } atual)
+            {
+                <dl class="bfa-contrato-summary-grid">
+                    <div><dt>Versão</dt><dd>@atual.NumeroVersao · @NomeStatusVersao(atual.Status)</dd></div>
+                    <div><dt>Vigência</dt><dd>@atual.DataInicio.ToString("dd/MM/yyyy") a @(atual.DataFim?.ToString("dd/MM/yyyy") ?? "prazo indeterminado")</dd></div>
+                    <div><dt>Royalties</dt><dd>@atual.PercentualRoyalties.ToString("N2")%</dd></div>
+                    <div><dt>Mensalidade</dt><dd>@FormatarMoeda(atual.MensalidadeFixa)</dd></div>
+                    <div><dt>Taxa de adesão</dt><dd>@(atual.TaxaAdesao is { } taxa ? FormatarMoeda(taxa) : "—")</dd></div>
+                    <div><dt>Vencimento</dt><dd>@(atual.DiaVencimento is { } dia ? $"Dia {dia}" : "—")</dd></div>
+                </dl>
+            }
+            <div class="bfa-contrato-state-actions">
+                @if (Model.Status == StatusContratoFranquia.Rascunho && Model.VinculoAtivo)
+                {
+                    <form action="@rotaBase/@contratoId/ativar" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="bfa-btn-primary bfa-admin-button" type="submit">Ativar contrato</button>
+                    </form>
+                    <form action="@rotaBase/@contratoId/cancelar" method="post" onsubmit="return confirm('Cancelar este rascunho e preservar seu histórico?');">
+                        @Html.AntiForgeryToken()
+                        <button class="bfa-btn-secondary bfa-admin-button" type="submit">Cancelar contrato</button>
+                    </form>
+                }
+                else if (Model.Status == StatusContratoFranquia.Ativo)
+                {
+                    <form action="@rotaBase/@contratoId/encerrar" method="post" onsubmit="return confirm('Encerrar este contrato? A última versão formalizada continuará no histórico.');">
+                        @Html.AntiForgeryToken()
+                        <button class="bfa-btn-secondary bfa-admin-button" type="submit">Encerrar contrato</button>
+                    </form>
+                    <form action="@rotaBase/@contratoId/cancelar" method="post" onsubmit="return confirm('Cancelar o contrato ativo e sua versão vigente?');">
+                        @Html.AntiForgeryToken()
+                        <button class="bfa-btn-secondary bfa-admin-button" type="submit">Cancelar contrato</button>
+                    </form>
+                }
+            </div>
+        </section>
+
+        @if (rascunho is not null && Model.VinculoAtivo)
+        {
+            <section class="bfa-admin-card bfa-admin-form-card" aria-labelledby="documento-upload-title">
+                <header class="bfa-contrato-heading"><div><p>Versão @rascunho.NumeroVersao</p><h2 id="documento-upload-title">Adicionar documento PDF</h2></div></header>
+                <form class="bfa-admin-form bfa-contrato-upload"
+                      action="@rotaBase/@contratoId/versoes/@rascunho.Id/documentos"
+                      method="post" enctype="multipart/form-data" data-bfa-upload-form>
+                    @Html.AntiForgeryToken()
+                    <div class="bfa-form-field">
+                        <label class="bfa-form-label" for="TipoDocumento">Tipo</label>
+                        <select class="form-select bfa-form-control" id="TipoDocumento" name="TipoDocumento" required>
+                            @foreach (var tipo in Enum.GetValues<TipoDocumentoContratoFranquia>()) { <option value="@tipo">@tipo</option> }
+                        </select>
+                    </div>
+                    <div class="bfa-form-field bfa-contrato-upload__file">
+                        <label class="bfa-form-label" for="Arquivo">Arquivo PDF</label>
+                        <input class="form-control bfa-form-control" id="Arquivo" name="Arquivo" type="file" accept="application/pdf,.pdf" required data-bfa-upload-input />
+                        <span class="bfa-admin-form-help" data-bfa-upload-feedback>PDF de até @FormatarTamanho(Model.TamanhoMaximoDocumentoBytes). O servidor valida conteúdo, assinatura e tamanho.</span>
+                    </div>
+                    <button class="bfa-btn-primary bfa-admin-button" type="submit" data-bfa-upload-submit>Enviar documento</button>
+                </form>
+            </section>
+        }
+
+        @if (Model.Status == StatusContratoFranquia.Ativo && rascunho is null && Model.VinculoAtivo)
+        {
+            <section class="bfa-admin-card bfa-admin-form-card" aria-labelledby="nova-versao-title">
+                <header class="bfa-contrato-heading"><div><p>Alteração contratual</p><h2 id="nova-versao-title">Criar nova versão</h2></div></header>
+                <form class="bfa-admin-form bfa-contrato-new-version" action="@rotaBase/@contratoId/versoes/nova" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="bfa-form-field">
+                        <label class="bfa-form-label" for="MotivoAlteracao">Motivo da alteração</label>
+                        <textarea class="form-control bfa-form-control" id="MotivoAlteracao" name="MotivoAlteracao" maxlength="1000" required></textarea>
+                    </div>
+                    <button class="bfa-btn-primary bfa-admin-button" type="submit">Nova versão</button>
+                </form>
+            </section>
+        }
+
+        <section class="bfa-admin-card" aria-labelledby="historico-title">
+            <header class="bfa-contrato-heading"><div><p>Histórico preservado</p><h2 id="historico-title">Versões contratuais</h2></div></header>
+            <div class="bfa-contrato-history">
+                @foreach (var versao in Model.Versoes)
+                {
+                    <article class="bfa-contrato-version-card">
+                        <header><div><span>Versão @versao.NumeroVersao</span><h3>@NomeStatusVersao(versao.Status)</h3></div><strong>@FormatarMoeda(versao.MensalidadeFixa)</strong></header>
+                        <p>Início em @versao.DataInicio.ToString("dd/MM/yyyy") · @versao.PercentualRoyalties.ToString("N2")% de royalties</p>
+                        <div class="bfa-admin-actions">
+                            <a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase/@contratoId/versoes/@versao.Id">Ver detalhes</a>
+                            @if (versao.Status == StatusVersaoContratoFranquia.Rascunho && Model.VinculoAtivo)
+                            {
+                                <a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase/@contratoId/versoes/@versao.Id/editar">Editar</a>
+                                @if (versao.NumeroVersao > 1)
+                                {
+                                    <form action="@rotaBase/@contratoId/versoes/@versao.Id/formalizar" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button class="bfa-btn-primary bfa-admin-button" type="submit">Formalizar nova versão</button>
+                                    </form>
+                                }
+                            }
+                        </div>
+                        @if (versao.Documentos.Count > 0)
+                        {
+                            <div class="bfa-contrato-documents">
+                                @foreach (var documento in versao.Documentos)
+                                {
+                                    <div class="bfa-contrato-document">
+                                        <div><strong>@documento.NomeOriginal</strong><span>@documento.TipoDocumento · @FormatarTamanho(documento.TamanhoBytes)</span></div>
+                                        <div class="bfa-admin-actions">
+                                            <a class="bfa-admin-icon-action" href="@rotaBase/@contratoId/versoes/@versao.Id/documentos/@documento.Id/visualizar" target="_blank" rel="noopener" aria-label="Visualizar @documento.NomeOriginal" title="Visualizar PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg></a>
+                                            <a class="bfa-admin-icon-action" href="@rotaBase/@contratoId/versoes/@versao.Id/documentos/@documento.Id/baixar" aria-label="Baixar @documento.NomeOriginal" title="Baixar PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"></path></svg></a>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    </div>
+}
+
+@functions {
+    private static string NomeStatusContrato(StatusContratoFranquia? status) => status switch { StatusContratoFranquia.Rascunho => "Rascunho", StatusContratoFranquia.Ativo => "Ativo", StatusContratoFranquia.Encerrado => "Encerrado", StatusContratoFranquia.Cancelado => "Cancelado", _ => "Não cadastrado" };
+    private static string NomeStatusVersao(StatusVersaoContratoFranquia status) => status switch { StatusVersaoContratoFranquia.Rascunho => "Rascunho", StatusVersaoContratoFranquia.Vigente => "Vigente", StatusVersaoContratoFranquia.Substituida => "Substituída", _ => "Cancelada" };
+    private static string StatusContratoClasse(StatusContratoFranquia? status) => status == StatusContratoFranquia.Ativo ? "is-active" : "is-inactive";
+    private static string FormatarTamanho(long bytes) => bytes >= 1024 * 1024 ? $"{bytes / 1024m / 1024m:N1} MB" : $"{bytes / 1024m:N0} KB";
+    private static string FormatarMoeda(decimal valor) => valor.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const input = document.querySelector('[data-bfa-upload-input]');
+            const feedback = document.querySelector('[data-bfa-upload-feedback]');
+            const form = document.querySelector('[data-bfa-upload-form]');
+            if (!input || !feedback || !form) return;
+            input.addEventListener('change', () => {
+                const file = input.files && input.files[0];
+                feedback.textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB · ${file.type || 'tipo não informado'}` : 'PDF de até 20 MB.';
+            });
+            form.addEventListener('submit', () => {
+                const button = form.querySelector('[data-bfa-upload-submit]');
+                if (button) { button.disabled = true; button.textContent = 'Enviando…'; }
+            });
+        })();
+    </script>
+}

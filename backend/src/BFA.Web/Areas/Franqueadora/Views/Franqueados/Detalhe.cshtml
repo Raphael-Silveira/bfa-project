@@ -100,16 +100,23 @@
         {
             <div class="bfa-admin-table-container bfa-admin-desktop-list bfa-franqueado-related-list">
                 <table class="bfa-admin-table">
-                    <thead><tr><th scope="col">Unidade</th><th scope="col">Vínculo</th><th scope="col">Unidade</th><th scope="col">Desde</th><th scope="col">Ações</th></tr></thead>
+                    <thead><tr><th scope="col">Unidade</th><th scope="col">Vínculo</th><th scope="col">Contrato</th><th scope="col">Desde</th><th scope="col">Ações</th></tr></thead>
                     <tbody>
                     @foreach (var unidade in Model.Unidades)
                     {
                         <tr>
                             <td><strong>@unidade.Nome</strong></td>
                             <td><span class="bfa-admin-badge @(unidade.VinculoAtivo ? "is-active" : "is-inactive")">@(unidade.VinculoAtivo ? "Ativo" : "Inativo")</span></td>
-                            <td><span class="bfa-admin-badge @(unidade.UnidadeAtiva ? "is-active" : "is-inactive")">@(unidade.UnidadeAtiva ? "Ativa" : "Inativa")</span></td>
+                            <td><span class="bfa-admin-badge @(unidade.StatusContrato == BFA.Domain.Contratos.StatusContratoFranquia.Ativo ? "is-active" : "is-inactive")">@NomeStatusContrato(unidade.StatusContrato)</span></td>
                             <td>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</td>
                             <td>
+                                <div class="bfa-admin-actions">
+                                    <a class="bfa-admin-icon-action"
+                                       href="/franqueadora/franqueados/@Model.Id/unidades/@unidade.UnidadeId/contrato"
+                                       aria-label="@(unidade.StatusContrato is null ? "Criar" : "Gerenciar") contrato da unidade @unidade.Nome"
+                                       title="@(unidade.StatusContrato is null ? "Criar contrato" : "Gerenciar contrato")">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M9 11h6M9 15h6M15 3v4h4"></path></svg>
+                                    </a>
                                 @if (unidade.VinculoAtivo)
                                 {
                                     <form action="/franqueadora/franqueados/@Model.Id/unidades/@unidade.UnidadeId/desativar" method="post">
@@ -119,6 +126,7 @@
                                         </button>
                                     </form>
                                 }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -130,7 +138,9 @@
                 {
                     <article class="bfa-franqueado-related-card">
                         <header><h3>@unidade.Nome</h3><span class="bfa-admin-badge @(unidade.VinculoAtivo ? "is-active" : "is-inactive")">Vínculo @(unidade.VinculoAtivo ? "ativo" : "inativo")</span></header>
-                        <p>Unidade @(unidade.UnidadeAtiva ? "ativa" : "inativa") · Desde @unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</p>
+                        <p>Unidade @(unidade.UnidadeAtiva ? "ativa" : "inativa") · Contrato: @NomeStatusContrato(unidade.StatusContrato) · Desde @unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</p>
+                        <div class="bfa-admin-actions">
+                            <a class="bfa-btn-secondary bfa-admin-button" href="/franqueadora/franqueados/@Model.Id/unidades/@unidade.UnidadeId/contrato">@(unidade.StatusContrato is null ? "Criar contrato" : "Gerenciar contrato")</a>
                         @if (unidade.VinculoAtivo)
                         {
                             <form action="/franqueadora/franqueados/@Model.Id/unidades/@unidade.UnidadeId/desativar" method="post">
@@ -138,6 +148,7 @@
                                 <button class="bfa-btn-secondary bfa-admin-button" type="submit">Desvincular</button>
                             </form>
                         }
+                        </div>
                     </article>
                 }
             </div>
@@ -170,4 +181,15 @@
 
 @section Scripts {
     <script src="~/js/bfa-searchable-combobox.js" asp-append-version="true"></script>
+}
+
+@functions {
+    private static string NomeStatusContrato(BFA.Domain.Contratos.StatusContratoFranquia? status) => status switch
+    {
+        BFA.Domain.Contratos.StatusContratoFranquia.Rascunho => "Rascunho",
+        BFA.Domain.Contratos.StatusContratoFranquia.Ativo => "Ativo",
+        BFA.Domain.Contratos.StatusContratoFranquia.Encerrado => "Encerrado",
+        BFA.Domain.Contratos.StatusContratoFranquia.Cancelado => "Cancelado",
+        _ => "Não cadastrado"
+    };
 }

@@ -16,7 +16,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace BFA.IntegrationTests;
 
-public sealed class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicationFactory
+public class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicationFactory
 {
     public const int EstadoPadraoCodigoIbge = 35;
     public const int MunicipioPadraoCodigoIbge = 3554508;

@@ -3,6 +3,7 @@ using BFA.Application.Bootstrap;
 using BFA.Application.Contratos;
 using BFA.Application.Franqueadora;
 using BFA.Application.Franqueadora.AcessosUnidade;
+using BFA.Application.Franqueadora.Contratos;
 using BFA.Application.Franqueadora.Franqueados;
 using BFA.Application.Franqueadora.Unidades;
 using BFA.Application.Franqueadora.Usuarios;
@@ -120,6 +121,12 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<FranqueadosServico>());
         services.AddScoped<IFranqueadosServico>(serviceProvider =>
             serviceProvider.GetRequiredService<FranqueadosServico>());
+        services.AddScoped<IContratosFranquiaRepositorio, ContratosFranquiaRepositorio>();
+        services.AddScoped<ContratosFranquiaServico>();
+        services.AddScoped<IContratosFranquiaConsulta>(serviceProvider =>
+            serviceProvider.GetRequiredService<ContratosFranquiaServico>());
+        services.AddScoped<IContratosFranquiaServico>(serviceProvider =>
+            serviceProvider.GetRequiredService<ContratosFranquiaServico>());
         services.AddHttpClient<IIbgeLocalidadesClient, IbgeLocalidadesClient>(httpClient =>
         {
             const string configurationKey = "Integracoes:Ibge:BaseUrl";

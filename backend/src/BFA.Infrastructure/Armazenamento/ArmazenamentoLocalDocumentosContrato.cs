@@ -1,5 +1,6 @@
 using BFA.Application.Contratos;
 using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
 
 namespace BFA.Infrastructure.Armazenamento;
 
@@ -7,6 +8,7 @@ public sealed class ArmazenamentoLocalDocumentosContrato
     : IArmazenamentoDocumentosContrato
 {
     private readonly string _diretorioBase;
+    private readonly long _tamanhoMaximoBytes;
 
     public ArmazenamentoLocalDocumentosContrato(
         IOptions<ArmazenamentoDocumentosContratoOptions> options)
@@ -21,14 +23,17 @@ public sealed class ArmazenamentoLocalDocumentosContrato
                 $"A configuracao {ArmazenamentoDocumentosContratoOptions.SecaoConfiguracao}:DiretorioBase e obrigatoria.");
         }
 
-        if (!Path.IsPathFullyQualified(diretorioConfigurado))
+        if (options.Value.TamanhoMaximoBytes <= 0)
         {
             throw new InvalidOperationException(
-                "O diretorio base do armazenamento de documentos deve ser um caminho absoluto.");
+                "O tamanho maximo de documentos deve ser maior que zero.");
         }
 
         _diretorioBase = Path.TrimEndingDirectorySeparator(
-            Path.GetFullPath(diretorioConfigurado));
+            Path.IsPathFullyQualified(diretorioConfigurado)
+                ? Path.GetFullPath(diretorioConfigurado)
+                : Path.GetFullPath(diretorioConfigurado, Directory.GetCurrentDirectory()));
+        _tamanhoMaximoBytes = options.Value.TamanhoMaximoBytes;
     }
 
     public async Task SalvarAsync(
@@ -101,6 +106,138 @@ public sealed class ArmazenamentoLocalDocumentosContrato
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(File.Exists(ResolverCaminhoSeguro(chaveArmazenamento)));
+    }
+
+    public async Task<ArquivoTemporarioDocumentoContrato> SalvarTemporarioAsync(
+        Stream conteudo,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(conteudo);
+
+        if (!conteudo.CanRead)
+        {
+            throw new ArgumentException("O conteudo deve permitir leitura.", nameof(conteudo));
+        }
+
+        var identificador = $".temporarios/{Guid.NewGuid():N}.tmp";
+        var caminho = ResolverCaminhoSeguro(identificador);
+        Directory.CreateDirectory(Path.GetDirectoryName(caminho)
+            ?? throw new InvalidOperationException("Nao foi possivel criar o diretorio temporario."));
+        var buffer = new byte[81920];
+        var assinatura = new byte[5];
+        var assinaturaLida = 0;
+        long tamanho = 0;
+
+        try
+        {
+            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            await using var destino = new FileStream(
+                caminho,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                buffer.Length,
+                FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+            while (true)
+            {
+                var lidos = await conteudo.ReadAsync(buffer, cancellationToken);
+
+                if (lidos == 0)
+                {
+                    break;
+                }
+
+                tamanho += lidos;
+
+                if (tamanho > _tamanhoMaximoBytes)
+                {
+                    throw new TamanhoDocumentoContratoExcedidoException(_tamanhoMaximoBytes);
+                }
+
+                if (assinaturaLida < assinatura.Length)
+                {
+                    var quantidade = Math.Min(assinatura.Length - assinaturaLida, lidos);
+                    buffer.AsSpan(0, quantidade).CopyTo(assinatura.AsSpan(assinaturaLida));
+                    assinaturaLida += quantidade;
+                }
+
+                hash.AppendData(buffer, 0, lidos);
+                await destino.WriteAsync(buffer.AsMemory(0, lidos), cancellationToken);
+            }
+
+            await destino.FlushAsync(cancellationToken);
+            var hashSha256 = Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+            var pdf = assinaturaLida == assinatura.Length
+                && assinatura.AsSpan().SequenceEqual("%PDF-"u8);
+            return new(identificador, tamanho, hashSha256, pdf);
+        }
+        catch
+        {
+            if (File.Exists(caminho))
+            {
+                File.Delete(caminho);
+            }
+
+            throw;
+        }
+    }
+
+    public Task ConfirmarTemporarioAsync(
+        string identificadorTemporario,
+        string chaveArmazenamento,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var origem = ResolverIdentificadorTemporario(identificadorTemporario);
+        var destino = ResolverCaminhoSeguro(chaveArmazenamento);
+        Directory.CreateDirectory(Path.GetDirectoryName(destino)
+            ?? throw new InvalidOperationException("Nao foi possivel criar o diretorio final."));
+        File.Move(origem, destino, overwrite: false);
+        return Task.CompletedTask;
+    }
+
+    public Task DescartarTemporarioAsync(
+        string identificadorTemporario,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var caminho = ResolverIdentificadorTemporario(identificadorTemporario);
+
+        if (File.Exists(caminho))
+        {
+            File.Delete(caminho);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task DescartarArquivoNaoConfirmadoAsync(
+        string chaveArmazenamento,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var caminho = ResolverCaminhoSeguro(chaveArmazenamento);
+
+        if (File.Exists(caminho))
+        {
+            File.Delete(caminho);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private string ResolverIdentificadorTemporario(string identificadorTemporario)
+    {
+        if (!identificadorTemporario.StartsWith(".temporarios/", StringComparison.Ordinal)
+            || !identificadorTemporario.EndsWith(".tmp", StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "O identificador temporario e invalido.",
+                nameof(identificadorTemporario));
+        }
+
+        return ResolverCaminhoSeguro(identificadorTemporario);
     }
 
     private string ResolverCaminhoSeguro(string chaveArmazenamento)

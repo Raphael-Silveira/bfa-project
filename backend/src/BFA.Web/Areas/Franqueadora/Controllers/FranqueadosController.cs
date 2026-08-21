@@ -343,7 +343,8 @@ public sealed class FranqueadosController(
                     unidade.Nome,
                     unidade.VinculoAtivo,
                     unidade.UnidadeAtiva,
-                    unidade.CriadoEmUtc)).ToArray(),
+                    unidade.CriadoEmUtc,
+                    unidade.StatusContrato)).ToArray(),
             UnidadesDisponiveis = franqueado.UnidadesDisponiveis.Select(unidade =>
                 new UnidadeDisponivelFranqueadoViewModel(unidade.Id, unidade.Nome)).ToArray()
         };
