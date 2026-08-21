@@ -564,6 +564,132 @@
   font-size: 0.85rem;
 }
 
+.bfa-admin-localidades {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.bfa-admin-localidades__notice,
+.bfa-admin-localidades__feedback {
+  grid-column: 1 / -1;
+}
+
+.bfa-admin-localidades__notice {
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 0.5rem;
+  background: rgba(255, 193, 7, 0.08);
+  color: var(--bfa-text-primary);
+}
+
+.bfa-admin-localidades__feedback {
+  display: flex;
+  min-height: 1.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bfa-admin-localidades__feedback p {
+  margin: 0;
+  color: var(--bfa-text-muted);
+  font-size: 0.85rem;
+}
+
+.bfa-admin-localidades__feedback p.is-error {
+  color: #f0c98d;
+}
+
+.bfa-admin-localidades__feedback .bfa-admin-button {
+  min-height: 2.65rem;
+}
+
+.bfa-admin-combobox {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.bfa-admin-combobox__native.is-enhanced {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bfa-admin-combobox__input {
+  padding-right: 2.6rem;
+  background-image: linear-gradient(45deg, transparent 50%, var(--bfa-text-muted) 50%),
+    linear-gradient(135deg, var(--bfa-text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 1.15rem) 50%, calc(100% - 0.85rem) 50%;
+  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem;
+  background-repeat: no-repeat;
+}
+
+.bfa-admin-combobox__input:focus-visible {
+  outline: 3px solid var(--bfa-accent);
+  outline-offset: 2px;
+}
+
+.bfa-admin-combobox__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.bfa-admin-combobox__list {
+  position: absolute;
+  z-index: 1060;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(18rem, var(--bfa-combobox-available-height, 42vh));
+  padding: 0.35rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  border-radius: 0.55rem;
+  background: var(--bfa-bg-secondary);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
+}
+
+.bfa-admin-combobox.opens-up .bfa-admin-combobox__list {
+  top: auto;
+  bottom: calc(100% + 0.35rem);
+}
+
+.bfa-admin-combobox__option {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.7rem 0.8rem;
+  align-items: center;
+  border: 0;
+  border-left: 0.18rem solid transparent;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--bfa-text-primary);
+  text-align: left;
+}
+
+.bfa-admin-combobox__option:hover,
+.bfa-admin-combobox__option.is-active,
+.bfa-admin-combobox__option[aria-selected="true"] {
+  border-left-color: var(--bfa-accent);
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.bfa-admin-combobox__empty {
+  margin: 0;
+  padding: 0.8rem;
+  color: var(--bfa-text-muted);
+}
+
 .bfa-admin-form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -712,6 +838,20 @@
   .bfa-admin-form-actions .bfa-admin-button {
     width: 100%;
     min-width: 0;
+  }
+
+  .bfa-admin-localidades {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bfa-admin-localidades__notice,
+  .bfa-admin-localidades__feedback {
+    grid-column: auto;
+  }
+
+  .bfa-admin-localidades__feedback {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

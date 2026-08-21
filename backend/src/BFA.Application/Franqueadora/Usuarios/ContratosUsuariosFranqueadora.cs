@@ -22,7 +22,9 @@ public enum EstadoGerenciamentoUsuario
     DocumentoDuplicado = 8,
     FalhaPersistencia = 9,
     UsuarioNaoEncontrado = 10,
-    UsuarioComMultiplasOrganizacoes = 11
+    UsuarioComMultiplasOrganizacoes = 11,
+    EstadoLocalidadeInvalido = 12,
+    MunicipioLocalidadeInvalido = 13
 }
 
 public sealed record UsuarioFranqueadoraResumo(
@@ -50,8 +52,8 @@ public sealed record FranqueadoCadastroDados(
     string? Numero,
     string? Complemento,
     string? Bairro,
-    string? Cidade,
-    string? Estado,
+    int? EstadoCodigoIbge,
+    int? MunicipioCodigoIbge,
     string? Cep,
     string? Observacoes,
     IReadOnlyCollection<Guid> UnidadesIds);

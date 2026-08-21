@@ -1,5 +1,6 @@
 using System.Net;
 using BFA.Application.Bootstrap;
+using BFA.Application.Localidades;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,12 +23,16 @@ public sealed class StartupNormalSemBootstrapTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(0, application.BootstrapInicial.Execucoes);
+        Assert.Equal(0, application.LocalidadesSincronizacao.Execucoes);
     }
 
     private sealed class StartupNormalWebApplicationFactory : BfaWebApplicationFactory
     {
         public TestBootstrapInicial BootstrapInicial =>
             Services.GetRequiredService<TestBootstrapInicial>();
+
+        public TestLocalidadesSincronizacao LocalidadesSincronizacao =>
+            Services.GetRequiredService<TestLocalidadesSincronizacao>();
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -39,7 +44,24 @@ public sealed class StartupNormalSemBootstrapTests
                 services.AddSingleton<TestBootstrapInicial>();
                 services.AddSingleton<IBootstrapInicial>(serviceProvider =>
                     serviceProvider.GetRequiredService<TestBootstrapInicial>());
+                services.RemoveAll<ILocalidadesSincronizacaoServico>();
+                services.AddSingleton<TestLocalidadesSincronizacao>();
+                services.AddSingleton<ILocalidadesSincronizacaoServico>(serviceProvider =>
+                    serviceProvider.GetRequiredService<TestLocalidadesSincronizacao>());
             });
+        }
+    }
+
+    private sealed class TestLocalidadesSincronizacao : ILocalidadesSincronizacaoServico
+    {
+        public int Execucoes { get; private set; }
+
+        public Task<LocalidadesSincronizacaoResultado> SincronizarAsync(
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Execucoes++;
+            return Task.FromResult(new LocalidadesSincronizacaoResultado(0, 0));
         }
     }
 }

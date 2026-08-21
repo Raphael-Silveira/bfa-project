@@ -7,6 +7,8 @@
     Layout = "_FranqueadoraLayout";
     var exibirFranqueado = Model.TipoCadastro == TipoCadastroUsuario.Franqueado;
     var exibirPessoaJuridica = Model.TipoPessoa == TipoPessoaFranqueado.PessoaJuridica;
+    var catalogoDisponivel = Model.Estados.Count > 0;
+    var municipioHabilitado = Model.EstadoCodigoIbge is > 0 && Model.Municipios.Count > 0;
 }
 
 <header class="bfa-admin-page-header">
@@ -175,15 +177,60 @@
                     <input asp-for="Bairro" class="form-control bfa-form-control" maxlength="100" />
                     <span asp-validation-for="Bairro" class="bfa-validation-message"></span>
                 </div>
-                <div class="bfa-form-field">
-                    <label asp-for="Cidade" class="bfa-form-label"></label>
-                    <input asp-for="Cidade" class="form-control bfa-form-control" autocomplete="address-level2" maxlength="100" />
-                    <span asp-validation-for="Cidade" class="bfa-validation-message"></span>
-                </div>
-                <div class="bfa-form-field">
-                    <label asp-for="Estado" class="bfa-form-label"></label>
-                    <input asp-for="Estado" class="form-control bfa-form-control" autocomplete="address-level1" maxlength="2" />
-                    <span asp-validation-for="Estado" class="bfa-validation-message"></span>
+                <div class="bfa-admin-localidades bfa-usuario-form__wide"
+                     data-bfa-localidades
+                     data-municipios-url="/franqueadora/localidades/municipios">
+                    @if (!catalogoDisponivel)
+                    {
+                        <div class="bfa-admin-localidades__notice" role="status">
+                            Catálogo de localidades não carregado.
+                        </div>
+                    }
+                    <div class="bfa-form-field">
+                        <label asp-for="EstadoCodigoIbge" class="bfa-form-label"></label>
+                        <select asp-for="EstadoCodigoIbge"
+                                class="form-select bfa-form-control"
+                                required
+                                disabled="@(!catalogoDisponivel)"
+                                data-bfa-combobox
+                                data-bfa-localidade-estado
+                                data-placeholder="Pesquise ou selecione um Estado"
+                                data-empty-message="Nenhum Estado encontrado.">
+                            <option value="">Pesquise ou selecione um Estado</option>
+                            @foreach (var estado in Model.Estados)
+                            {
+                                <option value="@estado.CodigoIbge">@estado.Nome - @estado.Sigla</option>
+                            }
+                        </select>
+                        <span asp-validation-for="EstadoCodigoIbge" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field">
+                        <label asp-for="MunicipioCodigoIbge" class="bfa-form-label"></label>
+                        <select asp-for="MunicipioCodigoIbge"
+                                class="form-select bfa-form-control"
+                                required
+                                disabled="@(!municipioHabilitado)"
+                                data-bfa-combobox
+                                data-bfa-localidade-municipio
+                                data-placeholder="@(municipioHabilitado ? "Pesquise ou selecione um Município" : "Selecione primeiro o Estado")"
+                                data-empty-message="Nenhum Município encontrado.">
+                            <option value="">@(municipioHabilitado ? "Pesquise ou selecione um Município" : "Selecione primeiro o Estado")</option>
+                            @foreach (var municipio in Model.Municipios)
+                            {
+                                <option value="@municipio.CodigoIbge">@municipio.Nome</option>
+                            }
+                        </select>
+                        <span asp-validation-for="MunicipioCodigoIbge" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-admin-localidades__feedback">
+                        <p data-bfa-localidades-status role="status" aria-live="polite"></p>
+                        <button class="bfa-btn-secondary bfa-admin-button"
+                                type="button"
+                                data-bfa-localidades-retry
+                                hidden>
+                            Tentar novamente
+                        </button>
+                    </div>
                 </div>
                 <div class="bfa-form-field">
                     <label asp-for="Cep" class="bfa-form-label"></label>
@@ -255,6 +302,8 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/bfa-input-masks.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-searchable-combobox.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-localidades-cascade.js" asp-append-version="true"></script>
     <script>
         (() => {
             const tipoCadastro = document.querySelector('[data-tipo-cadastro]');

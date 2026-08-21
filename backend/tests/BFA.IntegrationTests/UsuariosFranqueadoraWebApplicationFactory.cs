@@ -1,5 +1,7 @@
 using BFA.Application.Acessos;
+using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
+using BFA.Domain.Localidades;
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Unidades;
 using BFA.Infrastructure.Identity;
@@ -16,6 +18,9 @@ namespace BFA.IntegrationTests;
 
 public sealed class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicationFactory
 {
+    public const int EstadoPadraoCodigoIbge = 35;
+    public const int MunicipioPadraoCodigoIbge = 3554508;
+
     private readonly string _databaseName = $"bfa-usuarios-web-{Guid.NewGuid():N}";
 
     public string AdministradorEmail { get; } = $"admin-{Guid.NewGuid():N}@bfa.test";
@@ -27,6 +32,9 @@ public sealed class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicatio
     public TestAcessoUsuarioConsulta Acessos =>
         Services.GetRequiredService<TestAcessoUsuarioConsulta>();
 
+    public TestIbgeLocalidadesClient IbgeClient =>
+        Services.GetRequiredService<TestIbgeLocalidadesClient>();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
@@ -37,6 +45,7 @@ public sealed class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicatio
             services.RemoveAll<DbContextOptions<BfaDbContext>>();
             services.RemoveAll<BfaDbContext>();
             services.RemoveAll<IAcessoUsuarioConsulta>();
+            services.RemoveAll<IIbgeLocalidadesClient>();
             services.AddDbContext<BfaDbContext>(options =>
                 options.UseInMemoryDatabase(_databaseName)
                     .ConfigureWarnings(warnings => warnings.Ignore(
@@ -44,12 +53,16 @@ public sealed class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicatio
             services.AddSingleton<TestAcessoUsuarioConsulta>();
             services.AddSingleton<IAcessoUsuarioConsulta>(serviceProvider =>
                 serviceProvider.GetRequiredService<TestAcessoUsuarioConsulta>());
+            services.AddSingleton<TestIbgeLocalidadesClient>();
+            services.AddSingleton<IIbgeLocalidadesClient>(serviceProvider =>
+                serviceProvider.GetRequiredService<TestIbgeLocalidadesClient>());
         });
     }
 
     public async Task<Guid> InicializarAdministradorAsync(
         PerfilAcesso perfil = PerfilAcesso.AdministradorRede,
-        Guid? organizacaoId = null)
+        Guid? organizacaoId = null,
+        bool incluirCatalogoLocalidades = true)
     {
         var organizacaoAtualId = organizacaoId ?? Guid.NewGuid();
         await using var scope = Services.CreateAsyncScope();
@@ -99,6 +112,23 @@ public sealed class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicatio
             unidadeId,
             perfil,
             DateTime.UtcNow));
+
+        if (incluirCatalogoLocalidades
+            && !await dbContext.Estados.AnyAsync())
+        {
+            var agoraUtc = DateTime.UtcNow;
+            dbContext.Estados.Add(new Estado(
+                EstadoPadraoCodigoIbge,
+                "SP",
+                "São Paulo",
+                agoraUtc));
+            dbContext.Municipios.Add(new Municipio(
+                MunicipioPadraoCodigoIbge,
+                EstadoPadraoCodigoIbge,
+                "Tietê",
+                agoraUtc));
+        }
+
         await dbContext.SaveChangesAsync();
 
         Acessos.Limpar();
@@ -108,5 +138,29 @@ public sealed class UsuariosFranqueadoraWebApplicationFactory : BfaWebApplicatio
             unidadeId,
             perfil);
         return organizacaoAtualId;
+    }
+
+    public sealed class TestIbgeLocalidadesClient : IIbgeLocalidadesClient
+    {
+        public int Execucoes { get; private set; }
+
+        public Task<IReadOnlyList<EstadoIbgeDados>> ListarEstadosAsync(
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Execucoes++;
+            throw new InvalidOperationException(
+                "O cliente IBGE não pode ser utilizado durante o cadastro.");
+        }
+
+        public Task<IReadOnlyList<MunicipioIbgeDados>> ListarMunicipiosAsync(
+            string siglaEstado,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Execucoes++;
+            throw new InvalidOperationException(
+                "O cliente IBGE não pode ser utilizado durante o cadastro.");
+        }
     }
 }

@@ -1,5 +1,6 @@
 using BFA.Application.Acessos;
 using BFA.Application.Franqueadora.Usuarios;
+using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
 
@@ -61,6 +62,8 @@ public sealed class UsuariosFranqueadoraServicoTests
         Assert.Equal("Pessoa Franqueada", franqueado.NomeRazaoSocial);
         Assert.Equal("franqueado@bfa.test", franqueado.Email);
         Assert.Equal("11999999999", franqueado.Telefone);
+        Assert.Equal("SP", franqueado.Estado);
+        Assert.Equal("Tietê", franqueado.Cidade);
         Assert.True(relacaoUsuario.Principal);
         Assert.True(relacaoUsuario.Ativo);
         Assert.Equal(2, cadastro.FranqueadosUnidades.Count);
@@ -99,8 +102,8 @@ public sealed class UsuariosFranqueadoraServicoTests
                 null,
                 null,
                 null,
-                null,
-                null,
+                35,
+                3554508,
                 null,
                 null,
                 [unidadeId]));
@@ -145,8 +148,8 @@ public sealed class UsuariosFranqueadoraServicoTests
                 null,
                 null,
                 null,
-                null,
-                null,
+                35,
+                3554508,
                 null,
                 null,
                 [unidadeId]));
@@ -219,6 +222,94 @@ public sealed class UsuariosFranqueadoraServicoTests
 
         Assert.Equal(EstadoGerenciamentoUsuario.UnidadeComFranqueadoAtivo, resultado.Estado);
         Assert.Contains("BFA Tietê", resultado.Mensagem, StringComparison.Ordinal);
+        Assert.Empty(contexto.Repositorio.Cadastros);
+    }
+
+    [Fact]
+    public async Task Estado_inexistente_rejeita_cadastro()
+    {
+        var contexto = CriarContexto();
+        var unidadeId = Guid.NewGuid();
+        contexto.Repositorio.UnidadesValidas.Add(unidadeId);
+        var solicitacao = CriarFranqueado([unidadeId]);
+        solicitacao = solicitacao with
+        {
+            Franqueado = solicitacao.Franqueado! with { EstadoCodigoIbge = 99 }
+        };
+
+        var resultado = await contexto.Servico.CriarAsync(
+            contexto.UsuarioAtualId,
+            solicitacao,
+            CancellationToken.None);
+
+        Assert.Equal(EstadoGerenciamentoUsuario.EstadoLocalidadeInvalido, resultado.Estado);
+        Assert.Empty(contexto.Repositorio.Cadastros);
+    }
+
+    [Fact]
+    public async Task Municipio_inexistente_rejeita_cadastro()
+    {
+        var contexto = CriarContexto();
+        var unidadeId = Guid.NewGuid();
+        contexto.Repositorio.UnidadesValidas.Add(unidadeId);
+        var solicitacao = CriarFranqueado([unidadeId]);
+        solicitacao = solicitacao with
+        {
+            Franqueado = solicitacao.Franqueado! with { MunicipioCodigoIbge = 9999999 }
+        };
+
+        var resultado = await contexto.Servico.CriarAsync(
+            contexto.UsuarioAtualId,
+            solicitacao,
+            CancellationToken.None);
+
+        Assert.Equal(
+            EstadoGerenciamentoUsuario.MunicipioLocalidadeInvalido,
+            resultado.Estado);
+        Assert.Empty(contexto.Repositorio.Cadastros);
+    }
+
+    [Fact]
+    public async Task Troca_de_estado_nao_aceita_municipio_da_selecao_anterior()
+    {
+        var contexto = CriarContexto();
+        contexto.Localidades.Estados.Add(new(41, "PR", "Paraná"));
+        contexto.Localidades.Municipios[41] = [new(4106902, "Curitiba")];
+        var unidadeId = Guid.NewGuid();
+        contexto.Repositorio.UnidadesValidas.Add(unidadeId);
+        var solicitacao = CriarFranqueado([unidadeId]);
+        solicitacao = solicitacao with
+        {
+            Franqueado = solicitacao.Franqueado! with { EstadoCodigoIbge = 41 }
+        };
+
+        var resultado = await contexto.Servico.CriarAsync(
+            contexto.UsuarioAtualId,
+            solicitacao,
+            CancellationToken.None);
+
+        Assert.Equal(
+            EstadoGerenciamentoUsuario.MunicipioLocalidadeInvalido,
+            resultado.Estado);
+        Assert.Empty(contexto.Repositorio.Cadastros);
+    }
+
+    [Fact]
+    public async Task Catalogo_vazio_rejeita_cadastro_sem_fallback_para_texto()
+    {
+        var contexto = CriarContexto();
+        contexto.Localidades.Estados.Clear();
+        contexto.Localidades.Municipios.Clear();
+        var unidadeId = Guid.NewGuid();
+        contexto.Repositorio.UnidadesValidas.Add(unidadeId);
+
+        var resultado = await contexto.Servico.CriarAsync(
+            contexto.UsuarioAtualId,
+            CriarFranqueado([unidadeId]),
+            CancellationToken.None);
+
+        Assert.Equal(EstadoGerenciamentoUsuario.EstadoLocalidadeInvalido, resultado.Estado);
+        Assert.Contains("Catálogo", resultado.Mensagem, StringComparison.Ordinal);
         Assert.Empty(contexto.Repositorio.Cadastros);
     }
 
@@ -336,11 +427,19 @@ public sealed class UsuariosFranqueadoraServicoTests
         var acessos = new AcessoUsuarioConsultaTeste();
         acessos.Organizacoes.Add(organizacaoId);
         var repositorio = new UsuariosRepositorioTeste();
+        var localidades = new LocalidadesConsultaTeste();
         var servico = new UsuariosFranqueadoraServico(
             acessos,
             repositorio,
+            localidades,
             new TimeProviderTeste(new DateTimeOffset(AgoraUtc)));
-        return new(usuarioAtualId, organizacaoId, acessos, repositorio, servico);
+        return new(
+            usuarioAtualId,
+            organizacaoId,
+            acessos,
+            repositorio,
+            localidades,
+            servico);
     }
 
     private static CriarUsuarioFranqueadoraSolicitacao CriarAdministrador()
@@ -373,8 +472,8 @@ public sealed class UsuariosFranqueadoraServicoTests
                 null,
                 null,
                 null,
-                null,
-                null,
+                35,
+                3554508,
                 null,
                 null,
                 unidadesIds));
@@ -385,11 +484,40 @@ public sealed class UsuariosFranqueadoraServicoTests
         Guid OrganizacaoId,
         AcessoUsuarioConsultaTeste Acessos,
         UsuariosRepositorioTeste Repositorio,
+        LocalidadesConsultaTeste Localidades,
         UsuariosFranqueadoraServico Servico);
 
     private sealed class TimeProviderTeste(DateTimeOffset agora) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => agora;
+    }
+
+    private sealed class LocalidadesConsultaTeste : ILocalidadesConsulta
+    {
+        public List<EstadoLocalidadeResumo> Estados { get; } =
+            [new(35, "SP", "São Paulo")];
+
+        public Dictionary<int, IReadOnlyList<MunicipioLocalidadeResumo>> Municipios { get; } =
+            new()
+            {
+                [35] = [new(3554508, "Tietê")]
+            };
+
+        public Task<IReadOnlyList<EstadoLocalidadeResumo>> ListarEstadosAtivosAsync(
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult<IReadOnlyList<EstadoLocalidadeResumo>>([.. Estados]);
+        }
+
+        public Task<IReadOnlyList<MunicipioLocalidadeResumo>> ListarMunicipiosAtivosAsync(
+            int estadoCodigoIbge,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(Municipios.GetValueOrDefault(estadoCodigoIbge)
+                ?? (IReadOnlyList<MunicipioLocalidadeResumo>)[]);
+        }
     }
 
     private sealed class UsuariosRepositorioTeste : IUsuariosFranqueadoraRepositorio

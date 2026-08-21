@@ -115,13 +115,11 @@ public sealed class NovoUsuarioFranqueadoraViewModel : IValidatableObject
     [Display(Name = "Bairro")]
     public string? Bairro { get; set; }
 
-    [StringLength(Franqueado.CidadeTamanhoMaximo)]
-    [Display(Name = "Cidade")]
-    public string? Cidade { get; set; }
+    [Display(Name = "Estado")]
+    public int? EstadoCodigoIbge { get; set; }
 
-    [StringLength(Franqueado.EstadoTamanhoMaximo)]
-    [Display(Name = "Estado (UF)")]
-    public string? Estado { get; set; }
+    [Display(Name = "Município")]
+    public int? MunicipioCodigoIbge { get; set; }
 
     [StringLength(10)]
     [Display(Name = "CEP")]
@@ -134,6 +132,10 @@ public sealed class NovoUsuarioFranqueadoraViewModel : IValidatableObject
     public List<Guid> UnidadesIds { get; set; } = [];
 
     public IReadOnlyList<UnidadeSelecaoUsuarioViewModel> Unidades { get; set; } = [];
+
+    public IReadOnlyList<EstadoSelecaoLocalidadeViewModel> Estados { get; set; } = [];
+
+    public IReadOnlyList<MunicipioSelecaoLocalidadeViewModel> Municipios { get; set; } = [];
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
@@ -206,6 +208,16 @@ public sealed class NovoUsuarioFranqueadoraViewModel : IValidatableObject
         {
             yield return new("Selecione ao menos uma unidade.", [nameof(UnidadesIds)]);
         }
+
+        if (EstadoCodigoIbge is not > 0)
+        {
+            yield return new("Selecione um Estado.", [nameof(EstadoCodigoIbge)]);
+        }
+
+        if (MunicipioCodigoIbge is not > 0)
+        {
+            yield return new("Selecione um Município.", [nameof(MunicipioCodigoIbge)]);
+        }
     }
 }
 
@@ -213,6 +225,15 @@ public sealed record UnidadeSelecaoUsuarioViewModel(
     Guid Id,
     string Nome,
     bool Selecionada);
+
+public sealed record EstadoSelecaoLocalidadeViewModel(
+    int CodigoIbge,
+    string Sigla,
+    string Nome);
+
+public sealed record MunicipioSelecaoLocalidadeViewModel(
+    int CodigoIbge,
+    string Nome);
 
 public sealed record UsuarioFranqueadoraCriadoViewModel(
     string NomeCompleto,

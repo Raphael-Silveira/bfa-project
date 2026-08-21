@@ -1,0 +1,114 @@
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using BFA.Application.Localidades;
+
+namespace BFA.Infrastructure.Localidades;
+
+public sealed class IbgeLocalidadesClient(HttpClient httpClient) : IIbgeLocalidadesClient
+{
+    public async Task<IReadOnlyList<EstadoIbgeDados>> ListarEstadosAsync(
+        CancellationToken cancellationToken)
+    {
+        var estados = await ObterAsync<EstadoIbgeResposta>(
+            "estados",
+            "Estados",
+            cancellationToken);
+
+        return estados
+            .Select(estado => new EstadoIbgeDados(estado.Id, estado.Sigla, estado.Nome))
+            .ToArray();
+    }
+
+    public async Task<IReadOnlyList<MunicipioIbgeDados>> ListarMunicipiosAsync(
+        string siglaEstado,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(siglaEstado))
+        {
+            throw new ArgumentException("A sigla do Estado deve ser informada.", nameof(siglaEstado));
+        }
+
+        var sigla = Uri.EscapeDataString(siglaEstado.Trim().ToUpperInvariant());
+        var municipios = await ObterAsync<MunicipioIbgeResposta>(
+            $"estados/{sigla}/municipios",
+            "Municípios",
+            cancellationToken);
+
+        return municipios
+            .Select(municipio => new MunicipioIbgeDados(municipio.Id, municipio.Nome))
+            .ToArray();
+    }
+
+    private async Task<IReadOnlyList<T>> ObterAsync<T>(
+        string caminho,
+        string recurso,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var resposta = await httpClient.GetAsync(
+                caminho,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken);
+
+            if (!resposta.IsSuccessStatusCode)
+            {
+                throw new IbgeLocalidadesException(
+                    $"Não foi possível obter {recurso} no serviço de localidades do IBGE.");
+            }
+
+            var itens = await resposta.Content.ReadFromJsonAsync<T[]>(
+                cancellationToken: cancellationToken);
+
+            if (itens is null || itens.Length == 0)
+            {
+                throw new IbgeLocalidadesException(
+                    $"O serviço de localidades do IBGE retornou {recurso} em formato vazio ou inválido.");
+            }
+
+            return itens;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (IbgeLocalidadesException)
+        {
+            throw;
+        }
+        catch (HttpRequestException exception)
+        {
+            throw new IbgeLocalidadesException(
+                $"Não foi possível acessar {recurso} no serviço de localidades do IBGE.",
+                exception);
+        }
+        catch (OperationCanceledException exception)
+        {
+            throw new IbgeLocalidadesException(
+                $"O tempo limite para obter {recurso} no serviço de localidades do IBGE foi excedido.",
+                exception);
+        }
+        catch (JsonException exception)
+        {
+            throw new IbgeLocalidadesException(
+                $"O serviço de localidades do IBGE retornou {recurso} em formato inválido.",
+                exception);
+        }
+        catch (NotSupportedException exception)
+        {
+            throw new IbgeLocalidadesException(
+                $"O serviço de localidades do IBGE retornou {recurso} em formato inválido.",
+                exception);
+        }
+    }
+
+    private sealed record EstadoIbgeResposta(
+        [property: JsonPropertyName("id")] int Id,
+        [property: JsonPropertyName("sigla")] string Sigla,
+        [property: JsonPropertyName("nome")] string Nome);
+
+    private sealed record MunicipioIbgeResposta(
+        [property: JsonPropertyName("id")] int Id,
+        [property: JsonPropertyName("nome")] string Nome);
+}

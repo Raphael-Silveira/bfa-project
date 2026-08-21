@@ -134,6 +134,13 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
         Assert.Contains("data-franqueado-section", html, StringComparison.Ordinal);
         Assert.Contains("data-pessoa-juridica", html, StringComparison.Ordinal);
         Assert.Contains("data-documento-help", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"EstadoCodigoIbge\"", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"MunicipioCodigoIbge\"", html, StringComparison.Ordinal);
+        Assert.Contains("São Paulo - SP", WebUtility.HtmlDecode(html), StringComparison.Ordinal);
+        Assert.Contains("data-bfa-combobox", html, StringComparison.Ordinal);
+        Assert.Contains("data-bfa-localidades", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("name=\"Estado\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("name=\"Cidade\"", html, StringComparison.Ordinal);
         Assert.Contains("Dados da Empresa", html, StringComparison.Ordinal);
         Assert.DoesNotContain("name=\"OrganizacaoId\"", html, StringComparison.Ordinal);
         var mascaras = await client.GetStringAsync("/js/bfa-input-masks.js");
@@ -534,6 +541,9 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
         Assert.Null(franqueado.NomeFantasia);
         Assert.Null(franqueado.ResponsavelLegal);
         Assert.Equal("18000000", franqueado.Cep);
+        Assert.Equal("SP", franqueado.Estado);
+        Assert.Equal("Tietê", franqueado.Cidade);
+        Assert.Equal(0, application.IbgeClient.Execucoes);
         var franqueadoUsuario = await dbContext.FranqueadosUsuarios.SingleAsync();
         Assert.Equal(usuario.Id, franqueadoUsuario.UsuarioId);
         Assert.True(franqueadoUsuario.Principal);
@@ -852,7 +862,11 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
         TipoPessoaFranqueado tipoPessoa = TipoPessoaFranqueado.PessoaFisica,
         string documento = "123.456.789-01",
         bool incluirDadosEmpresa = true,
-        IReadOnlyDictionary<string, string>? camposAdicionais = null)
+        IReadOnlyDictionary<string, string>? camposAdicionais = null,
+        int? estadoCodigoIbge =
+            UsuariosFranqueadoraWebApplicationFactory.EstadoPadraoCodigoIbge,
+        int? municipioCodigoIbge =
+            UsuariosFranqueadoraWebApplicationFactory.MunicipioPadraoCodigoIbge)
     {
         var token = await ObterAntiforgeryAsync(client, "/franqueadora/usuarios/novo");
         var campos = new List<KeyValuePair<string, string>>
@@ -866,6 +880,16 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
             new("Cep", "18000-000"),
             new("__RequestVerificationToken", token)
         };
+
+        if (estadoCodigoIbge is not null)
+        {
+            campos.Add(new("EstadoCodigoIbge", estadoCodigoIbge.Value.ToString()));
+        }
+
+        if (municipioCodigoIbge is not null)
+        {
+            campos.Add(new("MunicipioCodigoIbge", municipioCodigoIbge.Value.ToString()));
+        }
 
         if (tipoPessoa == TipoPessoaFranqueado.PessoaJuridica && incluirDadosEmpresa)
         {

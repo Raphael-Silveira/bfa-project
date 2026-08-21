@@ -472,7 +472,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, and `FranqueadosUnidades`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, and `Municipios`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -498,6 +498,16 @@ Database.EnsureDeleted();
 Database.Migrate();
 ```
 
+### Catálogo de Localidades
+
+BFA maintains a shared local catalog of Brazilian States and Municipalities. The IBGE Localities API is the master source, but normal operational flows query only the BFA PostgreSQL database and therefore do not depend on IBGE availability to open forms or create business records.
+
+Synchronization is an explicit command (`dotnet run -- --sincronizar-localidades-ibge`) and never runs during normal web startup. It downloads and validates the complete remote catalog before opening the database transaction. Only a complete valid batch is upserted by the official IBGE code; records absent from that complete batch are marked inactive and are never physically deleted.
+
+The new Franqueado form loads active States and Municipalities only from this local catalog. The browser submits their official codes, Application validates that both records are active and that the Municipality belongs to the selected State, and then persists the official State abbreviation and Municipality name in the existing textual `franqueados.estado` and `franqueados.cidade` columns. Normal form use never calls the IBGE integration. The same catalog and searchable combobox may later support Unidades, Professores, Alunos, Responsaveis, and other platform addresses.
+
+The dependent Municipality selector cancels its previous HTTP request with `AbortController` whenever the selected State changes. The endpoint keeps cooperative cancellation through `HttpContext.RequestAborted` and treats an `OperationCanceledException` as expected only when that HTTP request was actually aborted; unrelated cancellations remain visible for diagnosis. The browser also verifies the current request identity before changing the selector, so an older response cannot overwrite the latest State selection.
+
 ---
 
 ## 11. Schema Deployment
@@ -516,6 +526,7 @@ V002__criar_identidade.sql
 V003__criar_vinculos_acesso.sql
 V004__criar_usuarios_e_franqueados.sql
 V005__adequar_cnpj_alfanumerico.sql
+V006__criar_catalogo_localidades.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.

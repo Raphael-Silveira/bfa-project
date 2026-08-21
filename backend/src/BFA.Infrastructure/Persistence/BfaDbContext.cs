@@ -1,5 +1,6 @@
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
+using BFA.Domain.Localidades;
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Unidades;
 using BFA.Domain.Usuarios;
@@ -25,6 +26,10 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
     public DbSet<FranqueadoUsuario> FranqueadosUsuarios => Set<FranqueadoUsuario>();
 
     public DbSet<FranqueadoUnidade> FranqueadosUnidades => Set<FranqueadoUnidade>();
+
+    public DbSet<Estado> Estados => Set<Estado>();
+
+    public DbSet<Municipio> Municipios => Set<Municipio>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -286,6 +286,10 @@ Views recebem ViewModels e contêm somente apresentação. Não consulte banco, 
 
 Cards ou etapas consecutivas de um formulário devem ser agrupados pelo contêiner reutilizável `.bfa-admin-form-sections`, com espaçamento vertical consistente e um `gap` discretamente menor no mobile. Máscaras de CPF, CNPJ, telefone e CEP são melhoria progressiva de digitação, implementada pelo script compartilhado e atributos `data-bfa-mask`; elas nunca substituem validação e normalização no servidor, que também deve aceitar submissões manuais sem JavaScript. A máscara de CNPJ aceita letras ASCII ou números nas 12 primeiras posições, converte letras para maiúsculas e restringe as 2 posições finais a números.
 
+### 11.1 Combobox pesquisável
+
+Seleções extensas podem usar o componente compartilhado `data-bfa-combobox`, preservando um `select` nativo como valor real do formulário e oferecendo pesquisa local progressiva por texto. A pesquisa deve ser tolerante a maiúsculas, minúsculas e acentos, sem modificar o texto oficial das opções. O componente deve manter operação por clique, setas, `Enter`, `Escape`, clique externo, foco visível e semântica ARIA de combobox/listbox. Relações em cascata, como Estado e Município, carregam o conjunto dependente uma vez após a seleção do campo principal e filtram no cliente; nunca fazem uma requisição por tecla. Texto digitado sem seleção real não constitui um valor válido para submissão.
+
 ## 12. Estado vazio
 
 Quando não houver dados, use `.bfa-admin-empty-state`.

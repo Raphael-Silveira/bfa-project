@@ -4,6 +4,7 @@ using BFA.Application.Franqueadora.AcessosUnidade;
 using BFA.Application.Franqueadora.Unidades;
 using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Identidade;
+using BFA.Application.Localidades;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -98,6 +99,24 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
         Assert.NotNull(repositorio);
         Assert.NotNull(primeiroAcesso);
         Assert.Same(consulta, servico);
+    }
+
+    [Fact]
+    public void Catalogo_localidades_possui_cliente_consulta_repositorio_e_servico()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        var client = scope.ServiceProvider.GetService<IIbgeLocalidadesClient>();
+        var consulta = scope.ServiceProvider.GetService<ILocalidadesConsulta>();
+        var repositorio = scope.ServiceProvider
+            .GetService<ILocalidadesSincronizacaoRepositorio>();
+        var servico = scope.ServiceProvider
+            .GetService<ILocalidadesSincronizacaoServico>();
+
+        Assert.NotNull(client);
+        Assert.NotNull(consulta);
+        Assert.NotNull(repositorio);
+        Assert.NotNull(servico);
     }
 
     [Fact]

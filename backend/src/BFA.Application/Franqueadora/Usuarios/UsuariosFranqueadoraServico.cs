@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using BFA.Application.Acessos;
+using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Usuarios;
@@ -9,6 +10,7 @@ namespace BFA.Application.Franqueadora.Usuarios;
 public sealed class UsuariosFranqueadoraServico(
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IUsuariosFranqueadoraRepositorio repositorio,
+    ILocalidadesConsulta localidadesConsulta,
     TimeProvider timeProvider)
     : IUsuariosFranqueadoraConsulta, IUsuariosFranqueadoraServico
 {
@@ -244,6 +246,14 @@ public sealed class UsuariosFranqueadoraServico(
                 Mensagem: "Informe os dados do franqueado.");
         }
 
+        var localidade = await ValidarLocalidadeAsync(dados, cancellationToken);
+
+        if (localidade.Estado != EstadoGerenciamentoUsuario.Sucesso
+            || localidade.Valor is not { } endereco)
+        {
+            return new(localidade.Estado, Mensagem: localidade.Mensagem);
+        }
+
         var unidadesIds = dados.UnidadesIds
             .Where(unidadeId => unidadeId != Guid.Empty)
             .Distinct()
@@ -309,8 +319,8 @@ public sealed class UsuariosFranqueadoraServico(
                 dados.Numero,
                 dados.Complemento,
                 dados.Bairro,
-                dados.Cidade,
-                dados.Estado,
+                endereco.Municipio.Nome,
+                endereco.Estado.Sigla,
                 dados.Cep,
                 dados.Observacoes);
 
@@ -409,6 +419,67 @@ public sealed class UsuariosFranqueadoraServico(
         };
     }
 
+    private async Task<ResultadoUsuariosFranqueadora<LocalidadeEnderecoValidada>>
+        ValidarLocalidadeAsync(
+            FranqueadoCadastroDados dados,
+            CancellationToken cancellationToken)
+    {
+        if (dados.EstadoCodigoIbge is not > 0)
+        {
+            return new(
+                EstadoGerenciamentoUsuario.EstadoLocalidadeInvalido,
+                null,
+                "Selecione um Estado válido.");
+        }
+
+        var estados = await localidadesConsulta.ListarEstadosAtivosAsync(cancellationToken);
+
+        if (estados.Count == 0)
+        {
+            return new(
+                EstadoGerenciamentoUsuario.EstadoLocalidadeInvalido,
+                null,
+                "Catálogo de localidades não carregado.");
+        }
+
+        var estado = estados.SingleOrDefault(item =>
+            item.CodigoIbge == dados.EstadoCodigoIbge.Value);
+
+        if (estado is null)
+        {
+            return new(
+                EstadoGerenciamentoUsuario.EstadoLocalidadeInvalido,
+                null,
+                "Selecione um Estado ativo do catálogo de localidades.");
+        }
+
+        if (dados.MunicipioCodigoIbge is not > 0)
+        {
+            return new(
+                EstadoGerenciamentoUsuario.MunicipioLocalidadeInvalido,
+                null,
+                "Selecione um Município válido.");
+        }
+
+        var municipios = await localidadesConsulta.ListarMunicipiosAtivosAsync(
+            estado.CodigoIbge,
+            cancellationToken);
+        var municipio = municipios.SingleOrDefault(item =>
+            item.CodigoIbge == dados.MunicipioCodigoIbge.Value);
+
+        if (municipio is null)
+        {
+            return new(
+                EstadoGerenciamentoUsuario.MunicipioLocalidadeInvalido,
+                null,
+                "Selecione um Município ativo pertencente ao Estado informado.");
+        }
+
+        return new(
+            EstadoGerenciamentoUsuario.Sucesso,
+            new LocalidadeEnderecoValidada(estado, municipio));
+    }
+
     private async Task<ContextoOrganizacao> ObterContextoAsync(
         Guid usuarioAtualId,
         CancellationToken cancellationToken)
@@ -490,4 +561,8 @@ public sealed class UsuariosFranqueadoraServico(
     private sealed record ContextoOrganizacao(
         EstadoGerenciamentoUsuario Estado,
         Guid? OrganizacaoId);
+
+    private sealed record LocalidadeEnderecoValidada(
+        EstadoLocalidadeResumo Estado,
+        MunicipioLocalidadeResumo Municipio);
 }

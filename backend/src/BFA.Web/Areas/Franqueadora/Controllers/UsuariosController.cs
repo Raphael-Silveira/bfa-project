@@ -1,5 +1,6 @@
 using BFA.Application.Acessos;
 using BFA.Application.Franqueadora.Usuarios;
+using BFA.Application.Localidades;
 using BFA.Web.Authorization;
 using BFA.Web.Identidade;
 using BFA.Web.ViewModels.Franqueadora;
@@ -14,7 +15,8 @@ namespace BFA.Web.Areas.Franqueadora.Controllers;
 public sealed class UsuariosController(
     IUsuarioAtual usuarioAtual,
     IUsuariosFranqueadoraConsulta consulta,
-    IUsuariosFranqueadoraServico servico) : Controller
+    IUsuariosFranqueadoraServico servico,
+    ILocalidadesConsulta localidadesConsulta) : Controller
 {
     public const string MensagemUsuarioAtualizado = "Usuário atualizado com sucesso.";
 
@@ -116,6 +118,10 @@ public sealed class UsuariosController(
         {
             EstadoGerenciamentoUsuario.EmailDuplicado => nameof(model.Email),
             EstadoGerenciamentoUsuario.DocumentoDuplicado => nameof(model.Documento),
+            EstadoGerenciamentoUsuario.EstadoLocalidadeInvalido =>
+                nameof(model.EstadoCodigoIbge),
+            EstadoGerenciamentoUsuario.MunicipioLocalidadeInvalido =>
+                nameof(model.MunicipioCodigoIbge),
             EstadoGerenciamentoUsuario.UnidadesInvalidas or
                 EstadoGerenciamentoUsuario.UnidadeComFranqueadoAtivo => nameof(model.UnidadesIds),
             _ => string.Empty
@@ -231,6 +237,29 @@ public sealed class UsuariosController(
                 unidade.Nome,
                 selecionadas.Contains(unidade.Id)))
             .ToArray();
+
+        var estados = await localidadesConsulta.ListarEstadosAtivosAsync(cancellationToken);
+        model.Estados = estados
+            .Select(estado => new EstadoSelecaoLocalidadeViewModel(
+                estado.CodigoIbge,
+                estado.Sigla,
+                estado.Nome))
+            .ToArray();
+        model.Municipios = [];
+
+        if (model.EstadoCodigoIbge is > 0
+            && estados.Any(estado => estado.CodigoIbge == model.EstadoCodigoIbge.Value))
+        {
+            var municipios = await localidadesConsulta.ListarMunicipiosAtivosAsync(
+                model.EstadoCodigoIbge.Value,
+                cancellationToken);
+            model.Municipios = municipios
+                .Select(municipio => new MunicipioSelecaoLocalidadeViewModel(
+                    municipio.CodigoIbge,
+                    municipio.Nome))
+                .ToArray();
+        }
+
         return View("Novo", model);
     }
 
@@ -311,8 +340,8 @@ public sealed class UsuariosController(
             model.Numero,
             model.Complemento,
             model.Bairro,
-            model.Cidade,
-            model.Estado,
+            model.EstadoCodigoIbge,
+            model.MunicipioCodigoIbge,
             model.Cep,
             model.Observacoes,
             model.UnidadesIds);
