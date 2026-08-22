@@ -46,9 +46,8 @@
 
 .bfa-admin-header__content {
   display: flex;
-  width: min(100%, 96rem);
+  width: 100%;
   min-height: 5rem;
-  margin: 0 auto;
   padding: 0.85rem 2rem;
   align-items: center;
   justify-content: space-between;
@@ -180,10 +179,9 @@
 
 .bfa-admin-shell {
   display: grid;
-  width: min(100%, 96rem);
+  width: 100%;
   min-width: 0;
   min-height: calc(100vh - 9rem);
-  margin: 0 auto;
   grid-template-columns: 14rem minmax(0, 1fr);
 }
 
@@ -804,7 +802,7 @@
   color: var(--bfa-text-muted);
 }
 
-.bfa-admin-empty-state a {
+.bfa-admin-empty-state a:not(.bfa-admin-button) {
   color: var(--bfa-accent);
   font-weight: 700;
   text-decoration: none;
