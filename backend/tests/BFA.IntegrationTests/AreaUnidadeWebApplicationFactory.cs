@@ -15,8 +15,19 @@ public sealed class AreaUnidadeWebApplicationFactory : LoginWebApplicationFactor
 {
     private readonly string _databaseName = $"bfa-area-unidade-{Guid.NewGuid():N}";
 
+    public string DiretorioArmazenamento { get; } = Path.Combine(
+        Path.GetTempPath(),
+        "bfa-area-unidade-documentos",
+        Guid.NewGuid().ToString("N"));
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting(
+            "Armazenamento:Documentos:DiretorioBase",
+            DiretorioArmazenamento);
+        builder.UseSetting(
+            "Armazenamento:Documentos:TamanhoMaximoBytes",
+            (20 * 1024 * 1024).ToString());
         base.ConfigureWebHost(builder);
 
         builder.ConfigureServices(services =>

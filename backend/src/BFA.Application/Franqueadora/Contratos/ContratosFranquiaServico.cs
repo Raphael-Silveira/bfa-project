@@ -574,7 +574,10 @@ public sealed class ContratosFranquiaServico(
         vigente.AlterarStatus(StatusVersaoContratoFranquia.Substituida);
         nova.AlterarStatus(StatusVersaoContratoFranquia.Vigente);
         return MapearPersistenciaOperacao(
-            await repositorio.SalvarTransacaoAsync(cancellationToken));
+            await repositorio.SalvarFormalizacaoAsync(
+                vigente,
+                nova,
+                cancellationToken));
     }
 
     public async Task<ResultadoOperacaoContratoFranquia> CancelarAsync(
@@ -602,13 +605,13 @@ public sealed class ContratosFranquiaServico(
         var versoes = contrato is null
             ? []
             : await repositorio.ListarVersoesParaAtualizacaoAsync(contratoId, cancellationToken);
-        var versao = contrato?.Status switch
+        var possuiVersaoBase = contrato?.Status switch
         {
-            StatusContratoFranquia.Rascunho => versoes.SingleOrDefault(item =>
+            StatusContratoFranquia.Rascunho => versoes.Any(item =>
                 item.Status == StatusVersaoContratoFranquia.Rascunho),
-            StatusContratoFranquia.Ativo => versoes.SingleOrDefault(item =>
+            StatusContratoFranquia.Ativo => versoes.Any(item =>
                 item.Status == StatusVersaoContratoFranquia.Vigente),
-            _ => null
+            _ => false
         };
 
         if (contrato is null)
@@ -616,17 +619,31 @@ public sealed class ContratosFranquiaServico(
             return new(EstadoGerenciamentoContratoFranquia.NaoEncontrado);
         }
 
-        if (versao is null)
+        if (!possuiVersaoBase)
         {
             return new(
                 EstadoGerenciamentoContratoFranquia.EstadoInvalido,
                 "Este contrato não pode ser cancelado no estado atual.");
         }
 
+        var versoesParaCancelar = contrato.Status switch
+        {
+            StatusContratoFranquia.Rascunho => versoes.Where(item =>
+                item.Status == StatusVersaoContratoFranquia.Rascunho).ToArray(),
+            StatusContratoFranquia.Ativo => versoes.Where(item =>
+                item.Status is StatusVersaoContratoFranquia.Rascunho
+                    or StatusVersaoContratoFranquia.Vigente).ToArray(),
+            _ => []
+        };
         contrato.AlterarStatus(
             StatusContratoFranquia.Cancelado,
             timeProvider.GetUtcNow().UtcDateTime);
-        versao.AlterarStatus(StatusVersaoContratoFranquia.Cancelada);
+
+        foreach (var versao in versoesParaCancelar)
+        {
+            versao.AlterarStatus(StatusVersaoContratoFranquia.Cancelada);
+        }
+
         return MapearPersistenciaOperacao(
             await repositorio.SalvarTransacaoAsync(cancellationToken));
     }

@@ -166,6 +166,96 @@ public sealed class ContratosFranquiaServicoTests
         Assert.Single(cenario.Repositorio.Versoes);
         Assert.Equal(StatusContratoFranquia.Cancelado, cenario.Repositorio.Contratos[0].Status);
         Assert.Equal(StatusVersaoContratoFranquia.Cancelada, cenario.Repositorio.Versoes[0].Status);
+        Assert.Equal(1, cenario.Repositorio.SalvamentosTransacionais);
+    }
+
+    [Fact]
+    public async Task Cancelar_ativo_cancela_contrato_e_versao_vigente()
+    {
+        var cenario = CriarCenarioComContrato(ativo: true);
+
+        var resultado = await cenario.Servico.CancelarAsync(
+            cenario.UsuarioId,
+            cenario.FranqueadoId,
+            cenario.UnidadeId,
+            cenario.Repositorio.Contratos[0].Id,
+            CancellationToken.None);
+
+        Assert.Equal(EstadoGerenciamentoContratoFranquia.Sucesso, resultado.Estado);
+        Assert.Equal(StatusContratoFranquia.Cancelado, cenario.Repositorio.Contratos[0].Status);
+        Assert.Equal(StatusVersaoContratoFranquia.Cancelada, cenario.Repositorio.Versoes[0].Status);
+        Assert.Equal(1, cenario.Repositorio.SalvamentosTransacionais);
+    }
+
+    [Fact]
+    public async Task Cancelar_ativo_cancela_vigente_e_rascunho_pendente_em_uma_transacao()
+    {
+        var cenario = CriarCenarioComContrato(ativo: true);
+        var contrato = cenario.Repositorio.Contratos[0];
+        var vigente = cenario.Repositorio.Versoes[0];
+        var rascunho = NovaVersao(contrato.Id, 2, cenario.UsuarioId);
+        cenario.Repositorio.Versoes.Add(rascunho);
+
+        var resultado = await cenario.Servico.CancelarAsync(
+            cenario.UsuarioId,
+            cenario.FranqueadoId,
+            cenario.UnidadeId,
+            contrato.Id,
+            CancellationToken.None);
+
+        Assert.Equal(EstadoGerenciamentoContratoFranquia.Sucesso, resultado.Estado);
+        Assert.Equal(StatusContratoFranquia.Cancelado, contrato.Status);
+        Assert.Equal(StatusVersaoContratoFranquia.Cancelada, vigente.Status);
+        Assert.Equal(StatusVersaoContratoFranquia.Cancelada, rascunho.Status);
+        Assert.Equal(1, cenario.Repositorio.SalvamentosTransacionais);
+    }
+
+    [Fact]
+    public async Task Cancelar_ativo_preserva_versao_substituida()
+    {
+        var cenario = CriarCenarioComContrato(ativo: true);
+        var contrato = cenario.Repositorio.Contratos[0];
+        var substituida = cenario.Repositorio.Versoes[0];
+        substituida.AlterarStatus(StatusVersaoContratoFranquia.Substituida);
+        var vigente = NovaVersao(contrato.Id, 2, cenario.UsuarioId);
+        vigente.AlterarStatus(StatusVersaoContratoFranquia.Vigente);
+        cenario.Repositorio.Versoes.Add(vigente);
+
+        var resultado = await cenario.Servico.CancelarAsync(
+            cenario.UsuarioId,
+            cenario.FranqueadoId,
+            cenario.UnidadeId,
+            contrato.Id,
+            CancellationToken.None);
+
+        Assert.Equal(EstadoGerenciamentoContratoFranquia.Sucesso, resultado.Estado);
+        Assert.Equal(StatusVersaoContratoFranquia.Substituida, substituida.Status);
+        Assert.Equal(StatusVersaoContratoFranquia.Cancelada, vigente.Status);
+        Assert.Equal(1, cenario.Repositorio.SalvamentosTransacionais);
+    }
+
+    [Fact]
+    public async Task Outro_tenant_nao_cancela_contrato()
+    {
+        var cenario = CriarCenarioComContrato(ativo: true);
+        var contrato = cenario.Repositorio.Contratos[0];
+        var vigente = cenario.Repositorio.Versoes[0];
+        cenario.Repositorio.Contexto = cenario.Repositorio.Contexto! with
+        {
+            OrganizacaoId = Guid.NewGuid()
+        };
+
+        var resultado = await cenario.Servico.CancelarAsync(
+            cenario.UsuarioId,
+            cenario.FranqueadoId,
+            cenario.UnidadeId,
+            contrato.Id,
+            CancellationToken.None);
+
+        Assert.Equal(EstadoGerenciamentoContratoFranquia.NaoEncontrado, resultado.Estado);
+        Assert.Equal(StatusContratoFranquia.Ativo, contrato.Status);
+        Assert.Equal(StatusVersaoContratoFranquia.Vigente, vigente.Status);
+        Assert.Equal(0, cenario.Repositorio.SalvamentosTransacionais);
     }
 
     [Fact]
@@ -258,6 +348,7 @@ public sealed class ContratosFranquiaServicoTests
         Assert.Equal(EstadoGerenciamentoContratoFranquia.Sucesso, resultado.Estado);
         Assert.Equal(StatusVersaoContratoFranquia.Substituida, vigente.Status);
         Assert.Equal(StatusVersaoContratoFranquia.Vigente, nova.Status);
+        Assert.Equal(1, cenario.Repositorio.Formalizacoes);
         Assert.Single(cenario.Repositorio.Versoes, item =>
             item.Status == StatusVersaoContratoFranquia.Vigente);
     }
@@ -426,6 +517,7 @@ public sealed class ContratosFranquiaServicoTests
         public HashSet<TipoDocumentoContratoFranquia> TiposDocumento { get; } = [];
         public bool ExisteContratoAtivoOutro { get; set; }
         public int SalvamentosTransacionais { get; private set; }
+        public int Formalizacoes { get; private set; }
         public EstadoPersistenciaContratoFranquia EstadoNovaVersao { get; set; } =
             EstadoPersistenciaContratoFranquia.Sucesso;
 
@@ -457,6 +549,11 @@ public sealed class ContratosFranquiaServicoTests
         {
             if (EstadoNovaVersao == EstadoPersistenciaContratoFranquia.Sucesso) Versoes.Add(versao);
             return Task.FromResult(EstadoNovaVersao);
+        }
+        public Task<EstadoPersistenciaContratoFranquia> SalvarFormalizacaoAsync(ContratoFranquiaVersao versaoVigenteAnterior, ContratoFranquiaVersao novaVersaoVigente, CancellationToken cancellationToken)
+        {
+            Formalizacoes++;
+            return Task.FromResult(EstadoPersistenciaContratoFranquia.Sucesso);
         }
         public Task<EstadoPersistenciaContratoFranquia> SalvarDocumentoAsync(DocumentoContratoFranquia documento, string identificadorTemporario, CancellationToken cancellationToken)
         {

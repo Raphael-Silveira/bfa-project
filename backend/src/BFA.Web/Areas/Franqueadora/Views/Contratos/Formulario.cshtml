@@ -23,12 +23,30 @@
         <header class="bfa-contrato-heading"><div><p>Identificação</p><h2>Condições contratuais</h2></div></header>
         <div class="bfa-contrato-form-grid">
             <div class="bfa-form-field bfa-contrato-form-wide"><label asp-for="NumeroContrato" class="bfa-form-label"></label><input asp-for="NumeroContrato" class="form-control bfa-form-control" readonly="@(Model.NumeroVersao > 1 ? "readonly" : null)" /><span asp-validation-for="NumeroContrato" class="bfa-validation-message"></span>@if (Model.NumeroVersao > 1) { <span class="bfa-admin-form-help">O número é imutável após a ativação do contrato.</span> }</div>
-            <div class="bfa-form-field"><label asp-for="DataInicio" class="bfa-form-label"></label><input asp-for="DataInicio" class="form-control bfa-form-control" type="date" required /><span asp-validation-for="DataInicio" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="DataFim" class="bfa-form-label"></label><input asp-for="DataFim" class="form-control bfa-form-control" type="date" /><span asp-validation-for="DataFim" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="PercentualRoyalties" class="bfa-form-label"></label><input asp-for="PercentualRoyalties" class="form-control bfa-form-control" inputmode="decimal" placeholder="8,00" required /><span asp-validation-for="PercentualRoyalties" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="MensalidadeFixa" class="bfa-form-label"></label><div class="bfa-contrato-money"><span>R$</span><input asp-for="MensalidadeFixa" class="form-control bfa-form-control" inputmode="decimal" placeholder="500,00" required /></div><span asp-validation-for="MensalidadeFixa" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="TaxaAdesao" class="bfa-form-label"></label><div class="bfa-contrato-money"><span>R$</span><input asp-for="TaxaAdesao" class="form-control bfa-form-control" inputmode="decimal" placeholder="0,00" /></div><span asp-validation-for="TaxaAdesao" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="DiaVencimento" class="bfa-form-label"></label><input asp-for="DiaVencimento" class="form-control bfa-form-control" type="number" min="1" max="31" /><span asp-validation-for="DiaVencimento" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field">
+                <label asp-for="DataInicioTexto" class="bfa-form-label"></label>
+                <div class="bfa-admin-date-field" data-bfa-date-field>
+                    <input asp-for="DataInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/aaaa" maxlength="10" required data-bfa-date-input data-bfa-date-required="true" data-bfa-date-invalid-message="Informe uma data de início válida no formato dd/mm/aaaa." />
+                    <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data de início" title="Abrir calendário" aria-haspopup="dialog" aria-expanded="false" data-bfa-date-trigger>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                    </button>
+                </div>
+                <span asp-validation-for="DataInicioTexto" class="bfa-validation-message"></span>
+            </div>
+            <div class="bfa-form-field">
+                <label asp-for="DataFimTexto" class="bfa-form-label"></label>
+                <div class="bfa-admin-date-field" data-bfa-date-field>
+                    <input asp-for="DataFimTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-invalid-message="Informe uma data de término válida no formato dd/mm/aaaa." />
+                    <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data de término" title="Abrir calendário" aria-haspopup="dialog" aria-expanded="false" data-bfa-date-trigger>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                    </button>
+                </div>
+                <span asp-validation-for="DataFimTexto" class="bfa-validation-message"></span>
+            </div>
+            <div class="bfa-form-field"><label asp-for="PercentualRoyalties" class="bfa-form-label"></label><input asp-for="PercentualRoyalties" class="form-control bfa-form-control" type="text" inputmode="decimal" autocomplete="off" placeholder="8,00" maxlength="6" required data-bfa-number="percent" data-bfa-number-min="0" data-bfa-number-max="100" /><span asp-validation-for="PercentualRoyalties" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="MensalidadeFixa" class="bfa-form-label"></label><div class="bfa-contrato-money"><span>R$</span><input asp-for="MensalidadeFixa" class="form-control bfa-form-control" type="text" inputmode="decimal" autocomplete="off" placeholder="500,00" maxlength="18" required data-bfa-number="money" data-bfa-number-min="0" /></div><span asp-validation-for="MensalidadeFixa" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="TaxaAdesao" class="bfa-form-label"></label><div class="bfa-contrato-money"><span>R$</span><input asp-for="TaxaAdesao" class="form-control bfa-form-control" type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" maxlength="18" data-bfa-number="money" data-bfa-number-min="0" /></div><span asp-validation-for="TaxaAdesao" class="bfa-validation-message"></span></div>
+            <div class="bfa-form-field"><label asp-for="DiaVencimento" class="bfa-form-label"></label><input asp-for="DiaVencimento" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" maxlength="2" data-bfa-number="integer" data-bfa-number-min="1" data-bfa-number-max="31" /><span asp-validation-for="DiaVencimento" class="bfa-validation-message"></span></div>
             @if (Model.NumeroVersao > 1)
             {
                 <div class="bfa-form-field bfa-contrato-form-wide"><label asp-for="MotivoAlteracao" class="bfa-form-label"></label><textarea asp-for="MotivoAlteracao" class="form-control bfa-form-control" rows="3" required></textarea><span asp-validation-for="MotivoAlteracao" class="bfa-validation-message"></span></div>
@@ -38,3 +56,9 @@
     </section>
     <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar rascunho</button><a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase">Cancelar</a></div>
 </form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-number-field.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+}

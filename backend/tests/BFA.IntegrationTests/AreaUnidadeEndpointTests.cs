@@ -1,6 +1,9 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using BFA.Application.Contratos;
 using BFA.Domain.Acessos;
+using BFA.Domain.Contratos;
+using BFA.Domain.Franqueados;
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Unidades;
 using BFA.Domain.Usuarios;
@@ -62,7 +65,11 @@ public sealed partial class AreaUnidadeEndpointTests
             "Visão geral da operação da Unidade.",
             html,
             StringComparison.Ordinal);
-        Assert.Contains("Sua área de gestão está pronta.", html, StringComparison.Ordinal);
+        Assert.Contains("Contrato da franquia", html, StringComparison.Ordinal);
+        Assert.Contains(
+            "Nenhum contrato ativo disponível para esta unidade.",
+            html,
+            StringComparison.Ordinal);
         Assert.Contains("class=\"bfa-admin-shell\"", html, StringComparison.Ordinal);
         Assert.Contains("class=\"bfa-admin-sidebar\"", html, StringComparison.Ordinal);
         Assert.Contains("id=\"bfaAdminMobileMenu\"", html, StringComparison.Ordinal);
@@ -357,6 +364,140 @@ public sealed partial class AreaUnidadeEndpointTests
         AssertAcessoNegado(externa);
     }
 
+    [Fact]
+    public async Task Administrador_unidade_visualiza_resumo_detalhe_e_documento_vigente()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(application, "BFA", "bfa");
+        var unidade = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Tietê");
+        await AdicionarVinculoAsync(
+            application,
+            application.UsuarioStore.Usuario.Id,
+            organizacao.Id,
+            unidade.Id,
+            PerfilAcesso.AdministradorUnidade);
+        var contrato = await AdicionarContratoAtivoAsync(
+            application,
+            organizacao.Id,
+            unidade.Id);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var painel = WebUtility.HtmlDecode(await client.GetStringAsync(
+            $"/unidade/{unidade.Id:D}"));
+        Assert.Contains("Contrato da franquia", painel, StringComparison.Ordinal);
+        Assert.Contains("Contrato nº BFA-UN-123", painel, StringComparison.Ordinal);
+        Assert.Contains("Versão 2 · Vigente", painel, StringComparison.Ordinal);
+        Assert.Contains("22/08/2026 a 22/08/2027", painel, StringComparison.Ordinal);
+        Assert.Contains("8,00%", painel, StringComparison.Ordinal);
+        Assert.Contains("R$ 500,00", painel, StringComparison.Ordinal);
+        Assert.Contains("R$ 10.000,00", painel, StringComparison.Ordinal);
+        Assert.Contains("Dia 20", painel, StringComparison.Ordinal);
+        Assert.Contains(
+            $"href=\"/unidade/{unidade.Id:D}/contrato\"",
+            painel,
+            StringComparison.Ordinal);
+
+        using var detalheResponse = await client.GetAsync(
+            $"/unidade/{unidade.Id:D}/contrato");
+        var detalhe = WebUtility.HtmlDecode(await detalheResponse.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.OK, detalheResponse.StatusCode);
+        Assert.Contains("Consulte as condições vigentes", detalhe, StringComparison.Ordinal);
+        Assert.Contains("Taxa de franquia", detalhe, StringComparison.Ordinal);
+        Assert.Contains("Operação regular da unidade.", detalhe, StringComparison.Ordinal);
+        Assert.Contains("contrato-unidade.pdf", detalhe, StringComparison.Ordinal);
+        Assert.DoesNotContain(contrato.ChaveArmazenamento, detalhe, StringComparison.Ordinal);
+        Assert.DoesNotContain("/storage", detalhe, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(">Editar<", detalhe, StringComparison.Ordinal);
+        Assert.DoesNotContain("Nova versão", detalhe, StringComparison.Ordinal);
+        Assert.DoesNotContain("Formalizar", detalhe, StringComparison.Ordinal);
+        Assert.DoesNotContain("Cancelar contrato", detalhe, StringComparison.Ordinal);
+        Assert.DoesNotContain("Encerrar contrato", detalhe, StringComparison.Ordinal);
+        Assert.DoesNotContain("Enviar documento", detalhe, StringComparison.Ordinal);
+
+        using var visualizacao = await client.GetAsync(
+            $"/unidade/{unidade.Id:D}/contrato/documentos/{contrato.DocumentoId:D}/visualizar");
+        using var download = await client.GetAsync(
+            $"/unidade/{unidade.Id:D}/contrato/documentos/{contrato.DocumentoId:D}/baixar");
+        Assert.Equal(HttpStatusCode.OK, visualizacao.StatusCode);
+        Assert.Equal("application/pdf", visualizacao.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(contrato.Conteudo, await visualizacao.Content.ReadAsByteArrayAsync());
+        Assert.Equal(HttpStatusCode.OK, download.StatusCode);
+        Assert.Equal("attachment", download.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal(contrato.Conteudo, await download.Content.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task Ausencia_de_contrato_ativo_exibe_estado_controlado_sem_acao_de_criacao()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(application, "BFA", "bfa");
+        var unidade = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Sem Contrato");
+        await AdicionarVinculoAsync(
+            application,
+            application.UsuarioStore.Usuario.Id,
+            organizacao.Id,
+            unidade.Id,
+            PerfilAcesso.AdministradorUnidade);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var painel = await client.GetStringAsync($"/unidade/{unidade.Id:D}");
+        using var detalheResponse = await client.GetAsync($"/unidade/{unidade.Id:D}/contrato");
+        var detalhe = await detalheResponse.Content.ReadAsStringAsync();
+
+        Assert.Contains(
+            "Nenhum contrato ativo disponível para esta unidade.",
+            painel,
+            StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, detalheResponse.StatusCode);
+        Assert.Contains(
+            "Nenhum contrato ativo disponível para esta unidade.",
+            detalhe,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Criar contrato", painel, StringComparison.Ordinal);
+        Assert.DoesNotContain("Criar contrato", detalhe, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Administrador_unidade_nao_acessa_contrato_ou_documento_de_outra_unidade_ou_tenant()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(application, "BFA", "bfa");
+        var outroTenant = await AdicionarOrganizacaoAsync(application, "Outra", "outra");
+        var propria = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Própria");
+        var restrita = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Restrita");
+        var externa = await AdicionarUnidadeAsync(application, outroTenant.Id, "BFA Externa");
+        await AdicionarVinculoAsync(
+            application,
+            application.UsuarioStore.Usuario.Id,
+            organizacao.Id,
+            propria.Id,
+            PerfilAcesso.AdministradorUnidade);
+        var contratoRestrito = await AdicionarContratoAtivoAsync(
+            application,
+            organizacao.Id,
+            restrita.Id);
+        var contratoExterno = await AdicionarContratoAtivoAsync(
+            application,
+            outroTenant.Id,
+            externa.Id);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        using var detalheRestrito = await client.GetAsync($"/unidade/{restrita.Id:D}/contrato");
+        using var documentoRestrito = await client.GetAsync(
+            $"/unidade/{restrita.Id:D}/contrato/documentos/{contratoRestrito.DocumentoId:D}/baixar");
+        using var detalheExterno = await client.GetAsync($"/unidade/{externa.Id:D}/contrato");
+        using var documentoExterno = await client.GetAsync(
+            $"/unidade/{externa.Id:D}/contrato/documentos/{contratoExterno.DocumentoId:D}/visualizar");
+
+        AssertAcessoNegado(detalheRestrito);
+        AssertAcessoNegado(documentoRestrito);
+        AssertAcessoNegado(detalheExterno);
+        AssertAcessoNegado(documentoExterno);
+    }
+
     private static HttpClient CreateClient(AreaUnidadeWebApplicationFactory application)
     {
         return application.CreateClient(new WebApplicationFactoryClientOptions
@@ -489,6 +630,76 @@ public sealed partial class AreaUnidadeEndpointTests
         await dbContext.SaveChangesAsync();
     }
 
+    private static async Task<ContratoUnidadeTeste> AdicionarContratoAtivoAsync(
+        AreaUnidadeWebApplicationFactory application,
+        Guid organizacaoId,
+        Guid unidadeId)
+    {
+        var franqueado = new Franqueado(
+            Guid.NewGuid(),
+            organizacaoId,
+            TipoPessoaFranqueado.PessoaJuridica,
+            $"Franqueado {unidadeId:N}",
+            $"{unidadeId:N}"[..12] + "99",
+            $"franqueado-{unidadeId:N}@bfa.test",
+            CriadoEmUtc);
+        var vinculo = new FranqueadoUnidade(
+            Guid.NewGuid(),
+            franqueado.Id,
+            organizacaoId,
+            unidadeId,
+            CriadoEmUtc);
+        var contrato = new ContratoFranquia(
+            Guid.NewGuid(),
+            vinculo.Id,
+            "BFA-UN-123",
+            StatusContratoFranquia.Ativo,
+            CriadoEmUtc);
+        var versao = new ContratoFranquiaVersao(
+            Guid.NewGuid(),
+            contrato.Id,
+            2,
+            new DateOnly(2026, 8, 22),
+            new DateOnly(2027, 8, 22),
+            8m,
+            500m,
+            10_000m,
+            20,
+            StatusVersaoContratoFranquia.Vigente,
+            "Renovação contratual",
+            "Operação regular da unidade.",
+            CriadoEmUtc,
+            application.UsuarioStore.Usuario.Id);
+        var conteudo = "%PDF-1.7\nContrato da unidade BFA"u8.ToArray();
+        var documentoId = Guid.NewGuid();
+        var chave = $"contratos/{contrato.Id:N}/versoes/{versao.Id:N}/{documentoId:N}.pdf";
+        var documento = new DocumentoContratoFranquia(
+            documentoId,
+            versao.Id,
+            TipoDocumentoContratoFranquia.Contrato,
+            "contrato-unidade.pdf",
+            chave,
+            "application/pdf",
+            conteudo.Length,
+            new string('a', 64),
+            CriadoEmUtc,
+            application.UsuarioStore.Usuario.Id);
+
+        await using var scope = application.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+        dbContext.Franqueados.Add(franqueado);
+        dbContext.FranqueadosUnidades.Add(vinculo);
+        dbContext.ContratosFranquia.Add(contrato);
+        dbContext.ContratosFranquiaVersoes.Add(versao);
+        dbContext.DocumentosContratoFranquia.Add(documento);
+        await dbContext.SaveChangesAsync();
+        var armazenamento = scope.ServiceProvider
+            .GetRequiredService<IArmazenamentoDocumentosContrato>();
+        await using var stream = new MemoryStream(conteudo);
+        await armazenamento.SalvarAsync(chave, stream);
+        return new(documentoId, chave, conteudo);
+    }
+
     private static async Task DesativarVinculoAsync(
         AreaUnidadeWebApplicationFactory application,
         Guid vinculoId)
@@ -500,6 +711,11 @@ public sealed partial class AreaUnidadeEndpointTests
         vinculo.Desativar(CriadoEmUtc.AddHours(2));
         await dbContext.SaveChangesAsync();
     }
+
+    private sealed record ContratoUnidadeTeste(
+        Guid DocumentoId,
+        string ChaveArmazenamento,
+        byte[] Conteudo);
 
     [GeneratedRegex(
         "name=\"__RequestVerificationToken\"[^>]*value=\"(?<token>[^\"]+)\"",

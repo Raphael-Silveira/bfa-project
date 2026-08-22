@@ -58,6 +58,11 @@ public interface IContratosFranquiaRepositorio
         ContratoFranquiaVersao versao,
         CancellationToken cancellationToken);
 
+    Task<EstadoPersistenciaContratoFranquia> SalvarFormalizacaoAsync(
+        ContratoFranquiaVersao versaoVigenteAnterior,
+        ContratoFranquiaVersao novaVersaoVigente,
+        CancellationToken cancellationToken);
+
     Task<EstadoPersistenciaContratoFranquia> SalvarDocumentoAsync(
         DocumentoContratoFranquia documento,
         string identificadorTemporario,

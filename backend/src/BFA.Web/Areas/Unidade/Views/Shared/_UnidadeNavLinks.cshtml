@@ -1,12 +1,17 @@
 @{
     var caminhoAtual = Context.Request.Path.Value?.TrimEnd('/') ?? string.Empty;
-    var visaoGeralAtiva = caminhoAtual.StartsWith(
-        "/unidade/",
+    var unidadeId = Context.Request.RouteValues["unidadeId"]?.ToString();
+    var rotaUnidade = $"/unidade/{unidadeId}";
+    var rotaContrato = $"{rotaUnidade}/contrato";
+    var contratoAtivo = caminhoAtual.StartsWith(
+        rotaContrato,
         StringComparison.OrdinalIgnoreCase);
+    var visaoGeralAtiva = !contratoAtivo
+        && caminhoAtual.Equals(rotaUnidade, StringComparison.OrdinalIgnoreCase);
 }
 
 <a class="bfa-admin-nav-link @(visaoGeralAtiva ? "is-active" : null)"
-   href="@Context.Request.Path"
+   href="@rotaUnidade"
    aria-current="@(visaoGeralAtiva ? "page" : null)">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M4 4h6v6H4z"></path>
@@ -15,4 +20,14 @@
         <path d="M14 14h6v6h-6z"></path>
     </svg>
     <span>Visão Geral</span>
+</a>
+
+<a class="bfa-admin-nav-link @(contratoAtivo ? "is-active" : null)"
+   href="@rotaContrato"
+   aria-current="@(contratoAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 3h9l3 3v15H6z"></path>
+        <path d="M15 3v4h4M9 11h6M9 15h6"></path>
+    </svg>
+    <span>Contrato</span>
 </a>

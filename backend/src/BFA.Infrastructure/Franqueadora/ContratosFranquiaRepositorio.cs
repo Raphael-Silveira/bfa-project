@@ -225,6 +225,36 @@ public sealed class ContratosFranquiaRepositorio(
         return await SalvarAlteracoesAsync(cancellationToken);
     }
 
+    public async Task<EstadoPersistenciaContratoFranquia> SalvarFormalizacaoAsync(
+        ContratoFranquiaVersao versaoVigenteAnterior,
+        ContratoFranquiaVersao novaVersaoVigente,
+        CancellationToken cancellationToken)
+    {
+        await using var transacao = await dbContext.Database.BeginTransactionAsync(
+            cancellationToken);
+
+        try
+        {
+            dbContext.Entry(versaoVigenteAnterior)
+                .Property(versao => versao.Status)
+                .IsModified = true;
+            dbContext.Entry(novaVersaoVigente).State = EntityState.Detached;
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            dbContext.Attach(novaVersaoVigente);
+            dbContext.Entry(novaVersaoVigente)
+                .Property(versao => versao.Status)
+                .IsModified = true;
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transacao.CommitAsync(cancellationToken);
+            return EstadoPersistenciaContratoFranquia.Sucesso;
+        }
+        catch (DbUpdateException exception)
+        {
+            return MapearExcecao(exception);
+        }
+    }
+
     public async Task<EstadoPersistenciaContratoFranquia> SalvarDocumentoAsync(
         DocumentoContratoFranquia documento,
         string identificadorTemporario,

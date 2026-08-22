@@ -52,6 +52,7 @@ public sealed class ContratosController(
             return Conflict("O vínculo comercial está inativo.");
         }
 
+        var dataInicio = DateOnly.FromDateTime(DateTime.Today);
         var model = new ContratoFranquiaFormViewModel
         {
             FranqueadoId = franqueadoId,
@@ -59,7 +60,8 @@ public sealed class ContratosController(
             UnidadeId = unidadeId,
             UnidadeNome = painel.Valor.Contexto.UnidadeNome,
             NumeroVersao = 1,
-            DataInicio = DateOnly.FromDateTime(DateTime.Today),
+            DataInicio = dataInicio,
+            DataInicioTexto = dataInicio.ToString("dd/MM/yyyy", CulturaPtBr),
             PercentualRoyalties = "0,00",
             MensalidadeFixa = "0,00"
         };
@@ -574,6 +576,8 @@ public sealed class ContratosController(
             NumeroContrato = painel.Valor.Numero,
             DataInicio = item.DataInicio,
             DataFim = item.DataFim,
+            DataInicioTexto = item.DataInicio.ToString("dd/MM/yyyy", CulturaPtBr),
+            DataFimTexto = item.DataFim?.ToString("dd/MM/yyyy", CulturaPtBr),
             PercentualRoyalties = item.PercentualRoyalties.ToString("N2", CulturaPtBr),
             MensalidadeFixa = item.MensalidadeFixa.ToString("N2", CulturaPtBr),
             TaxaAdesao = item.TaxaAdesao?.ToString("N2", CulturaPtBr),

@@ -10,6 +10,7 @@ using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Identidade;
 using BFA.Application.Localidades;
 using BFA.Application.Unidades;
+using BFA.Application.Unidades.Contratos;
 using BFA.Application.Usuarios;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Bootstrap;
@@ -88,6 +89,7 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
         services.AddScoped<IUnidadeContextoConsulta>(serviceProvider =>
             serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
+        services.AddScoped<IContratoUnidadeConsulta, ContratoUnidadeConsulta>();
         services.AddScoped<IUsuarioApresentacaoConsulta, UsuarioApresentacaoConsulta>();
         services.AddScoped<IUsuarioPorEmailConsulta, UsuarioPorEmailConsulta>();
         services.AddScoped<IPrimeiroAcessoServico, PrimeiroAcessoServico>();

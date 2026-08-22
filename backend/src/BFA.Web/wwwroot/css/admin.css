@@ -612,11 +612,323 @@
   min-height: 3rem;
 }
 
+.bfa-admin-date-field {
+  position: relative;
+  min-width: 0;
+}
+
+.bfa-admin-date-field .bfa-form-control {
+  padding-right: 3.25rem;
+}
+
+.bfa-admin-date-field__trigger {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--bfa-accent);
+  transform: translateY(-50%);
+}
+
+.bfa-admin-date-field__trigger:hover {
+  background: rgba(255, 193, 7, 0.12);
+  color: var(--bfa-white);
+}
+
+.bfa-admin-date-field__trigger:focus-visible {
+  outline: 3px solid var(--bfa-accent);
+  outline-offset: 1px;
+}
+
+.bfa-admin-date-field__trigger svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.bfa-admin-calendar {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 1080;
+  width: min(20rem, calc(100vw - 2rem));
+  padding: 0.85rem;
+  border: 1px solid rgba(255, 193, 7, 0.42);
+  border-radius: 0.7rem;
+  background: #171717;
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.48);
+  color: var(--bfa-text-primary);
+  transform: translate(var(--bfa-calendar-offset-x, 0), var(--bfa-calendar-offset-y, 0));
+}
+
+.bfa-admin-calendar[hidden] {
+  display: none;
+}
+
+.bfa-admin-date-field.aligns-right .bfa-admin-calendar {
+  right: 0;
+  left: auto;
+}
+
+.bfa-admin-date-field.opens-up .bfa-admin-calendar {
+  top: auto;
+  bottom: calc(100% + 0.5rem);
+}
+
+.bfa-admin-calendar__header {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.bfa-admin-calendar__title {
+  margin: 0;
+  color: var(--bfa-white);
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.bfa-admin-calendar__nav,
+.bfa-admin-calendar__day,
+.bfa-admin-calendar__today {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--bfa-text-primary);
+}
+
+.bfa-admin-calendar__nav {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  place-items: center;
+  border-radius: 0.45rem;
+}
+
+.bfa-admin-calendar__nav svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.bfa-admin-calendar__weekdays,
+.bfa-admin-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.2rem;
+}
+
+.bfa-admin-calendar__weekdays {
+  margin-top: 0.7rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.bfa-admin-calendar__weekdays span {
+  padding: 0.35rem 0;
+}
+
+.bfa-admin-calendar__day,
+.bfa-admin-calendar__empty-day {
+  min-width: 0;
+  min-height: 2.35rem;
+}
+
+.bfa-admin-calendar__day {
+  padding: 0;
+  border-radius: 0.45rem;
+  font-size: 0.86rem;
+}
+
+.bfa-admin-calendar__nav:hover,
+.bfa-admin-calendar__day:hover,
+.bfa-admin-calendar__today:hover {
+  border-color: rgba(255, 193, 7, 0.55);
+  background: rgba(255, 193, 7, 0.1);
+  color: var(--bfa-white);
+}
+
+.bfa-admin-calendar__day.is-today {
+  border-color: var(--bfa-accent);
+  color: var(--bfa-accent);
+  font-weight: 800;
+}
+
+.bfa-admin-calendar__day.is-selected {
+  border-color: var(--bfa-accent);
+  background: var(--bfa-accent);
+  color: var(--bfa-black);
+  font-weight: 900;
+}
+
+.bfa-admin-calendar__footer {
+  display: flex;
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  justify-content: flex-end;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-admin-calendar__today {
+  min-height: 2.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.45rem;
+  color: var(--bfa-accent);
+  font-weight: 800;
+}
+
+.bfa-admin-calendar__nav:focus-visible,
+.bfa-admin-calendar__day:focus-visible,
+.bfa-admin-calendar__today:focus-visible {
+  outline: 3px solid var(--bfa-accent);
+  outline-offset: 1px;
+}
+
 .bfa-admin-form-help {
   display: block;
   margin-top: 0.5rem;
   color: var(--bfa-text-muted);
   font-size: 0.85rem;
+}
+
+.bfa-admin-file-upload {
+  position: relative;
+  min-width: 0;
+  margin-top: 0.45rem;
+}
+
+.bfa-admin-file-upload__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}
+
+.bfa-admin-file-upload__surface {
+  display: grid;
+  min-width: 0;
+  min-height: 6.25rem;
+  padding: 1rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  border: 1px dashed rgba(189, 189, 189, 0.45);
+  border-radius: 0.7rem;
+  background: rgba(13, 13, 13, 0.48);
+  color: var(--bfa-text-primary);
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.bfa-admin-file-upload__surface:hover,
+.bfa-admin-file-upload.is-dragging .bfa-admin-file-upload__surface {
+  border-color: var(--bfa-accent);
+  background: rgba(255, 193, 7, 0.07);
+}
+
+.bfa-admin-file-upload__input:focus-visible + .bfa-admin-file-upload__surface {
+  outline: 3px solid var(--bfa-accent);
+  outline-offset: 2px;
+}
+
+.bfa-admin-file-upload__icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 3rem;
+  place-items: center;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  border-radius: 0.65rem;
+  background: rgba(255, 193, 7, 0.08);
+  color: var(--bfa-accent);
+}
+
+.bfa-admin-file-upload__icon svg {
+  width: 1.45rem;
+  height: 1.45rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.bfa-admin-file-upload__copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.bfa-admin-file-upload__copy strong {
+  overflow: hidden;
+  color: var(--bfa-text-primary);
+  font-size: 0.98rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bfa-admin-file-upload__copy span {
+  color: var(--bfa-text-muted);
+  font-size: 0.82rem;
+}
+
+.bfa-admin-file-upload__action {
+  display: inline-flex;
+  min-height: 2.65rem;
+  padding: 0.55rem 0.9rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bfa-accent);
+  border-radius: 0.4rem;
+  color: var(--bfa-accent);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.bfa-admin-file-upload.is-selected .bfa-admin-file-upload__surface {
+  border-style: solid;
+  border-color: rgba(255, 193, 7, 0.48);
+}
+
+.bfa-admin-file-upload.is-selected .bfa-admin-file-upload__icon {
+  background: var(--bfa-accent);
+  color: var(--bfa-black);
+}
+
+.bfa-admin-file-upload__input:disabled + .bfa-admin-file-upload__surface {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bfa-admin-file-upload-actions .bfa-admin-button:disabled {
+  border-color: var(--bfa-border);
+  background: rgba(189, 189, 189, 0.15);
+  color: var(--bfa-text-muted);
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .bfa-admin-localidades {
@@ -953,6 +1265,21 @@
 
   .bfa-admin-card {
     padding: 1.15rem;
+  }
+
+  .bfa-admin-file-upload__surface {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+
+  .bfa-admin-file-upload__copy strong {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .bfa-admin-file-upload__action {
+    width: 100%;
+    grid-column: 1 / -1;
   }
 
   .bfa-admin-form .mb-4 {

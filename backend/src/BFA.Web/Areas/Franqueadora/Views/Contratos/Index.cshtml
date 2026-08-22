@@ -8,6 +8,7 @@
     var rascunho = Model.Versoes.FirstOrDefault(item => item.Status == StatusVersaoContratoFranquia.Rascunho);
 }
 
+<div class="bfa-contrato-page">
 <header class="bfa-admin-page-header">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Contrato de franquia</p>
@@ -30,11 +31,11 @@
 
 @if (TempData[BFA.Web.Areas.Franqueadora.Controllers.ContratosController.MensagemSucesso] is string sucesso)
 {
-    <section class="bfa-admin-notice" role="status"><span class="bfa-admin-notice__marker" aria-hidden="true"></span><div><h2>Operação concluída</h2><p>@sucesso</p></div></section>
+    <section class="bfa-admin-notice bfa-contrato-feedback" role="status"><span class="bfa-admin-notice__marker" aria-hidden="true"></span><div><h2>Operação concluída</h2><p>@sucesso</p></div></section>
 }
 @if (TempData[BFA.Web.Areas.Franqueadora.Controllers.ContratosController.MensagemErro] is string erro)
 {
-    <section class="bfa-admin-notice" role="alert"><span class="bfa-admin-notice__marker" aria-hidden="true"></span><div><h2>Não foi possível concluir</h2><p>@erro</p></div></section>
+    <section class="bfa-admin-notice bfa-contrato-feedback" role="alert"><span class="bfa-admin-notice__marker" aria-hidden="true"></span><div><h2>Não foi possível concluir</h2><p>@erro</p></div></section>
 }
 @if (!Model.VinculoAtivo)
 {
@@ -97,23 +98,50 @@ else
         @if (rascunho is not null && Model.VinculoAtivo)
         {
             <section class="bfa-admin-card bfa-admin-form-card" aria-labelledby="documento-upload-title">
-                <header class="bfa-contrato-heading"><div><p>Versão @rascunho.NumeroVersao</p><h2 id="documento-upload-title">Adicionar documento PDF</h2></div></header>
+                <header class="bfa-contrato-heading">
+                    <div>
+                        <p>Versão @rascunho.NumeroVersao</p>
+                        <h2 id="documento-upload-title">Adicionar documento</h2>
+                        <span class="bfa-contrato-heading__help">Envie o contrato, aditivo ou anexo correspondente a esta versão.</span>
+                    </div>
+                </header>
                 <form class="bfa-admin-form bfa-contrato-upload"
                       action="@rotaBase/@contratoId/versoes/@rascunho.Id/documentos"
                       method="post" enctype="multipart/form-data" data-bfa-upload-form>
                     @Html.AntiForgeryToken()
-                    <div class="bfa-form-field">
-                        <label class="bfa-form-label" for="TipoDocumento">Tipo</label>
+                    <div class="bfa-form-field bfa-contrato-upload__type">
+                        <label class="bfa-form-label" for="TipoDocumento">Tipo de documento</label>
                         <select class="form-select bfa-form-control" id="TipoDocumento" name="TipoDocumento" required>
                             @foreach (var tipo in Enum.GetValues<TipoDocumentoContratoFranquia>()) { <option value="@tipo">@tipo</option> }
                         </select>
                     </div>
                     <div class="bfa-form-field bfa-contrato-upload__file">
-                        <label class="bfa-form-label" for="Arquivo">Arquivo PDF</label>
-                        <input class="form-control bfa-form-control" id="Arquivo" name="Arquivo" type="file" accept="application/pdf,.pdf" required data-bfa-upload-input />
-                        <span class="bfa-admin-form-help" data-bfa-upload-feedback>PDF de até @FormatarTamanho(Model.TamanhoMaximoDocumentoBytes). O servidor valida conteúdo, assinatura e tamanho.</span>
+                        <span class="bfa-form-label" id="ArquivoRotulo">Arquivo PDF</span>
+                        <div class="bfa-admin-file-upload" data-bfa-file-upload>
+                            <input class="bfa-admin-file-upload__input"
+                                   id="Arquivo"
+                                   name="Arquivo"
+                                   type="file"
+                                   accept="application/pdf,.pdf"
+                                   required
+                                   aria-labelledby="ArquivoRotulo ArquivoNome"
+                                   aria-describedby="ArquivoTamanho"
+                                   data-bfa-upload-input />
+                            <label class="bfa-admin-file-upload__surface" for="Arquivo" data-bfa-file-upload-surface>
+                                <span class="bfa-admin-file-upload__icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><path d="M6 2.75h8l4 4V21.25H6z"></path><path d="M14 2.75v4h4M9 12h6M9 15.5h6"></path></svg>
+                                </span>
+                                <span class="bfa-admin-file-upload__copy" aria-live="polite">
+                                    <strong id="ArquivoNome" data-bfa-file-upload-name>Selecione um arquivo PDF</strong>
+                                    <span id="ArquivoTamanho" data-bfa-file-upload-size>PDF • máximo @FormatarTamanho(Model.TamanhoMaximoDocumentoBytes)</span>
+                                </span>
+                                <span class="bfa-admin-file-upload__action" data-bfa-file-upload-action>Selecionar</span>
+                            </label>
+                        </div>
                     </div>
-                    <button class="bfa-btn-primary bfa-admin-button" type="submit" data-bfa-upload-submit>Enviar documento</button>
+                    <div class="bfa-admin-file-upload-actions bfa-contrato-upload__actions">
+                        <button class="bfa-btn-primary bfa-admin-button" type="submit" data-bfa-upload-submit>Enviar documento</button>
+                    </div>
                 </form>
             </section>
         }
@@ -139,8 +167,12 @@ else
                 @foreach (var versao in Model.Versoes)
                 {
                     <article class="bfa-contrato-version-card">
-                        <header><div><span>Versão @versao.NumeroVersao</span><h3>@NomeStatusVersao(versao.Status)</h3></div><strong>@FormatarMoeda(versao.MensalidadeFixa)</strong></header>
-                        <p>Início em @versao.DataInicio.ToString("dd/MM/yyyy") · @versao.PercentualRoyalties.ToString("N2")% de royalties</p>
+                        <header><div><span>Versão @versao.NumeroVersao</span><h3>@NomeStatusVersao(versao.Status)</h3></div></header>
+                        <dl class="bfa-contrato-version-summary">
+                            <div><dt>Data</dt><dd>@versao.DataInicio.ToString("dd/MM/yyyy")</dd></div>
+                            <div><dt>Royalties</dt><dd>@versao.PercentualRoyalties.ToString("N2")%</dd></div>
+                            <div><dt>Mensalidade</dt><dd>@FormatarMoeda(versao.MensalidadeFixa)</dd></div>
+                        </dl>
                         <div class="bfa-admin-actions">
                             <a class="bfa-btn-secondary bfa-admin-button" href="@rotaBase/@contratoId/versoes/@versao.Id">Ver detalhes</a>
                             @if (versao.Status == StatusVersaoContratoFranquia.Rascunho && Model.VinculoAtivo)
@@ -176,6 +208,7 @@ else
         </section>
     </div>
 }
+</div>
 
 @functions {
     private static string NomeStatusContrato(StatusContratoFranquia? status) => status switch { StatusContratoFranquia.Rascunho => "Rascunho", StatusContratoFranquia.Ativo => "Ativo", StatusContratoFranquia.Encerrado => "Encerrado", StatusContratoFranquia.Cancelado => "Cancelado", _ => "Não cadastrado" };
@@ -186,20 +219,5 @@ else
 }
 
 @section Scripts {
-    <script>
-        (() => {
-            const input = document.querySelector('[data-bfa-upload-input]');
-            const feedback = document.querySelector('[data-bfa-upload-feedback]');
-            const form = document.querySelector('[data-bfa-upload-form]');
-            if (!input || !feedback || !form) return;
-            input.addEventListener('change', () => {
-                const file = input.files && input.files[0];
-                feedback.textContent = file ? `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB · ${file.type || 'tipo não informado'}` : 'PDF de até 20 MB.';
-            });
-            form.addEventListener('submit', () => {
-                const button = form.querySelector('[data-bfa-upload-submit]');
-                if (button) { button.disabled = true; button.textContent = 'Enviando…'; }
-            });
-        })();
-    </script>
+    <script src="~/js/bfa-file-upload.js" asp-append-version="true"></script>
 }

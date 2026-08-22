@@ -3,6 +3,177 @@
   margin-top: 0;
 }
 
+.bfa-unidade-contract-card,
+.bfa-unidade-contract-detail,
+.bfa-unidade-contract-documents {
+  width: 100%;
+  max-width: 72rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-top: 0.2rem solid var(--bfa-accent);
+}
+
+.bfa-unidade-contract-card__header,
+.bfa-unidade-contract-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-unidade-contract-card__header h2,
+.bfa-unidade-contract-detail__header h2,
+.bfa-unidade-contract-documents h2,
+.bfa-unidade-contract-notes h3 {
+  margin: 0;
+  color: var(--bfa-text-primary);
+}
+
+.bfa-unidade-contract-card__eyebrow,
+.bfa-unidade-contract-detail__header p,
+.bfa-unidade-contract-documents > header p {
+  margin: 0 0 0.35rem;
+  color: var(--bfa-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-unidade-contract-card__identity {
+  display: grid;
+  margin-top: 1.5rem;
+  gap: 0.25rem;
+}
+
+.bfa-unidade-contract-card__identity strong {
+  color: var(--bfa-white);
+  font-size: clamp(1.25rem, 3vw, 1.7rem);
+}
+
+.bfa-unidade-contract-card__identity span,
+.bfa-unidade-contract-detail__header span,
+.bfa-unidade-document-item__copy span {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-unidade-contract-grid {
+  display: grid;
+  margin: 1.5rem 0 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem 2rem;
+}
+
+.bfa-unidade-contract-grid div {
+  min-width: 0;
+}
+
+.bfa-unidade-contract-grid dt {
+  margin-bottom: 0.35rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bfa-unidade-contract-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--bfa-text-primary);
+  font-weight: 750;
+}
+
+.bfa-unidade-contract-card__actions {
+  display: flex;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  justify-content: flex-end;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-unidade-contract-empty {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.55rem;
+  background: rgba(13, 13, 13, 0.45);
+}
+
+.bfa-unidade-contract-empty p {
+  margin: 0;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-unidade-contract-empty-state {
+  max-width: 72rem;
+}
+
+.bfa-unidade-contract-sections {
+  display: grid;
+  width: 100%;
+  max-width: 72rem;
+  gap: 1.5rem;
+}
+
+.bfa-unidade-contract-detail__header h2 {
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.bfa-unidade-contract-detail__header > div > span {
+  display: block;
+  margin-top: 0.35rem;
+}
+
+.bfa-unidade-contract-notes {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-unidade-contract-notes h3 {
+  font-size: 1rem;
+}
+
+.bfa-unidade-contract-notes p {
+  margin: 0.65rem 0 0;
+  color: var(--bfa-text-muted);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.bfa-unidade-contract-documents > header {
+  margin-bottom: 1.25rem;
+}
+
+.bfa-unidade-document-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bfa-unidade-document-item {
+  display: flex;
+  min-width: 0;
+  padding: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.55rem;
+  background: rgba(13, 13, 13, 0.42);
+}
+
+.bfa-unidade-document-item__copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.bfa-unidade-document-item__copy strong {
+  overflow-wrap: anywhere;
+  color: var(--bfa-text-primary);
+}
+
 .bfa-auth-container:has(.bfa-unidade-selection) {
   width: min(100%, 60rem);
   margin-inline: auto;
@@ -186,12 +357,43 @@
 }
 
 @media (max-width: 46rem) {
+  .bfa-unidade-contract-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .bfa-unidade-selection__list {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 30rem) {
+  .bfa-unidade-contract-card__header,
+  .bfa-unidade-contract-detail__header,
+  .bfa-unidade-document-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bfa-unidade-contract-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .bfa-unidade-contract-card__actions,
+  .bfa-unidade-document-item .bfa-admin-actions {
+    justify-content: stretch;
+  }
+
+  .bfa-unidade-contract-card__actions .bfa-admin-button,
+  .bfa-unidade-document-item .bfa-admin-button {
+    width: 100%;
+  }
+
+  .bfa-unidade-document-item .bfa-admin-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
   .bfa-auth-container:has(.bfa-unidade-selection) {
     padding: 1rem;
   }

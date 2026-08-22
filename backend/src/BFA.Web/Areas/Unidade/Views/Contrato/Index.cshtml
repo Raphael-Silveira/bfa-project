@@ -1,0 +1,133 @@
+@using System.Globalization
+@model ContratoUnidadeDetalheViewModel
+
+@{
+    ViewData["Title"] = "Contrato da franquia";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-contrato-unidade">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Unidade · @Model.NomeUnidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-contrato-unidade">Contrato da franquia</h1>
+        <p class="bfa-admin-page-header__description">Consulte as condições vigentes e os documentos disponíveis.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId">Voltar à visão geral</a>
+    </div>
+</header>
+
+@if (Model.Contrato is not { } contrato)
+{
+    <section class="bfa-admin-empty-state bfa-unidade-contract-empty-state"
+             aria-labelledby="titulo-sem-contrato">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2 id="titulo-sem-contrato">Nenhum contrato ativo</h2>
+            <p>Nenhum contrato ativo disponível para esta unidade.</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-unidade-contract-sections">
+        <section class="bfa-admin-card bfa-unidade-contract-detail"
+                 aria-labelledby="titulo-condicoes-contrato">
+            <header class="bfa-unidade-contract-detail__header">
+                <div>
+                    <p>Contrato atual</p>
+                    <h2 id="titulo-condicoes-contrato">Contrato nº @(contrato.Numero ?? "Não informado")</h2>
+                    <span>Versão @contrato.NumeroVersao · Vigente</span>
+                </div>
+                <span class="bfa-admin-badge is-active">Ativo</span>
+            </header>
+
+            <dl class="bfa-unidade-contract-grid is-detail">
+                <div>
+                    <dt>Vigência</dt>
+                    <dd>@FormatarVigencia(contrato.DataInicio, contrato.DataFim)</dd>
+                </div>
+                <div>
+                    <dt>Royalties</dt>
+                    <dd>@contrato.PercentualRoyalties.ToString("N2", CulturaPtBr)%</dd>
+                </div>
+                <div>
+                    <dt>Mensalidade fixa</dt>
+                    <dd>@contrato.MensalidadeFixa.ToString("C", CulturaPtBr)</dd>
+                </div>
+                <div>
+                    <dt>Taxa de franquia</dt>
+                    <dd>@FormatarMoedaOpcional(contrato.TaxaAdesao)</dd>
+                </div>
+                <div>
+                    <dt>Dia de vencimento</dt>
+                    <dd>@FormatarVencimento(contrato.DiaVencimento)</dd>
+                </div>
+            </dl>
+
+            <div class="bfa-unidade-contract-notes">
+                <h3>Observações</h3>
+                <p>@(contrato.Observacoes ?? "Nenhuma observação informada.")</p>
+            </div>
+        </section>
+
+        <section class="bfa-admin-card bfa-unidade-contract-documents"
+                 aria-labelledby="titulo-documentos-contrato">
+            <header>
+                <p>Versão vigente</p>
+                <h2 id="titulo-documentos-contrato">Documentos</h2>
+            </header>
+
+            @if (contrato.Documentos.Count == 0)
+            {
+                <div class="bfa-unidade-contract-empty" role="status">
+                    <p>Nenhum documento disponível para a versão vigente.</p>
+                </div>
+            }
+            else
+            {
+                <div class="bfa-unidade-document-list">
+                    @foreach (var documento in contrato.Documentos)
+                    {
+                        <article class="bfa-unidade-document-item">
+                            <div class="bfa-unidade-document-item__copy">
+                                <strong>@documento.NomeOriginal</strong>
+                                <span>@documento.TipoDocumento · @FormatarTamanho(documento.TamanhoBytes)</span>
+                            </div>
+                            <div class="bfa-admin-actions">
+                                <a class="bfa-btn-secondary bfa-admin-button"
+                                   href="/unidade/@Model.UnidadeId/contrato/documentos/@documento.Id/visualizar"
+                                   target="_blank"
+                                   rel="noopener">Visualizar</a>
+                                <a class="bfa-btn-secondary bfa-admin-button"
+                                   href="/unidade/@Model.UnidadeId/contrato/documentos/@documento.Id/baixar">Baixar</a>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+}
+
+@functions {
+    private static string FormatarVigencia(DateOnly inicio, DateOnly? fim) =>
+        fim is { } dataFim
+            ? $"{inicio:dd/MM/yyyy} a {dataFim:dd/MM/yyyy}"
+            : $"A partir de {inicio:dd/MM/yyyy}";
+
+    private static string FormatarMoedaOpcional(decimal? valor) =>
+        valor is { } moeda ? moeda.ToString("C", CulturaPtBr) : "Não informada";
+
+    private static string FormatarVencimento(int? dia) =>
+        dia is { } valor ? $"Dia {valor}" : "Não informado";
+
+    private static string FormatarTamanho(long tamanhoBytes) => tamanhoBytes switch
+    {
+        >= 1024 * 1024 => $"{(tamanhoBytes / 1024m / 1024m).ToString("N1", CulturaPtBr)} MB",
+        >= 1024 => $"{(tamanhoBytes / 1024m).ToString("N0", CulturaPtBr)} KB",
+        _ => $"{tamanhoBytes} bytes"
+    };
+
+    private static readonly CultureInfo CulturaPtBr = CultureInfo.GetCultureInfo("pt-BR");
+}

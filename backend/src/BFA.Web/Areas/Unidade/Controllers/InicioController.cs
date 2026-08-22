@@ -1,5 +1,6 @@
 using BFA.Application.Acessos;
 using BFA.Application.Unidades;
+using BFA.Application.Unidades.Contratos;
 using BFA.Domain.Acessos;
 using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
@@ -15,6 +16,7 @@ public sealed class InicioController(
     IUsuarioAtual usuarioAtual,
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
+    IContratoUnidadeConsulta contratoUnidadeConsulta,
     IAuthorizationService authorizationService) : Controller
 {
     [HttpGet("")]
@@ -49,13 +51,23 @@ public sealed class InicioController(
         var unidadesAdministradas = await unidadesUsuarioConsulta.ListarAdministradasAsync(
             usuarioId,
             cancellationToken);
+        var contrato = await contratoUnidadeConsulta.ObterAtivoAsync(
+            usuarioId,
+            unidadeId,
+            cancellationToken);
+
+        if (contrato.Estado == EstadoConsultaContratoUnidade.SemAcesso)
+        {
+            return Forbid();
+        }
 
         return View(new PainelUnidadeViewModel
         {
             OrganizacaoId = unidade.OrganizacaoId,
             UnidadeId = unidade.UnidadeId,
             NomeUnidade = unidade.Nome,
-            PodeTrocarUnidade = unidadesAdministradas.Count > 1
+            PodeTrocarUnidade = unidadesAdministradas.Count > 1,
+            Contrato = ContratoUnidadeViewModelMapper.Mapear(contrato.Valor?.Contrato)
         });
     }
 }

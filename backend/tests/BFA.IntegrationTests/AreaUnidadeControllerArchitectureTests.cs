@@ -1,4 +1,5 @@
 using BFA.Application.Unidades;
+using BFA.Application.Unidades.Contratos;
 using BFA.Application.Usuarios;
 using BFA.Infrastructure.Persistence;
 using BFA.Web.Areas.Unidade.Controllers;
@@ -15,6 +16,7 @@ public sealed class AreaUnidadeControllerArchitectureTests
         var controllers = new[]
         {
             typeof(InicioController),
+            typeof(ContratoController),
             typeof(BFA.Web.Controllers.SelecaoUnidadeController)
         };
 
@@ -35,6 +37,21 @@ public sealed class AreaUnidadeControllerArchitectureTests
             Assert.DoesNotContain(typeof(BfaDbContext), dependencias);
             Assert.DoesNotContain(typeof(BfaDbContext), campos);
         }
+    }
+
+    [Fact]
+    public void Contrato_da_unidade_usa_consulta_application_e_autorizacao_por_recurso()
+    {
+        var dependencias = typeof(ContratoController)
+            .GetConstructors()
+            .SelectMany(construtor => construtor.GetParameters())
+            .Select(parametro => parametro.ParameterType)
+            .ToArray();
+
+        Assert.Contains(typeof(IContratoUnidadeConsulta), dependencias);
+        Assert.Contains(typeof(IUnidadeContextoConsulta), dependencias);
+        Assert.Contains(typeof(IAuthorizationService), dependencias);
+        Assert.DoesNotContain(typeof(BfaDbContext), dependencias);
     }
 
     [Fact]

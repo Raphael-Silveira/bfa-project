@@ -58,7 +58,6 @@ public sealed class ContratoFranquiaFormViewModel : IValidatableObject
     [Display(Name = "Número do contrato")]
     public string? NumeroContrato { get; set; }
 
-    [Required(ErrorMessage = "Informe a data de início.")]
     [DataType(DataType.Date)]
     [Display(Name = "Data de início")]
     public DateOnly? DataInicio { get; set; }
@@ -66,6 +65,12 @@ public sealed class ContratoFranquiaFormViewModel : IValidatableObject
     [DataType(DataType.Date)]
     [Display(Name = "Data de término")]
     public DateOnly? DataFim { get; set; }
+
+    [Display(Name = "Data de início")]
+    public string? DataInicioTexto { get; set; }
+
+    [Display(Name = "Data de término")]
+    public string? DataFimTexto { get; set; }
 
     [Required(ErrorMessage = "Informe o percentual de royalties.")]
     [Display(Name = "Royalties (%)")]
@@ -92,11 +97,45 @@ public sealed class ContratoFranquiaFormViewModel : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (!string.IsNullOrWhiteSpace(DataInicioTexto))
+        {
+            if (TentarData(DataInicioTexto, out var inicioInformado))
+            {
+                DataInicio = inicioInformado;
+            }
+            else
+            {
+                yield return new(
+                    "Informe uma data de início válida no formato dd/mm/aaaa.",
+                    [nameof(DataInicioTexto)]);
+            }
+        }
+        else if (DataInicio is null)
+        {
+            yield return new(
+                "Informe a data de início.",
+                [nameof(DataInicioTexto)]);
+        }
+
+        if (!string.IsNullOrWhiteSpace(DataFimTexto))
+        {
+            if (TentarData(DataFimTexto, out var fimInformado))
+            {
+                DataFim = fimInformado;
+            }
+            else
+            {
+                yield return new(
+                    "Informe uma data de término válida no formato dd/mm/aaaa.",
+                    [nameof(DataFimTexto)]);
+            }
+        }
+
         if (DataInicio is { } inicio && DataFim is { } fim && fim < inicio)
         {
             yield return new(
                 "A data de término não pode ser anterior à data de início.",
-                [nameof(DataFim)]);
+                [nameof(DataFimTexto)]);
         }
 
         if (!TentarDecimal(PercentualRoyalties, out var royalties)
@@ -136,6 +175,14 @@ public sealed class ContratoFranquiaFormViewModel : IValidatableObject
         return decimal.TryParse(valor, estilos, CultureInfo.GetCultureInfo("pt-BR"), out resultado)
             || decimal.TryParse(valor, estilos, CultureInfo.InvariantCulture, out resultado);
     }
+
+    private static bool TentarData(string valor, out DateOnly resultado) =>
+        DateOnly.TryParseExact(
+            valor.Trim(),
+            "dd/MM/yyyy",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out resultado);
 }
 
 public sealed class NovaVersaoContratoFranquiaViewModel

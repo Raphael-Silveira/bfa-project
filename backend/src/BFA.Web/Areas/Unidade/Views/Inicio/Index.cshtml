@@ -1,3 +1,4 @@
+@using System.Globalization
 @model PainelUnidadeViewModel
 
 @{
@@ -13,13 +14,71 @@
     </div>
 </header>
 
-<section class="bfa-admin-empty-state bfa-unidade-empty-state"
-         aria-labelledby="titulo-primeiros-modulos">
-    <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
-    <div>
-        <h2 id="titulo-primeiros-modulos">Sua área de gestão está pronta.</h2>
-        <p>
-            Os módulos operacionais aparecerão aqui conforme forem disponibilizados para a Unidade.
-        </p>
-    </div>
+<section class="bfa-admin-card bfa-unidade-contract-card"
+         aria-labelledby="titulo-contrato-unidade">
+    <header class="bfa-unidade-contract-card__header">
+        <div>
+            <p class="bfa-unidade-contract-card__eyebrow">Franquia</p>
+            <h2 id="titulo-contrato-unidade">Contrato da franquia</h2>
+        </div>
+        @if (Model.Contrato is not null)
+        {
+            <span class="bfa-admin-badge is-active">Ativo</span>
+        }
+    </header>
+
+    @if (Model.Contrato is { } contrato)
+    {
+        <div class="bfa-unidade-contract-card__identity">
+            <strong>Contrato nº @(contrato.Numero ?? "Não informado")</strong>
+            <span>Versão @contrato.NumeroVersao · Vigente</span>
+        </div>
+        <dl class="bfa-unidade-contract-grid">
+            <div>
+                <dt>Vigência</dt>
+                <dd>@FormatarVigencia(contrato.DataInicio, contrato.DataFim)</dd>
+            </div>
+            <div>
+                <dt>Royalties</dt>
+                <dd>@contrato.PercentualRoyalties.ToString("N2", CulturaPtBr)%</dd>
+            </div>
+            <div>
+                <dt>Mensalidade</dt>
+                <dd>@contrato.MensalidadeFixa.ToString("C", CulturaPtBr)</dd>
+            </div>
+            <div>
+                <dt>Taxa de franquia</dt>
+                <dd>@FormatarMoedaOpcional(contrato.TaxaAdesao)</dd>
+            </div>
+            <div>
+                <dt>Vencimento</dt>
+                <dd>@FormatarVencimento(contrato.DiaVencimento)</dd>
+            </div>
+        </dl>
+        <footer class="bfa-unidade-contract-card__actions">
+            <a class="bfa-btn-secondary bfa-admin-button"
+               href="/unidade/@Model.UnidadeId/contrato">Ver contrato</a>
+        </footer>
+    }
+    else
+    {
+        <div class="bfa-unidade-contract-empty" role="status">
+            <p>Nenhum contrato ativo disponível para esta unidade.</p>
+        </div>
+    }
 </section>
+
+@functions {
+    private static string FormatarVigencia(DateOnly inicio, DateOnly? fim) =>
+        fim is { } dataFim
+            ? $"{inicio:dd/MM/yyyy} a {dataFim:dd/MM/yyyy}"
+            : $"A partir de {inicio:dd/MM/yyyy}";
+
+    private static string FormatarMoedaOpcional(decimal? valor) =>
+        valor is { } moeda ? moeda.ToString("C", CulturaPtBr) : "Não informada";
+
+    private static string FormatarVencimento(int? dia) =>
+        dia is { } valor ? $"Dia {valor}" : "Não informado";
+
+    private static readonly CultureInfo CulturaPtBr = CultureInfo.GetCultureInfo("pt-BR");
+}
