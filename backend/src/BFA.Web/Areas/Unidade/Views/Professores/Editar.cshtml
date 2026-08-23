@@ -1,0 +1,18 @@
+@model ProfessorUnidadeEditarViewModel
+@{ ViewData["Title"] = "Editar professor"; Layout = "_UnidadeLayout"; }
+
+<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Cadastro da rede</p><h1 class="bfa-admin-page-header__title">Editar professor</h1><p class="bfa-admin-page-header__description">Este cadastro pertence à rede e pode ser utilizado em outras unidades.</p></div></header>
+
+<form class="bfa-admin-form bfa-professor-form" method="post" action="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/editar">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+    <div class="bfa-admin-form-sections"><section class="bfa-admin-card bfa-admin-form-card"><header class="bfa-professor-form__heading"><p>Dados cadastrais</p><h2>@Model.NomeCompleto</h2></header><div class="bfa-professor-form-grid">
+        <div class="bfa-form-field bfa-professor-form-wide"><label asp-for="NomeCompleto" class="bfa-form-label"></label><input asp-for="NomeCompleto" class="form-control bfa-form-control" /><span asp-validation-for="NomeCompleto" class="bfa-validation-message"></span></div>
+        <div class="bfa-form-field"><label asp-for="Cpf" class="bfa-form-label"></label><input asp-for="Cpf" class="form-control bfa-form-control" inputmode="numeric" maxlength="14" data-bfa-mask="document" /><span asp-validation-for="Cpf" class="bfa-validation-message"></span></div>
+        <div class="bfa-form-field"><label asp-for="Telefone" class="bfa-form-label"></label><input asp-for="Telefone" class="form-control bfa-form-control" inputmode="numeric" data-bfa-mask="phone" /><span asp-validation-for="Telefone" class="bfa-validation-message"></span></div>
+        <div class="bfa-form-field bfa-professor-form-wide"><label asp-for="Email" class="bfa-form-label"></label><input asp-for="Email" class="form-control bfa-form-control" type="email" /><span asp-validation-for="Email" class="bfa-validation-message"></span></div>
+    </div></section></div>
+    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar alterações</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Cancelar</a></div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/bfa-input-masks.js" asp-append-version="true"></script> }

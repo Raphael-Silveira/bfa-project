@@ -810,6 +810,12 @@
   font-size: 0.85rem;
 }
 
+.bfa-admin-calendar__day:disabled,
+.bfa-admin-calendar__today:disabled {
+    cursor: not-allowed;
+    opacity: 0.32;
+}
+
 .bfa-admin-file-upload {
   position: relative;
   min-width: 0;

@@ -1,0 +1,73 @@
+@using BFA.Application.Unidades.Professores
+@model ProfessorUnidadeVincularViewModel
+@{
+    ViewData["Title"] = "Vincular professor existente";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Equipe da unidade</p><h1 class="bfa-admin-page-header__title">Vincular professor existente</h1><p class="bfa-admin-page-header__description">Localize um professor da rede e defina a remuneração específica para @Model.NomeUnidade.</p></div>
+</header>
+
+@if (Model.ProfessorSelecionado is null)
+{
+    <form class="bfa-admin-card bfa-professor-search" method="get" action="/unidade/@Model.UnidadeId/professores/vincular" role="search">
+        <div class="bfa-form-field"><label class="bfa-form-label" for="termo">Nome, CPF ou e-mail</label><div class="bfa-professor-search__controls"><input class="form-control bfa-form-control" id="termo" name="termo" value="@Model.Termo" minlength="2" required /><button class="bfa-btn-primary bfa-admin-button" type="submit">Buscar</button></div><span class="bfa-admin-form-help">Informe pelo menos dois caracteres. A pesquisa é restrita à sua Organização.</span></div>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Termo))
+    {
+        if (Model.Resultados.Count == 0)
+        {
+            <section class="bfa-admin-empty-state" role="status"><div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div><div><h2>Nenhum professor encontrado.</h2><p>Revise o nome, CPF ou e-mail informado.</p></div></section>
+        }
+        else
+        {
+            <section class="bfa-professor-search-results" aria-label="Professores encontrados">
+            @foreach (var professor in Model.Resultados)
+            {
+                <article class="bfa-admin-card bfa-professor-result">
+                    <div class="bfa-professor-result__copy"><div><h2>@professor.NomeCompleto</h2><span class="bfa-admin-badge @(professor.ProfessorAtivo ? "is-active" : "is-inactive")">@(professor.ProfessorAtivo ? "Ativo" : "Inativo")</span></div><p>CPF @FormatarCpfProtegido(professor.Cpf)</p>@if (!string.IsNullOrWhiteSpace(professor.Telefone)) { <p>@professor.Telefone</p> } @if (!string.IsNullOrWhiteSpace(professor.Email)) { <p>@professor.Email</p> }</div>
+                    <div class="bfa-professor-result__action">
+                    @if (!professor.ProfessorAtivo)
+                    { <span>Professor inativo. O vínculo não está disponível.</span> }
+                    else if (professor.EstadoVinculo == EstadoVinculoProfessorExistente.Ativo)
+                    { <span>Este professor já está vinculado a esta unidade.</span> }
+                    else
+                    { <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores/vincular?professorId=@professor.ProfessorId">@(professor.EstadoVinculo == EstadoVinculoProfessorExistente.Inativo ? "Reativar vínculo" : $"Vincular à {Model.NomeUnidade}")</a> }
+                    </div>
+                </article>
+            }
+            </section>
+        }
+    }
+}
+else
+{
+    var professor = Model.ProfessorSelecionado;
+    <section class="bfa-admin-card bfa-professor-selected"><div><p>Professor selecionado</p><h2>@professor.NomeCompleto</h2><span>CPF @FormatarCpfProtegido(professor.Cpf)</span></div><span class="bfa-admin-badge @(professor.ProfessorAtivo ? "is-active" : "is-inactive")">@(professor.ProfessorAtivo ? "Ativo" : "Inativo")</span></section>
+    @if (!professor.ProfessorAtivo)
+    { <div class="bfa-admin-notice" role="alert"><strong>O professor está inativo e não pode ser vinculado.</strong></div> }
+    else if (professor.EstadoVinculo == EstadoVinculoProfessorExistente.Ativo)
+    { <div class="bfa-admin-notice" role="status"><strong>Este professor já está vinculado a esta unidade.</strong></div> }
+    else
+    {
+        <form class="bfa-admin-form bfa-professor-form" method="post" action="/unidade/@Model.UnidadeId/professores/vincular">
+            @Html.AntiForgeryToken()<input asp-for="ProfessorId" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+            <div class="bfa-admin-form-sections"><partial name="_RemuneracaoInicial" model="Model" /></div>
+            <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">@(professor.EstadoVinculo == EstadoVinculoProfessorExistente.Inativo ? "Reativar e vincular" : "Vincular professor")</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores/vincular">Cancelar</a></div>
+        </form>
+    }
+}
+
+@functions {
+    private static string FormatarCpfProtegido(string? cpf) => cpf is { Length: 11 }
+        ? $"***.***.***-{cpf[9..]}" : "não informado";
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-number-field.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+}

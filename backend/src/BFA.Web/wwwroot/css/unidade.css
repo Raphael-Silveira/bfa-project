@@ -3,6 +3,133 @@
   margin-top: 0;
 }
 
+.bfa-professor-contact {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.bfa-professor-contact small {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-professor-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-professor-card header p,
+.bfa-professor-form__heading p {
+  margin: 0 0 0.3rem;
+  color: var(--bfa-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-professor-card h2,
+.bfa-professor-form__heading h2 {
+  margin: 0;
+}
+
+.bfa-professor-card dl {
+  display: grid;
+  margin: 1.25rem 0 0;
+  gap: 1rem;
+}
+
+.bfa-professor-card dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+.bfa-professor-card dd { margin: 0.25rem 0 0; overflow-wrap: anywhere; }
+.bfa-professor-card__actions { display: flex; margin-top: 1.25rem; padding-top: 1rem; justify-content: flex-end; border-top: 1px solid var(--bfa-border); }
+.bfa-professor-filters { display: flex; width: fit-content; max-width: 100%; margin-bottom: 1.25rem; padding: 0.25rem; gap: 0.25rem; overflow-x: auto; border: 1px solid var(--bfa-border); border-radius: 0.6rem; background: rgba(13, 13, 13, 0.55); }
+.bfa-professor-filters a { min-height: 2.5rem; padding: 0.55rem 0.9rem; border-left: 0.15rem solid transparent; border-radius: 0.4rem; color: var(--bfa-text-muted); font-weight: 800; text-decoration: none; white-space: nowrap; }
+.bfa-professor-filters a:hover { color: var(--bfa-text-primary); }
+.bfa-professor-filters a.is-active { border-left-color: var(--bfa-accent); background: rgba(255, 193, 7, 0.1); color: var(--bfa-accent); }
+.bfa-professor-form { width: 100%; max-width: 68rem; }
+.bfa-professor-form .bfa-admin-form-card { width: 100%; }
+.bfa-professor-form .bfa-admin-form-sections { gap: 1.5rem; }
+.bfa-professor-form .bfa-admin-form-actions { margin-top: 1.5rem; }
+.bfa-professor-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.bfa-professor-form-wide { grid-column: 1 / -1; }
+.bfa-professor-form__heading { margin-bottom: 1.5rem; }
+.bfa-professor-money { display: flex; align-items: stretch; }
+.bfa-professor-money > span { display: grid; padding: 0 0.85rem; place-items: center; border: 1px solid var(--bfa-border); border-right: 0; border-radius: 0.5rem 0 0 0.5rem; color: var(--bfa-accent); font-weight: 800; }
+.bfa-professor-money .bfa-form-control { border-radius: 0 0.5rem 0.5rem 0; }
+
+.bfa-professor-search {
+  width: 100%;
+  max-width: 68rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.bfa-professor-search__controls {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+.bfa-professor-search-results {
+  display: grid;
+  width: 100%;
+  max-width: 68rem;
+  margin-top: 1.5rem;
+  gap: 1rem;
+}
+
+.bfa-professor-result,
+.bfa-professor-selected {
+  display: flex;
+  width: 100%;
+  padding: 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.bfa-professor-result__copy,
+.bfa-professor-selected > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+}
+
+.bfa-professor-result__copy > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bfa-professor-result h2,
+.bfa-professor-selected h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 1.15rem;
+}
+
+.bfa-professor-result p,
+.bfa-professor-selected p,
+.bfa-professor-selected span {
+  margin: 0;
+  color: var(--bfa-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.bfa-professor-result__action {
+  display: flex;
+  max-width: 22rem;
+  justify-content: flex-end;
+  color: var(--bfa-text-muted);
+  text-align: right;
+}
+
+.bfa-professor-selected {
+  max-width: 68rem;
+  margin-bottom: 1.5rem;
+  border-top: 0.2rem solid var(--bfa-accent);
+}
+
 .bfa-unidade-contract-card,
 .bfa-unidade-contract-detail,
 .bfa-unidade-contract-documents {
@@ -367,6 +494,20 @@
 }
 
 @media (max-width: 30rem) {
+  .bfa-professor-form-grid { grid-template-columns: 1fr; }
+  .bfa-professor-form-wide { grid-column: auto; }
+  .bfa-professor-form .bfa-admin-form-sections { gap: 1rem; }
+  .bfa-professor-form .bfa-admin-form-actions { display: grid; margin-top: 1.25rem; }
+  .bfa-professor-form .bfa-admin-form-actions .bfa-admin-button { width: 100%; }
+  .bfa-professor-card__actions { justify-content: flex-start; }
+  .bfa-professor-search__controls,
+  .bfa-professor-result,
+  .bfa-professor-selected,
+  .bfa-professor-result__copy > div { align-items: stretch; flex-direction: column; }
+  .bfa-professor-search__controls .bfa-admin-button,
+  .bfa-professor-result__action,
+  .bfa-professor-result__action .bfa-admin-button { width: 100%; max-width: none; }
+  .bfa-professor-result__action { justify-content: stretch; text-align: left; }
   .bfa-unidade-contract-card__header,
   .bfa-unidade-contract-detail__header,
   .bfa-unidade-document-item {

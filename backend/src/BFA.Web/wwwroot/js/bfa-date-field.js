@@ -29,6 +29,12 @@
     };
 
     const formatarData = (data) => `${String(data.dia).padStart(2, "0")}/${String(data.mes).padStart(2, "0")}/${String(data.ano).padStart(4, "0")}`;
+    const analisarDataIso = (valor) => {
+        const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor ?? "");
+        return partes ? { dia: Number(partes[3]), mes: Number(partes[2]), ano: Number(partes[1]) } : null;
+    };
+    const compararDatas = (a, b) => new Date(a.ano, a.mes - 1, a.dia, 12)
+        - new Date(b.ano, b.mes - 1, b.dia, 12);
     const hoje = () => {
         const agora = new Date();
         return { dia: agora.getDate(), mes: agora.getMonth() + 1, ano: agora.getFullYear() };
@@ -63,6 +69,7 @@
         const entrada = campo.querySelector("[data-bfa-date-input]");
         const gatilho = campo.querySelector("[data-bfa-date-trigger]");
         if (!entrada || !gatilho) return;
+        const dataMinima = analisarDataIso(entrada.dataset.bfaDateMin);
 
         const calendario = document.createElement("div");
         const tituloId = `bfa-calendar-title-${indice}`;
@@ -162,6 +169,11 @@
                 botao.setAttribute("aria-label", `${dia} de ${meses[mesExibido - 1].toLowerCase()} de ${anoExibido}`);
                 botao.setAttribute("aria-selected", mesmaData(data, selecionada) ? "true" : "false");
 
+                if (dataMinima && compararDatas(data, dataMinima) < 0) {
+                    botao.disabled = true;
+                    botao.setAttribute("aria-label", `${botao.getAttribute("aria-label")}, indisponível`);
+                }
+
                 if (mesmaData(data, dataHoje)) {
                     botao.classList.add("is-today");
                     botao.setAttribute("aria-current", "date");
@@ -185,6 +197,8 @@
                 grade.append(botao);
             }
         };
+
+        if (dataMinima && compararDatas(hoje(), dataMinima) < 0) botaoHoje.disabled = true;
 
         const posicionar = () => {
             campo.classList.remove("opens-up", "aligns-right");

@@ -1,0 +1,431 @@
+using BFA.Application.Acessos;
+using BFA.Application.Unidades;
+using BFA.Application.Unidades.Professores;
+using BFA.Domain.Acessos;
+using BFA.Domain.Professores;
+using BFA.Web.Authorization;
+using BFA.Web.ViewModels.Unidade;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BFA.Web.Areas.Unidade.Controllers;
+
+[Area("Unidade")]
+[Authorize]
+[Route("unidade/{unidadeId:guid}/professores")]
+public sealed class ProfessoresController(
+    IUsuarioAtual usuarioAtual,
+    IUnidadeContextoConsulta unidadeContextoConsulta,
+    IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
+    IProfessoresUnidadeConsulta consulta,
+    IProfessoresUnidadeServico servico,
+    IAuthorizationService authorizationService,
+    TimeProvider timeProvider) : Controller
+{
+    [HttpGet("")]
+    public async Task<IActionResult> Index(
+        Guid unidadeId,
+        string? filtro,
+        CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+
+        var filtroAplicado = filtro?.ToLowerInvariant() switch
+        {
+            "encerrados" => FiltroProfessoresUnidade.Encerrados,
+            "todos" => FiltroProfessoresUnidade.Todos,
+            _ => FiltroProfessoresUnidade.Ativos
+        };
+        var resultado = await consulta.ListarAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, filtroAplicado, cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+
+        return View(new ProfessoresUnidadeIndexViewModel
+        {
+            OrganizacaoId = acesso.Contexto!.OrganizacaoId,
+            UnidadeId = unidadeId,
+            NomeUnidade = acesso.Contexto.Nome,
+            PodeTrocarUnidade = acesso.PodeTrocar,
+            Professores = resultado.Valor ?? [],
+            Filtro = filtroAplicado
+        });
+    }
+
+    [HttpGet("novo")]
+    public async Task<IActionResult> Novo(Guid unidadeId, CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+
+        return View(new ProfessorUnidadeNovoViewModel
+        {
+            OrganizacaoId = acesso.Contexto!.OrganizacaoId,
+            UnidadeId = unidadeId,
+            NomeUnidade = acesso.Contexto.Nome,
+            PodeTrocarUnidade = acesso.PodeTrocar,
+            Modalidade = ModalidadeRemuneracaoProfessor.Mensal,
+            VigenciaInicioTexto = DateOnly.FromDateTime(
+                timeProvider.GetLocalNow().DateTime).ToString("dd/MM/yyyy")
+        });
+    }
+
+    [HttpPost("novo")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Novo(
+        Guid unidadeId,
+        ProfessorUnidadeNovoViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        PreencherContexto(model, acesso.Contexto!, acesso.PodeTrocar);
+
+        if (!model.TryCriarSolicitacao(out var solicitacao))
+        {
+            ModelState.AddModelError(string.Empty, "Revise a remuneração e a data de vigência.");
+        }
+
+        if (!ModelState.IsValid || solicitacao is null) return View(model);
+
+        var resultado = await servico.CriarAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, solicitacao, cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoProfessoresUnidade.CpfDuplicado)
+        {
+            model.CpfJaCadastradoNaRede = true;
+            ModelState.AddModelError(nameof(model.Cpf),
+                "Este professor já está cadastrado na rede.");
+            return View(model);
+        }
+        if (resultado.Estado != EstadoProfessoresUnidade.Sucesso)
+        {
+            ModelState.AddModelError(string.Empty, "Não foi possível cadastrar o professor. Revise os dados.");
+            return View(model);
+        }
+
+        TempData["Sucesso"] = "Professor cadastrado com sucesso.";
+        return Redirect($"/unidade/{unidadeId:D}/professores");
+    }
+
+    [HttpGet("vincular")]
+    public async Task<IActionResult> Vincular(
+        Guid unidadeId,
+        string? termo,
+        Guid? professorId,
+        CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+
+        var model = CriarModeloVinculo(acesso.Contexto!, acesso.PodeTrocar);
+        model.Termo = termo;
+        model.ProfessorId = professorId;
+
+        if (professorId.HasValue)
+        {
+            var selecionado = await consulta.ObterExistenteAsync(
+                usuarioAtual.UsuarioId!.Value, unidadeId, professorId.Value, cancellationToken);
+            if (selecionado.Estado == EstadoProfessoresUnidade.ProfessorNaoEncontrado)
+            {
+                return NotFound();
+            }
+            if (selecionado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+            model.ProfessorSelecionado = selecionado.Valor;
+            PreencherOrientacaoReativacao(model, sobrescreverVigencia: true);
+        }
+        else if (!string.IsNullOrWhiteSpace(termo))
+        {
+            var busca = await consulta.BuscarExistentesAsync(
+                usuarioAtual.UsuarioId!.Value, unidadeId, termo, cancellationToken);
+            if (busca.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+            model.Resultados = busca.Valor ?? [];
+        }
+
+        return View(model);
+    }
+
+    [HttpPost("vincular")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Vincular(
+        Guid unidadeId,
+        ProfessorUnidadeVincularViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        PreencherContexto(model, acesso.Contexto!, acesso.PodeTrocar);
+
+        if (model.ProfessorId is { } professorId)
+        {
+            var selecionado = await consulta.ObterExistenteAsync(
+                usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+            if (selecionado.Estado == EstadoProfessoresUnidade.ProfessorNaoEncontrado)
+            {
+                return NotFound();
+            }
+            model.ProfessorSelecionado = selecionado.Valor;
+            PreencherOrientacaoReativacao(model, sobrescreverVigencia: false);
+        }
+
+        if (!model.TryCriarSolicitacao(out var solicitacao))
+        {
+            ModelState.AddModelError(string.Empty, "Revise a remuneração e a data de vigência.");
+        }
+
+        if (!ModelState.IsValid || solicitacao is null) return View(model);
+        var resultado = await servico.VincularExistenteAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, solicitacao, cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoProfessoresUnidade.ProfessorNaoEncontrado) return NotFound();
+        if (resultado.Estado == EstadoProfessoresUnidade.ProfessorInativo)
+        {
+            ModelState.AddModelError(string.Empty,
+                "O professor está inativo e não pode ser vinculado.");
+            return View(model);
+        }
+        if (resultado.Estado == EstadoProfessoresUnidade.JaVinculado)
+        {
+            ModelState.AddModelError(string.Empty,
+                "Este professor já está vinculado a esta unidade.");
+            return View(model);
+        }
+        if (resultado.Estado == EstadoProfessoresUnidade.VigenciaInicioInvalida)
+        {
+            var termino = model.ProfessorSelecionado?.UltimaVigenciaFim;
+            ModelState.AddModelError(nameof(model.VigenciaInicioTexto), termino is { } data
+                ? $"A nova remuneração deve iniciar após o término da remuneração anterior ({data:dd/MM/yyyy})."
+                : "A nova remuneração deve iniciar após o término da remuneração anterior.");
+            return View(model);
+        }
+        if (resultado.Estado != EstadoProfessoresUnidade.Sucesso)
+        {
+            ModelState.AddModelError(string.Empty, "Não foi possível vincular o professor.");
+            return View(model);
+        }
+
+        TempData["Sucesso"] = "Professor vinculado à unidade com sucesso.";
+        return Redirect($"/unidade/{unidadeId:D}/professores");
+    }
+
+    [HttpGet("{professorId:guid}/editar")]
+    public async Task<IActionResult> Editar(
+        Guid unidadeId, Guid professorId, CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        var resultado = await consulta.ObterGerenciamentoAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.VinculoNaoEncontrado) return NotFound();
+        var professor = resultado.Valor!;
+        return View(new ProfessorUnidadeEditarViewModel
+        {
+            OrganizacaoId = acesso.Contexto!.OrganizacaoId,
+            UnidadeId = unidadeId,
+            ProfessorId = professorId,
+            NomeUnidade = acesso.Contexto.Nome,
+            PodeTrocarUnidade = acesso.PodeTrocar,
+            NomeCompleto = professor.NomeCompleto,
+            Cpf = professor.Cpf,
+            Telefone = professor.Telefone,
+            Email = professor.Email
+        });
+    }
+
+    [HttpPost("{professorId:guid}/editar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Editar(
+        Guid unidadeId,
+        Guid professorId,
+        ProfessorUnidadeEditarViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        PreencherContexto(model, acesso.Contexto!, acesso.PodeTrocar, professorId);
+        if (!ModelState.IsValid) return View(model);
+        var resultado = await servico.AtualizarCadastroAsync(
+            usuarioAtual.UsuarioId!.Value,
+            unidadeId,
+            professorId,
+            new(model.NomeCompleto, model.Cpf, model.Telefone, model.Email),
+            cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.VinculoNaoEncontrado) return NotFound();
+        if (resultado.Estado == EstadoProfessoresUnidade.CpfDuplicado)
+        {
+            ModelState.AddModelError(nameof(model.Cpf), "Este CPF já pertence a outro professor da rede.");
+            return View(model);
+        }
+        if (resultado.Estado != EstadoProfessoresUnidade.Sucesso)
+        {
+            ModelState.AddModelError(string.Empty, "Não foi possível atualizar o professor.");
+            return View(model);
+        }
+        TempData["Sucesso"] = "Dados cadastrais atualizados com sucesso.";
+        return Redirect($"/unidade/{unidadeId:D}/professores");
+    }
+
+    [HttpGet("{professorId:guid}/encerrar")]
+    public async Task<IActionResult> Encerrar(
+        Guid unidadeId, Guid professorId, CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        var resultado = await consulta.ObterGerenciamentoAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.VinculoNaoEncontrado) return NotFound();
+        return View(MapearEncerramento(
+            acesso.Contexto!, acesso.PodeTrocar, resultado.Valor!));
+    }
+
+    [HttpPost("{professorId:guid}/encerrar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Encerrar(
+        Guid unidadeId,
+        Guid professorId,
+        ProfessorUnidadeEncerrarViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        var resumo = await consulta.ObterGerenciamentoAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (resumo.Estado == EstadoProfessoresUnidade.VinculoNaoEncontrado) return NotFound();
+        PreencherEncerramento(model, acesso.Contexto!, acesso.PodeTrocar, resumo.Valor!);
+        if (!model.TryObterData(out var data))
+        {
+            ModelState.AddModelError(nameof(model.DataEncerramentoTexto),
+                "Informe uma data válida no formato dd/mm/aaaa.");
+        }
+        if (!ModelState.IsValid) return View(model);
+        var resultado = await servico.EncerrarVinculoAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, data, cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.VinculoJaEncerrado)
+        {
+            ModelState.AddModelError(string.Empty, "Este vínculo já está encerrado.");
+            model.VinculoAtivo = false;
+            return View(model);
+        }
+        if (resultado.Estado == EstadoProfessoresUnidade.DataEncerramentoInvalida)
+        {
+            ModelState.AddModelError(nameof(model.DataEncerramentoTexto),
+                "A data de encerramento não pode ser anterior ao início da remuneração atual.");
+            return View(model);
+        }
+        if (resultado.Estado != EstadoProfessoresUnidade.Sucesso)
+        {
+            ModelState.AddModelError(string.Empty, "Não foi possível encerrar o vínculo.");
+            return View(model);
+        }
+        TempData["Sucesso"] = "Vínculo profissional encerrado com sucesso.";
+        return Redirect($"/unidade/{unidadeId:D}/professores?filtro=encerrados");
+    }
+
+    private async Task<(UnidadeContextoResumo? Contexto, bool PodeTrocar, IActionResult? Resultado)>
+        ValidarAcessoAsync(Guid unidadeId, CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return (null, false, Forbid());
+        var contexto = await unidadeContextoConsulta.ObterAtivaAsync(unidadeId, cancellationToken);
+        if (contexto is null) return (null, false, NotFound());
+        var autorizacao = await authorizationService.AuthorizeAsync(
+            User,
+            new ContextoUnidade(contexto.OrganizacaoId, unidadeId),
+            new AcessoUnidadePorPerfilRequirement(PerfilAcesso.AdministradorUnidade));
+        if (!autorizacao.Succeeded) return (null, false, Forbid());
+        var unidades = await unidadesUsuarioConsulta.ListarAdministradasAsync(
+            usuarioId, cancellationToken);
+        return (contexto, unidades.Count > 1, null);
+    }
+
+    private static void PreencherContexto(
+        ProfessorUnidadeNovoViewModel model, UnidadeContextoResumo contexto, bool podeTrocar)
+    {
+        model.OrganizacaoId = contexto.OrganizacaoId;
+        model.UnidadeId = contexto.UnidadeId;
+        model.NomeUnidade = contexto.Nome;
+        model.PodeTrocarUnidade = podeTrocar;
+    }
+
+    private static void PreencherContexto(
+        ProfessorUnidadeVincularViewModel model,
+        UnidadeContextoResumo contexto,
+        bool podeTrocar)
+    {
+        model.OrganizacaoId = contexto.OrganizacaoId;
+        model.UnidadeId = contexto.UnidadeId;
+        model.NomeUnidade = contexto.Nome;
+        model.PodeTrocarUnidade = podeTrocar;
+    }
+
+    private static void PreencherContexto(
+        ProfessorUnidadeEditarViewModel model,
+        UnidadeContextoResumo contexto,
+        bool podeTrocar,
+        Guid professorId)
+    {
+        model.OrganizacaoId = contexto.OrganizacaoId;
+        model.UnidadeId = contexto.UnidadeId;
+        model.ProfessorId = professorId;
+        model.NomeUnidade = contexto.Nome;
+        model.PodeTrocarUnidade = podeTrocar;
+    }
+
+    private static ProfessorUnidadeEncerrarViewModel MapearEncerramento(
+        UnidadeContextoResumo contexto,
+        bool podeTrocar,
+        ProfessorUnidadeGerenciamentoResumo professor)
+    {
+        var model = new ProfessorUnidadeEncerrarViewModel();
+        PreencherEncerramento(model, contexto, podeTrocar, professor);
+        return model;
+    }
+
+    private static void PreencherEncerramento(
+        ProfessorUnidadeEncerrarViewModel model,
+        UnidadeContextoResumo contexto,
+        bool podeTrocar,
+        ProfessorUnidadeGerenciamentoResumo professor)
+    {
+        model.OrganizacaoId = contexto.OrganizacaoId;
+        model.UnidadeId = contexto.UnidadeId;
+        model.ProfessorId = professor.ProfessorId;
+        model.NomeUnidade = contexto.Nome;
+        model.PodeTrocarUnidade = podeTrocar;
+        model.NomeProfessor = professor.NomeCompleto;
+        model.VinculoAtivo = professor.VinculoAtivo;
+        model.ModalidadeAtual = professor.ModalidadeAtual;
+        model.ValorAtual = professor.ValorAtual;
+        model.VigenciaInicioAtual = professor.VigenciaInicioAtual;
+    }
+
+    private ProfessorUnidadeVincularViewModel CriarModeloVinculo(
+        UnidadeContextoResumo contexto,
+        bool podeTrocar) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.Nome,
+        PodeTrocarUnidade = podeTrocar,
+        Modalidade = ModalidadeRemuneracaoProfessor.Mensal,
+        VigenciaInicioTexto = DateOnly.FromDateTime(
+            timeProvider.GetLocalNow().DateTime).ToString("dd/MM/yyyy")
+    };
+
+    private static void PreencherOrientacaoReativacao(
+        ProfessorUnidadeVincularViewModel model,
+        bool sobrescreverVigencia)
+    {
+        if (model.ProfessorSelecionado is not
+            { EstadoVinculo: EstadoVinculoProfessorExistente.Inativo,
+              UltimaVigenciaFim: { } ultimaVigenciaFim })
+        {
+            return;
+        }
+
+        model.VigenciaInicioMinima = ultimaVigenciaFim.AddDays(1);
+        if (sobrescreverVigencia)
+        {
+            model.VigenciaInicioTexto = model.VigenciaInicioMinima.Value.ToString("dd/MM/yyyy");
+        }
+    }
+}

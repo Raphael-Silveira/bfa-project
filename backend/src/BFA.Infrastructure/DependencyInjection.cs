@@ -11,6 +11,7 @@ using BFA.Application.Identidade;
 using BFA.Application.Localidades;
 using BFA.Application.Unidades;
 using BFA.Application.Unidades.Contratos;
+using BFA.Application.Unidades.Professores;
 using BFA.Application.Usuarios;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Bootstrap;
@@ -90,6 +91,12 @@ public static class DependencyInjection
         services.AddScoped<IUnidadeContextoConsulta>(serviceProvider =>
             serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
         services.AddScoped<IContratoUnidadeConsulta, ContratoUnidadeConsulta>();
+        services.AddScoped<IProfessoresUnidadeRepositorio, ProfessoresUnidadeRepositorio>();
+        services.AddScoped<ProfessoresUnidadeServico>();
+        services.AddScoped<IProfessoresUnidadeConsulta>(provider =>
+            provider.GetRequiredService<ProfessoresUnidadeServico>());
+        services.AddScoped<IProfessoresUnidadeServico>(provider =>
+            provider.GetRequiredService<ProfessoresUnidadeServico>());
         services.AddScoped<IUsuarioApresentacaoConsulta, UsuarioApresentacaoConsulta>();
         services.AddScoped<IUsuarioPorEmailConsulta, UsuarioPorEmailConsulta>();
         services.AddScoped<IPrimeiroAcessoServico, PrimeiroAcessoServico>();

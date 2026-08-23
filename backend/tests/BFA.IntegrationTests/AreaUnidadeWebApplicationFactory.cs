@@ -6,6 +6,7 @@ using BFA.Infrastructure.Unidades;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -36,7 +37,9 @@ public sealed class AreaUnidadeWebApplicationFactory : LoginWebApplicationFactor
             services.RemoveAll<DbContextOptions<BfaDbContext>>();
             services.RemoveAll<BfaDbContext>();
             services.AddDbContext<BfaDbContext>(options =>
-                options.UseInMemoryDatabase(_databaseName));
+                options.UseInMemoryDatabase(_databaseName)
+                    .ConfigureWarnings(warnings => warnings.Ignore(
+                        InMemoryEventId.TransactionIgnoredWarning)));
 
             services.RemoveAll<IAcessoUsuarioConsulta>();
             services.AddScoped<IAcessoUsuarioConsulta, AcessoUsuarioConsulta>();

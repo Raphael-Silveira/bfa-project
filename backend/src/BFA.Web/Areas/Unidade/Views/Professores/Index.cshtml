@@ -1,0 +1,83 @@
+@using System.Globalization
+@using BFA.Domain.Professores
+@using BFA.Application.Unidades.Professores
+@model ProfessoresUnidadeIndexViewModel
+@{
+    ViewData["Title"] = "Professores";
+    Layout = "_UnidadeLayout";
+    var cultura = CultureInfo.GetCultureInfo("pt-BR");
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Equipe da unidade</p>
+        <h1 class="bfa-admin-page-header__title">Professores</h1>
+        <p class="bfa-admin-page-header__description">Professores vinculados à @Model.NomeUnidade.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores/vincular">
+            <span>Vincular professor existente</span>
+        </a>
+        <a class="bfa-btn-primary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores/novo">
+            <span>Novo professor</span>
+        </a>
+    </div>
+</header>
+
+<nav class="bfa-professor-filters" aria-label="Filtrar professores por vínculo">
+    <a class="@(Model.Filtro == FiltroProfessoresUnidade.Ativos ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores">Ativos</a>
+    <a class="@(Model.Filtro == FiltroProfessoresUnidade.Encerrados ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores?filtro=encerrados">Encerrados</a>
+    <a class="@(Model.Filtro == FiltroProfessoresUnidade.Todos ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores?filtro=todos">Todos</a>
+</nav>
+
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+@if (Model.Professores.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div><h2>Nenhum professor cadastrado.</h2><p>Use “Novo professor” para iniciar o cadastro nesta unidade.</p></div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table">
+            <thead><tr><th>Professor</th><th>CPF</th><th>Contato</th><th>Vínculo</th><th>Remuneração atual</th><th>Ações</th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.Professores)
+            {
+                <tr>
+                    <td><strong>@item.NomeCompleto</strong></td>
+                    <td>@FormatarCpf(item.Cpf)</td>
+                    <td><span class="bfa-professor-contact">@(item.Telefone ?? "Não informado")<small>@(item.Email ?? "E-mail não informado")</small></span></td>
+                    <td><span class="bfa-admin-badge @(item.VinculoAtivo ? "is-active" : "is-inactive")">@(item.VinculoAtivo ? "Ativo" : "Inativo")</span></td>
+                    <td>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</td>
+                    <td><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo))" /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <section class="bfa-admin-mobile-list" aria-label="Professores vinculados">
+        @foreach (var item in Model.Professores)
+        {
+            <article class="bfa-admin-card bfa-professor-card">
+                <header><div><p>Professor</p><h2>@item.NomeCompleto</h2></div><span class="bfa-admin-badge @(item.VinculoAtivo ? "is-active" : "is-inactive")">@(item.VinculoAtivo ? "Ativo" : "Inativo")</span></header>
+                <dl><div><dt>CPF</dt><dd>@FormatarCpf(item.Cpf)</dd></div><div><dt>Telefone</dt><dd>@(item.Telefone ?? "Não informado")</dd></div><div><dt>E-mail</dt><dd>@(item.Email ?? "Não informado")</dd></div><div><dt>Remuneração atual</dt><dd>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</dd></div></dl>
+                <footer class="bfa-professor-card__actions"><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo))" /></footer>
+            </article>
+        }
+    </section>
+}
+
+@functions {
+    private static string FormatarCpf(string? cpf) => cpf is { Length: 11 }
+        ? $"{cpf[..3]}.{cpf[3..6]}.{cpf[6..9]}-{cpf[9..]}" : "Não informado";
+    private static string FormatarRemuneracao(ModalidadeRemuneracaoProfessor? modalidade, decimal? valor, CultureInfo cultura) =>
+        modalidade is null || valor is null ? "Não informada" : $"{NomeModalidade(modalidade.Value)} · {valor.Value.ToString("C", cultura)}";
+    private static string NomeModalidade(ModalidadeRemuneracaoProfessor modalidade) => modalidade switch { ModalidadeRemuneracaoProfessor.Mensal => "Mensal", ModalidadeRemuneracaoProfessor.PorAula => "Por aula", ModalidadeRemuneracaoProfessor.PorHora => "Por hora", _ => modalidade.ToString() };
+}

@@ -1,0 +1,12 @@
+@model ProfessorUnidadeAcoesViewModel
+<div class="bfa-admin-actions">
+    <a class="bfa-admin-icon-action" href="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/editar" aria-label="Editar professor" title="Editar professor">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
+    </a>
+    @if (Model.VinculoAtivo)
+    {
+        <a class="bfa-admin-icon-action is-deactivate" href="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/encerrar" aria-label="Encerrar vínculo profissional" title="Encerrar vínculo profissional">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14"></path><circle cx="12" cy="12" r="9"></circle></svg>
+        </a>
+    }
+</div>

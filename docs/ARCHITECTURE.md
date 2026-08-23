@@ -149,7 +149,7 @@ Controller namespace: `BFA.Web.Areas.Unidade.Controllers`.
 
 The first version is available to an active `AdministradorUnidade` only for the exact Organization/Unit pair in its active `VinculoAcesso`. An `AdministradorRede` keeps transversal superaccess to active Units inside its own Organization, but never to another Organization. The route identifier is not authorization: Web resolves the active Unit and Organization from the current persistence source, creates `ContextoUnidade`, and invokes the existing resource-based `AcessoUnidadePorPerfilRequirement` on every request.
 
-The initial dashboard identifies the current Unit and renders only data backed by implemented modules. It reuses the shared Admin Shell, drawer, logout, responsive behavior, and visual tokens. Its navigation contains `Visão Geral` and the read-only `Contrato`; modules for Professores, Alunos, Turmas, Matriculas, Presencas, and finance are not created by this first version.
+The initial dashboard identifies the current Unit and renders only data backed by implemented modules. It reuses the shared Admin Shell, drawer, logout, responsive behavior, and visual tokens. Its navigation contains `Visão Geral` and the read-only `Contrato`; operational UI and use cases for Professores, Alunos, Turmas, Matriculas, Presencas, and finance are not created by this first version.
 
 The Unit dashboard now includes a read-only summary of the active franchise contract, and `GET /unidade/{unidadeId}/contrato` exposes its current terms and the documents from the vigente version. Authorized document visualization and download are streamed through private storage routes under that same Unit context; storage keys and physical paths are never exposed. The server revalidates the authenticated user's active Unit access, Organization, active `FranqueadoUnidade`, active `ContratoFranquia`, and vigente version. This experience offers no contract creation, editing, upload, versioning, formalization, cancellation, or closing actions.
 
@@ -449,6 +449,59 @@ An `AdministradorRede` does not create a password for a new user. `UsuarioIdenti
 
 The public `GET /definir-senha` and `POST /definir-senha` endpoints validate the Identity token and apply the current Identity password policy. The POST requires antiforgery, never authenticates the user automatically, and redirects to `/login` with a generic success message. Invalid, expired, or already-used links return a controlled response without internal details. Email delivery and invitation persistence remain deferred.
 
+### Professors, Unit relationships, and remuneration history
+
+The professional model remains separate from technical authentication and authorization:
+
+```text
+Professor
+└── ProfessorUnidade
+    └── ProfessorRemuneracao
+
+UsuarioIdentity
+└── VinculoAcesso: Professor
+```
+
+`Professor` is an organization-scoped business entity and may exist without a
+`UsuarioIdentity`. `ProfessorUnidade` records the professional relationship with an exact
+Unit in the same Organization; it does not grant system access. Access is granted only by an
+explicit `VinculoAcesso` with `PerfilAcesso.Professor`, created by a future approved use case.
+Therefore, professional relationship and authorization are not interchangeable and no
+automatic synchronization exists between them.
+
+After insertion, a Professor's `Id`, `OrganizacaoId`, and creation timestamp are immutable;
+its optional user association and registration data may evolve through controlled Domain
+operations. A `ProfessorUnidade` is a historical identity whose `Id`, tenant, Professor,
+Unit, and creation timestamp never change. Reactivation changes only its active state and
+update timestamp, so remuneration history can never be reinterpreted by moving a relationship
+to another person or Unit.
+
+Remuneration belongs to `ProfessorUnidade`, not directly to `Professor`. Its initial
+modalities are `Mensal`, `PorAula`, and `PorHora`, persisted as strings. Historical terms are
+append-only: a change closes the current effective period once and inserts a new record in the
+same future transaction. PostgreSQL locks the corresponding professional relationship while
+validating a write, permits only one open remuneration, rejects overlapping date ranges, and
+prevents changes to historical value, modality, initial date, observation, tenant, identity,
+and creation audit. Runtime grants contain no physical `DELETE` permission for these tables.
+
+The active-state hierarchy is also enforced in PostgreSQL. A `ProfessorUnidade` cannot be
+inactivated while it has an open remuneration, and a `Professor` cannot be inactivated while
+it has an active professional relationship. The future use case must close the current
+remuneration, inactivate the relationship, and only then inactivate the Professor, in that
+order and in one transaction where applicable. Reactivation reuses the unique existing
+`ProfessorUnidade` and never creates remuneration automatically; a new remuneration is an
+explicit operation. Parent-row locking and reverse active-state validation prevent concurrent
+writes from reopening the inconsistent state.
+
+`UsuarioIdentity` already stores username independently from email, but the current `/login`
+flow remains email-based. A future explicitly approved change may accept "E-mail ou usuario"
+and allow a Professor to authenticate with a username without an email; V008 does not change
+login behavior, create users, or create access links.
+
+The manually reviewed `V008__criar_professores_e_remuneracoes.sql` defines only
+`professores`, `professores_unidades`, and `professores_remuneracoes`. It is deployed manually
+and is never executed by EF Core or application startup.
+
 ### Versioned franchise contracts and private documents
 
 The contractual aggregate begins from the commercial relationship and preserves every
@@ -601,7 +654,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, and `DocumentosContratoFranquia`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, `DocumentosContratoFranquia`, `Professores`, `ProfessoresUnidades`, and `ProfessoresRemuneracoes`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -657,6 +710,7 @@ V004__criar_usuarios_e_franqueados.sql
 V005__adequar_cnpj_alfanumerico.sql
 V006__criar_catalogo_localidades.sql
 V007__criar_contratos_franquia.sql
+V008__criar_professores_e_remuneracoes.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.

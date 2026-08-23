@@ -3,6 +3,7 @@ using BFA.Domain.Contratos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Localidades;
 using BFA.Domain.Organizacoes;
+using BFA.Domain.Professores;
 using BFA.Domain.Unidades;
 using BFA.Domain.Usuarios;
 using BFA.Infrastructure.Identity;
@@ -39,6 +40,13 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
 
     public DbSet<DocumentoContratoFranquia> DocumentosContratoFranquia =>
         Set<DocumentoContratoFranquia>();
+
+    public DbSet<Professor> Professores => Set<Professor>();
+
+    public DbSet<ProfessorUnidade> ProfessoresUnidades => Set<ProfessorUnidade>();
+
+    public DbSet<ProfessorRemuneracao> ProfessoresRemuneracoes =>
+        Set<ProfessorRemuneracao>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

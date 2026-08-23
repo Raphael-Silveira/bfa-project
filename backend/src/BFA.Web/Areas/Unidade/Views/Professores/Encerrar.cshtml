@@ -1,0 +1,23 @@
+@using System.Globalization
+@using BFA.Domain.Professores
+@model ProfessorUnidadeEncerrarViewModel
+@{ ViewData["Title"] = "Encerrar vínculo"; Layout = "_UnidadeLayout"; var cultura = CultureInfo.GetCultureInfo("pt-BR"); }
+
+<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Vínculo profissional</p><h1 class="bfa-admin-page-header__title">Encerrar vínculo com @Model.NomeUnidade?</h1><p class="bfa-admin-page-header__description">O histórico será preservado e o Professor continuará disponível para outras Unidades.</p></div></header>
+
+<section class="bfa-admin-card bfa-professor-selected"><div><p>Professor</p><h2>@Model.NomeProfessor</h2>@if (Model.ModalidadeAtual is { } modalidade && Model.ValorAtual is { } valor) { <span>Remuneração atual: @NomeModalidade(modalidade) · @valor.ToString("C", cultura)</span> } else { <span>Sem remuneração aberta.</span> }</div><span class="bfa-admin-badge @(Model.VinculoAtivo ? "is-active" : "is-inactive")">@(Model.VinculoAtivo ? "Ativo" : "Encerrado")</span></section>
+
+@if (!Model.VinculoAtivo)
+{ <div class="bfa-admin-notice" role="status"><strong>Este vínculo já está encerrado.</strong></div> }
+else
+{
+<form class="bfa-admin-form bfa-professor-form" method="post" action="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/encerrar">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+    <div class="bfa-admin-form-sections"><section class="bfa-admin-card bfa-admin-form-card"><div class="bfa-form-field"><label asp-for="DataEncerramentoTexto" class="bfa-form-label"></label><div class="bfa-admin-date-field" data-bfa-date-field><input asp-for="DataEncerramentoTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data de encerramento" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div><span asp-validation-for="DataEncerramentoTexto" class="bfa-validation-message"></span>@if (Model.VigenciaInicioAtual is { } inicio) { <span class="bfa-admin-form-help">A remuneração atual iniciou em @inicio.ToString("dd/MM/yyyy").</span> }</div></section></div>
+    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Confirmar encerramento</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Cancelar</a></div>
+</form>
+}
+
+@functions { private static string NomeModalidade(ModalidadeRemuneracaoProfessor modalidade) => modalidade switch { ModalidadeRemuneracaoProfessor.Mensal => "Mensal", ModalidadeRemuneracaoProfessor.PorAula => "Por aula", ModalidadeRemuneracaoProfessor.PorHora => "Por hora", _ => modalidade.ToString() }; }
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/bfa-date-field.js" asp-append-version="true"></script> }
