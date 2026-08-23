@@ -5,6 +5,9 @@
     </a>
     @if (Model.VinculoAtivo)
     {
+        <a class="bfa-admin-icon-action" href="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/remuneracao" aria-label="Alterar remuneração" title="Alterar remuneração">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2v20M17 6.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </a>
         <a class="bfa-admin-icon-action is-deactivate" href="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/encerrar" aria-label="Encerrar vínculo profissional" title="Encerrar vínculo profissional">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14"></path><circle cx="12" cy="12" r="9"></circle></svg>
         </a>

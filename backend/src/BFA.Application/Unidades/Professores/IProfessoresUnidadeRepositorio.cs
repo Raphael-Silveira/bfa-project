@@ -31,6 +31,21 @@ public sealed record ProfessorUnidadeGerenciamentoResumo(
     decimal? ValorAtual,
     DateOnly? VigenciaInicioAtual);
 
+public sealed record ProfessorRemuneracaoResumo(
+    Guid RemuneracaoId,
+    ModalidadeRemuneracaoProfessor Modalidade,
+    decimal Valor,
+    DateOnly VigenciaInicio,
+    DateOnly? VigenciaFim,
+    string? Observacao);
+
+public sealed record ProfessorRemuneracaoGerenciamentoResumo(
+    Guid ProfessorId,
+    string NomeCompleto,
+    bool VinculoAtivo,
+    ProfessorRemuneracaoResumo? RemuneracaoAtual,
+    IReadOnlyList<ProfessorRemuneracaoResumo> Historico);
+
 public enum EstadoVinculoProfessorExistente
 {
     SemVinculo,
@@ -59,6 +74,7 @@ public enum EstadoPersistenciaProfessorUnidade
     VinculoJaEncerrado,
     DataEncerramentoInvalida,
     VigenciaInicioInvalida,
+    RemuneracaoNaoEncontrada,
     Falha
 }
 
@@ -71,6 +87,12 @@ public interface IProfessoresUnidadeRepositorio
         CancellationToken cancellationToken);
 
     Task<ProfessorUnidadeGerenciamentoResumo?> ObterGerenciamentoAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid professorId,
+        CancellationToken cancellationToken);
+
+    Task<ProfessorRemuneracaoGerenciamentoResumo?> ObterRemuneracaoAsync(
         Guid organizacaoId,
         Guid unidadeId,
         Guid professorId,
@@ -126,5 +148,17 @@ public interface IProfessoresUnidadeRepositorio
         Guid professorId,
         DateOnly dataEncerramento,
         DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken);
+
+    Task<EstadoPersistenciaProfessorUnidade> AlterarRemuneracaoAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid professorId,
+        ModalidadeRemuneracaoProfessor modalidade,
+        decimal valor,
+        DateOnly vigenciaInicio,
+        string? observacao,
+        Guid usuarioId,
+        DateTime criadoEmUtc,
         CancellationToken cancellationToken);
 }

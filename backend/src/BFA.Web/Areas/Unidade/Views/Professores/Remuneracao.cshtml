@@ -1,0 +1,115 @@
+@using System.Globalization
+@using BFA.Domain.Professores
+@model ProfessorRemuneracaoAlterarViewModel
+@{
+    ViewData["Title"] = "Alterar remuneração";
+    Layout = "_UnidadeLayout";
+    var cultura = CultureInfo.GetCultureInfo("pt-BR");
+    var atual = Model.RemuneracaoAtual!;
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Equipe da unidade</p>
+        <h1 class="bfa-admin-page-header__title">Alterar remuneração</h1>
+        <p class="bfa-admin-page-header__description">Crie uma nova vigência para @Model.NomeProfessor sem alterar o histórico anterior.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Voltar aos professores</a>
+    </div>
+</header>
+
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice bfa-professor-remuneracao-feedback" role="status"><strong>@sucesso</strong></div>
+}
+
+<div class="bfa-professor-remuneracao-layout">
+    <section class="bfa-admin-card bfa-professor-remuneracao-atual" aria-labelledby="remuneracao-atual-titulo">
+        <header class="bfa-professor-form__heading">
+            <p>Condição vigente</p>
+            <h2 id="remuneracao-atual-titulo">Remuneração atual</h2>
+        </header>
+        <dl class="bfa-professor-remuneracao-grid">
+            <div><dt>Professor</dt><dd>@Model.NomeProfessor</dd></div>
+            <div><dt>Unidade</dt><dd>@Model.NomeUnidade</dd></div>
+            <div><dt>Modalidade</dt><dd>@NomeModalidade(atual.Modalidade)</dd></div>
+            <div><dt>Valor</dt><dd>@atual.Valor.ToString("C", cultura)</dd></div>
+            <div><dt>Início</dt><dd>@atual.VigenciaInicio.ToString("dd/MM/yyyy")</dd></div>
+            <div><dt>Fim</dt><dd>Atual</dd></div>
+        </dl>
+    </section>
+
+    <form class="bfa-admin-form bfa-professor-form" method="post" action="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/remuneracao">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+        <div class="bfa-admin-form-sections">
+            <section class="bfa-admin-card bfa-admin-form-card">
+                <header class="bfa-professor-form__heading"><p>Nova vigência</p><h2>Nova remuneração</h2></header>
+                <div class="bfa-professor-form-grid">
+                    <div class="bfa-form-field">
+                        <label asp-for="Modalidade" class="bfa-form-label"></label>
+                        <select asp-for="Modalidade" class="form-select bfa-form-control">
+                            <option value="@ModalidadeRemuneracaoProfessor.Mensal">Mensal</option>
+                            <option value="@ModalidadeRemuneracaoProfessor.PorAula">Por aula</option>
+                            <option value="@ModalidadeRemuneracaoProfessor.PorHora">Por hora</option>
+                        </select>
+                        <span asp-validation-for="Modalidade" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field">
+                        <label asp-for="ValorTexto" class="bfa-form-label">Novo valor</label>
+                        <div class="bfa-professor-money"><span>R$</span><input asp-for="ValorTexto" class="form-control bfa-form-control" type="text" inputmode="decimal" placeholder="0,00" data-bfa-number="money" data-bfa-number-min="0" /></div>
+                        <span asp-validation-for="ValorTexto" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field">
+                        <label asp-for="VigenciaInicioTexto" class="bfa-form-label">Início da nova vigência</label>
+                        <div class="bfa-admin-date-field" data-bfa-date-field><input asp-for="VigenciaInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" data-bfa-date-min="@(Model.VigenciaInicioMinima?.ToString("yyyy-MM-dd"))" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da nova vigência" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div>
+                        <span asp-validation-for="VigenciaInicioTexto" class="bfa-validation-message"></span>
+                        <span class="bfa-admin-form-help">Deve ser posterior a @atual.VigenciaInicio.ToString("dd/MM/yyyy"). A condição atual terminará no dia anterior.</span>
+                    </div>
+                    <div class="bfa-form-field bfa-professor-form-wide">
+                        <label asp-for="Observacao" class="bfa-form-label"></label>
+                        <textarea asp-for="Observacao" class="form-control bfa-form-control" rows="4"></textarea>
+                        <span asp-validation-for="Observacao" class="bfa-validation-message"></span>
+                        <span class="bfa-admin-form-help">Mesmo que modalidade e valor não mudem, uma nova vigência será registrada.</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar nova remuneração</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Cancelar</a></div>
+    </form>
+
+    <section class="bfa-admin-card bfa-professor-remuneracao-historico" aria-labelledby="historico-remuneracao-titulo">
+        <header class="bfa-professor-form__heading"><p>Registros preservados</p><h2 id="historico-remuneracao-titulo">Histórico de remuneração</h2></header>
+        <div class="bfa-professor-remuneracao-lista">
+        @foreach (var item in Model.Historico)
+        {
+            <article class="bfa-professor-remuneracao-item">
+                <div><span>Vigência</span><strong>@item.VigenciaInicio.ToString("dd/MM/yyyy") — @(item.VigenciaFim?.ToString("dd/MM/yyyy") ?? "Atual")</strong></div>
+                <div><span>Modalidade</span><strong>@NomeModalidade(item.Modalidade)</strong></div>
+                <div><span>Valor</span><strong>@item.Valor.ToString("C", cultura)</strong></div>
+                @if (!string.IsNullOrWhiteSpace(item.Observacao))
+                {
+                    <div class="bfa-professor-remuneracao-item__observacao"><span>Observação</span><p>@item.Observacao</p></div>
+                }
+            </article>
+        }
+        </div>
+    </section>
+</div>
+
+@functions {
+    private static string NomeModalidade(ModalidadeRemuneracaoProfessor modalidade) => modalidade switch
+    {
+        ModalidadeRemuneracaoProfessor.Mensal => "Mensal",
+        ModalidadeRemuneracaoProfessor.PorAula => "Por aula",
+        ModalidadeRemuneracaoProfessor.PorHora => "Por hora",
+        _ => modalidade.ToString()
+    };
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-number-field.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+}

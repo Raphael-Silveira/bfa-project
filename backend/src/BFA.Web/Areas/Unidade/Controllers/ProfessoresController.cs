@@ -5,6 +5,7 @@ using BFA.Domain.Acessos;
 using BFA.Domain.Professores;
 using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
+using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -232,6 +233,81 @@ public sealed class ProfessoresController(
         });
     }
 
+    [HttpGet("{professorId:guid}/remuneracao")]
+    public async Task<IActionResult> Remuneracao(
+        Guid unidadeId, Guid professorId, CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        var resultado = await consulta.ObterRemuneracaoAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.VinculoNaoEncontrado
+            || resultado.Valor is not { VinculoAtivo: true, RemuneracaoAtual: not null })
+        {
+            return NotFound();
+        }
+
+        var model = new ProfessorRemuneracaoAlterarViewModel();
+        PreencherRemuneracao(
+            model, acesso.Contexto!, acesso.PodeTrocar, resultado.Valor, sobrescreverCampos: true);
+        return View(model);
+    }
+
+    [HttpPost("{professorId:guid}/remuneracao")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Remuneracao(
+        Guid unidadeId,
+        Guid professorId,
+        ProfessorRemuneracaoAlterarViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acesso.Resultado is not null) return acesso.Resultado;
+        var resumo = await consulta.ObterRemuneracaoAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (resumo.Estado == EstadoProfessoresUnidade.VinculoNaoEncontrado
+            || resumo.Valor is not { VinculoAtivo: true, RemuneracaoAtual: not null })
+        {
+            return NotFound();
+        }
+
+        PreencherRemuneracao(
+            model, acesso.Contexto!, acesso.PodeTrocar, resumo.Valor, sobrescreverCampos: false);
+        if (!model.TryCriarSolicitacao(out var solicitacao))
+        {
+            ModelState.AddModelError(string.Empty, "Revise a nova remuneração e a data de vigência.");
+        }
+        if (!ModelState.IsValid || solicitacao is null) return View(model);
+
+        var resultado = await servico.AlterarRemuneracaoAsync(
+            usuarioAtual.UsuarioId!.Value,
+            unidadeId,
+            professorId,
+            solicitacao,
+            cancellationToken);
+        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado is EstadoProfessoresUnidade.VinculoNaoEncontrado
+            or EstadoProfessoresUnidade.VinculoJaEncerrado
+            or EstadoProfessoresUnidade.RemuneracaoNaoEncontrada)
+        {
+            return NotFound();
+        }
+        if (resultado.Estado == EstadoProfessoresUnidade.VigenciaInicioInvalida)
+        {
+            ModelState.AddModelError(nameof(model.VigenciaInicioTexto),
+                $"A nova remuneração deve iniciar após {resumo.Valor.RemuneracaoAtual.VigenciaInicio:dd/MM/yyyy}.");
+            return View(model);
+        }
+        if (resultado.Estado != EstadoProfessoresUnidade.Sucesso)
+        {
+            ModelState.AddModelError(string.Empty, "Não foi possível alterar a remuneração.");
+            return View(model);
+        }
+
+        TempData["Sucesso"] = "Nova remuneração cadastrada e histórico preservado.";
+        return Redirect($"/unidade/{unidadeId:D}/professores/{professorId:D}/remuneracao");
+    }
+
     [HttpPost("{professorId:guid}/editar")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Editar(
@@ -396,6 +472,43 @@ public sealed class ProfessoresController(
         model.ModalidadeAtual = professor.ModalidadeAtual;
         model.ValorAtual = professor.ValorAtual;
         model.VigenciaInicioAtual = professor.VigenciaInicioAtual;
+    }
+
+    private void PreencherRemuneracao(
+        ProfessorRemuneracaoAlterarViewModel model,
+        UnidadeContextoResumo contexto,
+        bool podeTrocar,
+        ProfessorRemuneracaoGerenciamentoResumo professor,
+        bool sobrescreverCampos)
+    {
+        model.OrganizacaoId = contexto.OrganizacaoId;
+        model.UnidadeId = contexto.UnidadeId;
+        model.ProfessorId = professor.ProfessorId;
+        model.NomeUnidade = contexto.Nome;
+        model.PodeTrocarUnidade = podeTrocar;
+        model.NomeProfessor = professor.NomeCompleto;
+        model.VinculoAtivo = professor.VinculoAtivo;
+        model.RemuneracaoAtual = professor.RemuneracaoAtual;
+        model.Historico = professor.Historico;
+        if (professor.RemuneracaoAtual is not { } atual)
+        {
+            return;
+        }
+
+        model.VigenciaInicioMinima = atual.VigenciaInicio.AddDays(1);
+        if (!sobrescreverCampos)
+        {
+            return;
+        }
+
+        model.Modalidade = atual.Modalidade;
+        model.ValorTexto = atual.Valor.ToString(
+            "N2", CultureInfo.GetCultureInfo("pt-BR"));
+        var hoje = DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime);
+        var sugestao = hoje > atual.VigenciaInicio
+            ? hoje
+            : model.VigenciaInicioMinima.Value;
+        model.VigenciaInicioTexto = sugestao.ToString("dd/MM/yyyy");
     }
 
     private ProfessorUnidadeVincularViewModel CriarModeloVinculo(

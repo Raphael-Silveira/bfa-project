@@ -80,6 +80,56 @@ public sealed class ProfessoresUnidadeRepositorio(BfaDbContext dbContext)
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<ProfessorRemuneracaoGerenciamentoResumo?> ObterRemuneracaoAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid professorId,
+        CancellationToken cancellationToken)
+    {
+        var vinculo = await (
+            from professor in dbContext.Professores.AsNoTracking()
+            join item in dbContext.ProfessoresUnidades.AsNoTracking()
+                on professor.Id equals item.ProfessorId
+            where professor.OrganizacaoId == organizacaoId
+                && item.OrganizacaoId == organizacaoId
+                && item.UnidadeId == unidadeId
+                && professor.Id == professorId
+            select new
+            {
+                professor.Id,
+                professor.NomeCompleto,
+                VinculoId = item.Id,
+                item.Ativo
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (vinculo is null)
+        {
+            return null;
+        }
+
+        var historico = await dbContext.ProfessoresRemuneracoes
+            .AsNoTracking()
+            .Where(item => item.OrganizacaoId == organizacaoId
+                && item.ProfessorUnidadeId == vinculo.VinculoId)
+            .OrderByDescending(item => item.VigenciaInicio)
+            .ThenByDescending(item => item.CriadoEmUtc)
+            .Select(item => new ProfessorRemuneracaoResumo(
+                item.Id,
+                item.Modalidade,
+                item.Valor,
+                item.VigenciaInicio,
+                item.VigenciaFim,
+                item.Observacao))
+            .ToArrayAsync(cancellationToken);
+
+        return new ProfessorRemuneracaoGerenciamentoResumo(
+            vinculo.Id,
+            vinculo.NomeCompleto,
+            vinculo.Ativo,
+            historico.SingleOrDefault(item => item.VigenciaFim == null),
+            historico);
+    }
+
     public Task<bool> ExisteCpfAsync(
         Guid organizacaoId, string cpf, CancellationToken cancellationToken) =>
         dbContext.Professores.AsNoTracking().AnyAsync(
@@ -387,6 +437,90 @@ public sealed class ProfessoresUnidadeRepositorio(BfaDbContext dbContext)
         catch (ArgumentException)
         {
             return EstadoPersistenciaProfessorUnidade.DataEncerramentoInvalida;
+        }
+    }
+
+    public async Task<EstadoPersistenciaProfessorUnidade> AlterarRemuneracaoAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid professorId,
+        ModalidadeRemuneracaoProfessor modalidade,
+        decimal valor,
+        DateOnly vigenciaInicio,
+        string? observacao,
+        Guid usuarioId,
+        DateTime criadoEmUtc,
+        CancellationToken cancellationToken)
+    {
+        await using var transacao = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var vinculo = await dbContext.ProfessoresUnidades.SingleOrDefaultAsync(
+            item => item.OrganizacaoId == organizacaoId
+                && item.UnidadeId == unidadeId
+                && item.ProfessorId == professorId,
+            cancellationToken);
+        if (vinculo is null)
+        {
+            return EstadoPersistenciaProfessorUnidade.VinculoNaoEncontrado;
+        }
+        if (!vinculo.Ativo)
+        {
+            return EstadoPersistenciaProfessorUnidade.VinculoJaEncerrado;
+        }
+
+        var remuneracaoAtual = await dbContext.ProfessoresRemuneracoes.SingleOrDefaultAsync(
+            item => item.OrganizacaoId == organizacaoId
+                && item.ProfessorUnidadeId == vinculo.Id
+                && item.VigenciaFim == null,
+            cancellationToken);
+        if (remuneracaoAtual is null)
+        {
+            return EstadoPersistenciaProfessorUnidade.RemuneracaoNaoEncontrada;
+        }
+        if (vigenciaInicio <= remuneracaoAtual.VigenciaInicio)
+        {
+            return EstadoPersistenciaProfessorUnidade.VigenciaInicioInvalida;
+        }
+
+        try
+        {
+            var novaRemuneracao = new ProfessorRemuneracao(
+                Guid.NewGuid(),
+                organizacaoId,
+                vinculo.Id,
+                modalidade,
+                valor,
+                vigenciaInicio,
+                null,
+                usuarioId,
+                criadoEmUtc,
+                observacao);
+
+            remuneracaoAtual.Encerrar(vigenciaInicio.AddDays(-1));
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            dbContext.ProfessoresRemuneracoes.Add(novaRemuneracao);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transacao.CommitAsync(cancellationToken);
+            return EstadoPersistenciaProfessorUnidade.Sucesso;
+        }
+        catch (DbUpdateException exception)
+            when (exception.InnerException is PostgresException postgres
+                && postgres.SqlState == PostgresErrorCodes.CheckViolation
+                && postgres.MessageText == MensagemSobreposicaoVigencia)
+        {
+            await transacao.RollbackAsync(cancellationToken);
+            dbContext.ChangeTracker.Clear();
+            return EstadoPersistenciaProfessorUnidade.VigenciaInicioInvalida;
+        }
+        catch (DbUpdateException)
+        {
+            await transacao.RollbackAsync(cancellationToken);
+            dbContext.ChangeTracker.Clear();
+            return EstadoPersistenciaProfessorUnidade.Falha;
+        }
+        catch (ArgumentException)
+        {
+            return EstadoPersistenciaProfessorUnidade.Falha;
         }
     }
 }

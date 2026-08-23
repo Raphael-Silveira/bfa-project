@@ -149,6 +149,32 @@ public sealed class ProfessorUnidadeEditarViewModel : IUnidadeContextoViewModel
     public string? Email { get; set; }
 }
 
+public sealed class ProfessorRemuneracaoAlterarViewModel
+    : ProfessorRemuneracaoInicialViewModel, IUnidadeContextoViewModel
+{
+    public Guid OrganizacaoId { get; set; }
+    public Guid UnidadeId { get; set; }
+    public Guid ProfessorId { get; set; }
+    public string NomeUnidade { get; set; } = string.Empty;
+    public bool PodeTrocarUnidade { get; set; }
+    public string NomeProfessor { get; set; } = string.Empty;
+    public bool VinculoAtivo { get; set; }
+    public ProfessorRemuneracaoResumo? RemuneracaoAtual { get; set; }
+    public IReadOnlyList<ProfessorRemuneracaoResumo> Historico { get; set; } = [];
+
+    public bool TryCriarSolicitacao(out AlterarProfessorRemuneracaoSolicitacao? solicitacao)
+    {
+        if (!TryObterRemuneracao(out var modalidade, out var valor, out var data))
+        {
+            solicitacao = null;
+            return false;
+        }
+
+        solicitacao = new(modalidade, valor, data, Observacao);
+        return true;
+    }
+}
+
 public sealed class ProfessorUnidadeEncerrarViewModel : IUnidadeContextoViewModel
 {
     public Guid OrganizacaoId { get; set; }

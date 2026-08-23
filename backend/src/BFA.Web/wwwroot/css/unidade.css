@@ -88,6 +88,81 @@
   gap: 1.25rem;
 }
 
+.bfa-professor-remuneracao-layout {
+  display: grid;
+  width: 100%;
+  max-width: 72rem;
+  gap: 1.5rem;
+}
+
+.bfa-professor-remuneracao-feedback {
+  width: 100%;
+  max-width: 72rem;
+  margin-bottom: 1.5rem;
+}
+
+.bfa-professor-remuneracao-atual,
+.bfa-professor-remuneracao-historico {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-top: 0.2rem solid var(--bfa-accent);
+}
+
+.bfa-professor-remuneracao-grid {
+  display: grid;
+  margin: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.bfa-professor-remuneracao-grid dt,
+.bfa-professor-remuneracao-item span {
+  color: var(--bfa-text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bfa-professor-remuneracao-grid dd {
+  margin: 0.3rem 0 0;
+  color: var(--bfa-text-primary);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.bfa-professor-remuneracao-lista {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.bfa-professor-remuneracao-item {
+  display: grid;
+  padding: 1rem;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.55rem;
+  background: rgba(13, 13, 13, 0.42);
+}
+
+.bfa-professor-remuneracao-item > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.bfa-professor-remuneracao-item strong,
+.bfa-professor-remuneracao-item p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.bfa-professor-remuneracao-item__observacao {
+  grid-column: 1 / -1;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
 .bfa-professor-result__copy,
 .bfa-professor-selected > div {
   display: grid;
@@ -484,6 +559,11 @@
 }
 
 @media (max-width: 46rem) {
+  .bfa-professor-remuneracao-grid,
+  .bfa-professor-remuneracao-item {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .bfa-unidade-contract-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -494,6 +574,14 @@
 }
 
 @media (max-width: 30rem) {
+  .bfa-professor-remuneracao-grid,
+  .bfa-professor-remuneracao-item {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-professor-remuneracao-item__observacao {
+    grid-column: auto;
+  }
   .bfa-professor-form-grid { grid-template-columns: 1fr; }
   .bfa-professor-form-wide { grid-column: auto; }
   .bfa-professor-form .bfa-admin-form-sections { gap: 1rem; }

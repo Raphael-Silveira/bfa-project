@@ -27,6 +27,12 @@ public sealed record AtualizarProfessorSolicitacao(
     string? Telefone,
     string? Email);
 
+public sealed record AlterarProfessorRemuneracaoSolicitacao(
+    ModalidadeRemuneracaoProfessor Modalidade,
+    decimal Valor,
+    DateOnly VigenciaInicio,
+    string? Observacao);
+
 public enum EstadoProfessoresUnidade
 {
     Sucesso,
@@ -40,6 +46,7 @@ public enum EstadoProfessoresUnidade
     VinculoJaEncerrado,
     DataEncerramentoInvalida,
     VigenciaInicioInvalida,
+    RemuneracaoNaoEncontrada,
     DadosInvalidos,
     Falha
 }
@@ -75,6 +82,13 @@ public interface IProfessoresUnidadeConsulta
             Guid unidadeId,
             Guid professorId,
             CancellationToken cancellationToken);
+
+    Task<ResultadoProfessoresUnidade<ProfessorRemuneracaoGerenciamentoResumo>>
+        ObterRemuneracaoAsync(
+            Guid usuarioId,
+            Guid unidadeId,
+            Guid professorId,
+            CancellationToken cancellationToken);
 }
 
 public interface IProfessoresUnidadeServico
@@ -103,6 +117,13 @@ public interface IProfessoresUnidadeServico
         Guid unidadeId,
         Guid professorId,
         DateOnly dataEncerramento,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoProfessoresUnidade<Guid>> AlterarRemuneracaoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        Guid professorId,
+        AlterarProfessorRemuneracaoSolicitacao solicitacao,
         CancellationToken cancellationToken);
 }
 
@@ -318,6 +339,26 @@ public sealed class ProfessoresUnidadeServico(
             : new(EstadoProfessoresUnidade.Sucesso, resumo);
     }
 
+    public async Task<ResultadoProfessoresUnidade<ProfessorRemuneracaoGerenciamentoResumo>>
+        ObterRemuneracaoAsync(
+            Guid usuarioId,
+            Guid unidadeId,
+            Guid professorId,
+            CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAutorizadoAsync(usuarioId, unidadeId, cancellationToken);
+        if (contexto.Estado != EstadoProfessoresUnidade.Sucesso)
+        {
+            return new(contexto.Estado);
+        }
+
+        var resumo = await repositorio.ObterRemuneracaoAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, professorId, cancellationToken);
+        return resumo is null
+            ? new(EstadoProfessoresUnidade.VinculoNaoEncontrado)
+            : new(EstadoProfessoresUnidade.Sucesso, resumo);
+    }
+
     public async Task<ResultadoProfessoresUnidade<Guid>> AtualizarCadastroAsync(
         Guid usuarioId,
         Guid unidadeId,
@@ -374,6 +415,42 @@ public sealed class ProfessoresUnidadeServico(
         return MapearPersistencia(estado, professorId);
     }
 
+    public async Task<ResultadoProfessoresUnidade<Guid>> AlterarRemuneracaoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        Guid professorId,
+        AlterarProfessorRemuneracaoSolicitacao solicitacao,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(solicitacao);
+        var contexto = await ObterContextoAutorizadoAsync(usuarioId, unidadeId, cancellationToken);
+        if (contexto.Estado != EstadoProfessoresUnidade.Sucesso)
+        {
+            return new(contexto.Estado);
+        }
+
+        if (professorId == Guid.Empty
+            || solicitacao.VigenciaInicio == default
+            || solicitacao.Valor < 0
+            || !Enum.IsDefined(solicitacao.Modalidade))
+        {
+            return new(EstadoProfessoresUnidade.DadosInvalidos);
+        }
+
+        var estado = await repositorio.AlterarRemuneracaoAsync(
+            contexto.Valor!.OrganizacaoId,
+            unidadeId,
+            professorId,
+            solicitacao.Modalidade,
+            solicitacao.Valor,
+            solicitacao.VigenciaInicio,
+            solicitacao.Observacao,
+            usuarioId,
+            timeProvider.GetUtcNow().UtcDateTime,
+            cancellationToken);
+        return MapearPersistencia(estado, professorId);
+    }
+
     private static ResultadoProfessoresUnidade<Guid> MapearPersistencia(
         EstadoPersistenciaProfessorUnidade estado,
         Guid professorId) => estado switch
@@ -388,6 +465,10 @@ public sealed class ProfessoresUnidadeServico(
                 new(EstadoProfessoresUnidade.VinculoJaEncerrado),
             EstadoPersistenciaProfessorUnidade.DataEncerramentoInvalida =>
                 new(EstadoProfessoresUnidade.DataEncerramentoInvalida),
+            EstadoPersistenciaProfessorUnidade.VigenciaInicioInvalida =>
+                new(EstadoProfessoresUnidade.VigenciaInicioInvalida),
+            EstadoPersistenciaProfessorUnidade.RemuneracaoNaoEncontrada =>
+                new(EstadoProfessoresUnidade.RemuneracaoNaoEncontrada),
             _ => new(EstadoProfessoresUnidade.Falha)
         };
 
