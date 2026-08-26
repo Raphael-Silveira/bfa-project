@@ -1,0 +1,23 @@
+@model MinhasTurmasProfessorViewModel
+@{ ViewData["Title"] = "Minhas Turmas"; Layout = "_ProfessorLayout"; }
+
+<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Área do Professor</p><h1 class="bfa-admin-page-header__title">Minhas Turmas</h1><p class="bfa-admin-page-header__description">Turmas atribuídas a você em @Model.NomeUnidade.</p></div></header>
+
+@if (Model.Turmas.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status"><div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div><div><h2>Nenhuma turma atribuída a você nesta unidade.</h2><p>Quando uma turma for atribuída ao seu vínculo profissional, ela aparecerá aqui.</p></div></section>
+}
+else
+{
+    <section class="bfa-admin-card-grid bfa-minhas-turmas-grid" aria-label="Turmas atribuídas ao professor">
+    @foreach (var turma in Model.Turmas)
+    {
+        <article class="bfa-admin-card bfa-minhas-turmas-card">
+            <header><div><p>Turma</p><h2>@turma.Nome</h2></div><span class="bfa-admin-badge @(turma.Ativo ? "is-active" : "is-inactive")">@(turma.Ativo ? "Ativa" : "Inativa")</span></header>
+            <dl><div><dt>Capacidade</dt><dd>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</dd></div></dl>
+            <section aria-label="Horários atuais"><h3>Horários</h3>@if (turma.HorariosAtuais.Count == 0) { <p class="bfa-minhas-turmas-muted">Nenhum horário atual.</p> } else { <partial name="_Horarios" model="turma.HorariosAtuais" /> }</section>
+            <footer><a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas/@turma.Id">Ver detalhes</a></footer>
+        </article>
+    }
+    </section>
+}

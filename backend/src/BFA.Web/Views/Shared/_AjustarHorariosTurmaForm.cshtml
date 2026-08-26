@@ -1,0 +1,35 @@
+@using BFA.Domain.Turmas
+@model BFA.Web.ViewModels.Professor.AjustarHorariosTurmaViewModel
+@{
+    var area = Model.AreaProfessor ? "Professor" : "Unidade";
+    var cancelarAction = Model.AreaProfessor ? "Detalhe" : "Index";
+}
+<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Programação recorrente</p><h1 class="bfa-admin-page-header__title">Ajustar horários</h1><p class="bfa-admin-page-header__description">@Model.NomeTurma · @Model.NomeProfessor</p></div></header>
+
+<form class="bfa-admin-form bfa-turma-form"
+      asp-area="@area"
+      asp-controller="Turmas"
+      asp-action="Horarios"
+      asp-route-unidadeId="@Model.UnidadeId"
+      asp-route-turmaId="@Model.TurmaId"
+      method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+    <div class="bfa-admin-form-sections">
+        <section class="bfa-admin-card bfa-admin-form-card"><header class="bfa-turma-form__heading"><p>Programação atual</p><h2>Horários abertos</h2></header>
+            @if (Model.HorariosAtuais.Count == 0) { <p class="bfa-admin-form-help">Esta turma não possui horários abertos.</p> }
+            else { <div class="bfa-turma-current-schedules">@foreach (var horario in Model.HorariosAtuais) { <div><strong>@NomeDia(horario.DiaSemana)</strong><span>@horario.HoraInicio.ToString("HH:mm") às @horario.HoraFim.ToString("HH:mm")</span><small>Desde @horario.VigenciaInicio.ToString("dd/MM/yyyy")</small></div> }</div> }
+        </section>
+        <section class="bfa-admin-card bfa-admin-form-card"><header class="bfa-turma-form__heading"><p>Nova programação</p><h2>Ajuste os horários</h2>@if (Model.HorariosAtuais.Count == 0) { <span>Cadastre os horários que valerão a partir da nova vigência.</span> } else { <span>Os horários vigentes já estão carregados abaixo. Altere somente o que for necessário.</span> }</header>
+            <div class="bfa-form-field bfa-turma-new-start"><label asp-for="NovaVigenciaInicioTexto" class="bfa-form-label"></label><div class="bfa-admin-date-field" data-bfa-date-field><input asp-for="NovaVigenciaInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da nova vigência" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div><span asp-validation-for="NovaVigenciaInicioTexto" class="bfa-validation-message"></span></div>
+            <span asp-validation-for="Horarios" class="bfa-validation-message"></span>
+            <div class="bfa-turma-schedule-list" data-bfa-schedule-list>
+                @for (var i = 0; i < Model.Horarios.Count; i++) { <div class="bfa-turma-schedule-row is-adjustment" data-bfa-schedule-row><div class="bfa-form-field"><label asp-for="Horarios[i].DiaSemana" class="bfa-form-label"></label><select asp-for="Horarios[i].DiaSemana" class="form-select bfa-form-control"><option value="">Selecione</option><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select></div><div class="bfa-form-field"><label asp-for="Horarios[i].HoraInicio" class="bfa-form-label"></label><input asp-for="Horarios[i].HoraInicio" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="19:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /></div><div class="bfa-form-field"><label asp-for="Horarios[i].HoraFim" class="bfa-form-label"></label><input asp-for="Horarios[i].HoraFim" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="20:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /></div><button class="bfa-turma-schedule-remove" type="button" data-bfa-schedule-remove>Remover</button></div> }
+            </div>
+            <button class="bfa-btn-secondary bfa-admin-button bfa-turma-schedule-add" type="button" data-bfa-schedule-add>Adicionar outro horário</button>
+        </section>
+    </div>
+    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar nova programação</button><a class="bfa-btn-secondary bfa-admin-button" asp-area="@area" asp-controller="Turmas" asp-action="@cancelarAction" asp-route-unidadeId="@Model.UnidadeId" asp-route-turmaId="@(Model.AreaProfessor ? Model.TurmaId : null)">Cancelar</a></div>
+</form>
+<template data-bfa-schedule-template><div class="bfa-turma-schedule-row is-adjustment" data-bfa-schedule-row><div class="bfa-form-field"><label class="bfa-form-label" for="Horarios___index____DiaSemana">Dia da semana</label><select class="form-select bfa-form-control" id="Horarios___index____DiaSemana" name="Horarios[__index__].DiaSemana"><option value="">Selecione</option><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select></div><div class="bfa-form-field"><label class="bfa-form-label" for="Horarios___index____HoraInicio">Hora inicial</label><input class="form-control bfa-form-control" id="Horarios___index____HoraInicio" name="Horarios[__index__].HoraInicio" type="text" inputmode="numeric" autocomplete="off" placeholder="19:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /></div><div class="bfa-form-field"><label class="bfa-form-label" for="Horarios___index____HoraFim">Hora final</label><input class="form-control bfa-form-control" id="Horarios___index____HoraFim" name="Horarios[__index__].HoraFim" type="text" inputmode="numeric" autocomplete="off" placeholder="20:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /></div><button class="bfa-turma-schedule-remove" type="button" data-bfa-schedule-remove>Remover</button></div></template>
+@functions { private static string NomeDia(DiaSemana dia) => dia switch { DiaSemana.Segunda => "Segunda-feira", DiaSemana.Terca => "Terça-feira", DiaSemana.Quarta => "Quarta-feira", DiaSemana.Quinta => "Quinta-feira", DiaSemana.Sexta => "Sexta-feira", DiaSemana.Sabado => "Sábado", _ => "Domingo" }; }

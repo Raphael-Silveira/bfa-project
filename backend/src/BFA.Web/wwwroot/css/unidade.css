@@ -58,6 +58,73 @@
 .bfa-professor-money > span { display: grid; padding: 0 0.85rem; place-items: center; border: 1px solid var(--bfa-border); border-right: 0; border-radius: 0.5rem 0 0 0.5rem; color: var(--bfa-accent); font-weight: 800; }
 .bfa-professor-money .bfa-form-control { border-radius: 0 0.5rem 0.5rem 0; }
 
+.bfa-turma-form { width: 100%; max-width: 76rem; }
+.bfa-turma-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.bfa-turma-form-wide { grid-column: 1 / -1; }
+.bfa-turma-form__heading { margin-bottom: 1.5rem; }
+.bfa-turma-form__heading p,
+.bfa-turma-card header p { margin: 0 0 0.3rem; color: var(--bfa-accent); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.bfa-turma-form__heading h2,
+.bfa-turma-card h2 { margin: 0; }
+.bfa-turma-form__heading > span { display: block; margin-top: 0.5rem; color: var(--bfa-text-muted); }
+.bfa-turma-schedule-list { display: grid; gap: 1rem; }
+.bfa-turma-schedule-row { display: grid; padding: 1rem; grid-template-columns: 1.2fr repeat(3, minmax(8.5rem, 1fr)) auto; align-items: end; gap: 1rem; border: 1px solid var(--bfa-border); border-radius: 0.6rem; background: rgba(13, 13, 13, 0.42); }
+.bfa-turma-schedule-remove { min-height: 2.75rem; padding: 0.65rem 0.85rem; border: 1px solid var(--bfa-border); border-radius: 0.5rem; background: transparent; color: var(--bfa-text-muted); font-weight: 800; }
+.bfa-turma-schedule-remove:hover:not(:disabled),
+.bfa-turma-schedule-remove:focus-visible { border-color: var(--bfa-accent); color: var(--bfa-accent); }
+.bfa-turma-schedule-remove:disabled { opacity: 0.42; cursor: not-allowed; }
+.bfa-turma-schedule-add { margin-top: 1rem; }
+.bfa-turma-schedule-summary { display: grid; margin: 0; padding: 0; gap: 0.25rem; list-style: none; }
+.bfa-turma-schedule-summary li { white-space: nowrap; }
+.bfa-turma-schedule-empty { color: var(--bfa-text-muted); }
+.bfa-turma-card header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.bfa-turma-card dl { display: grid; margin: 1.25rem 0 0; gap: 1rem; }
+.bfa-turma-card dt,
+.bfa-turma-readonly-grid dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+.bfa-turma-card dd,
+.bfa-turma-readonly-grid dd { margin: 0.25rem 0 0; overflow-wrap: anywhere; }
+.bfa-turma-card__actions { display: flex; margin-top: 1.25rem; padding-top: 1rem; justify-content: flex-end; border-top: 1px solid var(--bfa-border); }
+.bfa-turma-readonly-grid { display: grid; margin: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+
+.bfa-professor-turmas-summary {
+  display: flex;
+  width: 100%;
+  max-width: 48rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-top: 0.2rem solid var(--bfa-accent);
+}
+.bfa-professor-turmas-summary p,
+.bfa-minhas-turmas-card header p,
+.bfa-minhas-turmas-detail header p { margin: 0 0 0.3rem; color: var(--bfa-accent); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.bfa-professor-turmas-summary h2,
+.bfa-minhas-turmas-card h2,
+.bfa-minhas-turmas-detail h2 { margin: 0; }
+.bfa-professor-turmas-summary strong { display: block; margin-top: 0.65rem; color: var(--bfa-text-muted); }
+.bfa-minhas-turmas-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
+.bfa-minhas-turmas-card,
+.bfa-minhas-turmas-detail { padding: clamp(1.25rem, 3vw, 1.75rem); border-top: 0.2rem solid var(--bfa-accent); }
+.bfa-minhas-turmas-card > header,
+.bfa-minhas-turmas-detail > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.bfa-minhas-turmas-card dl,
+.bfa-minhas-turmas-detail dl { display: grid; margin: 1.25rem 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.bfa-minhas-turmas-card dt,
+.bfa-minhas-turmas-detail dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+.bfa-minhas-turmas-card dd,
+.bfa-minhas-turmas-detail dd { margin: 0.25rem 0 0; }
+.bfa-minhas-turmas-card h3 { margin: 0 0 0.75rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.bfa-minhas-turmas-card footer { display: flex; margin-top: 1.25rem; padding-top: 1rem; justify-content: flex-end; border-top: 1px solid var(--bfa-border); }
+.bfa-minhas-turmas-horarios { display: grid; gap: 0.75rem; }
+.bfa-minhas-turmas-horario { display: grid; padding: 0.9rem 1rem; gap: 0.2rem; border: 1px solid var(--bfa-border); border-radius: 0.55rem; background: rgba(13, 13, 13, 0.42); }
+.bfa-minhas-turmas-horario strong { color: var(--bfa-text-primary); }
+.bfa-minhas-turmas-horario span { color: var(--bfa-text-primary); }
+.bfa-minhas-turmas-horario small,
+.bfa-minhas-turmas-muted { color: var(--bfa-text-muted); }
+.bfa-minhas-turmas-muted { margin: 0; }
+.bfa-minhas-turmas-detail-sections { display: grid; width: 100%; max-width: 72rem; gap: 1.5rem; }
+
 .bfa-professor-search {
   width: 100%;
   max-width: 68rem;
@@ -559,6 +626,8 @@
 }
 
 @media (max-width: 46rem) {
+  .bfa-turma-schedule-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bfa-turma-schedule-remove { justify-self: start; }
   .bfa-professor-remuneracao-grid,
   .bfa-professor-remuneracao-item {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -574,6 +643,19 @@
 }
 
 @media (max-width: 30rem) {
+  .bfa-professor-turmas-summary { align-items: stretch; flex-direction: column; }
+  .bfa-professor-turmas-summary .bfa-admin-button,
+  .bfa-minhas-turmas-card footer .bfa-admin-button { width: 100%; }
+  .bfa-minhas-turmas-card dl,
+  .bfa-minhas-turmas-detail dl { grid-template-columns: 1fr; }
+  .bfa-turma-form-grid,
+  .bfa-turma-schedule-row,
+  .bfa-turma-readonly-grid { grid-template-columns: 1fr; }
+  .bfa-turma-form-wide { grid-column: auto; }
+  .bfa-turma-schedule-remove,
+  .bfa-turma-schedule-add,
+  .bfa-turma-card__actions .bfa-admin-button { width: 100%; }
+  .bfa-turma-schedule-summary li { white-space: normal; }
   .bfa-professor-remuneracao-grid,
   .bfa-professor-remuneracao-item {
     grid-template-columns: 1fr;
@@ -641,4 +723,26 @@
   .bfa-unidade-selection__item-copy small {
     font-size: 0.75rem;
   }
+}
+.bfa-turma-current-schedules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+.bfa-turma-current-schedules > div {
+    display: grid;
+    gap: 4px;
+    padding: 14px;
+    border: 1px solid var(--bfa-border-subtle);
+    border-radius: 10px;
+}
+
+.bfa-turma-current-schedules small { color: var(--bfa-text-muted); }
+.bfa-turma-new-start { max-width: 360px; margin-bottom: 20px; }
+.bfa-turma-schedule-row.is-adjustment { grid-template-columns: 1.2fr 1fr 1fr auto; }
+
+@media (max-width: 700px) {
+    .bfa-turma-schedule-row.is-adjustment { grid-template-columns: 1fr; }
+    .bfa-turma-new-start { max-width: none; }
 }

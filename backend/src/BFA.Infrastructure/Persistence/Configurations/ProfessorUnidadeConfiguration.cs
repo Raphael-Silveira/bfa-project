@@ -13,6 +13,7 @@ public sealed class ProfessorUnidadeConfiguration : IEntityTypeConfiguration<Pro
         builder.ToTable("professores_unidades", tableBuilder =>
         {
             tableBuilder.HasTrigger("trg_proteger_estado_professor_unidade");
+            tableBuilder.HasTrigger("trg_proteger_professor_unidade_turmas");
         });
 
         builder.HasKey(vinculo => vinculo.Id)
@@ -55,6 +56,14 @@ public sealed class ProfessorUnidadeConfiguration : IEntityTypeConfiguration<Pro
 
         builder.HasAlternateKey(vinculo => new { vinculo.OrganizacaoId, vinculo.Id })
             .HasName("uq_professores_unidades_organizacao_id_id");
+
+        builder.HasAlternateKey(vinculo => new
+            {
+                vinculo.OrganizacaoId,
+                vinculo.UnidadeId,
+                vinculo.Id
+            })
+            .HasName("uq_professores_unidades_organizacao_unidade_id");
 
         builder.HasIndex(vinculo => new
             {

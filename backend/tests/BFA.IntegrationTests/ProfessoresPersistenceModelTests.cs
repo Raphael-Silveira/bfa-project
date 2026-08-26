@@ -105,9 +105,11 @@ public sealed class ProfessoresPersistenceModelTests
         Assert.NotNull(entityType);
         Assert.Equal("professores_unidades", entityType.GetTableName());
         Assert.Equal("pk_professores_unidades", entityType.FindPrimaryKey()!.GetName());
-        Assert.Equal(
-            "uq_professores_unidades_organizacao_id_id",
-            entityType.GetKeys().Single(key => !key.IsPrimaryKey()).GetName());
+        var alternateKeys = entityType.GetKeys()
+            .Where(key => !key.IsPrimaryKey())
+            .ToDictionary(key => key.GetName()!);
+        Assert.Contains("uq_professores_unidades_organizacao_id_id", alternateKeys);
+        Assert.Contains("uq_professores_unidades_organizacao_unidade_id", alternateKeys);
 
         AssertColumn(entityType, nameof(ProfessorUnidade.Id), "id", "uuid");
         AssertColumn(
@@ -158,6 +160,9 @@ public sealed class ProfessoresPersistenceModelTests
         Assert.Contains(
             entityType.GetDeclaredTriggers(),
             trigger => trigger.ModelName == "trg_proteger_estado_professor_unidade");
+        Assert.Contains(
+            entityType.GetDeclaredTriggers(),
+            trigger => trigger.ModelName == "trg_proteger_professor_unidade_turmas");
     }
 
     [Fact]

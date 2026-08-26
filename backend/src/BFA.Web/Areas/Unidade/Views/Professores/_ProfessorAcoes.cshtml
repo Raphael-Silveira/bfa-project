@@ -1,5 +1,20 @@
 @model ProfessorUnidadeAcoesViewModel
 <div class="bfa-admin-actions">
+    @if (Model.VinculoAtivo && !Model.AcessoProfessorAtivo)
+    {
+        <a class="bfa-admin-icon-action" href="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/acesso" aria-label="Conceder acesso ao sistema" title="Conceder acesso ao sistema">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"></path><circle cx="12" cy="12" r="9"></circle></svg>
+        </a>
+    }
+    @if (Model.AcessoProfessorAtivo)
+    {
+        <form action="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/acesso/revogar" method="post">
+            @Html.AntiForgeryToken()
+            <button class="bfa-admin-icon-action is-deactivate" type="submit" aria-label="Revogar acesso ao sistema" title="Revogar acesso ao sistema">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14"></path><circle cx="12" cy="12" r="9"></circle></svg>
+            </button>
+        </form>
+    }
     <a class="bfa-admin-icon-action" href="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/editar" aria-label="Editar professor" title="Editar professor">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
     </a>

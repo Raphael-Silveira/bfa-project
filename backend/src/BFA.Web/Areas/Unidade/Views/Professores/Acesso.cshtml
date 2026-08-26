@@ -1,0 +1,49 @@
+@model BFA.Web.ViewModels.Unidade.ProfessorAcessoViewModel
+@{
+    ViewData["Title"] = "Acesso do professor";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Acesso ao sistema</p>
+        <h1 class="bfa-admin-page-header__title">@Model.NomeProfessor</h1>
+        <p class="bfa-admin-page-header__description">Conceda acesso somente à unidade @Model.NomeUnidade.</p>
+    </div>
+</header>
+
+<section class="bfa-admin-form-card">
+    <form method="post" action="/unidade/@Model.UnidadeId/professores/@Model.ProfessorId/acesso" novalidate>
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="bfa-validation-message" role="alert"></div>
+        <div class="bfa-admin-form-grid">
+            <div class="bfa-admin-form-field">
+                <label>Professor</label>
+                <input class="form-control bfa-form-control" value="@Model.NomeProfessor" readonly />
+            </div>
+            <div class="bfa-admin-form-field">
+                <label>E-mail cadastral</label>
+                <input class="form-control bfa-form-control" value="@(Model.Email ?? "Não informado")" readonly />
+                <small>O e-mail não é obrigatório para o acesso do professor.</small>
+            </div>
+            <div class="bfa-admin-form-field">
+                <label asp-for="NomeUsuario"></label>
+                @if (Model.UsuarioExistente)
+                {
+                    <input asp-for="NomeUsuario" class="form-control bfa-form-control" readonly autocomplete="username" />
+                }
+                else
+                {
+                    <input asp-for="NomeUsuario" class="form-control bfa-form-control" autocomplete="username" />
+                }
+                <span asp-validation-for="NomeUsuario" class="bfa-validation-message"></span>
+            </div>
+        </div>
+        <div class="bfa-admin-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Conceder acesso</button>
+            <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Cancelar</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

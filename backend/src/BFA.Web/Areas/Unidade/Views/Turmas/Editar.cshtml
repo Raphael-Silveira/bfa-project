@@ -1,0 +1,15 @@
+@model TurmaEditarViewModel
+@{ ViewData["Title"] = "Editar turma"; Layout = "_UnidadeLayout"; }
+
+<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Operação da unidade</p><h1 class="bfa-admin-page-header__title">Editar turma</h1><p class="bfa-admin-page-header__description">Altere somente nome e capacidade. Professor e horários permanecem históricos.</p></div></header>
+
+<form class="bfa-admin-form bfa-turma-form" method="post" action="/unidade/@Model.UnidadeId/turmas/@Model.TurmaId/editar">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+    <div class="bfa-admin-form-sections">
+        <section class="bfa-admin-card bfa-admin-form-card"><header class="bfa-turma-form__heading"><p>Dados editáveis</p><h2>@Model.Nome</h2></header><div class="bfa-turma-form-grid"><div class="bfa-form-field bfa-turma-form-wide"><label asp-for="Nome" class="bfa-form-label"></label><input asp-for="Nome" class="form-control bfa-form-control" maxlength="150" /><span asp-validation-for="Nome" class="bfa-validation-message"></span></div><div class="bfa-form-field"><label asp-for="Capacidade" class="bfa-form-label"></label><input asp-for="Capacidade" class="form-control bfa-form-control" type="number" min="1" inputmode="numeric" /><span asp-validation-for="Capacidade" class="bfa-validation-message"></span></div></div></section>
+        <section class="bfa-admin-card bfa-admin-form-card"><header class="bfa-turma-form__heading"><p>Histórico preservado</p><h2>Professor e horários vigentes</h2></header><dl class="bfa-turma-readonly-grid"><div><dt>Professor responsável</dt><dd>@Model.NomeProfessor</dd></div><div><dt>Horários vigentes</dt><dd><partial name="_HorariosResumo" model="Model.Horarios" /></dd></div></dl></section>
+    </div>
+    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar alterações</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas">Cancelar</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

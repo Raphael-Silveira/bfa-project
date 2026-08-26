@@ -1,0 +1,32 @@
+@model BFA.Web.ViewModels.Unidade.ProfessorAcessoConcedidoViewModel
+@{
+    ViewData["Title"] = "Acesso concedido";
+    Layout = "_UnidadeLayout";
+}
+
+<section class="bfa-admin-form-card" aria-labelledby="titulo-acesso-concedido">
+    <p class="bfa-admin-page-header__eyebrow">Acesso ao sistema</p>
+    <h1 id="titulo-acesso-concedido">Acesso concedido</h1>
+    <p><strong>@Model.NomeProfessor</strong> pode acessar a unidade com o usuário <strong>@Model.NomeUsuario</strong>.</p>
+    @if (!string.IsNullOrWhiteSpace(Model.LinkPrimeiroAcesso))
+    {
+        <div class="bfa-copy-field">
+            <input id="link-primeiro-acesso" class="form-control bfa-form-control" value="@Model.LinkPrimeiroAcesso" readonly />
+            <button class="bfa-btn-primary bfa-admin-button" type="button" data-copy-link>Copiar link de primeiro acesso</button>
+        </div>
+        <p class="bfa-admin-form-help" data-copy-status role="status">O link é exibido somente nesta tela e não fica armazenado.</p>
+    }
+    <div class="bfa-admin-form-actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Voltar aos professores</a>
+    </div>
+</section>
+
+@section Scripts {
+<script>
+document.querySelector('[data-copy-link]')?.addEventListener('click', async () => {
+    const input = document.querySelector('#link-primeiro-acesso');
+    await navigator.clipboard.writeText(input.value);
+    document.querySelector('[data-copy-status]').textContent = 'Link copiado.';
+});
+</script>
+}

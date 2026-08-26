@@ -314,6 +314,40 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
     }
 
     [Fact]
+    public async Task Edicao_administrativa_nao_sobrescreve_nome_usuario_especifico_de_professor()
+    {
+        using var application = new UsuariosFranqueadoraWebApplicationFactory();
+        var organizacaoId = await application.InicializarAdministradorAsync();
+        var unidade = await AdicionarUnidadeAsync(application, organizacaoId, "BFA Professor");
+        var usuarioId = await AdicionarUsuarioRelacionadoAsync(
+            application, organizacaoId, unidade, "Professor", "professor@bfa.test");
+        await using (var scope = application.Services.CreateAsyncScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+            var usuario = await userManager.FindByIdAsync(usuarioId.ToString());
+            Assert.NotNull(usuario);
+            Assert.True((await userManager.SetUserNameAsync(
+                usuario, "professor.cerquilho")).Succeeded);
+        }
+        using var client = CriarCliente(application);
+        await LoginAsync(client, application);
+
+        using var response = await EditarUsuarioAsync(
+            client,
+            usuarioId,
+            "Professor Atualizado",
+            "novo-email@bfa.test",
+            "11911112222");
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        await using var verificacao = application.Services.CreateAsyncScope();
+        var dbContext = verificacao.ServiceProvider.GetRequiredService<BfaDbContext>();
+        var atualizado = await dbContext.Users.SingleAsync(item => item.Id == usuarioId);
+        Assert.Equal("novo-email@bfa.test", atualizado.Email);
+        Assert.Equal("professor.cerquilho", atualizado.UserName);
+    }
+
+    [Fact]
     public async Task Usuario_bootstrap_nao_cria_perfil_no_get_e_cria_no_post_valido()
     {
         using var application = new UsuariosFranqueadoraWebApplicationFactory();

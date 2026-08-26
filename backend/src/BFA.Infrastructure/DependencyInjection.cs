@@ -9,9 +9,11 @@ using BFA.Application.Franqueadora.Unidades;
 using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Identidade;
 using BFA.Application.Localidades;
+using BFA.Application.Professores.Turmas;
 using BFA.Application.Unidades;
 using BFA.Application.Unidades.Contratos;
 using BFA.Application.Unidades.Professores;
+using BFA.Application.Unidades.Turmas;
 using BFA.Application.Usuarios;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Bootstrap;
@@ -20,6 +22,7 @@ using BFA.Infrastructure.Franqueadora;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Localidades;
 using BFA.Infrastructure.Persistence;
+using BFA.Infrastructure.Professores;
 using BFA.Infrastructure.Unidades;
 using BFA.Infrastructure.Usuarios;
 using Microsoft.AspNetCore.Http;
@@ -92,11 +95,31 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
         services.AddScoped<IContratoUnidadeConsulta, ContratoUnidadeConsulta>();
         services.AddScoped<IProfessoresUnidadeRepositorio, ProfessoresUnidadeRepositorio>();
+        services.AddScoped<IAcessoProfessorRepositorio, AcessoProfessorRepositorio>();
+        services.AddScoped<IAcessoProfessorServico, AcessoProfessorServico>();
         services.AddScoped<ProfessoresUnidadeServico>();
         services.AddScoped<IProfessoresUnidadeConsulta>(provider =>
             provider.GetRequiredService<ProfessoresUnidadeServico>());
         services.AddScoped<IProfessoresUnidadeServico>(provider =>
             provider.GetRequiredService<ProfessoresUnidadeServico>());
+        services.AddScoped<IMinhasTurmasProfessorRepositorio,
+            MinhasTurmasProfessorRepositorio>();
+        services.AddScoped<IMinhasTurmasProfessorConsulta,
+            MinhasTurmasProfessorConsulta>();
+        services.AddScoped<ITurmasUnidadeRepositorio, TurmasUnidadeRepositorio>();
+        services.AddScoped<TurmasUnidadeServico>();
+        services.AddScoped<ITurmasUnidadeConsulta>(provider =>
+            provider.GetRequiredService<TurmasUnidadeServico>());
+        services.AddScoped<ITurmasUnidadeServico>(provider =>
+            provider.GetRequiredService<TurmasUnidadeServico>());
+        services.AddScoped<IAjusteHorariosTurmaRepositorio,
+            AjusteHorariosTurmaRepositorio>();
+        services.AddScoped<IAjusteHorariosTurmaServico,
+            AjusteHorariosTurmaServico>();
+        services.AddScoped<ITrocaProfessorTurmaRepositorio,
+            TrocaProfessorTurmaRepositorio>();
+        services.AddScoped<ITrocaProfessorTurmaServico,
+            TrocaProfessorTurmaServico>();
         services.AddScoped<IUsuarioApresentacaoConsulta, UsuarioApresentacaoConsulta>();
         services.AddScoped<IUsuarioPorEmailConsulta, UsuarioPorEmailConsulta>();
         services.AddScoped<IPrimeiroAcessoServico, PrimeiroAcessoServico>();

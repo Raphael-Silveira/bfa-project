@@ -1,0 +1,30 @@
+@model BFA.Web.ViewModels.Professor.IProfessorContextoViewModel
+@{
+    var caminhoAtual = Context.Request.Path.Value?.TrimEnd('/') ?? string.Empty;
+    var rotaInicio = $"/professor/unidade/{Model.UnidadeId:D}";
+    var rotaTurmas = $"{rotaInicio}/turmas";
+    var turmasAtiva = caminhoAtual.StartsWith(rotaTurmas, StringComparison.OrdinalIgnoreCase);
+    var inicioAtivo = !turmasAtiva && caminhoAtual.Equals(
+        rotaInicio, StringComparison.OrdinalIgnoreCase);
+}
+<a class="bfa-admin-nav-link @(inicioAtivo ? "is-active" : null)"
+   href="/professor/unidade/@Model.UnidadeId"
+   aria-current="@(inicioAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 4h6v6H4z"></path>
+        <path d="M14 4h6v6h-6z"></path>
+        <path d="M4 14h6v6H4z"></path>
+        <path d="M14 14h6v6h-6z"></path>
+    </svg>
+    <span>Visão Geral</span>
+</a>
+
+<a class="bfa-admin-nav-link @(turmasAtiva ? "is-active" : null)"
+   href="@rotaTurmas"
+   aria-current="@(turmasAtiva ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 5h16v14H4z"></path>
+        <path d="M8 3v4M16 3v4M4 9h16M8 13h3M13 13h3M8 16h3"></path>
+    </svg>
+    <span>Minhas Turmas</span>
+</a>

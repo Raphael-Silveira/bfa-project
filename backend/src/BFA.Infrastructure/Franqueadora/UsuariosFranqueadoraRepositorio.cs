@@ -324,6 +324,10 @@ public sealed class UsuariosFranqueadoraRepositorio(
                 return new(EstadoPersistenciaEdicaoUsuario.EmailDuplicado);
             }
 
+            var nomeUsuarioSegueEmail = string.Equals(
+                usuario.UserName,
+                usuario.Email,
+                StringComparison.OrdinalIgnoreCase);
             var resultadoEmail = await userManager.SetEmailAsync(usuario, dados.Email);
 
             if (!resultadoEmail.Succeeded)
@@ -331,13 +335,16 @@ public sealed class UsuariosFranqueadoraRepositorio(
                 return MapearFalhaEdicaoIdentity(resultadoEmail);
             }
 
-            var resultadoNomeUsuario = await userManager.SetUserNameAsync(
-                usuario,
-                dados.Email);
-
-            if (!resultadoNomeUsuario.Succeeded)
+            if (nomeUsuarioSegueEmail)
             {
-                return MapearFalhaEdicaoIdentity(resultadoNomeUsuario);
+                var resultadoNomeUsuario = await userManager.SetUserNameAsync(
+                    usuario,
+                    dados.Email);
+
+                if (!resultadoNomeUsuario.Succeeded)
+                {
+                    return MapearFalhaEdicaoIdentity(resultadoNomeUsuario);
+                }
             }
 
             var perfil = await dbContext.PerfisUsuario

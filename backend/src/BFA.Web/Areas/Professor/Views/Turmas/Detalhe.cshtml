@@ -1,0 +1,13 @@
+@model TurmaProfessorDetalheViewModel
+@{ ViewData["Title"] = Model.Turma.Nome; Layout = "_ProfessorLayout"; }
+
+<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Minhas Turmas</p><h1 class="bfa-admin-page-header__title">@Model.Turma.Nome</h1><p class="bfa-admin-page-header__description">Detalhes da turma em @Model.NomeUnidade.</p></div><div class="bfa-admin-page-header__actions"><a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Voltar às turmas</a></div></header>
+
+<div class="bfa-minhas-turmas-detail-sections">
+    <section class="bfa-admin-card bfa-minhas-turmas-detail"><header><div><p>Turma</p><h2>@Model.Turma.Nome</h2></div><span class="bfa-admin-badge @(Model.Turma.Ativo ? "is-active" : "is-inactive")">@(Model.Turma.Ativo ? "Ativa" : "Inativa")</span></header><dl><div><dt>Professor responsável</dt><dd>@Model.Turma.NomeProfessor</dd></div><div><dt>Capacidade</dt><dd>@Model.Turma.Capacidade @(Model.Turma.Capacidade == 1 ? "aluno" : "alunos")</dd></div></dl></section>
+    <section class="bfa-admin-card bfa-minhas-turmas-detail" aria-labelledby="horarios-atuais"><header><div><p>Recorrência vigente</p><h2 id="horarios-atuais">Horários atuais</h2></div></header>@if (Model.Turma.HorariosAtuais.Count == 0) { <p class="bfa-minhas-turmas-muted">Nenhum horário atual.</p> } else { <partial name="_Horarios" model="Model.Turma.HorariosAtuais" /> }</section>
+    @if (Model.Turma.HistoricoHorarios.Count > 0)
+    {
+        <section class="bfa-admin-card bfa-minhas-turmas-detail" aria-labelledby="historico-horarios"><header><div><p>Histórico preservado</p><h2 id="historico-horarios">Histórico de horários</h2></div></header><partial name="_Horarios" model="Model.Turma.HistoricoHorarios" view-data='new ViewDataDictionary(ViewData) { ["Historico"] = true }' /></section>
+    }
+</div>

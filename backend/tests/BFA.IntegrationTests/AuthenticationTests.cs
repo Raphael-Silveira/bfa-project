@@ -300,7 +300,7 @@ public sealed partial class AuthenticationTests : IClassFixture<LoginWebApplicat
         var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Email ou senha inválidos.", html, StringComparison.Ordinal);
+        Assert.Contains("E-mail/usuário ou senha inválidos.", html, StringComparison.Ordinal);
     }
 
     [Fact]

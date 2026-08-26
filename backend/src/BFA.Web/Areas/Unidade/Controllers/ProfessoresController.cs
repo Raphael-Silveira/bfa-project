@@ -5,6 +5,7 @@ using BFA.Domain.Acessos;
 using BFA.Domain.Professores;
 using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
+using BFA.Web.Identidade;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,9 +21,114 @@ public sealed class ProfessoresController(
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     IProfessoresUnidadeConsulta consulta,
     IProfessoresUnidadeServico servico,
+    IAcessoProfessorServico acessoProfessorServico,
     IAuthorizationService authorizationService,
     TimeProvider timeProvider) : Controller
 {
+    [HttpGet("{professorId:guid}/acesso")]
+    public async Task<IActionResult> Acesso(
+        Guid unidadeId, Guid professorId, CancellationToken cancellationToken)
+    {
+        var acessoUnidade = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acessoUnidade.Resultado is not null) return acessoUnidade.Resultado;
+        var resultado = await acessoProfessorServico.ObterAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (resultado.Estado == EstadoAcessoProfessor.SemAcesso) return Forbid();
+        if (resultado.Acesso is null) return NotFound();
+        return View(MapearAcesso(resultado.Acesso, acessoUnidade.Contexto!, acessoUnidade.PodeTrocar));
+    }
+
+    [HttpPost("{professorId:guid}/acesso")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Acesso(
+        Guid unidadeId,
+        Guid professorId,
+        ProfessorAcessoViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var acessoUnidade = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acessoUnidade.Resultado is not null) return acessoUnidade.Resultado;
+        var atual = await acessoProfessorServico.ObterAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (atual.Estado == EstadoAcessoProfessor.SemAcesso) return Forbid();
+        if (atual.Acesso is null) return NotFound();
+        PreencherAcesso(model, atual.Acesso, acessoUnidade.Contexto!, acessoUnidade.PodeTrocar);
+        if (!ModelState.IsValid) return View(model);
+
+        var resultado = await acessoProfessorServico.ConcederAsync(
+            usuarioAtual.UsuarioId.Value,
+            unidadeId,
+            professorId,
+            model.NomeUsuario,
+            cancellationToken);
+        if (resultado.Estado == EstadoAcessoProfessor.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoAcessoProfessor.ProfessorNaoEncontrado) return NotFound();
+        if (resultado.Estado is EstadoAcessoProfessor.NomeUsuarioDuplicado
+            or EstadoAcessoProfessor.NomeUsuarioInvalido)
+        {
+            ModelState.AddModelError(nameof(model.NomeUsuario),
+                resultado.Estado == EstadoAcessoProfessor.NomeUsuarioDuplicado
+                    ? "Este nome de usuário já está em uso."
+                    : "Informe um nome de usuário válido.");
+            return View(model);
+        }
+        if (resultado.Estado == EstadoAcessoProfessor.VinculoProfissionalInativo)
+        {
+            ModelState.AddModelError(string.Empty,
+                "O vínculo profissional precisa estar ativo para conceder acesso.");
+            return View(model);
+        }
+        if (resultado.Estado != EstadoAcessoProfessor.Sucesso)
+        {
+            ModelState.AddModelError(string.Empty, "Não foi possível conceder o acesso.");
+            return View(model);
+        }
+
+        string? link = null;
+        if (resultado.UsuarioId is { } usuarioId
+            && !string.IsNullOrWhiteSpace(resultado.TokenDefinicaoSenha))
+        {
+            link = Url.Action(
+                "DefinirSenha",
+                "PrimeiroAcesso",
+                new
+                {
+                    usuarioId,
+                    token = TokenPrimeiroAcesso.Codificar(resultado.TokenDefinicaoSenha)
+                },
+                Request.Scheme);
+        }
+
+        return View("AcessoConcedido", new ProfessorAcessoConcedidoViewModel(
+            unidadeId,
+            acessoUnidade.Contexto!.Nome,
+            acessoUnidade.PodeTrocar,
+            atual.Acesso.NomeCompleto,
+            resultado.NomeUsuario ?? model.NomeUsuario.Trim(),
+            link));
+    }
+
+    [HttpPost("{professorId:guid}/acesso/revogar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RevogarAcesso(
+        Guid unidadeId, Guid professorId, CancellationToken cancellationToken)
+    {
+        var acessoUnidade = await ValidarAcessoAsync(unidadeId, cancellationToken);
+        if (acessoUnidade.Resultado is not null) return acessoUnidade.Resultado;
+        var estado = await acessoProfessorServico.RevogarAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
+        if (estado == EstadoAcessoProfessor.SemAcesso) return Forbid();
+        if (estado is EstadoAcessoProfessor.ProfessorNaoEncontrado
+            or EstadoAcessoProfessor.AcessoNaoEncontrado) return NotFound();
+        if (estado != EstadoAcessoProfessor.Sucesso)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+
+        TempData["Sucesso"] = "Acesso do professor revogado nesta unidade.";
+        return Redirect($"/unidade/{unidadeId:D}/professores");
+    }
+
     [HttpGet("")]
     public async Task<IActionResult> Index(
         Guid unidadeId,
@@ -420,6 +526,36 @@ public sealed class ProfessoresController(
         model.UnidadeId = contexto.UnidadeId;
         model.NomeUnidade = contexto.Nome;
         model.PodeTrocarUnidade = podeTrocar;
+    }
+
+    private static ProfessorAcessoViewModel MapearAcesso(
+        AcessoProfessorResumo acesso,
+        UnidadeContextoResumo contexto,
+        bool podeTrocar)
+    {
+        var model = new ProfessorAcessoViewModel();
+        PreencherAcesso(model, acesso, contexto, podeTrocar);
+        return model;
+    }
+
+    private static void PreencherAcesso(
+        ProfessorAcessoViewModel model,
+        AcessoProfessorResumo acesso,
+        UnidadeContextoResumo contexto,
+        bool podeTrocar)
+    {
+        model.OrganizacaoId = contexto.OrganizacaoId;
+        model.UnidadeId = contexto.UnidadeId;
+        model.ProfessorId = acesso.ProfessorId;
+        model.NomeUnidade = contexto.Nome;
+        model.PodeTrocarUnidade = podeTrocar;
+        model.NomeProfessor = acesso.NomeCompleto;
+        model.Email = acesso.Email;
+        model.UsuarioExistente = acesso.UsuarioId.HasValue;
+        if (acesso.UsuarioId.HasValue)
+        {
+            model.NomeUsuario = acesso.NomeUsuario ?? string.Empty;
+        }
     }
 
     private static void PreencherContexto(

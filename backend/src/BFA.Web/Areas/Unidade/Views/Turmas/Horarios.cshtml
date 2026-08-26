@@ -1,0 +1,4 @@
+@model BFA.Web.ViewModels.Professor.AjustarHorariosTurmaViewModel
+@{ ViewData["Title"] = "Ajustar horários"; Layout = "_UnidadeLayout"; }
+<partial name="_AjustarHorariosTurmaForm" model="Model" />
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/bfa-date-field.js" asp-append-version="true"></script><script src="~/js/bfa-turma-horarios.js" asp-append-version="true"></script> }

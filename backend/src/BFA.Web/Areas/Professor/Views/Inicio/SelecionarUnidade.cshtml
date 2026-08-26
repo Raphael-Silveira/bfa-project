@@ -1,0 +1,27 @@
+@model BFA.Web.ViewModels.Professor.ProfessorSelecaoUnidadeViewModel
+@{
+    ViewData["Title"] = "Selecionar Unidade";
+    Layout = "_AuthLayout";
+}
+<section class="bfa-unidade-selection" aria-labelledby="titulo-selecao-professor">
+    <header class="bfa-unidade-selection__header">
+        <img class="bfa-unidade-selection__logo" src="~/images/brand/bfa-logo-horizontal-dark.png" alt="Brazilian Footvolley Academy" />
+        @if (!string.IsNullOrWhiteSpace(Model.PrimeiroNomeUsuario)) { <p class="bfa-unidade-selection__welcome">Bem-vindo, @Model.PrimeiroNomeUsuario</p> }
+        <h1 id="titulo-selecao-professor">Selecione uma unidade</h1>
+        <p>Escolha a unidade em que deseja acessar a Área do Professor.</p>
+    </header>
+    <form action="/professor/selecionar-unidade" method="post" class="bfa-unidade-selection__list">
+        @Html.AntiForgeryToken()
+        @foreach (var unidade in Model.Unidades)
+        {
+            <button type="submit" name="unidadeId" value="@unidade.UnidadeId" class="bfa-unidade-selection__item">
+                <span class="bfa-unidade-selection__item-copy"><strong>@unidade.Nome</strong><small>Acessar unidade</small></span>
+                <span class="bfa-unidade-selection__arrow" aria-hidden="true">→</span>
+            </button>
+        }
+    </form>
+</section>
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/unidade.css" asp-append-version="true" />
+}

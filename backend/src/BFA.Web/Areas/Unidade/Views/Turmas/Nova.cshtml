@@ -1,0 +1,49 @@
+@model TurmaNovaViewModel
+@{ ViewData["Title"] = "Nova turma"; Layout = "_UnidadeLayout"; }
+
+<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Operação da unidade</p><h1 class="bfa-admin-page-header__title">Nova turma</h1><p class="bfa-admin-page-header__description">Cadastre a turma e pelo menos um horário recorrente.</p></div></header>
+
+<form class="bfa-admin-form bfa-turma-form" method="post" action="/unidade/@Model.UnidadeId/turmas/nova">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+    <div class="bfa-admin-form-sections">
+        <section class="bfa-admin-card bfa-admin-form-card">
+            <header class="bfa-turma-form__heading"><p>Dados da turma</p><h2>Identificação e responsável</h2></header>
+            <div class="bfa-turma-form-grid">
+                <div class="bfa-form-field bfa-turma-form-wide"><label asp-for="Nome" class="bfa-form-label"></label><input asp-for="Nome" class="form-control bfa-form-control" maxlength="150" /><span asp-validation-for="Nome" class="bfa-validation-message"></span></div>
+                <div class="bfa-form-field"><label asp-for="Capacidade" class="bfa-form-label"></label><input asp-for="Capacidade" class="form-control bfa-form-control" type="number" min="1" inputmode="numeric" /><span asp-validation-for="Capacidade" class="bfa-validation-message"></span></div>
+                <div class="bfa-form-field"><label asp-for="ProfessorUnidadeId" class="bfa-form-label"></label><select asp-for="ProfessorUnidadeId" class="form-select bfa-form-control"><option value="">Selecione um professor</option>@foreach (var professor in Model.Professores) { <option value="@professor.ProfessorUnidadeId">@professor.NomeCompleto</option> }</select><span asp-validation-for="ProfessorUnidadeId" class="bfa-validation-message"></span>@if (Model.Professores.Count == 0) { <span class="bfa-admin-form-help">Cadastre e mantenha ativo um professor nesta unidade antes de criar a turma.</span> }</div>
+            </div>
+        </section>
+        <section class="bfa-admin-card bfa-admin-form-card">
+            <header class="bfa-turma-form__heading"><p>Recorrência</p><h2>Horários</h2><span>Horários adjacentes, como 19:00–20:00 e 20:00–21:00, são permitidos.</span></header>
+            <span asp-validation-for="Horarios" class="bfa-validation-message"></span>
+            <div class="bfa-turma-schedule-list" data-bfa-schedule-list>
+                @for (var i = 0; i < Model.Horarios.Count; i++)
+                {
+                    <div class="bfa-turma-schedule-row" data-bfa-schedule-row>
+                        <div class="bfa-form-field"><label asp-for="Horarios[i].DiaSemana" class="bfa-form-label"></label><select asp-for="Horarios[i].DiaSemana" class="form-select bfa-form-control"><option value="">Selecione</option><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select><span asp-validation-for="Horarios[i].DiaSemana" class="bfa-validation-message"></span></div>
+                        <div class="bfa-form-field"><label asp-for="Horarios[i].HoraInicio" class="bfa-form-label"></label><input asp-for="Horarios[i].HoraInicio" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="19:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /><span asp-validation-for="Horarios[i].HoraInicio" class="bfa-validation-message"></span></div>
+                        <div class="bfa-form-field"><label asp-for="Horarios[i].HoraFim" class="bfa-form-label"></label><input asp-for="Horarios[i].HoraFim" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="20:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /><span asp-validation-for="Horarios[i].HoraFim" class="bfa-validation-message"></span></div>
+                        <div class="bfa-form-field"><label asp-for="Horarios[i].VigenciaInicioTexto" class="bfa-form-label"></label><div class="bfa-admin-date-field" data-bfa-date-field><input asp-for="Horarios[i].VigenciaInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário do início da vigência" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div><span asp-validation-for="Horarios[i].VigenciaInicioTexto" class="bfa-validation-message"></span></div>
+                        <button class="bfa-turma-schedule-remove" type="button" data-bfa-schedule-remove aria-label="Remover horário" title="Remover horário">Remover</button>
+                    </div>
+                }
+            </div>
+            <button class="bfa-btn-secondary bfa-admin-button bfa-turma-schedule-add" type="button" data-bfa-schedule-add>Adicionar horário</button>
+        </section>
+    </div>
+    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit" disabled="@(Model.Professores.Count == 0 ? "disabled" : null)">Cadastrar turma</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas">Cancelar</a></div>
+</form>
+
+<template data-bfa-schedule-template>
+    <div class="bfa-turma-schedule-row" data-bfa-schedule-row>
+        <div class="bfa-form-field"><label class="bfa-form-label" for="Horarios___index____DiaSemana">Dia da semana</label><select class="form-select bfa-form-control" id="Horarios___index____DiaSemana" name="Horarios[__index__].DiaSemana"><option value="">Selecione</option><option value="1">Segunda-feira</option><option value="2">Terça-feira</option><option value="3">Quarta-feira</option><option value="4">Quinta-feira</option><option value="5">Sexta-feira</option><option value="6">Sábado</option><option value="7">Domingo</option></select></div>
+        <div class="bfa-form-field"><label class="bfa-form-label" for="Horarios___index____HoraInicio">Hora inicial</label><input class="form-control bfa-form-control" id="Horarios___index____HoraInicio" name="Horarios[__index__].HoraInicio" type="text" inputmode="numeric" autocomplete="off" placeholder="19:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /></div>
+        <div class="bfa-form-field"><label class="bfa-form-label" for="Horarios___index____HoraFim">Hora final</label><input class="form-control bfa-form-control" id="Horarios___index____HoraFim" name="Horarios[__index__].HoraFim" type="text" inputmode="numeric" autocomplete="off" placeholder="20:00" maxlength="5" pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]" data-bfa-time-input /></div>
+        <div class="bfa-form-field"><label class="bfa-form-label" for="Horarios___index____VigenciaInicioTexto">Início da vigência</label><div class="bfa-admin-date-field" data-bfa-date-field><input class="form-control bfa-form-control" id="Horarios___index____VigenciaInicioTexto" name="Horarios[__index__].VigenciaInicioTexto" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário do início da vigência" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div></div>
+        <button class="bfa-turma-schedule-remove" type="button" data-bfa-schedule-remove aria-label="Remover horário" title="Remover horário">Remover</button>
+    </div>
+</template>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/bfa-date-field.js" asp-append-version="true"></script><script src="~/js/bfa-turma-horarios.js" asp-append-version="true"></script> }

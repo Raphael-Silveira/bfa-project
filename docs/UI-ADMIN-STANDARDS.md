@@ -102,6 +102,13 @@ As classes genéricas de referência incluem:
 - `.bfa-admin-drawer`;
 - `.bfa-admin-footer`.
 
+Regras compartilhadas para todos os shells internos:
+
+- o título da seção de navegação deve refletir o contexto real do usuário; áreas operacionais ou pessoais não devem receber rótulos administrativos;
+- todo item da sidebar e do drawer deve usar `.bfa-admin-nav-link`, com ícone, texto e os estados compartilhados de hover, foco e item ativo;
+- nunca deixe um elemento `<a>` visualmente cru, azul ou sublinhado dentro da navegação interna;
+- shells internos novos devem reutilizar o Admin Shell e suas classes de navegação, ainda que possuam identidade e destinos próprios.
+
 ### 4.1 Desktop
 
 Em desktop:
@@ -251,6 +258,9 @@ Use `.bfa-admin-card` como superfície base e `.bfa-admin-card-grid` para coleç
 Regras:
 
 - cards agrupam conteúdo relacionado, não cada linha ou ação isolada;
+- cards ou painéis exibidos em sequência vertical devem manter `gap` consistente e nunca ficar visualmente colados;
+- em formulários, agrupe cards ou etapas consecutivas com `.bfa-admin-form-sections`, que centraliza o espaçamento desktop/mobile;
+- não crie margens diferentes em cada página para separar painéis sequenciais;
 - mantenha bordas, raios, sombras e fundos já definidos;
 - evite aparência de “cards grandes” nos itens de navegação;
 - mantenha rótulo, valor e contexto com hierarquia clara;
@@ -286,7 +296,21 @@ Views recebem ViewModels e contêm somente apresentação. Não consulte banco, 
 
 Cards ou etapas consecutivas de um formulário devem ser agrupados pelo contêiner reutilizável `.bfa-admin-form-sections`, com espaçamento vertical consistente e um `gap` discretamente menor no mobile. Máscaras de CPF, CNPJ, telefone e CEP são melhoria progressiva de digitação, implementada pelo script compartilhado e atributos `data-bfa-mask`; elas nunca substituem validação e normalização no servidor, que também deve aceitar submissões manuais sem JavaScript. A máscara de CNPJ aceita letras ASCII ou números nas 12 primeiras posições, converte letras para maiúsculas e restringe as 2 posições finais a números.
 
-### 11.1 Combobox pesquisável
+### 11.1 Área de ações do formulário
+
+Use `.bfa-admin-form-actions` para separar e organizar as ações que concluem ou cancelam um formulário. A classe compartilhada já fornece o espaçamento vertical antes das ações, o `gap` entre botões e o comportamento responsivo; não complemente esse padrão com margens improvisadas específicas por página.
+
+Regras obrigatórias:
+
+- os botões nunca ficam colados ao último campo, card ou etapa do formulário;
+- sempre existe espaçamento vertical claro antes da área de ações;
+- ações lado a lado mantêm o `gap` compartilhado e consistente;
+- a ação primária aparece primeiro e a secundária depois;
+- em telas menores, os botões ocupam a largura disponível sem overflow e podem ser empilhados quando a largura não comportar duas ações confortavelmente;
+- preserve uma área de toque confortável e foco visível em todos os botões;
+- não use `style` inline nem seletores exclusivos de página para reproduzir esse espaçamento.
+
+### 11.2 Combobox pesquisável
 
 Seleções extensas podem usar o componente compartilhado `data-bfa-combobox`, preservando um `select` nativo como valor real do formulário e oferecendo pesquisa local progressiva por texto. A pesquisa deve ser tolerante a maiúsculas, minúsculas e acentos, sem modificar o texto oficial das opções. O componente deve manter operação por clique, setas, `Enter`, `Escape`, clique externo, foco visível e semântica ARIA de combobox/listbox. Relações em cascata, como Estado e Município, carregam o conjunto dependente uma vez após a seleção do campo principal e filtram no cliente; nunca fazem uma requisição por tecla. Texto digitado sem seleção real não constitui um valor válido para submissão.
 

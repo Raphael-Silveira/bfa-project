@@ -1,5 +1,6 @@
 using BFA.Application.Unidades;
 using BFA.Application.Unidades.Contratos;
+using BFA.Application.Unidades.Turmas;
 using BFA.Application.Usuarios;
 using BFA.Infrastructure.Persistence;
 using BFA.Web.Areas.Unidade.Controllers;
@@ -17,6 +18,7 @@ public sealed class AreaUnidadeControllerArchitectureTests
         {
             typeof(InicioController),
             typeof(ContratoController),
+            typeof(TurmasController),
             typeof(BFA.Web.Controllers.SelecaoUnidadeController)
         };
 
@@ -37,6 +39,21 @@ public sealed class AreaUnidadeControllerArchitectureTests
             Assert.DoesNotContain(typeof(BfaDbContext), dependencias);
             Assert.DoesNotContain(typeof(BfaDbContext), campos);
         }
+    }
+
+    [Fact]
+    public void Turmas_usa_application_e_nao_acessa_db_context()
+    {
+        var dependencias = typeof(TurmasController)
+            .GetConstructors()
+            .SelectMany(construtor => construtor.GetParameters())
+            .Select(parametro => parametro.ParameterType)
+            .ToArray();
+
+        Assert.Contains(typeof(ITurmasUnidadeConsulta), dependencias);
+        Assert.Contains(typeof(ITurmasUnidadeServico), dependencias);
+        Assert.Contains(typeof(IAuthorizationService), dependencias);
+        Assert.DoesNotContain(typeof(BfaDbContext), dependencias);
     }
 
     [Fact]

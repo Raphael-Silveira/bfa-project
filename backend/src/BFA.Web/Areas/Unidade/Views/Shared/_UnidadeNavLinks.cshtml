@@ -4,13 +4,17 @@
     var rotaUnidade = $"/unidade/{unidadeId}";
     var rotaContrato = $"{rotaUnidade}/contrato";
     var rotaProfessores = $"{rotaUnidade}/professores";
+    var rotaTurmas = $"{rotaUnidade}/turmas";
     var contratoAtivo = caminhoAtual.StartsWith(
         rotaContrato,
         StringComparison.OrdinalIgnoreCase);
     var professoresAtivo = caminhoAtual.StartsWith(
         rotaProfessores,
         StringComparison.OrdinalIgnoreCase);
-    var visaoGeralAtiva = !contratoAtivo && !professoresAtivo
+    var turmasAtivo = caminhoAtual.StartsWith(
+        rotaTurmas,
+        StringComparison.OrdinalIgnoreCase);
+    var visaoGeralAtiva = !contratoAtivo && !professoresAtivo && !turmasAtivo
         && caminhoAtual.Equals(rotaUnidade, StringComparison.OrdinalIgnoreCase);
 }
 
@@ -35,6 +39,16 @@
         <path d="M19 8v6M16 11h6"></path>
     </svg>
     <span>Professores</span>
+</a>
+
+<a class="bfa-admin-nav-link @(turmasAtivo ? "is-active" : null)"
+   href="@rotaTurmas"
+   aria-current="@(turmasAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 5h16v14H4z"></path>
+        <path d="M8 3v4M16 3v4M4 9h16M8 13h3M13 13h3M8 16h3"></path>
+    </svg>
+    <span>Turmas</span>
 </a>
 
 <a class="bfa-admin-nav-link @(contratoAtivo ? "is-active" : null)"

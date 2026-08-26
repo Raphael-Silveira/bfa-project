@@ -1,0 +1,28 @@
+@using BFA.Domain.Turmas
+@using BFA.Application.Unidades.Turmas
+@model IReadOnlyList<TurmaHorarioResumo>
+@if (Model.Count == 0)
+{
+    <span class="bfa-turma-schedule-empty">Nenhum horário vigente</span>
+}
+else
+{
+    <ul class="bfa-turma-schedule-summary">
+    @foreach (var horario in Model)
+    {
+        <li>@NomeDia(horario.DiaSemana) <span aria-hidden="true">•</span> @horario.HoraInicio.ToString("HH:mm")–@horario.HoraFim.ToString("HH:mm")</li>
+    }
+    </ul>
+}
+@functions {
+    private static string NomeDia(DiaSemana dia) => dia switch
+    {
+        DiaSemana.Segunda => "Segunda",
+        DiaSemana.Terca => "Terça",
+        DiaSemana.Quarta => "Quarta",
+        DiaSemana.Quinta => "Quinta",
+        DiaSemana.Sexta => "Sexta",
+        DiaSemana.Sabado => "Sábado",
+        _ => "Domingo"
+    };
+}

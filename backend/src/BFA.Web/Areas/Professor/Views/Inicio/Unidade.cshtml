@@ -1,0 +1,20 @@
+@model BFA.Web.ViewModels.Professor.ProfessorInicioViewModel
+@{
+    ViewData["Title"] = "Área do Professor";
+    Layout = "_ProfessorLayout";
+}
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Área do Professor</p>
+        <h1 class="bfa-admin-page-header__title">@(Model.PrimeiroNome is null ? "Bem-vindo" : $"Olá, {Model.PrimeiroNome}")</h1>
+        <p class="bfa-admin-page-header__description">@Model.NomeUnidade</p>
+    </div>
+</header>
+<section class="bfa-admin-card bfa-professor-turmas-summary" aria-labelledby="minhas-turmas-titulo">
+    <div>
+        <p>Operação do professor</p>
+        <h2 id="minhas-turmas-titulo">Minhas turmas</h2>
+        <strong>@Model.QuantidadeTurmasAtivas @(Model.QuantidadeTurmasAtivas == 1 ? "turma ativa" : "turmas ativas")</strong>
+    </div>
+    <a class="bfa-btn-primary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Ver minhas turmas</a>
+</section>

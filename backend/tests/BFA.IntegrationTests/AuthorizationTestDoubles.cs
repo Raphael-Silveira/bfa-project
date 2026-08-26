@@ -1,8 +1,20 @@
 using BFA.Application.Acessos;
 using BFA.Application.Unidades;
 using BFA.Domain.Acessos;
+using BFA.Application.Usuarios;
 
 namespace BFA.IntegrationTests;
+
+public sealed class TestUsuarioApresentacaoConsulta : IUsuarioApresentacaoConsulta
+{
+    public Task<string?> ObterNomeCompletoAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult<string?>("Professor Teste");
+    }
+}
 
 public sealed class TestUsuarioAtual : IUsuarioAtual
 {
@@ -14,10 +26,12 @@ public sealed class TestUsuarioAtual : IUsuarioAtual
 public sealed class TestUnidadesUsuarioConsulta : IUnidadesUsuarioConsulta
 {
     private readonly List<TestUnidadeUsuario> _unidades = [];
+    private readonly List<TestUnidadeUsuario> _unidadesProfessor = [];
 
     public void Limpar()
     {
         _unidades.Clear();
+        _unidadesProfessor.Clear();
     }
 
     public void Adicionar(
@@ -53,6 +67,45 @@ public sealed class TestUnidadesUsuarioConsulta : IUnidadesUsuarioConsulta
     {
         cancellationToken.ThrowIfCancellationRequested();
         var unidade = _unidades
+            .Where(item => item.UsuarioId == usuarioId && item.Ativa)
+            .Select(item => item.Unidade)
+            .SingleOrDefault(item => item.UnidadeId == unidadeId);
+        return Task.FromResult(unidade);
+    }
+
+    public void AdicionarProfessor(
+        Guid usuarioId,
+        Guid organizacaoId,
+        Guid unidadeId,
+        string nome,
+        bool ativa = true)
+    {
+        _unidadesProfessor.Add(new TestUnidadeUsuario(
+            usuarioId,
+            new UnidadeAcessoResumo(organizacaoId, unidadeId, nome),
+            ativa));
+    }
+
+    public Task<IReadOnlyList<UnidadeAcessoResumo>> ListarProfessorAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<UnidadeAcessoResumo> unidades = _unidadesProfessor
+            .Where(item => item.UsuarioId == usuarioId && item.Ativa)
+            .Select(item => item.Unidade)
+            .OrderBy(unidade => unidade.Nome)
+            .ToArray();
+        return Task.FromResult(unidades);
+    }
+
+    public Task<UnidadeAcessoResumo?> ObterProfessorAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var unidade = _unidadesProfessor
             .Where(item => item.UsuarioId == usuarioId && item.Ativa)
             .Select(item => item.Unidade)
             .SingleOrDefault(item => item.UnidadeId == unidadeId);

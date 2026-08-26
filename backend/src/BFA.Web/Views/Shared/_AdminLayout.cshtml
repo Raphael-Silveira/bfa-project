@@ -51,8 +51,8 @@
                         data-bs-toggle="offcanvas"
                         data-bs-target="#bfaAdminMobileMenu"
                         aria-controls="bfaAdminMobileMenu"
-                        aria-label="Abrir menu administrativo"
-                        title="Abrir menu administrativo">
+                        aria-label="Abrir @shell.MenuDescricao"
+                        title="Abrir @shell.MenuDescricao">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M4 7h16"></path>
                         <path d="M4 12h16"></path>
@@ -65,7 +65,7 @@
 
     <div class="bfa-admin-shell">
         <aside class="bfa-admin-sidebar" aria-label="@shell.NavegacaoAriaLabel">
-            <p class="bfa-admin-nav-label">Administração</p>
+            <p class="bfa-admin-nav-label">@shell.NavegacaoTitulo</p>
             <nav class="bfa-admin-nav">
                 @await Html.PartialAsync(shell.NavegacaoPartial)
             </nav>
@@ -84,7 +84,7 @@
          aria-labelledby="bfaAdminMobileMenuTitle">
         <div class="bfa-admin-drawer__header">
             <div>
-                <p class="bfa-admin-drawer__eyebrow">Área administrativa</p>
+                <p class="bfa-admin-drawer__eyebrow">@shell.NavegacaoTitulo</p>
                 <h2 id="bfaAdminMobileMenuTitle">@shell.AreaNome</h2>
                 @if (!string.IsNullOrWhiteSpace(shell.ContextoNome))
                 {
@@ -94,8 +94,8 @@
             <button class="bfa-admin-drawer__close"
                     type="button"
                     data-bs-dismiss="offcanvas"
-                    aria-label="Fechar menu administrativo"
-                    title="Fechar menu administrativo">
+                    aria-label="Fechar @shell.MenuDescricao"
+                    title="Fechar @shell.MenuDescricao">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="m6 6 12 12"></path>
                     <path d="m18 6-12 12"></path>
@@ -103,7 +103,7 @@
             </button>
         </div>
         <div class="bfa-admin-drawer__body">
-            <nav class="bfa-admin-nav bfa-admin-drawer__nav" aria-label="Menu administrativo mobile">
+            <nav class="bfa-admin-nav bfa-admin-drawer__nav" aria-label="@shell.NavegacaoAriaLabel no mobile">
                 @await Html.PartialAsync(shell.NavegacaoPartial)
             </nav>
 

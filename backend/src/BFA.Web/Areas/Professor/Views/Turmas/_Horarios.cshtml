@@ -1,0 +1,35 @@
+@using BFA.Application.Professores.Turmas
+@using BFA.Domain.Turmas
+@model IReadOnlyList<HorarioTurmaProfessorResumo>
+@{
+    var historico = ViewData["Historico"] as bool? == true;
+}
+<div class="bfa-minhas-turmas-horarios">
+@foreach (var horario in Model)
+{
+    <article class="bfa-minhas-turmas-horario">
+        <strong>@NomeDia(horario.DiaSemana)</strong>
+        <span>@horario.HoraInicio.ToString("HH:mm") às @horario.HoraFim.ToString("HH:mm")</span>
+        @if (historico)
+        {
+            <small>@horario.VigenciaInicio.ToString("dd/MM/yyyy") a @(horario.VigenciaFim?.ToString("dd/MM/yyyy") ?? "sem término") · @(horario.Ativo ? "Ativo" : "Inativo")</small>
+        }
+        else
+        {
+            <small>Desde @horario.VigenciaInicio.ToString("dd/MM/yyyy")</small>
+        }
+    </article>
+}
+</div>
+@functions {
+    private static string NomeDia(DiaSemana dia) => dia switch
+    {
+        DiaSemana.Segunda => "Segunda-feira",
+        DiaSemana.Terca => "Terça-feira",
+        DiaSemana.Quarta => "Quarta-feira",
+        DiaSemana.Quinta => "Quinta-feira",
+        DiaSemana.Sexta => "Sexta-feira",
+        DiaSemana.Sabado => "Sábado",
+        _ => "Domingo"
+    };
+}

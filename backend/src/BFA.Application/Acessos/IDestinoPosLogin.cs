@@ -6,7 +6,9 @@ public enum DestinoAcesso
     AdministradorRede = 2,
     Unidade = 3,
     SelecionarUnidade = 4,
-    SemAcesso = 5
+    SemAcesso = 5,
+    ProfessorUnidade = 6,
+    SelecionarUnidadeProfessor = 7
 }
 
 public sealed record DestinoPosLoginResultado(

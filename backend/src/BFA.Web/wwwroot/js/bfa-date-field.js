@@ -65,13 +65,18 @@
         return botao;
     };
 
-    const iniciarCampo = (campo, indice) => {
+    let proximoIndiceCalendario = 0;
+
+    const iniciarCampo = (campo) => {
+        if (campo.dataset.bfaDateInitialized === "true") return;
+        campo.dataset.bfaDateInitialized = "true";
         const entrada = campo.querySelector("[data-bfa-date-input]");
         const gatilho = campo.querySelector("[data-bfa-date-trigger]");
         if (!entrada || !gatilho) return;
         const dataMinima = analisarDataIso(entrada.dataset.bfaDateMin);
 
         const calendario = document.createElement("div");
+        const indice = proximoIndiceCalendario++;
         const tituloId = `bfa-calendar-title-${indice}`;
         const calendarioId = `bfa-calendar-${indice}`;
         calendario.id = calendarioId;
@@ -299,6 +304,13 @@
         document.addEventListener("keydown", (evento) => {
             if (evento.key === "Escape" && calendarioAberto) calendarioAberto.fechar(true);
         });
+    };
+
+    window.BfaDateField = {
+        iniciar: (raiz = document) => {
+            instalarValidacaoPtBr();
+            raiz.querySelectorAll("[data-bfa-date-field]").forEach(iniciarCampo);
+        }
     };
 
     if (document.readyState === "loading") {

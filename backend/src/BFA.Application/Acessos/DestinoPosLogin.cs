@@ -27,11 +27,20 @@ public sealed class DestinoPosLogin(
             usuarioId,
             cancellationToken);
 
-        return unidades.Count switch
+        if (unidades.Count > 0)
+        {
+            return unidades.Count == 1
+                ? new(DestinoAcesso.Unidade, unidades[0].UnidadeId)
+                : new(DestinoAcesso.SelecionarUnidade);
+        }
+
+        var unidadesProfessor = await unidadesUsuarioConsulta.ListarProfessorAsync(
+            usuarioId, cancellationToken);
+        return unidadesProfessor.Count switch
         {
             0 => new(DestinoAcesso.SemAcesso),
-            1 => new(DestinoAcesso.Unidade, unidades[0].UnidadeId),
-            _ => new(DestinoAcesso.SelecionarUnidade)
+            1 => new(DestinoAcesso.ProfessorUnidade, unidadesProfessor[0].UnidadeId),
+            _ => new(DestinoAcesso.SelecionarUnidadeProfessor)
         };
     }
 }

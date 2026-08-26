@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using BFA.Application.Unidades.Professores;
 using BFA.Domain.Professores;
+using ProfessorEntidade = BFA.Domain.Professores.Professor;
 
 namespace BFA.Web.ViewModels.Unidade;
 
@@ -18,7 +19,38 @@ public sealed class ProfessoresUnidadeIndexViewModel : IUnidadeContextoViewModel
 public sealed record ProfessorUnidadeAcoesViewModel(
     Guid UnidadeId,
     Guid ProfessorId,
-    bool VinculoAtivo);
+    bool VinculoAtivo,
+    Guid? UsuarioId,
+    string? NomeUsuario,
+    bool AcessoProfessorAtivo);
+
+public sealed class ProfessorAcessoViewModel : IUnidadeContextoViewModel
+{
+    public Guid OrganizacaoId { get; set; }
+    public Guid UnidadeId { get; set; }
+    public Guid ProfessorId { get; set; }
+    public string NomeUnidade { get; set; } = string.Empty;
+    public bool PodeTrocarUnidade { get; set; }
+    public string NomeProfessor { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public bool UsuarioExistente { get; set; }
+
+    [Required(ErrorMessage = "Informe o nome de usuário.")]
+    [StringLength(256)]
+    [Display(Name = "Nome de usuário")]
+    public string NomeUsuario { get; set; } = string.Empty;
+}
+
+public sealed record ProfessorAcessoConcedidoViewModel(
+    Guid UnidadeId,
+    string NomeUnidade,
+    bool PodeTrocarUnidade,
+    string NomeProfessor,
+    string NomeUsuario,
+    string? LinkPrimeiroAcesso) : IUnidadeContextoViewModel
+{
+    public Guid OrganizacaoId => Guid.Empty;
+}
 
 public abstract class ProfessorRemuneracaoInicialViewModel
 {
@@ -64,7 +96,7 @@ public sealed class ProfessorUnidadeNovoViewModel
     public bool PodeTrocarUnidade { get; set; }
 
     [Required(ErrorMessage = "Informe o nome completo.")]
-    [StringLength(Professor.NomeCompletoTamanhoMaximo)]
+    [StringLength(ProfessorEntidade.NomeCompletoTamanhoMaximo)]
     [Display(Name = "Nome completo")]
     public string NomeCompleto { get; set; } = string.Empty;
 
@@ -72,12 +104,12 @@ public sealed class ProfessorUnidadeNovoViewModel
     [Display(Name = "CPF")]
     public string? Cpf { get; set; }
 
-    [StringLength(Professor.TelefoneTamanhoMaximo)]
+    [StringLength(ProfessorEntidade.TelefoneTamanhoMaximo)]
     [Display(Name = "Telefone")]
     public string? Telefone { get; set; }
 
     [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
-    [StringLength(Professor.EmailTamanhoMaximo)]
+    [StringLength(ProfessorEntidade.EmailTamanhoMaximo)]
     [Display(Name = "E-mail")]
     public string? Email { get; set; }
 
@@ -133,18 +165,18 @@ public sealed class ProfessorUnidadeEditarViewModel : IUnidadeContextoViewModel
     public bool PodeTrocarUnidade { get; set; }
 
     [Required(ErrorMessage = "Informe o nome completo.")]
-    [StringLength(Professor.NomeCompletoTamanhoMaximo)]
+    [StringLength(ProfessorEntidade.NomeCompletoTamanhoMaximo)]
     [Display(Name = "Nome completo")]
     public string NomeCompleto { get; set; } = string.Empty;
 
     [StringLength(14)]
     public string? Cpf { get; set; }
 
-    [StringLength(Professor.TelefoneTamanhoMaximo)]
+    [StringLength(ProfessorEntidade.TelefoneTamanhoMaximo)]
     public string? Telefone { get; set; }
 
     [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
-    [StringLength(Professor.EmailTamanhoMaximo)]
+    [StringLength(ProfessorEntidade.EmailTamanhoMaximo)]
     [Display(Name = "E-mail")]
     public string? Email { get; set; }
 }

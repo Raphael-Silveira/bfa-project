@@ -11,7 +11,7 @@ namespace BFA.Web.Controllers;
 
 public sealed class ContaController : Controller
 {
-    private const string CredenciaisInvalidas = "Email ou senha inválidos.";
+    private const string CredenciaisInvalidas = "E-mail/usuário ou senha inválidos.";
     private readonly UserManager<UsuarioIdentity> _userManager;
     private readonly SignInManager<UsuarioIdentity> _signInManager;
     private readonly IUsuarioAtual _usuarioAtual;
@@ -55,7 +55,7 @@ public sealed class ContaController : Controller
             return View(model);
         }
 
-        var usuario = await _userManager.FindByEmailAsync(model.Email);
+        var usuario = await _userManager.FindByNameAsync(model.Email.Trim());
 
         if (usuario is null)
         {

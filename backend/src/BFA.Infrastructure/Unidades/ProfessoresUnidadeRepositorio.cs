@@ -44,7 +44,20 @@ public sealed class ProfessoresUnidadeRepositorio(BfaDbContext dbContext)
                 professor.Email,
                 vinculo.Ativo,
                 remuneracao == null ? null : remuneracao.Modalidade,
-                remuneracao == null ? null : remuneracao.Valor))
+                remuneracao == null ? null : remuneracao.Valor,
+                professor.UsuarioId,
+                professor.UsuarioId == null
+                    ? null
+                    : dbContext.Users
+                        .Where(usuario => usuario.Id == professor.UsuarioId)
+                        .Select(usuario => usuario.UserName)
+                        .FirstOrDefault(),
+                professor.UsuarioId != null && dbContext.VinculosAcesso.Any(acesso =>
+                    acesso.UsuarioId == professor.UsuarioId
+                    && acesso.OrganizacaoId == organizacaoId
+                    && acesso.UnidadeId == unidadeId
+                    && acesso.Perfil == BFA.Domain.Acessos.PerfilAcesso.Professor
+                    && acesso.Ativo)))
             .ToArrayAsync(cancellationToken);
     }
 

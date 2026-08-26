@@ -149,7 +149,7 @@ Controller namespace: `BFA.Web.Areas.Unidade.Controllers`.
 
 The first version is available to an active `AdministradorUnidade` only for the exact Organization/Unit pair in its active `VinculoAcesso`. An `AdministradorRede` keeps transversal superaccess to active Units inside its own Organization, but never to another Organization. The route identifier is not authorization: Web resolves the active Unit and Organization from the current persistence source, creates `ContextoUnidade`, and invokes the existing resource-based `AcessoUnidadePorPerfilRequirement` on every request.
 
-The initial dashboard identifies the current Unit and renders only data backed by implemented modules. It reuses the shared Admin Shell, drawer, logout, responsive behavior, and visual tokens. Its navigation contains `Visão Geral` and the read-only `Contrato`; operational UI and use cases for Professores, Alunos, Turmas, Matriculas, Presencas, and finance are not created by this first version.
+The initial dashboard identifies the current Unit and renders only data backed by implemented modules. It reuses the shared Admin Shell, drawer, logout, responsive behavior, and visual tokens. Its current navigation contains `Visão Geral`, `Professores`, `Turmas`, and the read-only `Contrato`; Alunos, Matriculas, Presencas, and finance remain future modules.
 
 The Unit dashboard now includes a read-only summary of the active franchise contract, and `GET /unidade/{unidadeId}/contrato` exposes its current terms and the documents from the vigente version. Authorized document visualization and download are streamed through private storage routes under that same Unit context; storage keys and physical paths are never exposed. The server revalidates the authenticated user's active Unit access, Organization, active `FranqueadoUnidade`, active `ContratoFranquia`, and vigente version. This experience offers no contract creation, editing, upload, versioning, formalization, cancellation, or closing actions.
 
@@ -363,11 +363,11 @@ VinculoAcesso     = which contexts and profiles the user has
 Policies/Handlers = authorization decision
 ```
 
-The post-login functional destination is selected by `IDestinoPosLogin` in Application from the user's active access links and active Unit contexts. Application returns a typed `DestinoPosLoginResultado` and does not know MVC URLs. `AdministradorRede` has priority and Web maps it to `/franqueadora`; one `AdministradorUnidade` context maps to `/unidade/{unidadeId}`; multiple contexts map to `/selecionar-unidade`; no valid administrative context maps to `/acesso-negado`. A local `ReturnUrl`, validated with `Url.IsLocalUrl`, always has priority over this normal landing decision, and external return URLs are never followed.
+The post-login functional destination is selected by `IDestinoPosLogin` in Application from the user's active access links and active Unit contexts. Application returns a typed `DestinoPosLoginResultado` and does not know MVC URLs. The current priority is `AdministradorRede`, then `AdministradorUnidade`, then `Professor`. Web maps the Professor experience to `/professor/unidade/{unidadeId}` when there is one active Professor Unit and to `/professor/selecionar-unidade` when there is more than one. No valid context maps to `/acesso-negado`. A local `ReturnUrl`, validated with `Url.IsLocalUrl`, always has priority over this normal landing decision, and external return URLs are never followed.
 
 `GET /acessar` is the central authenticated entry point exposed by the public navigation. Anonymous users are sent to `/login`; authenticated users are routed through `IUsuarioAtual`, `IDestinoPosLogin`, and the Web URL mapper. An authenticated user who requests `GET /login` follows the same destination mechanism instead of seeing the login form again. The public Home only chooses between the `Login` and `Acessar sistema` calls to action based on authentication state and contains no profile rule.
 
-The `/acessar` mechanism now supports `AdministradorRede` and `AdministradorUnidade`. It may later be expanded for `Professor`, `Aluno`, and `Responsavel`, with possible experiences under `/professor`, `/aluno`, and `/responsavel`; those destinations and routes do not exist yet. Priority among different future operational profiles remains intentionally undefined. The current Unit selection resolves only multiple `AdministradorUnidade` contexts and does not choose between different product experiences.
+The `/acessar` mechanism supports `AdministradorRede`, `AdministradorUnidade`, and `Professor`. Professor Unit selection is based only on active `VinculoAcesso` records with `PerfilAcesso.Professor`; it is independent from the administrator selection. `Aluno` and `Responsavel` remain future destinations. If more experiences are introduced, their priority or an explicit context selection must be documented before implementation.
 
 Only active access links associated with an active Unit and active Organization participate in the Unit destination and context selection. Profiles, `OrganizacaoId`, `UnidadeId`, and the list of Units are not copied into the authentication cookie; handlers and context queries consult the persistent source for every decision, without an authorization cache at this stage. Deactivating a link or Unit therefore takes effect on the next request of an existing authenticated session.
 
@@ -465,9 +465,19 @@ UsuarioIdentity
 `Professor` is an organization-scoped business entity and may exist without a
 `UsuarioIdentity`. `ProfessorUnidade` records the professional relationship with an exact
 Unit in the same Organization; it does not grant system access. Access is granted only by an
-explicit `VinculoAcesso` with `PerfilAcesso.Professor`, created by a future approved use case.
+explicit `VinculoAcesso` with `PerfilAcesso.Professor`, created or reactivated by the Unit
+administrator's dedicated access use case.
 Therefore, professional relationship and authorization are not interchangeable and no
 automatic synchronization exists between them.
+
+Granting Professor access creates a passwordless `UsuarioIdentity` only when the Professor
+does not already have one, associates it through `Professor.UsuarioId`, and creates or
+reactivates the access link only for the selected Unit. The login identifier is an explicit,
+unique `UserName`; email remains optional. A newly created account receives the existing
+`/definir-senha` first-access link, transported by `usuarioId` and an Identity token that is
+shown once and is not persisted or logged. Additional Units reuse the same account and do not
+issue another invitation. Revocation only deactivates the current Unit's Professor access and
+does not change the professional relationship, identity, or access to other Units.
 
 After insertion, a Professor's `Id`, `OrganizacaoId`, and creation timestamp are immutable;
 its optional user association and registration data may evolve through controlled Domain
@@ -501,6 +511,116 @@ login behavior, create users, or create access links.
 The manually reviewed `V008__criar_professores_e_remuneracoes.sql` defines only
 `professores`, `professores_unidades`, and `professores_remuneracoes`. It is deployed manually
 and is never executed by EF Core or application startup.
+
+### Classes and recurring schedules
+
+The initial operational scheduling foundation separates a recurring plan from a concrete
+occurrence:
+
+```text
+Turma
+├── ProfessorUnidade: one responsible Professor
+└── TurmaHorario: one or more recurring rules
+    └── ProfessorUnidade: historical responsible Professor snapshot
+
+Turma + TurmaHorario = recurring plan
+Aula                 = concrete occurrence on a date (future module)
+```
+
+`Turma` belongs to an exact Organization and Unit and references `ProfessorUnidade`, never
+`Professor` directly. The composite foreign key
+`(OrganizacaoId, UnidadeId, ProfessorUnidadeId)` guarantees that the responsible professional
+relationship belongs to the same tenant and Unit. An active class requires an active
+professional relationship. The relationship cannot be inactivated while it remains
+responsible for an active class, and an active recurring schedule cannot belong to an inactive
+class. These transitions are coordinated explicitly by future Application use cases; database
+triggers reject inconsistent states but never cascade or silently change children.
+
+`Turma.ProfessorUnidadeId` represents the current responsible Professor, while every
+`TurmaHorario.ProfessorUnidadeId` snapshots the professional relationship responsible for that
+specific recurring rule. Both references use tenant-safe composite foreign keys. An active
+schedule must snapshot the class's current responsible Professor at creation or reactivation;
+the snapshot then becomes immutable, so changing the current class assignment never
+reinterprets an earlier schedule as belonging to the new Professor.
+
+Recurring schedules use ISO 8601 weekdays (`1` Monday through `7` Sunday), local wall-clock
+times, and an inclusive effective date range. They do not cross midnight. Historical rules are
+not overwritten: a future recurrence change closes the previous `VigenciaFim` once and inserts
+a new rule. Identity, tenant, class, responsible-Professor snapshot, weekday, interval,
+initial effective date, creator, and creation timestamp remain immutable after insertion.
+Physical deletion is not granted to the runtime role.
+
+Schedule conflicts are evaluated by the organization-scoped `ProfessorId` reached through the
+`ProfessorUnidadeId` stored in each schedule, across every Unit in which that Professor works.
+They are never inferred from the class's current assignment. PostgreSQL locks the `Professor`
+row with `FOR UPDATE` before checking overlapping active time intervals and effective date
+ranges. The validation applies when a schedule is created or reactivated. Application will add
+a friendly preventive validation in the future; PostgreSQL remains the concurrency-safe final
+barrier.
+
+Changing the class's current responsible Professor is blocked while the previous assignment
+still has an active schedule with an open effective range. The administrative use case at
+`GET/POST /unidade/{unidadeId}/turmas/{turmaId}/professor` therefore closes all such previous
+rules and saves, updates `Turma.ProfessorUnidadeId` and saves, then inserts copied recurring
+rules carrying the new responsible-Professor snapshot and saves, with all three stages in one
+transaction. A class without open rules changes responsibility without inventing a schedule.
+Triggers do not perform any of those steps automatically. Closed historical rules remain
+attributed to their original Professor and are not checked as if they belonged to the new
+assignment; conflicts for the new Professor are validated across the Organization before the
+change and again by V009 when the new recurring rules are inserted. This operation is restricted
+to authorized network/Unit administrators and never creates system access or remuneration.
+
+The authorization matrix for the initial Unit management use cases is:
+
+| Actor | Class and schedule scope |
+|---|---|
+| `AdministradorRede` | Manages classes in any authorized Unit of the current Organization. |
+| `AdministradorUnidade` | Manages classes only in Units covered by active access links. |
+| `Professor` | Read-only access to classes assigned to their active professional relationship in the selected Unit. |
+
+`Franqueado` is a commercial entity, not a `PerfilAcesso`; local operation continues through
+`AdministradorUnidade`. The first functional Unit UI lists classes and their open active
+recurring schedules at `GET /unidade/{unidadeId}/turmas`, creates a class plus one or more
+schedules transactionally, and edits only class name and capacity. Professor selection is
+restricted to active `ProfessorUnidade` relationships in the exact Organization and Unit.
+Application performs a friendly cross-Unit Professor conflict check before persistence, while
+the V009 trigger remains the concurrency-safe final barrier. Changing the responsible
+Professor, closing or replacing historical schedules, and inactivating a class remain separate
+future use cases.
+
+The Professor Area exposes the read-only list at
+`GET /professor/unidade/{unidadeId}/turmas` and its detail at
+`GET /professor/unidade/{unidadeId}/turmas/{turmaId}`. Resolution starts from the authenticated
+user and requires both an active `PerfilAcesso.Professor` link and an active
+`Professor -> ProfessorUnidade` relationship in the exact Organization and Unit. Queries then
+filter `Turma` by that exact `ProfessorUnidadeId`; changing URL identifiers cannot widen the
+scope. Current and historical schedules are also filtered by the immutable
+`TurmaHorario.ProfessorUnidadeId` snapshot, so historical responsibility is not reinterpreted
+after a class changes Professor. This area does not create classes or alter their identity,
+responsible Professor, name, capacity, or active state.
+
+Recurring-program adjustments are restricted to authorized Unit administrators through
+`GET/POST /unidade/{unidadeId}/turmas/{turmaId}/horarios`. The Professor Area remains
+read-only and exposes no equivalent adjustment route or action. Application resolves the
+administrator's tenant and exact Unit context before loading the class. The operation
+never edits the historical identity of `TurmaHorario`: it closes every open current rule at
+`NovaVigenciaInicio - 1 day`, persists those closures, inserts a complete replacement set with
+the class's current `ProfessorUnidadeId`, and commits both saves in one transaction. Conflict
+validation spans every Unit of the same Organization by the underlying `ProfessorId`, excludes
+the current class rules that are being closed, accepts adjacent intervals, and leaves the V009
+trigger as the concurrency-safe final barrier.
+
+Concrete `Aula`, Agenda generation, Alunos, Matriculas, Presencas, substitute Professors, and
+Quadras remain outside V009. A future Aula authorization model may allow
+`AdministradorRede`, an authorized `AdministradorUnidade`, and the responsible `Professor` to
+operate occurrences within their respective tenant and Unit scopes. This future capability
+must preserve the concrete date, actual responsible Professor, cancellation/rescheduling, and
+attendance history independently from later changes to the recurring rule.
+
+The manually reviewed `V009__criar_turmas_e_horarios.sql` defines only `turmas` and
+`turmas_horarios` and adds the candidate key required for the tenant-safe reference to
+`professores_unidades`. It is deployed manually and is never executed by EF Core or application
+startup.
 
 ### Versioned franchise contracts and private documents
 
@@ -654,7 +774,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, `DocumentosContratoFranquia`, `Professores`, `ProfessoresUnidades`, and `ProfessoresRemuneracoes`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, `DocumentosContratoFranquia`, `Professores`, `ProfessoresUnidades`, `ProfessoresRemuneracoes`, `Turmas`, and `TurmasHorarios`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web

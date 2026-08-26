@@ -99,4 +99,50 @@ public sealed class DestinoPosLoginTests
 
         Assert.Equal(DestinoAcesso.SemAcesso, resultado.Destino);
     }
+
+    [Fact]
+    public async Task Professor_com_uma_unidade_vai_direto_para_a_area()
+    {
+        var usuarioId = Guid.NewGuid();
+        var unidadeId = Guid.NewGuid();
+        var unidades = new TestUnidadesUsuarioConsulta();
+        unidades.AdicionarProfessor(
+            usuarioId, Guid.NewGuid(), unidadeId, "BFA Cerquilho");
+        var servico = new DestinoPosLogin(new TestAcessoUsuarioConsulta(), unidades);
+
+        var resultado = await servico.ObterAsync(usuarioId, CancellationToken.None);
+
+        Assert.Equal(DestinoAcesso.ProfessorUnidade, resultado.Destino);
+        Assert.Equal(unidadeId, resultado.UnidadeId);
+    }
+
+    [Fact]
+    public async Task Professor_com_multiplas_unidades_vai_para_selecao_propria()
+    {
+        var usuarioId = Guid.NewGuid();
+        var unidades = new TestUnidadesUsuarioConsulta();
+        unidades.AdicionarProfessor(usuarioId, Guid.NewGuid(), Guid.NewGuid(), "BFA A");
+        unidades.AdicionarProfessor(usuarioId, Guid.NewGuid(), Guid.NewGuid(), "BFA B");
+        var servico = new DestinoPosLogin(new TestAcessoUsuarioConsulta(), unidades);
+
+        var resultado = await servico.ObterAsync(usuarioId, CancellationToken.None);
+
+        Assert.Equal(DestinoAcesso.SelecionarUnidadeProfessor, resultado.Destino);
+    }
+
+    [Fact]
+    public async Task Administrador_unidade_tem_prioridade_sobre_professor()
+    {
+        var usuarioId = Guid.NewGuid();
+        var unidadeAdmin = Guid.NewGuid();
+        var unidades = new TestUnidadesUsuarioConsulta();
+        unidades.Adicionar(usuarioId, Guid.NewGuid(), unidadeAdmin, "BFA Admin");
+        unidades.AdicionarProfessor(usuarioId, Guid.NewGuid(), Guid.NewGuid(), "BFA Professor");
+        var servico = new DestinoPosLogin(new TestAcessoUsuarioConsulta(), unidades);
+
+        var resultado = await servico.ObterAsync(usuarioId, CancellationToken.None);
+
+        Assert.Equal(DestinoAcesso.Unidade, resultado.Destino);
+        Assert.Equal(unidadeAdmin, resultado.UnidadeId);
+    }
 }

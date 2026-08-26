@@ -4,9 +4,8 @@ namespace BFA.Web.ViewModels.Conta;
 
 public sealed class LoginViewModel
 {
-    [Required(ErrorMessage = "Informe o email.")]
-    [EmailAddress(ErrorMessage = "Informe um email válido.")]
-    [Display(Name = "Email")]
+    [Required(ErrorMessage = "Informe o e-mail ou usuário.")]
+    [Display(Name = "E-mail ou usuário")]
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Informe a senha.")]

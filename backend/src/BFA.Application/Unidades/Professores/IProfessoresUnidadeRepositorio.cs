@@ -10,7 +10,10 @@ public sealed record ProfessorUnidadeResumo(
     string? Email,
     bool VinculoAtivo,
     ModalidadeRemuneracaoProfessor? Modalidade,
-    decimal? Valor);
+    decimal? Valor,
+    Guid? UsuarioId,
+    string? NomeUsuario,
+    bool AcessoProfessorAtivo);
 
 public enum FiltroProfessoresUnidade
 {

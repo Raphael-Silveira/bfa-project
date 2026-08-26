@@ -12,6 +12,10 @@ public sealed class AdminShellViewModel
 
     public required string NavegacaoAriaLabel { get; init; }
 
+    public required string NavegacaoTitulo { get; init; }
+
+    public required string MenuDescricao { get; init; }
+
     public required string NavegacaoPartial { get; init; }
 
     public string? TrocarContextoUrl { get; init; }

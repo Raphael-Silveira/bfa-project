@@ -46,7 +46,7 @@ else
 {
     <div class="bfa-admin-table-container bfa-admin-desktop-list">
         <table class="bfa-admin-table">
-            <thead><tr><th>Professor</th><th>CPF</th><th>Contato</th><th>Vínculo</th><th>Remuneração atual</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Professor</th><th>CPF</th><th>Contato</th><th>Vínculo</th><th>Acesso</th><th>Remuneração atual</th><th>Ações</th></tr></thead>
             <tbody>
             @foreach (var item in Model.Professores)
             {
@@ -55,8 +55,9 @@ else
                     <td>@FormatarCpf(item.Cpf)</td>
                     <td><span class="bfa-professor-contact">@(item.Telefone ?? "Não informado")<small>@(item.Email ?? "E-mail não informado")</small></span></td>
                     <td><span class="bfa-admin-badge @(item.VinculoAtivo ? "is-active" : "is-inactive")">@(item.VinculoAtivo ? "Ativo" : "Inativo")</span></td>
+                    <td><span class="bfa-professor-contact"><strong>@(item.AcessoProfessorAtivo ? "Ativo" : item.UsuarioId.HasValue ? "Revogado" : "Não concedido")</strong><small>@(item.NomeUsuario ?? "Sem usuário")</small></span></td>
                     <td>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</td>
-                    <td><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo))" /></td>
+                    <td><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo, item.UsuarioId, item.NomeUsuario, item.AcessoProfessorAtivo))" /></td>
                 </tr>
             }
             </tbody>
@@ -67,8 +68,8 @@ else
         {
             <article class="bfa-admin-card bfa-professor-card">
                 <header><div><p>Professor</p><h2>@item.NomeCompleto</h2></div><span class="bfa-admin-badge @(item.VinculoAtivo ? "is-active" : "is-inactive")">@(item.VinculoAtivo ? "Ativo" : "Inativo")</span></header>
-                <dl><div><dt>CPF</dt><dd>@FormatarCpf(item.Cpf)</dd></div><div><dt>Telefone</dt><dd>@(item.Telefone ?? "Não informado")</dd></div><div><dt>E-mail</dt><dd>@(item.Email ?? "Não informado")</dd></div><div><dt>Remuneração atual</dt><dd>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</dd></div></dl>
-                <footer class="bfa-professor-card__actions"><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo))" /></footer>
+                <dl><div><dt>CPF</dt><dd>@FormatarCpf(item.Cpf)</dd></div><div><dt>Telefone</dt><dd>@(item.Telefone ?? "Não informado")</dd></div><div><dt>E-mail</dt><dd>@(item.Email ?? "Não informado")</dd></div><div><dt>Acesso</dt><dd>@(item.AcessoProfessorAtivo ? $"Ativo · {item.NomeUsuario}" : item.UsuarioId.HasValue ? "Revogado" : "Não concedido")</dd></div><div><dt>Remuneração atual</dt><dd>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</dd></div></dl>
+                <footer class="bfa-professor-card__actions"><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo, item.UsuarioId, item.NomeUsuario, item.AcessoProfessorAtivo))" /></footer>
             </article>
         }
     </section>
