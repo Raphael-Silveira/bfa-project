@@ -78,7 +78,35 @@ public sealed partial class AreaUnidadeEndpointTests
         Assert.Contains("/css/admin.css", html, StringComparison.Ordinal);
         Assert.Contains("/css/unidade.css", html, StringComparison.Ordinal);
         Assert.DoesNotContain("href=\"/franqueadora", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Voltar à rede", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Trocar unidade", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Administrador_rede_entra_na_unidade_propria_com_retorno_e_nao_acessa_outro_tenant()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(
+            application, "BFA", $"bfa-rede-{Guid.NewGuid():N}");
+        var externa = await AdicionarOrganizacaoAsync(
+            application, "Outra", $"outra-rede-{Guid.NewGuid():N}");
+        var unidade = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Tatuí");
+        var unidadeExterna = await AdicionarUnidadeAsync(
+            application, externa.Id, "Unidade externa");
+        await AdicionarVinculoAsync(application, application.UsuarioStore.Usuario.Id,
+            organizacao.Id, null, PerfilAcesso.AdministradorRede);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        using var permitida = await client.GetAsync($"/unidade/{unidade.Id:D}");
+        var html = WebUtility.HtmlDecode(await permitida.Content.ReadAsStringAsync());
+        using var proibida = await client.GetAsync($"/unidade/{unidadeExterna.Id:D}");
+
+        Assert.Equal(HttpStatusCode.OK, permitida.StatusCode);
+        Assert.Contains("Operação administrada pela Rede", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora\"", html, StringComparison.Ordinal);
+        Assert.Contains("Voltar à rede", html, StringComparison.Ordinal);
+        AssertAcessoNegado(proibida);
     }
 
     [Fact]

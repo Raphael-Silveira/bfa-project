@@ -746,3 +746,15 @@
     .bfa-turma-schedule-row.is-adjustment { grid-template-columns: 1fr; }
     .bfa-turma-new-start { max-width: none; }
 }
+.bfa-unidade-operation-context {
+    width: fit-content;
+    margin: 0 0 1rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgb(255 193 7 / 24%);
+    border-radius: 999px;
+    color: var(--bfa-text-muted);
+    background: rgb(255 193 7 / 5%);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}

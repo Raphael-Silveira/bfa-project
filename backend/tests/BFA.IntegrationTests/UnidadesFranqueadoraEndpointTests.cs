@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using BFA.Domain.Acessos;
+using BFA.Domain.Franqueados;
 using BFA.Domain.Unidades;
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -90,6 +91,32 @@ public sealed partial class UnidadesFranqueadoraEndpointTests
         Assert.DoesNotContain(">Ativar<", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Desativar<", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Excluir", html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            $"href=\"/unidade/{(await ObterUnidadePorNomeAsync(application, "BFA Tietê")):D}\"",
+            html,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("aria-label=\"Entrar na unidade BFA Inativa\"", html,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Administrador_rede_entra_na_unidade_quando_ela_possui_franqueado_ativo()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        var unidade = await AdicionarUnidadeAsync(
+            application, organizacaoId, "BFA Franqueada", "bfa-franqueada");
+        await AdicionarFranqueadoAtivoAsync(application, organizacaoId, unidade.Id);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades"));
+
+        Assert.Contains("Franqueada", html, StringComparison.Ordinal);
+        Assert.Contains($"href=\"/unidade/{unidade.Id:D}\"", html, StringComparison.Ordinal);
+        Assert.Contains("aria-label=\"Entrar na unidade BFA Franqueada\"", html,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -354,6 +381,37 @@ public sealed partial class UnidadesFranqueadoraEndpointTests
             .Where(unidade => unidade.Id == unidadeId)
             .Select(unidade => unidade.Ativa)
             .SingleAsync();
+    }
+
+    private static async Task<Guid> ObterUnidadePorNomeAsync(
+        UnidadesFranqueadoraWebApplicationFactory application,
+        string nome)
+    {
+        await using var scope = application.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+        return await dbContext.Unidades.AsNoTracking()
+            .Where(unidade => unidade.Nome == nome)
+            .Select(unidade => unidade.Id)
+            .SingleAsync();
+    }
+
+    private static async Task AdicionarFranqueadoAtivoAsync(
+        UnidadesFranqueadoraWebApplicationFactory application,
+        Guid organizacaoId,
+        Guid unidadeId)
+    {
+        var criadoEmUtc = DateTime.UtcNow;
+        var franqueado = new Franqueado(
+            Guid.NewGuid(), organizacaoId, TipoPessoaFranqueado.PessoaJuridica,
+            "Franqueado da unidade", $"{unidadeId:N}"[..12] + "99",
+            $"franqueado-{unidadeId:N}@bfa.test", criadoEmUtc);
+        var vinculo = new FranqueadoUnidade(
+            Guid.NewGuid(), franqueado.Id, organizacaoId, unidadeId, criadoEmUtc);
+        await using var scope = application.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+        dbContext.Franqueados.Add(franqueado);
+        dbContext.FranqueadosUnidades.Add(vinculo);
+        await dbContext.SaveChangesAsync();
     }
 
     [GeneratedRegex(

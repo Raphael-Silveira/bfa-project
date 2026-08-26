@@ -14,7 +14,10 @@ public sealed record UnidadeResumo(
     string Nome,
     string Slug,
     bool Ativa,
-    DateTime CriadoEmUtc);
+    DateTime CriadoEmUtc)
+{
+    public bool PossuiFranqueadoAtivo { get; init; }
+}
 
 public sealed record UnidadeDetalhe(
     Guid Id,

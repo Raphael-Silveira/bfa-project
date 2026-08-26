@@ -1,6 +1,4 @@
-using BFA.Application.Acessos;
 using BFA.Application.Unidades;
-using BFA.Domain.Acessos;
 
 namespace BFA.Application.Unidades.Turmas;
 
@@ -62,7 +60,7 @@ public interface ITrocaProfessorTurmaServico
 
 public sealed class TrocaProfessorTurmaServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
-    IAcessoUsuarioConsulta acessoUsuarioConsulta,
+    IGovernancaOperacionalUnidade governancaOperacional,
     ITrocaProfessorTurmaRepositorio repositorio,
     TimeProvider timeProvider) : ITrocaProfessorTurmaServico
 {
@@ -116,12 +114,9 @@ public sealed class TrocaProfessorTurmaServico(
         var contexto = await unidadeContextoConsulta.ObterAtivaAsync(
             unidadeId, cancellationToken);
         if (contexto is null) return null;
-        var autorizado = await acessoUsuarioConsulta.PossuiPerfilNaUnidadeAsync(
-                usuarioId, contexto.OrganizacaoId, unidadeId,
-                PerfilAcesso.AdministradorUnidade, cancellationToken)
-            || await acessoUsuarioConsulta.EhAdministradorRedeNaOrganizacaoAsync(
-                usuarioId, contexto.OrganizacaoId, cancellationToken);
-        return autorizado ? contexto.OrganizacaoId : null;
+        var governanca = await governancaOperacional.ObterAsync(
+            usuarioId, contexto.OrganizacaoId, unidadeId, cancellationToken);
+        return governanca.PodeGerenciarTurmas ? contexto.OrganizacaoId : null;
     }
 
     private static DateOnly? MenorData(TrocaProfessorTurmaResumo turma) =>

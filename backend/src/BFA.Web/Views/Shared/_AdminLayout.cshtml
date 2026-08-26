@@ -35,6 +35,12 @@
             </a>
 
             <div class="bfa-admin-header__actions">
+                @if (!string.IsNullOrWhiteSpace(shell.RetornoContextoUrl))
+                {
+                    <a class="bfa-admin-context-switch bfa-admin-context-switch--desktop"
+                       href="@shell.RetornoContextoUrl">@shell.RetornoContextoTexto</a>
+                }
+
                 @if (!string.IsNullOrWhiteSpace(shell.TrocarContextoUrl))
                 {
                     <a class="bfa-admin-context-switch bfa-admin-context-switch--desktop"
@@ -106,6 +112,19 @@
             <nav class="bfa-admin-nav bfa-admin-drawer__nav" aria-label="@shell.NavegacaoAriaLabel no mobile">
                 @await Html.PartialAsync(shell.NavegacaoPartial)
             </nav>
+
+            @if (!string.IsNullOrWhiteSpace(shell.RetornoContextoUrl))
+            {
+                <div class="bfa-admin-drawer__context-switch">
+                    <a class="bfa-admin-nav-link" href="@shell.RetornoContextoUrl">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="m15 18-6-6 6-6"></path>
+                            <path d="M9 12h10"></path>
+                        </svg>
+                        <span>@shell.RetornoContextoTexto</span>
+                    </a>
+                </div>
+            }
 
             @if (!string.IsNullOrWhiteSpace(shell.TrocarContextoUrl))
             {

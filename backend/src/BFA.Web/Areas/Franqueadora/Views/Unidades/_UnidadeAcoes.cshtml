@@ -1,6 +1,20 @@
 @model UnidadeFranqueadoraItemViewModel
 
 <div class="bfa-admin-actions">
+    @if (Model.Ativa)
+    {
+        <a class="bfa-admin-icon-action"
+           href="/unidade/@Model.Id"
+           aria-label="Entrar na unidade @Model.Nome"
+           title="Entrar na unidade @Model.Nome">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M3 11 12 4l9 7"></path>
+                <path d="M5 10v10h14V10"></path>
+                <path d="M9 20v-6h6v6"></path>
+            </svg>
+        </a>
+    }
+
     <a class="bfa-admin-icon-action"
        href="/franqueadora/unidades/@Model.Id/acessos"
        aria-label="Gerenciar acessos da unidade @Model.Nome"

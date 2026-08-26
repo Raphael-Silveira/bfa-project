@@ -93,6 +93,10 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
         services.AddScoped<IUnidadeContextoConsulta>(serviceProvider =>
             serviceProvider.GetRequiredService<UnidadesUsuarioConsulta>());
+        services.AddScoped<IEstadoOperacionalUnidadeConsulta,
+            EstadoOperacionalUnidadeConsulta>();
+        services.AddScoped<IGovernancaOperacionalUnidade,
+            GovernancaOperacionalUnidadeServico>();
         services.AddScoped<IContratoUnidadeConsulta, ContratoUnidadeConsulta>();
         services.AddScoped<IProfessoresUnidadeRepositorio, ProfessoresUnidadeRepositorio>();
         services.AddScoped<IAcessoProfessorRepositorio, AcessoProfessorRepositorio>();

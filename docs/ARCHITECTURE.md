@@ -574,7 +574,7 @@ The authorization matrix for the initial Unit management use cases is:
 
 | Actor | Class and schedule scope |
 |---|---|
-| `AdministradorRede` | Manages classes in any authorized Unit of the current Organization. |
+| `AdministradorRede` | Manages classes while the Unit has no active `FranqueadoUnidade`; after franchising, retains read-only operational visibility. |
 | `AdministradorUnidade` | Manages classes only in Units covered by active access links. |
 | `Professor` | Read-only access to classes assigned to their active professional relationship in the selected Unit. |
 
@@ -588,6 +588,15 @@ the V009 trigger remains the concurrency-safe final barrier. Changing the respon
 Professor, closing or replacing historical schedules, and inactivating a class remain separate
 future use cases.
 
+Operational governance for classes is centralized in `IGovernancaOperacionalUnidade` and uses
+the active `FranqueadoUnidade` relationship as its source of truth. A network administrator may
+enter an active Unit in the same Organization without a synthetic Unit-administrator link. In a
+pre-franchise Unit, that network administrator may create and edit classes, replace recurring
+schedules, and change the responsible Professor. Once an active franchise relationship exists,
+the same network access becomes read-only for those operations, while an authorized
+`AdministradorUnidade` remains responsible for local management. Both rendered actions and
+state-changing use cases consume this rule; hiding a button is never the authorization barrier.
+
 The Professor Area exposes the read-only list at
 `GET /professor/unidade/{unidadeId}/turmas` and its detail at
 `GET /professor/unidade/{unidadeId}/turmas/{turmaId}`. Resolution starts from the authenticated
@@ -599,7 +608,8 @@ scope. Current and historical schedules are also filtered by the immutable
 after a class changes Professor. This area does not create classes or alter their identity,
 responsible Professor, name, capacity, or active state.
 
-Recurring-program adjustments are restricted to authorized Unit administrators through
+Recurring-program adjustments are restricted to actors authorized by the centralized Unit
+operational governance through
 `GET/POST /unidade/{unidadeId}/turmas/{turmaId}/horarios`. The Professor Area remains
 read-only and exposes no equivalent adjustment route or action. Application resolves the
 administrator's tenant and exact Unit context before loading the class. The operation

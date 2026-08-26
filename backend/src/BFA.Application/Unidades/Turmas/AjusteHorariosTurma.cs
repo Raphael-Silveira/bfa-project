@@ -80,6 +80,7 @@ public sealed class AjusteHorariosTurmaServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
+    IGovernancaOperacionalUnidade governancaOperacional,
     IMinhasTurmasProfessorRepositorio minhasTurmasRepositorio,
     IAjusteHorariosTurmaRepositorio repositorio,
     TimeProvider timeProvider) : IAjusteHorariosTurmaServico
@@ -196,12 +197,9 @@ public sealed class AjusteHorariosTurmaServico(
         var contexto = await unidadeContextoConsulta.ObterAtivaAsync(
             unidadeId, cancellationToken);
         if (contexto is null) return new(EstadoAjusteHorariosTurma.TurmaNaoEncontrada);
-        var autorizado = await acessoUsuarioConsulta.PossuiPerfilNaUnidadeAsync(
-                usuarioId, contexto.OrganizacaoId, unidadeId,
-                PerfilAcesso.AdministradorUnidade, cancellationToken)
-            || await acessoUsuarioConsulta.EhAdministradorRedeNaOrganizacaoAsync(
-                usuarioId, contexto.OrganizacaoId, cancellationToken);
-        return autorizado
+        var governanca = await governancaOperacional.ObterAsync(
+            usuarioId, contexto.OrganizacaoId, unidadeId, cancellationToken);
+        return governanca.PodeGerenciarTurmas
             ? new(EstadoAjusteHorariosTurma.Sucesso, contexto.OrganizacaoId)
             : new(EstadoAjusteHorariosTurma.SemAcesso);
     }

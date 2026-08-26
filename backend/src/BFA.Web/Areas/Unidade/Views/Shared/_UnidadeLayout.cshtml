@@ -2,6 +2,8 @@
 @model IUnidadeContextoViewModel
 @{
     Layout = "/Views/Shared/_AdminLayout.cshtml";
+    var governanca = ViewData[GovernancaOperacionalUnidadeViewData.Chave]
+        as GovernancaOperacionalUnidadeViewModel;
     ViewData[AdminShellViewData.Chave] = new AdminShellViewModel
     {
         AreaNome = "Unidade",
@@ -13,8 +15,23 @@
         MenuDescricao = "menu administrativo",
         NavegacaoPartial = "/Areas/Unidade/Views/Shared/_UnidadeNavLinks.cshtml",
         TrocarContextoUrl = Model.PodeTrocarUnidade ? "/selecionar-unidade" : null,
-        TrocarContextoTexto = Model.PodeTrocarUnidade ? "Trocar unidade" : null
+        TrocarContextoTexto = Model.PodeTrocarUnidade ? "Trocar unidade" : null,
+        RetornoContextoUrl = governanca?.EhAdministradorRede == true
+            ? "/franqueadora"
+            : null,
+        RetornoContextoTexto = governanca?.EhAdministradorRede == true
+            ? "Voltar à rede"
+            : null
     };
+}
+
+@if (governanca?.EhAdministradorRede == true)
+{
+    <p class="bfa-unidade-operation-context" role="status">
+        @(governanca.PossuiFranqueadoAtivo
+            ? "Unidade com operação sob responsabilidade do franqueado"
+            : "Operação administrada pela Rede")
+    </p>
 }
 
 @RenderBody()

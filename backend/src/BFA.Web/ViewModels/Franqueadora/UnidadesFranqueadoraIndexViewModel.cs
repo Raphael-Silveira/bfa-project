@@ -10,4 +10,5 @@ public sealed record UnidadeFranqueadoraItemViewModel(
     string Nome,
     string Slug,
     bool Ativa,
-    DateTime CriadoEmUtc);
+    DateTime CriadoEmUtc,
+    bool PossuiFranqueadoAtivo);

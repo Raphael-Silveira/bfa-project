@@ -1,5 +1,3 @@
-using BFA.Application.Acessos;
-using BFA.Domain.Acessos;
 using BFA.Domain.Turmas;
 
 namespace BFA.Application.Unidades.Turmas;
@@ -138,14 +136,15 @@ public interface ITurmasUnidadeServico
 
 public sealed class TurmasUnidadeServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
-    IAcessoUsuarioConsulta acessoUsuarioConsulta,
+    IGovernancaOperacionalUnidade governancaOperacional,
     ITurmasUnidadeRepositorio repositorio,
     TimeProvider timeProvider) : ITurmasUnidadeConsulta, ITurmasUnidadeServico
 {
     public async Task<ResultadoTurmasUnidade<IReadOnlyList<TurmaResumo>>> ListarAsync(
         Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
     {
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
         if (contexto.Estado != EstadoTurmasUnidade.Sucesso) return new(contexto.Estado);
         return new(EstadoTurmasUnidade.Sucesso,
             await repositorio.ListarAsync(
@@ -156,7 +155,8 @@ public sealed class TurmasUnidadeServico(
         ListarProfessoresAtivosAsync(
             Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
     {
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
         if (contexto.Estado != EstadoTurmasUnidade.Sucesso) return new(contexto.Estado);
         return new(EstadoTurmasUnidade.Sucesso,
             await repositorio.ListarProfessoresAtivosAsync(
@@ -167,7 +167,8 @@ public sealed class TurmasUnidadeServico(
         Guid usuarioId, Guid unidadeId, Guid turmaId,
         CancellationToken cancellationToken)
     {
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
         if (contexto.Estado != EstadoTurmasUnidade.Sucesso) return new(contexto.Estado);
         var turma = await repositorio.ObterEdicaoAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, turmaId, cancellationToken);
@@ -181,7 +182,8 @@ public sealed class TurmasUnidadeServico(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(solicitacao);
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
         if (contexto.Estado != EstadoTurmasUnidade.Sucesso) return new(contexto.Estado);
         if (solicitacao.Horarios is null || solicitacao.Horarios.Count == 0)
             return new(EstadoTurmasUnidade.SemHorarios);
@@ -253,7 +255,8 @@ public sealed class TurmasUnidadeServico(
         AtualizarTurmaSolicitacao solicitacao, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(solicitacao);
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
         if (contexto.Estado != EstadoTurmasUnidade.Sucesso) return new(contexto.Estado);
         var estado = await repositorio.AtualizarAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, turmaId,
@@ -271,16 +274,16 @@ public sealed class TurmasUnidadeServico(
     }
 
     private async Task<ResultadoTurmasUnidade<UnidadeContextoResumo>> ObterContextoAsync(
-        Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
+        Guid usuarioId, Guid unidadeId, bool exigirGerenciamento,
+        CancellationToken cancellationToken)
     {
         var contexto = await unidadeContextoConsulta.ObterAtivaAsync(unidadeId, cancellationToken);
         if (contexto is null) return new(EstadoTurmasUnidade.UnidadeNaoEncontrada);
-        var administradorUnidade = await acessoUsuarioConsulta.PossuiPerfilNaUnidadeAsync(
-            usuarioId, contexto.OrganizacaoId, unidadeId,
-            PerfilAcesso.AdministradorUnidade, cancellationToken);
-        var autorizado = administradorUnidade ||
-            await acessoUsuarioConsulta.EhAdministradorRedeNaOrganizacaoAsync(
-                usuarioId, contexto.OrganizacaoId, cancellationToken);
+        var governanca = await governancaOperacional.ObterAsync(
+            usuarioId, contexto.OrganizacaoId, unidadeId, cancellationToken);
+        var autorizado = exigirGerenciamento
+            ? governanca.PodeGerenciarTurmas
+            : governanca.PodeAcessar;
         return autorizado
             ? new(EstadoTurmasUnidade.Sucesso, contexto)
             : new(EstadoTurmasUnidade.SemAcesso);

@@ -63,6 +63,155 @@ public sealed partial class AreaUnidadeEndpointTests
     }
 
     [Fact]
+    public async Task Administrador_rede_edita_turma_antes_da_franquia()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(
+            application, "BFA", $"bfa-edicao-rede-{Guid.NewGuid():N}");
+        var unidade = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Pré-franquia");
+        await AdicionarVinculoAsync(application, application.UsuarioStore.Usuario.Id,
+            organizacao.Id, null, PerfilAcesso.AdministradorRede);
+        var professor = await AdicionarProfessorTurmaAsync(
+            application, organizacao.Id, unidade.Id, "Professor da Rede");
+        await AdicionarTurmaHorarioAsync(application, organizacao.Id, unidade.Id,
+            professor.Vinculo.Id, "Turma original", new TimeOnly(19, 0), new TimeOnly(20, 0));
+        Guid turmaId;
+        await using (var scope = application.Services.CreateAsyncScope())
+        {
+            turmaId = await scope.ServiceProvider.GetRequiredService<BfaDbContext>()
+                .Turmas.Select(item => item.Id).SingleAsync();
+        }
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+        var pagina = await client.GetStringAsync(
+            $"/unidade/{unidade.Id:D}/turmas/{turmaId:D}/editar");
+
+        using var response = await client.PostAsync(
+            $"/unidade/{unidade.Id:D}/turmas/{turmaId:D}/editar",
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ObterAntiforgery(pagina),
+                ["Nome"] = "Turma preparada",
+                ["Capacidade"] = "16"
+            }));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        await using var verificacao = application.Services.CreateAsyncScope();
+        var turma = await verificacao.ServiceProvider.GetRequiredService<BfaDbContext>()
+            .Turmas.SingleAsync();
+        Assert.Equal("Turma preparada", turma.Nome);
+        Assert.Equal(16, turma.Capacidade);
+    }
+
+    [Fact]
+    public async Task Administrador_rede_em_unidade_franqueada_consulta_sem_acoes_e_nao_altera_turmas()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(
+            application, "BFA", $"bfa-governanca-{Guid.NewGuid():N}");
+        var unidade = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Franqueada");
+        await AdicionarVinculoAsync(application, application.UsuarioStore.Usuario.Id,
+            organizacao.Id, null, PerfilAcesso.AdministradorRede);
+        var professorAtual = await AdicionarProfessorTurmaAsync(
+            application, organizacao.Id, unidade.Id, "Professor atual");
+        var professorNovo = await AdicionarProfessorTurmaAsync(
+            application, organizacao.Id, unidade.Id, "Professor novo");
+        await AdicionarTurmaHorarioAsync(application, organizacao.Id, unidade.Id,
+            professorAtual.Vinculo.Id, "Turma protegida", new TimeOnly(19, 0),
+            new TimeOnly(20, 0));
+        _ = await AdicionarContratoAtivoAsync(application, organizacao.Id, unidade.Id);
+
+        Guid turmaId;
+        await using (var scope = application.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+            turmaId = await db.Turmas.Select(item => item.Id).SingleAsync();
+        }
+
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+        var pagina = WebUtility.HtmlDecode(await client.GetStringAsync(
+            $"/unidade/{unidade.Id:D}/turmas"));
+        var token = ObterAntiforgery(pagina);
+
+        Assert.Contains("Turma protegida", pagina, StringComparison.Ordinal);
+        Assert.Contains("Unidade com operação sob responsabilidade do franqueado", pagina,
+            StringComparison.Ordinal);
+        Assert.Contains("Somente leitura", pagina, StringComparison.Ordinal);
+        Assert.DoesNotContain("Nova turma", pagina, StringComparison.Ordinal);
+        Assert.DoesNotContain("Ajustar horários", pagina, StringComparison.Ordinal);
+        Assert.DoesNotContain("Trocar professor", pagina, StringComparison.Ordinal);
+        Assert.Contains("Voltar à rede", pagina, StringComparison.Ordinal);
+
+        using var criar = await client.PostAsync($"/unidade/{unidade.Id:D}/turmas/nova",
+            FormTurma(token, professorAtual.Vinculo.Id, 12,
+                [(DiaSemana.Segunda, "20:00", "21:00", "01/09/2026")]));
+        using var editar = await client.PostAsync(
+            $"/unidade/{unidade.Id:D}/turmas/{turmaId:D}/editar",
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = token,
+                ["Nome"] = "Alteração indevida",
+                ["Capacidade"] = "20"
+            }));
+        using var horarios = await client.PostAsync(
+            $"/unidade/{unidade.Id:D}/turmas/{turmaId:D}/horarios",
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = token,
+                ["NovaVigenciaInicioTexto"] = "01/09/2026",
+                ["Horarios[0].DiaSemana"] = ((short)DiaSemana.Segunda).ToString(),
+                ["Horarios[0].HoraInicio"] = "20:00",
+                ["Horarios[0].HoraFim"] = "21:00"
+            }));
+        using var trocar = await client.PostAsync(
+            $"/unidade/{unidade.Id:D}/turmas/{turmaId:D}/professor",
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = token,
+                ["NovoProfessorUnidadeId"] = professorNovo.Vinculo.Id.ToString(),
+                ["DataTrocaTexto"] = "01/09/2026"
+            }));
+
+        AssertAcessoNegado(criar);
+        AssertAcessoNegado(editar);
+        AssertAcessoNegado(horarios);
+        AssertAcessoNegado(trocar);
+        await using var verificacao = application.Services.CreateAsyncScope();
+        var contexto = verificacao.ServiceProvider.GetRequiredService<BfaDbContext>();
+        var turma = await contexto.Turmas.SingleAsync();
+        Assert.Equal("Turma protegida", turma.Nome);
+        Assert.Equal(professorAtual.Vinculo.Id, turma.ProfessorUnidadeId);
+        Assert.Single(await contexto.TurmasHorarios.ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task Administrador_unidade_continua_gerenciando_turma_em_unidade_franqueada()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(
+            application, "BFA", $"bfa-admin-local-{Guid.NewGuid():N}");
+        var unidade = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Local");
+        await AdicionarVinculoAsync(application, application.UsuarioStore.Usuario.Id,
+            organizacao.Id, unidade.Id, PerfilAcesso.AdministradorUnidade);
+        var professor = await AdicionarProfessorTurmaAsync(
+            application, organizacao.Id, unidade.Id, "Professor local");
+        _ = await AdicionarContratoAtivoAsync(application, organizacao.Id, unidade.Id);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+        var pagina = await client.GetStringAsync($"/unidade/{unidade.Id:D}/turmas/nova");
+
+        using var response = await client.PostAsync($"/unidade/{unidade.Id:D}/turmas/nova",
+            FormTurma(ObterAntiforgery(pagina), professor.Vinculo.Id, 12,
+                [(DiaSemana.Segunda, "19:00", "20:00", "01/09/2026")]));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        await using var scope = application.Services.CreateAsyncScope();
+        Assert.Single(await scope.ServiceProvider.GetRequiredService<BfaDbContext>()
+            .Turmas.ToArrayAsync());
+    }
+
+    [Fact]
     public async Task Criacao_com_varios_horarios_e_edicao_preservam_historico()
     {
         using var application = new AreaUnidadeWebApplicationFactory();

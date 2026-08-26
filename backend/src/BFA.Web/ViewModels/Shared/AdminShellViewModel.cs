@@ -21,6 +21,10 @@ public sealed class AdminShellViewModel
     public string? TrocarContextoUrl { get; init; }
 
     public string? TrocarContextoTexto { get; init; }
+
+    public string? RetornoContextoUrl { get; init; }
+
+    public string? RetornoContextoTexto { get; init; }
 }
 
 public static class AdminShellViewData

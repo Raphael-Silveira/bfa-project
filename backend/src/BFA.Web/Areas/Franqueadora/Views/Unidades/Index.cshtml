@@ -58,6 +58,9 @@ else
                             <span class="bfa-admin-badge @(unidade.Ativa ? "is-active" : "is-inactive")">
                                 @(unidade.Ativa ? "Ativa" : "Inativa")
                             </span>
+                            <span class="bfa-admin-badge @(unidade.PossuiFranqueadoAtivo ? "is-active" : "is-inactive")">
+                                @(unidade.PossuiFranqueadoAtivo ? "Franqueada" : "Rede")
+                            </span>
                         </td>
                         <td>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</td>
                         <td>
@@ -91,6 +94,10 @@ else
                     <div>
                         <dt>Data de criação</dt>
                         <dd>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</dd>
+                    </div>
+                    <div>
+                        <dt>Situação da operação</dt>
+                        <dd>@(unidade.PossuiFranqueadoAtivo ? "Franqueada" : "Rede")</dd>
                     </div>
                 </dl>
 

@@ -14,6 +14,7 @@ namespace BFA.Web.Areas.Unidade.Controllers;
 
 [Area("Unidade")]
 [Authorize]
+[ServiceFilter(typeof(GovernancaOperacionalUnidadeResultFilter))]
 [Route("unidade/{unidadeId:guid}/professores")]
 public sealed class ProfessoresController(
     IUsuarioAtual usuarioAtual,

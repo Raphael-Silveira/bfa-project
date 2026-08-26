@@ -56,6 +56,7 @@ public static class AuthorizationDependencyInjection
         services.AddScoped<IAuthorizationHandler, PerfilAcessoHandler>();
         services.AddScoped<IAuthorizationHandler, AcessoUnidadeHandler>();
         services.AddScoped<IAuthorizationHandler, AcessoUnidadePorPerfilHandler>();
+        services.AddScoped<GovernancaOperacionalUnidadeResultFilter>();
 
         return services;
     }
