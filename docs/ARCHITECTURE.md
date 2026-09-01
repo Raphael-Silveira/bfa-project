@@ -632,6 +632,54 @@ The manually reviewed `V009__criar_turmas_e_horarios.sql` defines only `turmas` 
 `professores_unidades`. It is deployed manually and is never executed by EF Core or application
 startup.
 
+### Student plans and commercial versions
+
+The commercial plan catalog separates the stable identity of an offer from its versioned terms:
+
+```text
+Plano
+└── PlanoVersao
+```
+
+`Plano` belongs to an Organization and may be network-wide (`UnidadeId = null`) or exclusive to
+one Unit. Its scope and name are immutable after creation; only its active state and update audit
+may change. A plan name is not globally unique because commercial governance may intentionally
+reuse a name in different scopes or periods.
+
+`PlanoVersao` preserves the commercial conditions offered in a period: sequential version,
+duration in months, weekly frequency, monthly price, optional enrollment fee, and validity. Its
+commercial fields and creation audit are immutable. An open version may receive `VigenciaFim`
+once, but that value cannot later be changed or cleared. A partial unique index permits only one
+open version per plan. A PostgreSQL trigger locks the parent plan with `FOR UPDATE` and rejects
+inclusive date-range overlaps, providing concurrency-safe protection in addition to Application
+validation.
+
+All relationships use Organization-aware foreign keys, including an optional tenant-safe Unit
+scope. Plans do not yet create enrollment, billing, payment, class, or student records. A future
+`Matricula` will carry a tenant-safe `PlanoVersaoId` reference to the exact version contracted so
+later commercial versions cannot reinterpret historical conditions. Individual discounts, fee
+waivers, negotiated prices, and contract dates will belong to that future enrollment rather than
+mutating the plan version. Weekly frequency is a commercial allowance and does not assign a
+student to a class or recurring schedule.
+
+Plan management is exposed through `/franqueadora/planos` for the network catalog and
+`/unidade/{unidadeId}/planos` for the Unit-local catalog. Both flows share the same Application
+service and persistence rules: creation writes the stable `Plano` and version 1 atomically;
+commercial changes close the open version and create the next sequential version in one
+transaction; and inactivation never deletes or rewrites history.
+
+Plan governance follows the operational ownership of the Unit without reusing the
+`PodeGerenciarTurmas` capability as a generic permission. `AdministradorRede` manages network
+plans independently of whether a Unit has an active franchisee; `AdministradorUnidade` does not
+administer network plans; and Professor never administers plans. For a local plan,
+`AdministradorRede` may manage it while the Unit has no active franchisee and becomes read-only
+when an active franchisee exists. An authorized `AdministradorUnidade` manages the local plan.
+The centralized governance contract exposes the explicit `PodeGerenciarPlanoLocal` decision.
+Availability and sale eligibility remain future Application use cases.
+
+The manually reviewed `V010__criar_planos.sql` defines only `planos` and `planos_versoes`. It is
+deployed manually and is never executed by EF Core or application startup.
+
 ### Versioned franchise contracts and private documents
 
 The contractual aggregate begins from the commercial relationship and preserves every
@@ -784,7 +832,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, `DocumentosContratoFranquia`, `Professores`, `ProfessoresUnidades`, `ProfessoresRemuneracoes`, `Turmas`, and `TurmasHorarios`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, `DocumentosContratoFranquia`, `Professores`, `ProfessoresUnidades`, `ProfessoresRemuneracoes`, `Turmas`, `TurmasHorarios`, `Planos`, and `PlanosVersoes`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -841,6 +889,8 @@ V005__adequar_cnpj_alfanumerico.sql
 V006__criar_catalogo_localidades.sql
 V007__criar_contratos_franquia.sql
 V008__criar_professores_e_remuneracoes.sql
+V009__criar_turmas_e_horarios.sql
+V010__criar_planos.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.

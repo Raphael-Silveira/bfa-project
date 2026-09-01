@@ -3,6 +3,146 @@
   box-sizing: border-box;
 }
 
+/* Planos comerciais: composição compartilhada entre Franqueadora e Unidade. */
+.bfa-plan-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-block: 1.25rem;
+}
+
+.bfa-plan-filters .is-selected {
+  border-color: var(--bfa-gold);
+  color: var(--bfa-gold);
+}
+
+.bfa-plan-card header,
+.bfa-plan-current > header,
+.bfa-plan-section-heading,
+.bfa-plan-history article > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-plan-card header p,
+.bfa-plan-current header p,
+.bfa-plan-section-heading p {
+  color: var(--bfa-gold);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  margin: 0 0 .35rem;
+  text-transform: uppercase;
+}
+
+.bfa-plan-card h2,
+.bfa-plan-current h2,
+.bfa-plan-section-heading h2,
+.bfa-plan-history h3 {
+  margin: 0;
+}
+
+.bfa-plan-card dl,
+.bfa-plan-detail-grid,
+.bfa-plan-history article dl {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 1.25rem 0;
+}
+
+.bfa-plan-card dt,
+.bfa-plan-detail-grid dt,
+.bfa-plan-history dt {
+  color: var(--bfa-gray);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.bfa-plan-card dd,
+.bfa-plan-detail-grid dd,
+.bfa-plan-history dd {
+  margin: .25rem 0 0;
+}
+
+.bfa-plan-card footer,
+.bfa-plan-state-action {
+  border-top: 1px solid var(--bfa-admin-border, rgba(255, 255, 255, .16));
+  padding-top: 1rem;
+}
+
+.bfa-plan-form-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bfa-plan-form-wide {
+  grid-column: 1 / -1;
+}
+
+.bfa-plan-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.bfa-plan-choice label {
+  align-items: center;
+  display: inline-flex;
+  gap: .5rem;
+}
+
+.bfa-admin-money-field {
+  align-items: stretch;
+  display: flex;
+}
+
+.bfa-admin-money-field > span {
+  align-items: center;
+  border: 1px solid var(--bfa-admin-border, rgba(255, 255, 255, .24));
+  border-right: 0;
+  border-radius: .5rem 0 0 .5rem;
+  color: var(--bfa-gray);
+  display: flex;
+  padding-inline: .8rem;
+}
+
+.bfa-admin-money-field .bfa-form-control {
+  border-radius: 0 .5rem .5rem 0;
+}
+
+.bfa-plan-history {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.bfa-plan-history article {
+  border: 1px solid var(--bfa-admin-border, rgba(255, 255, 255, .16));
+  border-radius: .75rem;
+  padding: 1rem;
+}
+
+@media (max-width: 767px) {
+  .bfa-plan-form-grid,
+  .bfa-plan-card dl,
+  .bfa-plan-detail-grid,
+  .bfa-plan-history article dl {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-plan-card .bfa-admin-actions,
+  .bfa-plan-card .bfa-admin-actions form,
+  .bfa-plan-card .bfa-admin-actions .bfa-admin-button {
+    width: 100%;
+  }
+}
+
 .bfa-admin {
   min-width: 0;
   min-height: 100vh;

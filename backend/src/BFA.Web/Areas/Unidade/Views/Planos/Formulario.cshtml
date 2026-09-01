@@ -1,0 +1,9 @@
+@model BFA.Web.ViewModels.Planos.PlanoFormViewModel
+@{ ViewData["Title"] = Model.NovaVersao ? "Nova versão" : "Novo plano local"; Layout = "_UnidadeLayout"; }
+<partial name="/Views/Shared/Planos/_Formulario.cshtml" model="Model" />
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-number-field.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-plano-form.js" asp-append-version="true"></script>
+}

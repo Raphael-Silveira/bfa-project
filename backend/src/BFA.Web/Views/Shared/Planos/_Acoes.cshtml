@@ -1,0 +1,12 @@
+@model BFA.Web.ViewModels.Planos.PlanoAcoesViewModel
+<div class="bfa-admin-actions">
+    <a class="bfa-btn-secondary bfa-admin-button" href="@Model.RotaBase/@Model.PlanoId">Detalhes</a>
+    @if (Model.PodeGerenciar)
+    {
+        <a class="bfa-btn-secondary bfa-admin-button" href="@Model.RotaBase/@Model.PlanoId/nova-versao">Nova versão</a>
+        <form action="@Model.RotaBase/@Model.PlanoId/@(Model.Ativo ? "inativar" : "ativar")" method="post">
+            @Html.AntiForgeryToken()
+            <button class="bfa-btn-secondary bfa-admin-button" type="submit">@(Model.Ativo ? "Inativar" : "Reativar")</button>
+        </form>
+    }
+</div>

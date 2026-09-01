@@ -1,0 +1,35 @@
+@using System.Globalization
+@model BFA.Web.ViewModels.Planos.PlanoDetalheViewModel
+@{
+    var cultura = CultureInfo.GetCultureInfo("pt-BR");
+    var atual = Model.Plano.VersaoAtual;
+}
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Plano @(Model.EhLocal ? "local" : "da Rede")</p><h1 class="bfa-admin-page-header__title">@Model.Plano.Nome</h1><p class="bfa-admin-page-header__description">Escopo: @(Model.EhLocal ? Model.NomeUnidade : "Rede")</p></div>
+    <div class="bfa-admin-page-header__actions">@if (Model.PodeGerenciar) { <a class="bfa-btn-primary bfa-admin-button" href="@Model.RotaBase/@Model.Plano.Id/nova-versao">Nova versão</a> }<a class="bfa-btn-secondary bfa-admin-button" href="@Model.RotaBase">Voltar</a></div>
+</header>
+@if (TempData["Sucesso"] is string sucesso) { <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div> }
+@if (TempData["Erro"] is string erro) { <div class="bfa-admin-notice" role="alert"><strong>@erro</strong></div> }
+@if (Model.EhLocal && Model.PossuiFranqueadoAtivo && !Model.PodeGerenciar) { <div class="bfa-admin-notice" role="status">Esta unidade possui franqueado responsável. Este plano está disponível somente para consulta pela Administração da Rede.</div> }
+<div class="bfa-admin-form-sections">
+    <section class="bfa-admin-card bfa-plan-current">
+        <header><div><p>Versão atual</p><h2>@(atual is null ? "Sem versão aberta" : $"Versão {atual.NumeroVersao}")</h2></div><span class="bfa-admin-badge @(Model.Plano.Ativo ? "is-active" : "is-inactive")">@(Model.Plano.Ativo ? "Ativo" : "Inativo")</span></header>
+        @if (atual is not null)
+        {
+            <dl class="bfa-plan-detail-grid"><div><dt>Duração</dt><dd>@atual.DuracaoMeses @(atual.DuracaoMeses == 1 ? "mês" : "meses")</dd></div><div><dt>Frequência</dt><dd>@atual.FrequenciaSemanal× por semana</dd></div><div><dt>Valor mensal</dt><dd>@atual.ValorMensal.ToString("C", cultura)</dd></div><div><dt>Taxa de matrícula</dt><dd>@(atual.CobraMatricula ? atual.ValorMatricula!.Value.ToString("C", cultura) : "Não cobra")</dd></div><div><dt>Vigência</dt><dd>@atual.VigenciaInicio.ToString("dd/MM/yyyy") até atual</dd></div></dl>
+        }
+        @if (Model.PodeGerenciar)
+        {
+            <form class="bfa-plan-state-action" action="@Model.RotaBase/@Model.Plano.Id/@(Model.Plano.Ativo ? "inativar" : "ativar")" method="post">@Html.AntiForgeryToken()<button class="bfa-btn-secondary bfa-admin-button" type="submit">@(Model.Plano.Ativo ? "Inativar plano" : "Reativar plano")</button></form>
+        }
+    </section>
+    <section class="bfa-admin-card">
+        <header class="bfa-plan-section-heading"><div><p>Histórico preservado</p><h2>Histórico comercial</h2></div></header>
+        <div class="bfa-plan-history">
+            @foreach (var versao in Model.Plano.Versoes)
+            {
+                <article><header><h3>Versão @versao.NumeroVersao</h3><span>@versao.VigenciaInicio.ToString("dd/MM/yyyy") até @(versao.VigenciaFim?.ToString("dd/MM/yyyy") ?? "atual")</span></header><dl><div><dt>Duração</dt><dd>@versao.DuracaoMeses meses</dd></div><div><dt>Frequência</dt><dd>@versao.FrequenciaSemanal×/semana</dd></div><div><dt>Valor mensal</dt><dd>@versao.ValorMensal.ToString("C", cultura)</dd></div><div><dt>Taxa de matrícula</dt><dd>@(versao.CobraMatricula ? versao.ValorMatricula!.Value.ToString("C", cultura) : "Não cobra")</dd></div></dl></article>
+            }
+        </div>
+    </section>
+</div>

@@ -3,6 +3,7 @@ using BFA.Domain.Contratos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Localidades;
 using BFA.Domain.Organizacoes;
+using BFA.Domain.Planos;
 using BFA.Domain.Professores;
 using BFA.Domain.Turmas;
 using BFA.Domain.Unidades;
@@ -52,6 +53,10 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
     public DbSet<Turma> Turmas => Set<Turma>();
 
     public DbSet<TurmaHorario> TurmasHorarios => Set<TurmaHorario>();
+
+    public DbSet<Plano> Planos => Set<Plano>();
+
+    public DbSet<PlanoVersao> PlanosVersoes => Set<PlanoVersao>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

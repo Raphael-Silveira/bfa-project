@@ -133,6 +133,22 @@ Cada `Unidade` representa uma operação local da rede e pertence a uma `Organiz
 
 `AdministradorUnidade` possui acesso somente às Unidades indicadas por seus `VinculoAcesso` ativos. Um mesmo usuário pode administrar mais de uma Unidade, desde que cada contexto esteja autorizado.
 
+### 6.1 Planos comerciais dos Alunos
+
+Os planos comerciais destinados aos Alunos possuem identidade estável e condições versionadas.
+Um `Plano` pode ser definido para toda a rede BFA ou exclusivamente para uma Unidade, enquanto
+cada `PlanoVersao` preserva duração, frequência semanal, mensalidade, eventual taxa de matrícula
+e período de vigência.
+
+A frequência semanal representa o direito comercial contratado e não vincula automaticamente o
+Aluno a uma Turma ou horário. A futura Matrícula deverá guardar a versão exata contratada para que
+mudanças posteriores de preço ou condições não alterem o histórico do Aluno.
+
+A Franqueadora poderá governar planos de rede e versões comerciais. A governança local sobre
+planos exclusivos, a disponibilidade para venda e os fluxos de publicação serão definidos em
+casos de uso futuros. Plano, Matrícula e Cobrança permanecem conceitos distintos: a existência de
+um plano não cria matrícula, parcela, cobrança ou pagamento automaticamente.
+
 ## 7. Professor
 
 `Professor` será uma entidade de negócio própria e poderá possuir um `UsuarioIdentity` associado quando precisar acessar o sistema.

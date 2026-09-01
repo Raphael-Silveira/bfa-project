@@ -1,0 +1,95 @@
+@using System.Globalization
+@using BFA.Application.Planos
+@model BFA.Web.ViewModels.Planos.PlanosListaViewModel
+@{
+    var cultura = CultureInfo.GetCultureInfo("pt-BR");
+    var titulo = Model.EhLocal ? "Planos da Unidade" : "Planos da Rede";
+    var descricao = Model.EhLocal
+        ? $"Catálogo comercial exclusivo de {Model.NomeUnidade}."
+        : "Catálogo comercial administrado pela Franqueadora.";
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">@(Model.EhLocal ? "Operação da unidade" : "Rede BFA")</p>
+        <h1 class="bfa-admin-page-header__title">@titulo</h1>
+        <p class="bfa-admin-page-header__description">@descricao</p>
+    </div>
+    @if (Model.PodeGerenciar)
+    {
+        <div class="bfa-admin-page-header__actions">
+            <a class="bfa-btn-primary bfa-admin-button" href="@Model.RotaBase/novo">Novo plano</a>
+        </div>
+    }
+</header>
+
+@if (Model.EhLocal && Model.PossuiFranqueadoAtivo && !Model.PodeGerenciar)
+{
+    <div class="bfa-admin-notice" role="status">
+        Esta unidade possui franqueado responsável. Os Planos locais estão disponíveis para consulta pela Administração da Rede.
+    </div>
+}
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+<nav class="bfa-plan-filters" aria-label="Filtrar planos por status">
+    <a class="bfa-btn-secondary bfa-admin-button @(Model.Filtro == FiltroPlanos.Ativos ? "is-selected" : null)" href="@Model.RotaBase?status=ativos">Ativos</a>
+    <a class="bfa-btn-secondary bfa-admin-button @(Model.Filtro == FiltroPlanos.Inativos ? "is-selected" : null)" href="@Model.RotaBase?status=inativos">Inativos</a>
+    <a class="bfa-btn-secondary bfa-admin-button @(Model.Filtro == FiltroPlanos.Todos ? "is-selected" : null)" href="@Model.RotaBase?status=todos">Todos</a>
+</nav>
+
+@if (Model.Planos.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>@(Model.EhLocal ? "Nenhum plano local cadastrado nesta unidade." : "Nenhum plano da Rede cadastrado.")</h2>
+            <p>@(Model.PodeGerenciar ? "Cadastre o primeiro plano e suas condições comerciais." : "Não há planos disponíveis para este filtro.")</p>
+            @if (Model.PodeGerenciar)
+            {
+                <a class="bfa-btn-primary bfa-admin-button" href="@Model.RotaBase/novo">Criar primeiro plano</a>
+            }
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table">
+            <thead><tr><th>Plano</th><th>Condições atuais</th><th>Taxa de matrícula</th><th>Vigência</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+            @foreach (var plano in Model.Planos)
+            {
+                var versao = plano.VersaoAtual;
+                <tr>
+                    <td><strong>@plano.Nome</strong></td>
+                    <td>@if (versao is null) { <span>Sem versão aberta</span> } else { <span>@versao.DuracaoMeses @(versao.DuracaoMeses == 1 ? "mês" : "meses") · @versao.FrequenciaSemanal× por semana<br />@versao.ValorMensal.ToString("C", cultura)/mês</span> }</td>
+                    <td>@(versao?.CobraMatricula == true ? versao.ValorMatricula!.Value.ToString("C", cultura) : "Não cobra")</td>
+                    <td>@(versao is null ? "—" : $"Desde {versao.VigenciaInicio:dd/MM/yyyy}")</td>
+                    <td><span class="bfa-admin-badge @(plano.Ativo ? "is-active" : "is-inactive")">@(plano.Ativo ? "Ativo" : "Inativo")</span></td>
+                    <td><partial name="/Views/Shared/Planos/_Acoes.cshtml" model="@(new BFA.Web.ViewModels.Planos.PlanoAcoesViewModel(plano.Id, plano.Ativo, Model.PodeGerenciar, Model.RotaBase))" /></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <section class="bfa-admin-mobile-list" aria-label="@titulo">
+        @foreach (var plano in Model.Planos)
+        {
+            var versao = plano.VersaoAtual;
+            <article class="bfa-admin-card bfa-plan-card">
+                <header><div><p>Plano</p><h2>@plano.Nome</h2></div><span class="bfa-admin-badge @(plano.Ativo ? "is-active" : "is-inactive")">@(plano.Ativo ? "Ativo" : "Inativo")</span></header>
+                <dl>
+                    <div><dt>Duração</dt><dd>@(versao is null ? "—" : $"{versao.DuracaoMeses} {(versao.DuracaoMeses == 1 ? "mês" : "meses")}")</dd></div>
+                    <div><dt>Frequência</dt><dd>@(versao is null ? "—" : $"{versao.FrequenciaSemanal}× por semana")</dd></div>
+                    <div><dt>Valor mensal</dt><dd>@(versao is null ? "—" : versao.ValorMensal.ToString("C", cultura))</dd></div>
+                    <div><dt>Taxa de matrícula</dt><dd>@(versao?.CobraMatricula == true ? versao.ValorMatricula!.Value.ToString("C", cultura) : "Não cobra")</dd></div>
+                    <div><dt>Vigência atual</dt><dd>@(versao is null ? "Sem versão aberta" : $"Desde {versao.VigenciaInicio:dd/MM/yyyy}")</dd></div>
+                </dl>
+                <footer><partial name="/Views/Shared/Planos/_Acoes.cshtml" model="@(new BFA.Web.ViewModels.Planos.PlanoAcoesViewModel(plano.Id, plano.Ativo, Model.PodeGerenciar, Model.RotaBase))" /></footer>
+            </article>
+        }
+    </section>
+}

@@ -36,7 +36,8 @@ public sealed class GovernancaOperacionalUnidadeResultFilter(
                         new GovernancaOperacionalUnidadeViewModel(
                             governanca.EhAdministradorRede,
                             governanca.PossuiFranqueadoAtivo,
-                            governanca.PodeGerenciarTurmas);
+                            governanca.PodeGerenciarTurmas,
+                            governanca.PodeGerenciarPlanoLocal);
                 }
             }
         }
