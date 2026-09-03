@@ -247,12 +247,17 @@ public sealed class TurmasController(
                     $"A troca deve ocorrer em {resultado.MenorDataTroca:dd/MM/yyyy} ou depois.",
                 EstadoTrocaProfessorTurma.ConflitoHorario =>
                     "O novo professor já possui outra turma nesse horário.",
+                EstadoTrocaProfessorTurma.MigracaoGradeInvalida =>
+                    "Não foi possível migrar a Grade dos alunos. Nenhuma alteração foi realizada.",
                 _ => "Não foi possível trocar o professor. Tente novamente."
             };
             ModelState.AddModelError(string.Empty, mensagem);
             return View(model);
         }
-        TempData["Sucesso"] = "Professor responsável alterado com sucesso.";
+        TempData["Sucesso"] = resultado.GradesMigradas == 0
+            ? "Professor responsável alterado com sucesso."
+            : $"Professor alterado com sucesso. {resultado.HorariosMigrados} horário(s) e "
+                + $"{resultado.GradesMigradas} alocação(ões) de Grade migrados.";
         return Redirect($"/unidade/{unidadeId:D}/turmas");
     }
 
@@ -380,6 +385,8 @@ public sealed class TurmasController(
                 + $"{resultado.MenorVigenciaPermitida:dd/MM/yyyy} ou depois.",
             EstadoAjusteHorariosTurma.ConflitoHorario =>
                 MensagemConflito(resultado.Conflito, null),
+            EstadoAjusteHorariosTurma.ExisteGradeAfetada =>
+                "Este horário possui alunos alocados. Ajuste a Grade dos alunos antes de alterá-lo ou removê-lo.",
             EstadoAjusteHorariosTurma.SemHorarios =>
                 "Adicione pelo menos um horário à nova programação.",
             _ => "Não foi possível ajustar os horários. Revise os dados e tente novamente."

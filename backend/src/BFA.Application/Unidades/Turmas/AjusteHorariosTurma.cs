@@ -28,6 +28,7 @@ public enum EstadoAjusteHorariosTurma
     SemHorarios,
     DadosInvalidos,
     VigenciaInvalida,
+    ExisteGradeAfetada,
     ConflitoHorario,
     Falha
 }

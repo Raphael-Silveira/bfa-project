@@ -1,4 +1,5 @@
 using BFA.Application.Unidades.Turmas;
+using BFA.Domain.Matriculas;
 using BFA.Domain.Turmas;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -62,7 +63,7 @@ public sealed class TrocaProfessorTurmaRepositorio(
             turma.NomeProfessorAtual, horarios, professores);
     }
 
-    public async Task<EstadoTrocaProfessorTurma> TrocarAsync(
+    public async Task<ResultadoPersistenciaTrocaProfessor> TrocarAsync(
         Guid organizacaoId, Guid unidadeId, Guid turmaId,
         Guid novoProfessorUnidadeId, DateOnly dataTroca,
         Guid usuarioId, DateTime atualizadoEmUtc,
@@ -75,9 +76,9 @@ public sealed class TrocaProfessorTurmaRepositorio(
             var turma = await dbContext.Turmas.SingleOrDefaultAsync(item =>
                 item.Id == turmaId && item.OrganizacaoId == organizacaoId
                 && item.UnidadeId == unidadeId && item.Ativo, cancellationToken);
-            if (turma is null) return EstadoTrocaProfessorTurma.TurmaNaoEncontrada;
+            if (turma is null) return new(EstadoTrocaProfessorTurma.TurmaNaoEncontrada);
             if (turma.ProfessorUnidadeId == novoProfessorUnidadeId)
-                return EstadoTrocaProfessorTurma.MesmoProfessor;
+                return new(EstadoTrocaProfessorTurma.MesmoProfessor);
             var novoProfessor = await dbContext.ProfessoresUnidades.AsNoTracking()
                 .Where(item => item.Id == novoProfessorUnidadeId
                     && item.OrganizacaoId == organizacaoId
@@ -88,7 +89,7 @@ public sealed class TrocaProfessorTurmaRepositorio(
                     (vinculo, professor) => vinculo.Id)
                 .SingleOrDefaultAsync(cancellationToken);
             if (novoProfessor == Guid.Empty)
-                return EstadoTrocaProfessorTurma.ProfessorNaoEncontrado;
+                return new(EstadoTrocaProfessorTurma.ProfessorNaoEncontrado);
 
             var atuais = await dbContext.TurmasHorarios
                 .Where(item => item.OrganizacaoId == organizacaoId
@@ -98,20 +99,73 @@ public sealed class TrocaProfessorTurmaRepositorio(
                 .OrderBy(item => item.DiaSemana).ThenBy(item => item.HoraInicio)
                 .ToArrayAsync(cancellationToken);
             if (atuais.Any(item => dataTroca <= item.VigenciaInicio))
-                return EstadoTrocaProfessorTurma.VigenciaInvalida;
+                return new(EstadoTrocaProfessorTurma.VigenciaInvalida);
+
+            var idsHorariosAtuais = atuais.Select(item => item.Id).ToArray();
+            var gradesIniciais = await dbContext.MatriculasHorarios.AsNoTracking()
+                .Where(item => item.OrganizacaoId == organizacaoId
+                    && item.UnidadeId == unidadeId
+                    && idsHorariosAtuais.Contains(item.TurmaHorarioId)
+                    && item.VigenciaFim == null)
+                .OrderBy(item => item.MatriculaId)
+                .ThenBy(item => item.TurmaHorarioId)
+                .ThenBy(item => item.Id)
+                .ToArrayAsync(cancellationToken);
+            var idsMatriculasBloqueadas = gradesIniciais
+                .Select(item => item.MatriculaId).Distinct().ToArray();
+            var idsAlunosBloqueados = await dbContext.Matriculas.AsNoTracking()
+                .Where(item => item.OrganizacaoId == organizacaoId
+                    && item.UnidadeId == unidadeId
+                    && idsMatriculasBloqueadas.Contains(item.Id))
+                .OrderBy(item => item.Id)
+                .Select(item => item.AlunoId)
+                .Distinct()
+                .ToArrayAsync(cancellationToken);
+
+            await GradeLoteLocks.BloquearMatriculasAsync(
+                dbContext, organizacaoId, unidadeId,
+                idsMatriculasBloqueadas, cancellationToken);
+            await GradeLoteLocks.BloquearAlunosAsync(
+                dbContext, organizacaoId,
+                idsAlunosBloqueados, cancellationToken);
+            await GradeLoteLocks.BloquearTurmasHorariosAsync(
+                dbContext, organizacaoId, unidadeId,
+                idsHorariosAtuais, cancellationToken);
+
+            var gradesAbertas = await dbContext.MatriculasHorarios
+                .Where(item => item.OrganizacaoId == organizacaoId
+                    && item.UnidadeId == unidadeId
+                    && idsHorariosAtuais.Contains(item.TurmaHorarioId)
+                    && item.VigenciaFim == null)
+                .OrderBy(item => item.MatriculaId)
+                .ThenBy(item => item.TurmaHorarioId)
+                .ThenBy(item => item.Id)
+                .ToArrayAsync(cancellationToken);
+            if (gradesAbertas.Any(item =>
+                    !idsMatriculasBloqueadas.Contains(item.MatriculaId)))
+            {
+                return new(EstadoTrocaProfessorTurma.MigracaoGradeInvalida);
+            }
+
             foreach (var horario in atuais)
             {
                 var conflito = await ajusteHorariosRepositorio.ObterConflitoAsync(
                     organizacaoId, novoProfessorUnidadeId, turmaId, dataTroca,
                     new(horario.DiaSemana, horario.HoraInicio, horario.HoraFim),
                     cancellationToken);
-                if (conflito is not null) return EstadoTrocaProfessorTurma.ConflitoHorario;
+                if (conflito is not null)
+                    return new(EstadoTrocaProfessorTurma.ConflitoHorario);
             }
+
+            var fim = dataTroca.AddDays(-1);
+            foreach (var grade in gradesAbertas)
+                grade.Encerrar(fim, usuarioId, atualizadoEmUtc);
+            if (gradesAbertas.Length > 0)
+                await dbContext.SaveChangesAsync(cancellationToken);
 
             if (atuais.Length > 0)
             {
-                var fim = dataTroca.AddDays(-1);
-                foreach (var horario in atuais)
+                foreach (var horario in atuais.OrderBy(item => item.Id))
                     horario.Encerrar(fim, usuarioId, atualizadoEmUtc);
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
@@ -122,16 +176,34 @@ public sealed class TrocaProfessorTurmaRepositorio(
 
             if (atuais.Length > 0)
             {
-                var novos = atuais.Select(item => new TurmaHorario(
+                var novos = atuais.OrderBy(item => item.Id).Select(item => new TurmaHorario(
                     Guid.NewGuid(), organizacaoId, unidadeId, turmaId,
                     novoProfessorUnidadeId, item.DiaSemana, item.HoraInicio,
-                    item.HoraFim, dataTroca, null, usuarioId, atualizadoEmUtc));
+                    item.HoraFim, dataTroca, null, usuarioId, atualizadoEmUtc)).ToArray();
                 dbContext.TurmasHorarios.AddRange(novos);
                 await dbContext.SaveChangesAsync(cancellationToken);
+
+                var mapeamento = novos.ToDictionary(IdentidadeMaterial, item => item.Id);
+                var antigosPorId = atuais.ToDictionary(item => item.Id);
+                var novasGrades = gradesAbertas.Select(grade =>
+                {
+                    var horarioAntigo = antigosPorId[grade.TurmaHorarioId];
+                    var novoHorarioId = mapeamento[IdentidadeMaterial(horarioAntigo)];
+                    return new MatriculaHorario(
+                        Guid.NewGuid(), organizacaoId, unidadeId,
+                        grade.MatriculaId, novoHorarioId, dataTroca,
+                        usuarioId, atualizadoEmUtc);
+                }).ToArray();
+                dbContext.MatriculasHorarios.AddRange(novasGrades);
+                if (novasGrades.Length > 0)
+                    await dbContext.SaveChangesAsync(cancellationToken);
             }
 
             await transacao.CommitAsync(cancellationToken);
-            return EstadoTrocaProfessorTurma.Sucesso;
+            return new(
+                EstadoTrocaProfessorTurma.Sucesso,
+                atuais.Length,
+                gradesAbertas.Length);
         }
         catch (DbUpdateException exception) when (
             exception.InnerException is PostgresException postgres
@@ -140,12 +212,28 @@ public sealed class TrocaProfessorTurmaRepositorio(
                 StringComparison.OrdinalIgnoreCase))
         {
             await transacao.RollbackAsync(cancellationToken);
-            return EstadoTrocaProfessorTurma.ConflitoHorario;
+            return new(EstadoTrocaProfessorTurma.ConflitoHorario);
+        }
+        catch (DbUpdateException exception) when (
+            exception.InnerException is PostgresException postgres
+            && postgres.SqlState is PostgresErrorCodes.CheckViolation
+                or PostgresErrorCodes.UniqueViolation)
+        {
+            await transacao.RollbackAsync(cancellationToken);
+            return new(EstadoTrocaProfessorTurma.MigracaoGradeInvalida);
         }
         catch (DbUpdateException)
         {
             await transacao.RollbackAsync(cancellationToken);
-            return EstadoTrocaProfessorTurma.Falha;
+            return new(EstadoTrocaProfessorTurma.Falha);
         }
     }
+
+    private static IdentidadeMaterialHorario IdentidadeMaterial(TurmaHorario horario) =>
+        new(horario.DiaSemana, horario.HoraInicio, horario.HoraFim);
+
+    private sealed record IdentidadeMaterialHorario(
+        DiaSemana DiaSemana,
+        TimeOnly HoraInicio,
+        TimeOnly HoraFim);
 }

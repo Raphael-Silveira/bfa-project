@@ -9,6 +9,7 @@ using BFA.Application.Franqueadora.Unidades;
 using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Identidade;
 using BFA.Application.Localidades;
+using BFA.Application.Matriculas;
 using BFA.Application.Planos;
 using BFA.Application.Professores.Turmas;
 using BFA.Application.Unidades;
@@ -22,6 +23,7 @@ using BFA.Infrastructure.Armazenamento;
 using BFA.Infrastructure.Franqueadora;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Localidades;
+using BFA.Infrastructure.Matriculas;
 using BFA.Infrastructure.Persistence;
 using BFA.Infrastructure.Planos;
 using BFA.Infrastructure.Professores;
@@ -167,6 +169,8 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<ContratosFranquiaServico>());
         services.AddScoped<IPlanosRepositorio, PlanosRepositorio>();
         services.AddScoped<IPlanosServico, PlanosServico>();
+        services.AddScoped<IMatriculasRepositorio, MatriculasRepositorio>();
+        services.AddScoped<IMatriculasServico, MatriculasServico>();
         services.AddHttpClient<IIbgeLocalidadesClient, IbgeLocalidadesClient>(httpClient =>
         {
             const string configurationKey = "Integracoes:Ibge:BaseUrl";

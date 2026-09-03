@@ -724,6 +724,634 @@
     font-size: 0.75rem;
   }
 }
+
+/* Nova matrícula */
+.bfa-matricula-wizard {
+  display: grid;
+  width: 100%;
+  max-width: 76rem;
+  gap: 1.25rem;
+}
+
+.bfa-matricula-stepper {
+  position: sticky;
+  z-index: 5;
+  top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(13, 13, 13, 0.97);
+}
+
+.bfa-matricula-stepper ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  list-style: none;
+}
+
+.bfa-matricula-stepper li {
+  position: relative;
+  min-width: 0;
+}
+
+.bfa-matricula-stepper li:not(:last-child)::after {
+  position: absolute;
+  z-index: -1;
+  top: 1.1rem;
+  right: -50%;
+  left: 50%;
+  height: 1px;
+  background: var(--bfa-border);
+  content: "";
+}
+
+.bfa-matricula-stepper li.is-complete:not(:last-child)::after {
+  background: var(--bfa-accent);
+}
+
+.bfa-matricula-stepper button {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  padding: 0.15rem 0.3rem;
+  justify-items: center;
+  gap: 0.2rem;
+  border: 0;
+  color: var(--bfa-text-muted);
+  background: transparent;
+}
+
+.bfa-matricula-stepper button:not(:disabled) {
+  cursor: pointer;
+}
+
+.bfa-matricula-stepper__number {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid var(--bfa-border);
+  border-radius: 999px;
+  color: var(--bfa-text-primary);
+  background: #141414;
+  font-weight: 900;
+}
+
+.bfa-matricula-stepper .is-current .bfa-matricula-stepper__number {
+  border-color: var(--bfa-accent);
+  outline: 2px solid rgba(251, 201, 0, 0.2);
+}
+
+.bfa-matricula-stepper .is-complete .bfa-matricula-stepper__number {
+  border-color: var(--bfa-accent);
+  color: #111;
+  background: var(--bfa-accent);
+}
+
+.bfa-matricula-stepper__label {
+  overflow: hidden;
+  width: 100%;
+  color: var(--bfa-text-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bfa-matricula-stepper__state {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.bfa-matricula-stepper .is-current .bfa-matricula-stepper__state,
+.bfa-matricula-stepper .is-complete .bfa-matricula-stepper__state {
+  color: var(--bfa-accent);
+}
+
+.bfa-matricula-step {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.bfa-matricula-step__header {
+  display: grid;
+  margin-bottom: 1.5rem;
+  gap: 0.25rem;
+}
+
+.bfa-matricula-step__header > span,
+.bfa-matricula-choice-fieldset > legend,
+.bfa-matricula-existing-guardians > h3,
+.bfa-matricula-schedule-day > h3 {
+  color: var(--bfa-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-matricula-step__header h2,
+.bfa-matricula-step__header p,
+.bfa-matricula-commercial header h3,
+.bfa-matricula-commercial header p {
+  margin: 0;
+}
+
+.bfa-matricula-step__header p,
+.bfa-matricula-commercial header p,
+.bfa-matricula-existing-guardian small,
+.bfa-matricula-existing-guardian span {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-choice-fieldset {
+  min-width: 0;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border: 0;
+}
+
+.bfa-matricula-choice-fieldset > legend {
+  margin-bottom: 0.75rem;
+}
+
+.bfa-matricula-mode-grid,
+.bfa-matricula-plan-grid,
+.bfa-matricula-schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.85rem;
+}
+
+.bfa-matricula-mode-card,
+.bfa-matricula-student-card,
+.bfa-matricula-plan-card,
+.bfa-matricula-schedule-card {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  padding: 1rem;
+  gap: 0.35rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.65rem;
+  background: rgba(10, 10, 10, 0.45);
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+}
+
+.bfa-matricula-mode-card:hover,
+.bfa-matricula-student-card:not(.is-disabled):hover,
+.bfa-matricula-plan-card:hover,
+.bfa-matricula-schedule-card:not(.is-full):not(.is-conflict):not(.is-limit):hover {
+  border-color: rgba(251, 201, 0, 0.65);
+  background: rgba(251, 201, 0, 0.05);
+}
+
+.bfa-matricula-mode-card:has(input:focus-visible),
+.bfa-matricula-student-card:has(input:focus-visible),
+.bfa-matricula-plan-card:has(input:focus-visible),
+.bfa-matricula-schedule-card:has(input:focus-visible) {
+  outline: 3px solid rgba(251, 201, 0, 0.35);
+  outline-offset: 2px;
+}
+
+.bfa-matricula-mode-card.is-selected,
+.bfa-matricula-student-card:has(input:checked),
+.bfa-matricula-plan-card.is-selected,
+.bfa-matricula-schedule-card.is-selected {
+  border-color: var(--bfa-accent);
+  background: rgba(251, 201, 0, 0.08);
+}
+
+.bfa-matricula-mode-card input,
+.bfa-matricula-student-card input,
+.bfa-matricula-plan-card input,
+.bfa-matricula-schedule-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.bfa-matricula-mode-card > span,
+.bfa-matricula-student-card > span {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.bfa-matricula-mode-card strong,
+.bfa-matricula-student-card strong,
+.bfa-matricula-plan-card > strong,
+.bfa-matricula-schedule-card > strong {
+  color: var(--bfa-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.bfa-matricula-mode-card small,
+.bfa-matricula-student-card small,
+.bfa-matricula-plan-card > span,
+.bfa-matricula-schedule-card > span {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-student-card em,
+.bfa-matricula-plan-card em,
+.bfa-matricula-schedule-card em {
+  color: var(--bfa-accent);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.bfa-matricula-student-card.is-disabled,
+.bfa-matricula-schedule-card.is-full,
+.bfa-matricula-schedule-card.is-conflict,
+.bfa-matricula-schedule-card.is-limit {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.bfa-matricula-student-search {
+  max-width: 32rem;
+  margin-bottom: 1rem;
+}
+
+.bfa-matricula-student-list {
+  display: grid;
+  max-height: 22rem;
+  padding-right: 0.25rem;
+  gap: 0.65rem;
+  overflow-y: auto;
+}
+
+.bfa-matricula-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.bfa-matricula-grid-wide {
+  grid-column: 1 / -1;
+}
+
+.bfa-matricula-existing-guardians,
+.bfa-matricula-commercial,
+.bfa-matricula-frequency {
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.65rem;
+  background: rgba(251, 201, 0, 0.04);
+}
+
+.bfa-matricula-existing-guardian {
+  display: flex;
+  padding: 0.85rem 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--bfa-border-subtle);
+}
+
+.bfa-matricula-existing-guardian:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.bfa-matricula-existing-guardian > div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.bfa-matricula-badges,
+.bfa-matricula-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bfa-matricula-guardian-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.bfa-matricula-guardian-card {
+  padding: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.65rem;
+  background: rgba(10, 10, 10, 0.35);
+}
+
+.bfa-matricula-guardian-card > header {
+  display: flex;
+  margin-bottom: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-matricula-guardian-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.bfa-matricula-checkboxes {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bfa-border-subtle);
+}
+
+.bfa-matricula-checkboxes label,
+.bfa-matricula-toggle {
+  display: inline-flex;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.8rem;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.bfa-matricula-checkboxes input,
+.bfa-matricula-toggle input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--bfa-accent);
+}
+
+.bfa-matricula-add-guardian {
+  margin-top: 1rem;
+}
+
+.bfa-matricula-start-date {
+  display: flex;
+  margin-bottom: 1.5rem;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.bfa-matricula-start-date .bfa-form-field {
+  width: min(100%, 22rem);
+}
+
+.bfa-matricula-plan-card__scope {
+  width: fit-content;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  color: var(--bfa-accent) !important;
+  background: rgba(251, 201, 0, 0.1);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bfa-matricula-plan-card > b {
+  margin: 0.25rem 0;
+  color: var(--bfa-text-primary);
+  font-size: 1.2rem;
+}
+
+.bfa-matricula-plan-card > b small {
+  color: var(--bfa-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.bfa-matricula-commercial > header {
+  display: grid;
+  margin-bottom: 1rem;
+  gap: 0.25rem;
+}
+
+.bfa-matricula-money {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.bfa-matricula-money > span {
+  display: grid;
+  min-width: 3rem;
+  place-items: center;
+  border: 1px solid var(--bfa-border);
+  border-right: 0;
+  border-radius: 0.5rem 0 0 0.5rem;
+  color: var(--bfa-text-muted);
+  background: rgba(255, 255, 255, 0.035);
+  font-weight: 800;
+}
+
+.bfa-matricula-money .bfa-form-control {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.bfa-matricula-money input:disabled {
+  opacity: 0.55;
+}
+
+.bfa-matricula-end-date {
+  margin: 1rem 0 0;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-end-date strong {
+  color: var(--bfa-text-primary);
+}
+
+.bfa-matricula-frequency {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.bfa-matricula-frequency > strong {
+  margin-right: auto;
+  color: var(--bfa-text-primary);
+  font-size: 1.05rem;
+}
+
+.bfa-matricula-frequency span {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-frequency b {
+  color: var(--bfa-accent);
+}
+
+.bfa-matricula-schedule-days {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.bfa-matricula-schedule-day > h3 {
+  margin-bottom: 0.65rem;
+}
+
+.bfa-matricula-schedule-card > b {
+  color: var(--bfa-text-primary);
+  font-size: 1.05rem;
+}
+
+.bfa-matricula-schedule-card > span {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.78rem;
+}
+
+.bfa-matricula-schedule-card > span strong {
+  color: var(--bfa-text-primary);
+}
+
+.bfa-matricula-schedule-card > small {
+  margin-top: 0.25rem;
+  color: var(--bfa-text-primary);
+  font-weight: 800;
+}
+
+.bfa-matricula-inline-empty,
+.bfa-matricula-loading {
+  margin: 0.75rem 0;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-client-error {
+  margin: 0;
+}
+
+.bfa-matricula-review {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.bfa-matricula-review > section {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.65rem;
+  background: rgba(10, 10, 10, 0.35);
+}
+
+.bfa-matricula-review > section > header {
+  display: flex;
+  margin-bottom: 0.9rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-matricula-review h3 {
+  margin: 0;
+  color: var(--bfa-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-matricula-review header button {
+  padding: 0;
+  border: 0;
+  color: var(--bfa-accent);
+  background: transparent;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.bfa-matricula-review__item {
+  display: grid;
+  min-width: 0;
+  padding: 0.7rem 0;
+  gap: 0.2rem;
+  border-bottom: 1px solid var(--bfa-border-subtle);
+}
+
+.bfa-matricula-review__item:last-child {
+  border-bottom: 0;
+}
+
+.bfa-matricula-review__item span {
+  color: var(--bfa-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.bfa-matricula-step-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 58rem) {
+  .bfa-matricula-stepper {
+    top: 0.25rem;
+  }
+
+  .bfa-matricula-stepper__state {
+    font-size: 0.58rem;
+  }
+
+  .bfa-matricula-review {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
+  .bfa-matricula-stepper {
+    padding: 0.55rem 0.25rem;
+  }
+
+  .bfa-matricula-stepper button {
+    padding-inline: 0.1rem;
+  }
+
+  .bfa-matricula-stepper__number {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.72rem;
+  }
+
+  .bfa-matricula-stepper__label {
+    font-size: 0.59rem;
+  }
+
+  .bfa-matricula-stepper__state {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .bfa-matricula-form-grid,
+  .bfa-matricula-review {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bfa-matricula-grid-wide {
+    grid-column: auto;
+  }
+
+  .bfa-matricula-existing-guardian,
+  .bfa-matricula-start-date,
+  .bfa-matricula-frequency {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bfa-matricula-badges,
+  .bfa-matricula-checkboxes,
+  .bfa-matricula-step-actions {
+    display: grid;
+    width: 100%;
+  }
+
+  .bfa-matricula-checkboxes label,
+  .bfa-matricula-step-actions .bfa-admin-button,
+  .bfa-matricula-add-guardian {
+    width: 100%;
+  }
+}
 .bfa-turma-current-schedules {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -757,4 +1385,280 @@
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.02em;
+}
+
+.bfa-matricula-filters {
+  display: grid;
+  width: 100%;
+  max-width: 72rem;
+  margin-bottom: 1.25rem;
+  padding: 1.15rem;
+  grid-template-columns: minmax(16rem, 1fr) minmax(11rem, 0.35fr) auto;
+  align-items: end;
+  gap: 1rem;
+  border-top-width: 1px;
+}
+
+.bfa-matricula-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.bfa-matricula-table {
+  min-width: 42rem;
+}
+
+.bfa-matricula-table th:last-child,
+.bfa-matricula-table td:last-child {
+  width: 9.5rem;
+}
+
+.bfa-matricula-primary {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.bfa-matricula-primary strong,
+.bfa-matricula-primary small {
+  overflow-wrap: anywhere;
+}
+
+.bfa-matricula-primary small,
+.bfa-matricula-card header span,
+.bfa-matricula-overview > header span,
+.bfa-matricula-section > header p,
+.bfa-matricula-overview > header p,
+.bfa-matricula-muted {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-card > header,
+.bfa-matricula-overview > header,
+.bfa-matricula-responsavel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bfa-matricula-card > header p,
+.bfa-matricula-section > header p,
+.bfa-matricula-overview > header p {
+  margin: 0 0 0.3rem;
+  color: var(--bfa-accent);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-matricula-card h2,
+.bfa-matricula-overview h2,
+.bfa-matricula-section h2 {
+  margin: 0;
+}
+
+.bfa-matricula-card > header > div,
+.bfa-matricula-responsavel > header > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.bfa-matricula-card dl,
+.bfa-matricula-responsavel dl {
+  display: grid;
+  margin: 1.25rem 0 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.bfa-matricula-card dt,
+.bfa-matricula-detail-grid dt,
+.bfa-matricula-responsavel dt,
+.bfa-matricula-grade-item dt,
+.bfa-matricula-history-item span {
+  color: var(--bfa-text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bfa-matricula-card dd,
+.bfa-matricula-detail-grid dd,
+.bfa-matricula-responsavel dd,
+.bfa-matricula-grade-item dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.bfa-matricula-card > footer {
+  display: flex;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  justify-content: flex-end;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-matricula-detail-sections {
+  display: grid;
+  width: 100%;
+  max-width: 76rem;
+  gap: 1.25rem;
+}
+
+.bfa-matricula-overview,
+.bfa-matricula-section {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.bfa-matricula-overview > header > div,
+.bfa-matricula-section > header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.bfa-matricula-terminal {
+  display: flex;
+  margin-top: 1.25rem;
+  padding: 0.8rem 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.55rem;
+  background: rgba(189, 189, 189, 0.06);
+}
+
+.bfa-matricula-terminal span {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-detail-grid {
+  display: grid;
+  margin: 1.25rem 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 1.15rem;
+}
+
+.bfa-matricula-responsaveis,
+.bfa-matricula-grade-grid {
+  display: grid;
+  margin-top: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+}
+
+.bfa-matricula-responsavel,
+.bfa-matricula-grade-item,
+.bfa-matricula-history-item {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.6rem;
+  background: rgba(13, 13, 13, 0.42);
+}
+
+.bfa-matricula-responsavel > header span {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-matricula-responsavel > footer {
+  display: flex;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-matricula-grade-item > header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.bfa-matricula-grade-item > header strong {
+  color: var(--bfa-text-primary);
+  font-size: 1rem;
+}
+
+.bfa-matricula-grade-item > header span {
+  color: var(--bfa-accent);
+  font-weight: 800;
+}
+
+.bfa-matricula-grade-item dl {
+  display: grid;
+  margin: 1rem 0 0;
+  gap: 0.75rem;
+}
+
+.bfa-matricula-muted {
+  margin: 1rem 0 0;
+}
+
+.bfa-matricula-history-list {
+  display: grid;
+  margin-top: 1.25rem;
+  gap: 0.75rem;
+}
+
+.bfa-matricula-history-item {
+  display: grid;
+  grid-template-columns: 1.15fr 1.25fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.bfa-matricula-history-item > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.3rem;
+}
+
+.bfa-matricula-history-item strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 58rem) {
+  .bfa-matricula-filters {
+    grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.45fr);
+  }
+
+  .bfa-matricula-filter-actions {
+    grid-column: 1 / -1;
+  }
+
+  .bfa-matricula-history-item {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 30rem) {
+  .bfa-matricula-filters,
+  .bfa-matricula-history-item,
+  .bfa-matricula-card dl,
+  .bfa-matricula-responsavel dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bfa-matricula-filter-actions {
+    display: grid;
+    grid-column: auto;
+  }
+
+  .bfa-matricula-filter-actions .bfa-admin-button,
+  .bfa-matricula-card > footer .bfa-admin-button {
+    width: 100%;
+  }
+
+  .bfa-matricula-card > header,
+  .bfa-matricula-overview > header,
+  .bfa-matricula-responsavel > header,
+  .bfa-matricula-terminal {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

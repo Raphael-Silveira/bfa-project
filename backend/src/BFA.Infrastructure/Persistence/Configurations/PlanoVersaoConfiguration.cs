@@ -13,6 +13,7 @@ public sealed class PlanoVersaoConfiguration : IEntityTypeConfiguration<PlanoVer
         builder.ToTable("planos_versoes", tableBuilder =>
         {
             tableBuilder.HasTrigger("trg_proteger_plano_versao");
+            tableBuilder.HasTrigger("trg_proteger_plano_versao_matriculas");
             tableBuilder.HasCheckConstraint(
                 "ck_planos_versoes_numero_positivo",
                 "numero_versao > 0");

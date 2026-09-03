@@ -141,13 +141,32 @@ cada `PlanoVersao` preserva duração, frequência semanal, mensalidade, eventua
 e período de vigência.
 
 A frequência semanal representa o direito comercial contratado e não vincula automaticamente o
-Aluno a uma Turma ou horário. A futura Matrícula deverá guardar a versão exata contratada para que
+Aluno a uma Turma ou horário. A `Matricula` guarda a versão exata e os valores contratados para que
 mudanças posteriores de preço ou condições não alterem o histórico do Aluno.
 
-A Franqueadora poderá governar planos de rede e versões comerciais. A governança local sobre
-planos exclusivos, a disponibilidade para venda e os fluxos de publicação serão definidos em
-casos de uso futuros. Plano, Matrícula e Cobrança permanecem conceitos distintos: a existência de
-um plano não cria matrícula, parcela, cobrança ou pagamento automaticamente.
+A Grade operacional pertence à `Matricula`. Cada `MatriculaHorario` representa uma sessão
+recorrente semanal efetivamente escolhida e aponta para o snapshot de `TurmaHorario`. Assim, uma
+frequência 2x permite dois slots, inclusive no mesmo dia quando os horários não conflitam; ela não
+significa obrigatoriamente dois dias diferentes. A vigência de cada vínculo preserva trocas de
+Grade sem reescrever o passado.
+
+A capacidade é controlada por `TurmaHorario`, usando `Turma.Capacidade` como limite de cada slot.
+O mesmo Aluno não pode ocupar horários recorrentes sobrepostos, mesmo quando suas Matrículas
+pertencem a Unidades diferentes da mesma Organização. Inclusões concorrentes disputando a última
+vaga e conflitos globais do Aluno são serializados no backend e definitivamente protegidos no
+PostgreSQL.
+
+Alterações materiais em horários exigem decisão explícita sobre os Alunos afetados. Ajustar a
+Grade fecha o vínculo antigo e cria outro; não troca silenciosamente o horário de um registro
+histórico. Uma troca apenas de Professor migra os vínculos abertos um a um quando o slot material
+é preservado, sempre na mesma transação. A evolução acadêmica seguirá
+`Grade -> Aula -> Presença`: a Grade define recorrência, Aula será uma ocorrência concreta e
+Presença registrará participação nessa ocorrência.
+
+A Franqueadora governa planos de rede, versões comerciais e a disponibilidade desses planos por
+Unidade. A Unidade apenas consome uma disponibilidade ativa ao matricular. Plano, Matrícula e
+Cobrança permanecem conceitos distintos: a existência de um plano não cria matrícula, parcela,
+cobrança ou pagamento automaticamente.
 
 ## 7. Professor
 
@@ -185,7 +204,8 @@ Sua experiência prevista inclui:
 
 ## 9. Responsável
 
-`Responsavel` poderá existir como entidade e/ou relação de negócio para representar o vínculo com Alunos menores de idade ou dependentes. A definição detalhada desse modelo fica para uma etapa futura.
+`Responsavel` é uma entidade de negócio ligada ao Aluno por `AlunoResponsavel`. Na data inicial da
+Matrícula, um Aluno menor precisa de ao menos um vínculo ativo com Responsável também ativo.
 
 Sua possível experiência inclui:
 

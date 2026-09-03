@@ -165,6 +165,11 @@
     };
 
     const iniciarMascara = (input) => {
+        if (input.dataset.bfaMaskInitialized === "true") {
+            return;
+        }
+
+        input.dataset.bfaMaskInitialized = "true";
         input.addEventListener("input", () => aplicarMascara(input));
 
         if (input.dataset.bfaMask !== "document") {
@@ -183,6 +188,11 @@
 
     const iniciar = () => {
         document.querySelectorAll("[data-bfa-mask]").forEach(iniciarMascara);
+    };
+
+    window.BfaInputMasks = {
+        iniciar: (raiz = document) => raiz.querySelectorAll("[data-bfa-mask]")
+            .forEach(iniciarMascara)
     };
 
     if (document.readyState === "loading") {

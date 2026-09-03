@@ -15,6 +15,9 @@ public sealed record GovernancaOperacionalUnidade(
 
     public bool PodeGerenciarPlanoLocal =>
         EhAdministradorUnidade || EhAdministradorRede && !PossuiFranqueadoAtivo;
+
+    public bool PodeGerenciarMatriculas =>
+        EhAdministradorUnidade || EhAdministradorRede && !PossuiFranqueadoAtivo;
 }
 
 public interface IEstadoOperacionalUnidadeConsulta

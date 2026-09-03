@@ -1,0 +1,182 @@
+@model MatriculaDetalheViewModel
+@{
+    ViewData["Title"] = Model.Matricula.NomeAluno;
+    Layout = "_UnidadeLayout";
+    var matricula = Model.Matricula;
+    var statusRetorno = Model.StatusRetorno?.ToString();
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-detalhe-matricula">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Matrícula · @matricula.Plano</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-detalhe-matricula">@matricula.NomeAluno</h1>
+        <p class="bfa-admin-page-header__description">
+            @matricula.DataInicio a @matricula.DataFimPrevista · @matricula.FrequenciaSemanal
+        </p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        @if (!Model.PodeGerenciar)
+        {
+            <span class="bfa-admin-badge is-inactive">Somente leitura</span>
+        }
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Unidade"
+           asp-controller="Matriculas"
+           asp-action="Index"
+           asp-route-unidadeId="@Model.UnidadeId"
+           asp-route-texto="@Model.TextoRetorno"
+           asp-route-status="@statusRetorno">Voltar às matrículas</a>
+    </div>
+</header>
+
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+<div class="bfa-matricula-detail-sections">
+    <section class="bfa-admin-card bfa-matricula-overview" aria-labelledby="titulo-condicoes-matricula">
+        <header>
+            <div>
+                <p>Condições da matrícula</p>
+                <h2 id="titulo-condicoes-matricula">@matricula.Plano</h2>
+                <span>@matricula.VersaoComercial</span>
+            </div>
+            <span class="bfa-admin-badge @(matricula.Ativa ? "is-active" : "is-inactive")">@matricula.Status</span>
+        </header>
+
+        @if (!matricula.Ativa && matricula.DataFimReal is not null)
+        {
+            <div class="bfa-matricula-terminal" role="status">
+                <strong>Matrícula @matricula.Status.ToLowerInvariant()</strong>
+                <span>Data final real · @matricula.DataFimReal</span>
+            </div>
+        }
+
+        <dl class="bfa-matricula-detail-grid">
+            <div><dt>Data de início</dt><dd>@matricula.DataInicio</dd></div>
+            <div><dt>Fim previsto</dt><dd>@matricula.DataFimPrevista</dd></div>
+            @if (matricula.DataFimReal is not null)
+            {
+                <div><dt>Data final real</dt><dd>@matricula.DataFimReal</dd></div>
+            }
+            <div><dt>Duração</dt><dd>@matricula.Duracao</dd></div>
+            <div><dt>Frequência</dt><dd>@matricula.FrequenciaSemanal</dd></div>
+            <div><dt>Mensalidade contratada</dt><dd>@matricula.ValorMensalContratado</dd></div>
+            @if (matricula.ValorContratadoDiferenteCatalogo)
+            {
+                <div><dt>Valor de catálogo</dt><dd>@matricula.ValorMensalCatalogo</dd></div>
+            }
+            <div><dt>Taxa de matrícula</dt><dd>@matricula.TaxaMatricula</dd></div>
+        </dl>
+    </section>
+
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-dados-aluno">
+        <header>
+            <p>Cadastro</p>
+            <h2 id="titulo-dados-aluno">Dados do aluno</h2>
+        </header>
+        <dl class="bfa-matricula-detail-grid">
+            <div><dt>Nome</dt><dd>@matricula.NomeAluno</dd></div>
+            <div><dt>Data de nascimento</dt><dd>@matricula.DataNascimento</dd></div>
+            <div><dt>CPF</dt><dd>@matricula.CpfMascarado</dd></div>
+            <div><dt>Telefone</dt><dd>@matricula.Telefone</dd></div>
+            <div><dt>E-mail</dt><dd>@matricula.Email</dd></div>
+        </dl>
+    </section>
+
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-responsaveis-matricula">
+        <header>
+            <p>Contatos relacionados</p>
+            <h2 id="titulo-responsaveis-matricula">Responsáveis</h2>
+        </header>
+        @if (matricula.Responsaveis.Count == 0)
+        {
+            <p class="bfa-matricula-muted">Nenhum responsável vinculado.</p>
+        }
+        else
+        {
+            <div class="bfa-matricula-responsaveis">
+                @foreach (var responsavel in matricula.Responsaveis)
+                {
+                    <article class="bfa-matricula-responsavel">
+                        <header>
+                            <div><strong>@responsavel.Nome</strong><span>@responsavel.Relacao</span></div>
+                            @if (!responsavel.Ativo)
+                            {
+                                <span class="bfa-admin-badge is-inactive">Vínculo inativo</span>
+                            }
+                        </header>
+                        <dl>
+                            <div><dt>Telefone</dt><dd>@responsavel.Telefone</dd></div>
+                            <div><dt>E-mail</dt><dd>@responsavel.Email</dd></div>
+                        </dl>
+                        @if (responsavel.PrincipalContato || responsavel.ResponsavelFinanceiro)
+                        {
+                            <footer>
+                                @if (responsavel.PrincipalContato)
+                                {
+                                    <span class="bfa-admin-badge is-active">Principal contato</span>
+                                }
+                                @if (responsavel.ResponsavelFinanceiro)
+                                {
+                                    <span class="bfa-admin-badge is-inactive">Responsável financeiro</span>
+                                }
+                            </footer>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-grade-atual">
+        <header>
+            <p>Programação vigente</p>
+            <h2 id="titulo-grade-atual">Grade atual</h2>
+        </header>
+        @if (matricula.GradeAtual.Count == 0)
+        {
+            <p class="bfa-matricula-muted">Nenhum horário vigente nesta matrícula.</p>
+        }
+        else
+        {
+            <div class="bfa-matricula-grade-grid">
+                @foreach (var horario in matricula.GradeAtual)
+                {
+                    <article class="bfa-matricula-grade-item">
+                        <header><strong>@horario.DiaSemana</strong><span>@horario.Horario</span></header>
+                        <dl>
+                            <div><dt>Turma</dt><dd>@horario.Turma</dd></div>
+                            <div><dt>Professor</dt><dd>@horario.Professor</dd></div>
+                        </dl>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    @if (matricula.HistoricoGrade.Count > 0)
+    {
+        <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-historico-grade">
+            <header>
+                <p>Programações encerradas</p>
+                <h2 id="titulo-historico-grade">Histórico da Grade</h2>
+            </header>
+            <div class="bfa-matricula-history-list">
+                @foreach (var horario in matricula.HistoricoGrade)
+                {
+                    <article class="bfa-matricula-history-item">
+                        <div class="bfa-matricula-history-period">
+                            <span>Período</span>
+                            <strong>@horario.Periodo</strong>
+                        </div>
+                        <div><span>Horário</span><strong>@horario.DiaSemana · @horario.Horario</strong></div>
+                        <div><span>Turma</span><strong>@horario.Turma</strong></div>
+                        <div><span>Professor</span><strong>@horario.Professor</strong></div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>

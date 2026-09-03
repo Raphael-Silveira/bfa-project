@@ -149,7 +149,7 @@ Controller namespace: `BFA.Web.Areas.Unidade.Controllers`.
 
 The first version is available to an active `AdministradorUnidade` only for the exact Organization/Unit pair in its active `VinculoAcesso`. An `AdministradorRede` keeps transversal superaccess to active Units inside its own Organization, but never to another Organization. The route identifier is not authorization: Web resolves the active Unit and Organization from the current persistence source, creates `ContextoUnidade`, and invokes the existing resource-based `AcessoUnidadePorPerfilRequirement` on every request.
 
-The initial dashboard identifies the current Unit and renders only data backed by implemented modules. It reuses the shared Admin Shell, drawer, logout, responsive behavior, and visual tokens. Its current navigation contains `Visão Geral`, `Professores`, `Turmas`, and the read-only `Contrato`; Alunos, Matriculas, Presencas, and finance remain future modules.
+The initial dashboard identifies the current Unit and renders only data backed by implemented modules. It reuses the shared Admin Shell, drawer, logout, responsive behavior, and visual tokens. Its current navigation contains `Visão Geral`, `Professores`, `Turmas`, `Planos`, `Matrículas`, and the read-only `Contrato`; Presencas and finance remain future modules.
 
 The Unit dashboard now includes a read-only summary of the active franchise contract, and `GET /unidade/{unidadeId}/contrato` exposes its current terms and the documents from the vigente version. Authorized document visualization and download are streamed through private storage routes under that same Unit context; storage keys and physical paths are never exposed. The server revalidates the authenticated user's active Unit access, Organization, active `FranqueadoUnidade`, active `ContratoFranquia`, and vigente version. This experience offers no contract creation, editing, upload, versioning, formalization, cancellation, or closing actions.
 
@@ -613,12 +613,12 @@ operational governance through
 `GET/POST /unidade/{unidadeId}/turmas/{turmaId}/horarios`. The Professor Area remains
 read-only and exposes no equivalent adjustment route or action. Application resolves the
 administrator's tenant and exact Unit context before loading the class. The operation
-never edits the historical identity of `TurmaHorario`: it closes every open current rule at
-`NovaVigenciaInicio - 1 day`, persists those closures, inserts a complete replacement set with
-the class's current `ProfessorUnidadeId`, and commits both saves in one transaction. Conflict
-validation spans every Unit of the same Organization by the underlying `ProfessorId`, excludes
-the current class rules that are being closed, accepts adjacent intervals, and leaves the V009
-trigger as the concurrency-safe final barrier.
+never edits the historical identity of `TurmaHorario`: it computes a material diff, preserves
+unchanged rules with the same IDs, closes only removed or changed rules at
+`NovaVigenciaInicio - 1 day`, and inserts only genuinely new rules with the class's current
+`ProfessorUnidadeId`. Conflict validation spans every Unit of the same Organization by the
+underlying `ProfessorId`, excludes only current class rules being closed, accepts adjacent
+intervals, and leaves the V009 trigger as the concurrency-safe final barrier.
 
 Concrete `Aula`, Agenda generation, Alunos, Matriculas, Presencas, substitute Professors, and
 Quadras remain outside V009. A future Aula authorization model may allow
@@ -630,6 +630,73 @@ attendance history independently from later changes to the recurring rule.
 The manually reviewed `V009__criar_turmas_e_horarios.sql` defines only `turmas` and
 `turmas_horarios` and adds the candidate key required for the tenant-safe reference to
 `professores_unidades`. It is deployed manually and is never executed by EF Core or application
+startup.
+
+### Students, guardians, and local enrollment
+
+`Aluno` and `Responsavel` are organization-scoped people records. Neither entity carries a
+`UnidadeId`: a student or guardian may participate in more than one Unit of the same Organization
+without duplicating personal data. Both may optionally reference the global `UsuarioIdentity`,
+and that identity may represent the same person as both an `Aluno` and a `Responsavel`. CPF is
+optional and unique only within the Organization when present. A guardian must have at least one
+contact channel, phone or email. Domain rejects an empty contact state with a user-facing message;
+the future Application command must validate it before persistence and translate a concurrent
+database violation without exposing constraint or personal-data details.
+
+```text
+Organizacao
+├── Aluno
+├── Responsavel
+└── AlunoResponsavel
+    ├── Aluno
+    └── Responsavel
+```
+
+`AlunoResponsavel` preserves one reactivatable relationship per Organization, student, and
+guardian. It classifies the relationship as `Pai`, `Mae`, `ResponsavelLegal`, `Tutor`, `Avo`, or
+`Outro`; only `Outro` accepts and requires a free-text description. At most one active relationship
+per student is the principal contact, while any number may be marked as financially responsible.
+An active relationship requires both people to be active, and neither person can be inactivated
+while an active relationship exists. The database never silently closes relationships.
+
+An adult student may exist without a guardian. The creation use case for an active minor
+must create the student and at least one active guardian relationship atomically, and
+relationship maintenance must reject inactivation of the last active guardian while the minor
+remains active. This cross-aggregate workflow is intentionally not implemented as a V011 database
+trigger; it belongs to Domain/Application orchestration when the complete student command is
+introduced. Domain calculates minority from `DataNascimento` and an explicit civil reference date;
+no age or minor flag is persisted. V011 also adds `data_nascimento <= CURRENT_DATE` as a final
+database integrity guard. `CURRENT_DATE` follows the database session's civil date and is not the
+source for operational age calculations.
+
+Student and guardian records do not grant local authorization. The local boundary begins at
+`Matricula`, with tenant-safe references to `(OrganizacaoId, AlunoId)`,
+`(OrganizacaoId, UnidadeId)`, and `(OrganizacaoId, PlanoVersaoId)`. That enrollment will be the
+basis for Unit-scoped student and guardian access; posted Organization or Unit identifiers are
+never trusted as authorization. The server resolves the authenticated user's active access link,
+derives Organization and Unit from that context, checks the requested student's active enrollment
+in the same Unit, and only then loads purpose-limited personal data. A later academic assignment
+will follow `Matricula -> MatriculaHorario -> TurmaHorario`: the contracted plan version's weekly
+frequency is only the commercial limit, while the assignment records the recurring schedules
+actually selected.
+
+Future governance keeps `AdministradorRede` inside its own Organization. An
+`AdministradorUnidade` may access a student only through an authorized active enrollment in that
+Unit, and a guardian becomes locally reachable only through such an authorized student.
+`Professor` receives only the minimum operational fields required by the assigned activity. No
+temporary `AlunoUnidade` relationship is introduced.
+
+Names, birth dates, CPF, phone, email, and family relationships are personal data. Application and
+Web must expose only the minimum fields needed for an authorized tenant and purpose, avoid logging
+CPF, birth date, phone, or email, and keep student/guardian queries Organization-scoped. CPF must
+never appear in URLs and must be masked in future listings. Unit-scoped queries must prevent both
+cross-Organization access and identifier enumeration. Medical data remains outside this module,
+and data about minors requires stricter, purpose-limited visibility. Future retention, correction,
+export, and anonymization workflows must preserve legal and historical obligations and require an
+explicit LGPD review before implementation.
+
+The manually reviewed `V011__criar_alunos_e_responsaveis.sql` defines `alunos`, `responsaveis`, and
+`alunos_responsaveis`. It is deployed manually and is never executed by EF Core or application
 startup.
 
 ### Student plans and commercial versions
@@ -675,10 +742,157 @@ administer network plans; and Professor never administers plans. For a local pla
 `AdministradorRede` may manage it while the Unit has no active franchisee and becomes read-only
 when an active franchisee exists. An authorized `AdministradorUnidade` manages the local plan.
 The centralized governance contract exposes the explicit `PodeGerenciarPlanoLocal` decision.
-Availability and sale eligibility remain future Application use cases.
+
+Network-plan availability is explicit in `PlanoDisponibilidadeUnidade`. One reactivatable record
+exists per Organization, network plan, and Unit. An active record requires an active network plan
+and an active Unit in the same Organization; a local plan can never have this record. PostgreSQL is
+the final concurrency-safe barrier and never silently disables availability when its plan or Unit
+is disabled. Availability activation uses ordinary consistency reads because an UPDATE already
+locks its own availability row; acquiring Plan or Unit row locks there would invert the enrollment
+lock order. New enrollment remains responsible for locking and revalidating current eligibility.
+The Franqueadora's network administrator manages this availability. A Unit
+administrator may only consume active availability while enrolling a student, and a Professor has
+no management permission.
 
 The manually reviewed `V010__criar_planos.sql` defines only `planos` and `planos_versoes`. It is
 deployed manually and is never executed by EF Core or application startup.
+
+### Enrollments and contracted snapshots
+
+`Matricula` is the Organization- and Unit-scoped contract between one student and the exact
+`PlanoVersao` offered on its civil `DataInicio`. A new enrollment requires an active student, an
+active Unit, an active plan, and a version whose inclusive validity contains `DataInicio`. A local
+plan must belong to that exact Unit; a network plan additionally requires its exact active
+`PlanoDisponibilidadeUnidade`. PostgreSQL locks the commercial chain in the deterministic order
+`PlanoVersao -> Plano -> PlanoDisponibilidadeUnidade`, when applicable, followed by Unit and
+student, so concurrent plan or availability inactivation cannot admit an enrollment against the
+invalid final state. Later inactivation does not rewrite or invalidate existing enrollments.
+Closing a `PlanoVersao` uses the same leading order, with the version row locked implicitly by its
+UPDATE before the existing V010 trigger locks the Plan. A V012 trigger then considers every
+enrollment referencing that version, including closed or cancelled history, and rejects a
+`VigenciaFim` earlier than any enrollment's `DataInicio`. Conversely, an enrollment first locks its
+version, so concurrent closure either observes the committed enrollment and is rejected or commits
+first and causes the enrollment to fail its inclusive-validity check. `DataFimPrevista` need not
+fit inside commercial validity: only the enrollment start must have been commercially valid.
+
+The contracted monthly value is mandatory, positive, and may differ from the catalog price. Fee
+waiver or negotiation is captured by the null-safe pair `CobraTaxaMatricula` and
+`ValorTaxaMatricula`. Plan version, dates, prices, fee terms, tenant scope, and creation audit form
+an immutable snapshot. Changing plans means closing the active enrollment and creating another;
+it never mutates `PlanoVersaoId`. Only `Ativa -> Encerrada` and `Ativa -> Cancelada` are valid
+business transitions. Terminal states cannot transition again, and `DataFimReal` is filled once.
+At most one active enrollment exists per Organization, Unit, and student; the same student may
+hold an active enrollment in another Unit. There is no `Agendada` state and dates never change
+status automatically.
+
+`DataFimPrevista` is calculated centrally in Domain/Application as
+`DataInicio.AddMonths(DuracaoMeses).AddDays(-1)` and persisted as an immutable civil date. Thus a
+one-month enrollment beginning on 31 January ends on 27 February in a common year or 28 February
+in a leap year; the PostgreSQL guard only verifies that the result is not before `DataInicio`.
+Minority is evaluated on `DataInicio`. A minor requires at least one active
+`AlunoResponsavel` connected to an active `Responsavel`; this is an Application/Domain rule rather
+than a database age trigger. There is no payer field in this version.
+
+Enrollment administration uses the dedicated centralized capability
+`PodeGerenciarMatriculas`, instead of inferring permission from `PodeGerenciarTurmas` or plan
+management. In a Unit without an active franchisee, `AdministradorRede` may manage enrollments. In
+a Unit with an active franchisee, `AdministradorRede` is read-only and an authorized
+`AdministradorUnidade` manages them. A Professor never manages enrollment. Application and
+Infrastructure expose tenant-safe queries and commands. The first read-only Unit interface reuses
+those queries at `GET /unidade/{unidadeId}/matriculas` and
+`GET /unidade/{unidadeId}/matriculas/{matriculaId}`. Authorized enrollment creation uses a
+single five-step form at `GET/POST /unidade/{unidadeId}/matriculas/nova`; auxiliary reads for
+eligible Plans and recurring slots remain tenant-safe, and only the final POST invokes the atomic
+Application use case. No draft, personal data, or partial enrollment state is persisted by the
+wizard. Grade changes, terminal actions, and a general student CRUD remain deliberately outside
+this UI phase.
+
+### Enrollment Grade and occupied recurring slots
+
+`MatriculaHorario` is one recurring slot actually occupied by an enrollment. It connects
+`Matricula -> MatriculaHorario -> TurmaHorario`; it is not the whole Grade and has no `Ativo`
+flag. Every row is inserted open; `VigenciaFim IS NULL` is the single truth for that state, and
+history can arise only from a later update that fills the closing date once. Identity, tenant,
+enrollment, schedule snapshot, initial validity, creator, and creation timestamp stay immutable.
+Both enrollment and recurring-schedule references use
+`(OrganizacaoId, UnidadeId, Id)` candidate keys and restrictive foreign keys.
+
+`PlanoVersao.FrequenciaSemanal` means the maximum number of weekly recurring sessions contracted,
+not distinct weekdays. Two non-overlapping sessions on the same weekday are valid when frequency
+permits. PostgreSQL evaluates the maximum number of effective Grade intervals at every relevant
+interval start; it does not count all historical rows that happen to intersect different parts of
+a larger period. `Turma.Capacidade` remains the limit of each `TurmaHorario`, independently, and
+uses the same maximum-simultaneous-interval algorithm. A capacity reduction considers current and
+future commitments but ignores history already ended before the database civil date.
+
+A student conflict is Organization-global by `AlunoId`, including active enrollments in different
+Units. It exists only when weekday, half-open wall-clock interval, and inclusive Grade validity
+all overlap; adjacent times are allowed. The definitive insertion lock order is
+`Matricula -> Aluno -> TurmaHorario`, with every multi-slot batch locking schedules by canonical
+UUID order equivalent to PostgreSQL `ORDER BY id`. The slot row serializes the last available
+place. Frequency reads the immutable contracted version after the enrollment lock; capacity reads
+the class after the schedule lock without acquiring a class lock, avoiding inversion with V009.
+Capacity reduction first owns the class row through its UPDATE and then locks every affected
+schedule by ID before recalculating occupancy. PostgreSQL remains the final barrier; Application
+provides the corresponding friendly validation and maps expected concurrency failures to business
+results.
+
+The operational enrollment module starts every Unit list from `matriculas` already constrained by
+`(OrganizacaoId, UnidadeId)`. Student selection is derived from that same local enrollment history;
+an unrestricted Organization-wide name or CPF search is not exposed to Unit administration.
+Details load the student, responsible relationships, contracted plan version, current Grade, and
+historical Grade only after the exact tenant boundary has been resolved by Application.
+
+New enrollment creates or reuses the student, creates/reactivates responsible relationships when
+requested, validates minority through `RegraResponsavelMatricula`, resolves an eligible local or
+available network plan, and lets `Matricula` calculate `DataFimPrevista` server-side. People are
+saved first when necessary and the enrollment is then inserted, causing V012 to lock and revalidate
+the commercial chain, Unit, and student. Because the transaction owns the new enrollment and the
+student lock at that point, it sorts and locks selected `TurmaHorario` rows by ID, revalidates
+frequency, Organization-global student conflicts, and temporal slot capacity, inserts the complete
+Grade, and commits. A failure in any Grade insert rolls back the enrollment and every newly created
+student, responsible person, and relationship.
+
+Grade changes use the canonical explicit lock order `Matricula -> Aluno -> TurmaHorario(s ORDER BY
+id)`. They calculate a diff by `TurmaHorarioId`: an unchanged open assignment keeps its
+`MatriculaHorarioId`, removed assignments close at the day before the new configuration begins,
+and new assignments start on that date. A material change on the assignment's own first day is
+rejected because it could not produce valid inclusive history. Enrollment finalization instead
+receives a **final effective date**: the student retains Grade rights on that date, so every open
+Grade closes on the same date before `Matricula.Encerrar` or `Matricula.Cancelar` is saved. Both
+operations are atomic. An active enrollment cannot
+be closed or cancelled before every Grade row ends at or before its new `DataFimReal`. A recurring
+schedule cannot receive an end date before every linked Grade row ends, and cannot be inactivated
+while a Grade commitment is open or ends on/after the database civil date. These reverse checks
+preserve temporal containment from both parent and child update directions. Triggers never close
+or migrate assignments automatically.
+
+`AjustarHorariosTurma` now computes a material diff by Professor snapshot, weekday, start time, and
+end time. An unchanged schedule keeps its `TurmaHorarioId`; only removed or changed rules close at
+the day before the new effective date, and only genuinely new rules are inserted. Before any
+mutation, affected schedules are locked in ID order and Application rejects the whole operation
+when an open Grade or historical Grade ending after the proposed schedule closure would be left
+outside the schedule validity. It never remaps students implicitly.
+
+`TrocaProfessorTurma` is the explicit exception because the material weekday/time slot remains the
+same. In one transaction it pre-locks affected enrollments, students, and old schedules, each in
+ID order; closes open Grade rows; closes old schedules; updates the class Professor; creates new
+schedules carrying the new Professor snapshot; maps old to new by weekday/start/end rather than
+input position; and inserts replacement open Grade rows. Each stage is persisted separately in
+that order so V009/V013 revalidate normal invariants. Any failure, including the last Grade insert,
+rolls back Professor, schedules, and Grade together. Closed historical Grade is never migrated.
+The natural future chain is `Grade -> Aula -> Presenca`: Aula will materialize a civil occurrence
+from the recurring slot, while attendance will refer to that occurrence rather than reinterpret
+Grade history. Aula and Presenca remain outside V013.
+
+The manually reviewed `V012__criar_disponibilidades_de_planos_e_matriculas.sql` defines only
+`planos_disponibilidades_unidades`, `matriculas`, and their integrity triggers. It is deployed
+manually and is never executed by EF Core or application startup.
+
+The manually reviewed `V013__criar_grade_das_matriculas.sql` adds the tenant-safe candidate key to
+`turmas_horarios`, defines `matriculas_horarios`, and installs only the integrity triggers needed
+for Grade, schedule closure, enrollment termination, and class-capacity reduction. It is deployed
+manually and is never executed by EF Core or application startup.
 
 ### Versioned franchise contracts and private documents
 
@@ -832,7 +1046,7 @@ Npgsql.EntityFrameworkCore.PostgreSQL
 
 EF Core may execute DML but does not automatically deploy schema.
 
-`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, `DocumentosContratoFranquia`, `Professores`, `ProfessoresUnidades`, `ProfessoresRemuneracoes`, `Turmas`, `TurmasHorarios`, `Planos`, and `PlanosVersoes`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
+`BFA.Web` composes persistence with a single `AddInfrastructure(builder.Configuration)` call. `BFA.Infrastructure` reads `ConnectionStrings:BfaDatabase`, registers `BfaDbContext` with `UseNpgsql`, and registers Identity Core with its EF user stores. The context derives from `IdentityUserContext<UsuarioIdentity, Guid>` and exposes `Organizacoes`, `Unidades`, `VinculosAcesso`, `PerfisUsuario`, `Franqueados`, `FranqueadosUsuarios`, `FranqueadosUnidades`, `Estados`, `Municipios`, `ContratosFranquia`, `ContratosFranquiaVersoes`, `DocumentosContratoFranquia`, `Professores`, `ProfessoresUnidades`, `ProfessoresRemuneracoes`, `Turmas`, `TurmasHorarios`, `Planos`, `PlanosVersoes`, `PlanosDisponibilidadesUnidades`, `Alunos`, `Responsaveis`, `AlunosResponsaveis`, `Matriculas`, and `MatriculasHorarios`. All custom mappings remain isolated in separate Fluent API configurations inside Infrastructure.
 
 ```text
 BFA.Web
@@ -891,6 +1105,8 @@ V007__criar_contratos_franquia.sql
 V008__criar_professores_e_remuneracoes.sql
 V009__criar_turmas_e_horarios.sql
 V010__criar_planos.sql
+V011__criar_alunos_e_responsaveis.sql
+V012__criar_disponibilidades_de_planos_e_matriculas.sql
 ```
 
 `bfa_schema_history` records applied SQL versions. Reviewed scripts are executed manually by `bfa_*_deploy`; runtime application logins never deploy schema.

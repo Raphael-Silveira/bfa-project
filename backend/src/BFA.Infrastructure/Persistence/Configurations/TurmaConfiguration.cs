@@ -15,6 +15,7 @@ public sealed class TurmaConfiguration : IEntityTypeConfiguration<Turma>
         builder.ToTable("turmas", tableBuilder =>
         {
             tableBuilder.HasTrigger("trg_proteger_estado_turma");
+            tableBuilder.HasTrigger("trg_proteger_capacidade_turma_grade");
             tableBuilder.HasCheckConstraint(
                 "ck_turmas_nome_nao_vazio",
                 "btrim(nome) <> ''");

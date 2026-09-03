@@ -1,4 +1,6 @@
 using BFA.Application.Unidades.Turmas;
+using BFA.Domain.Alunos;
+using BFA.Domain.Matriculas;
 using BFA.Domain.Professores;
 using BFA.Domain.Turmas;
 using BFA.Infrastructure.Persistence;
@@ -26,7 +28,7 @@ public sealed class TrocaProfessorTurmaRepositorioTests
             cenario.NovoVinculoId, new DateOnly(2026, 9, 1), Guid.NewGuid(),
             Agora.AddMonths(1), CancellationToken.None);
 
-        Assert.Equal(EstadoTrocaProfessorTurma.Sucesso, estado);
+        Assert.Equal(EstadoTrocaProfessorTurma.Sucesso, estado.Estado);
         Assert.Equal(3, interceptor.Quantidade);
         Assert.True(interceptor.EncerrouPrimeiro);
         Assert.True(interceptor.TrocouTurmaSegundo);
@@ -46,7 +48,7 @@ public sealed class TrocaProfessorTurmaRepositorioTests
             cenario.NovoVinculoId, new DateOnly(2026, 9, 1), Guid.NewGuid(),
             Agora.AddMonths(1), CancellationToken.None);
 
-        Assert.Equal(EstadoTrocaProfessorTurma.Falha, estado);
+        Assert.Equal(EstadoTrocaProfessorTurma.Falha, estado.Estado);
         await using var verificacao = CriarContexto(cenario.Banco);
         Assert.Equal(cenario.VinculoAnteriorId,
             (await verificacao.Turmas.SingleAsync()).ProfessorUnidadeId);
@@ -68,7 +70,7 @@ public sealed class TrocaProfessorTurmaRepositorioTests
             cenario.NovoVinculoId, new DateOnly(2026, 9, 1), Guid.NewGuid(),
             Agora.AddMonths(1), CancellationToken.None);
 
-        Assert.Equal(EstadoTrocaProfessorTurma.Sucesso, estado);
+        Assert.Equal(EstadoTrocaProfessorTurma.Sucesso, estado.Estado);
         Assert.Empty(await consulta.ListarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, cenario.VinculoAnteriorId,
             new DateOnly(2026, 9, 1), CancellationToken.None));
@@ -77,10 +79,67 @@ public sealed class TrocaProfessorTurmaRepositorioTests
             new DateOnly(2026, 9, 1), CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Troca_com_grades_abertas_migra_um_para_um_e_preserva_historico()
+    {
+        var cenario = await CriarCenarioAsync(quantidadeGradesAbertas: 2,
+            incluirGradeHistorica: true);
+        await using var db = CriarContexto(cenario.Banco);
+
+        var resultado = await CriarRepositorio(db).TrocarAsync(
+            cenario.OrganizacaoId, cenario.UnidadeId, cenario.TurmaId,
+            cenario.NovoVinculoId, new DateOnly(2026, 9, 1), Guid.NewGuid(),
+            Agora.AddMonths(1), CancellationToken.None);
+
+        Assert.Equal(EstadoTrocaProfessorTurma.Sucesso, resultado.Estado);
+        Assert.Equal(1, resultado.HorariosMigrados);
+        Assert.Equal(2, resultado.GradesMigradas);
+        var horarios = await db.TurmasHorarios.OrderBy(item => item.VigenciaInicio).ToArrayAsync();
+        Assert.Equal(2, horarios.Length);
+        Assert.Equal(new DateOnly(2026, 8, 31), horarios[0].VigenciaFim);
+        Assert.Equal(cenario.VinculoAnteriorId, horarios[0].ProfessorUnidadeId);
+        Assert.Equal(new DateOnly(2026, 9, 1), horarios[1].VigenciaInicio);
+        Assert.Equal(cenario.NovoVinculoId, horarios[1].ProfessorUnidadeId);
+        Assert.Equal(horarios[0].DiaSemana, horarios[1].DiaSemana);
+        Assert.Equal(horarios[0].HoraInicio, horarios[1].HoraInicio);
+        Assert.Equal(horarios[0].HoraFim, horarios[1].HoraFim);
+
+        var grades = await db.MatriculasHorarios
+            .OrderBy(item => item.VigenciaInicio).ThenBy(item => item.Id).ToArrayAsync();
+        Assert.Equal(5, grades.Length);
+        Assert.Equal(3, grades.Count(item => item.TurmaHorarioId == horarios[0].Id));
+        Assert.Equal(2, grades.Count(item => item.TurmaHorarioId == horarios[1].Id));
+        Assert.All(grades.Where(item => item.VigenciaInicio == new DateOnly(2026, 9, 1)),
+            item => Assert.Null(item.VigenciaFim));
+    }
+
+    [Fact]
+    public async Task Falha_ao_criar_novas_grades_desfaz_toda_troca()
+    {
+        var cenario = await CriarCenarioAsync(quantidadeGradesAbertas: 1);
+        var interceptor = new FalharQuintoSave();
+        await using var db = CriarContexto(cenario.Banco, interceptor);
+
+        var resultado = await CriarRepositorio(db).TrocarAsync(
+            cenario.OrganizacaoId, cenario.UnidadeId, cenario.TurmaId,
+            cenario.NovoVinculoId, new DateOnly(2026, 9, 1), Guid.NewGuid(),
+            Agora.AddMonths(1), CancellationToken.None);
+
+        Assert.Equal(EstadoTrocaProfessorTurma.Falha, resultado.Estado);
+        Assert.Equal(5, interceptor.Quantidade);
+        await using var verificacao = CriarContexto(cenario.Banco);
+        Assert.Equal(cenario.VinculoAnteriorId,
+            (await verificacao.Turmas.SingleAsync()).ProfessorUnidadeId);
+        Assert.Null((await verificacao.TurmasHorarios.SingleAsync()).VigenciaFim);
+        Assert.Null((await verificacao.MatriculasHorarios.SingleAsync()).VigenciaFim);
+    }
+
     private static TrocaProfessorTurmaRepositorio CriarRepositorio(BfaDbContext db) =>
         new(db, new AjusteHorariosTurmaRepositorio(db));
 
-    private static async Task<Cenario> CriarCenarioAsync()
+    private static async Task<Cenario> CriarCenarioAsync(
+        int quantidadeGradesAbertas = 0,
+        bool incluirGradeHistorica = false)
     {
         var banco = $"troca-professor-{Guid.NewGuid():N}";
         var org = Guid.NewGuid();
@@ -98,6 +157,28 @@ public sealed class TrocaProfessorTurmaRepositorioTests
             new TimeOnly(20, 0), new DateOnly(2026, 8, 1), null, usuario, Agora);
         await using var db = CriarContexto(banco);
         db.AddRange(anterior, novo, vinculoAnterior, vinculoNovo, turma, horario);
+        for (var indice = 0; indice < quantidadeGradesAbertas; indice++)
+        {
+            var aluno = new Aluno(
+                Guid.NewGuid(), org, $"Aluno {indice}", new DateOnly(2000, 1, 1),
+                new DateOnly(2026, 8, 1), Agora);
+            var matricula = new Matricula(
+                Guid.NewGuid(), org, unidade, aluno.Id, Guid.NewGuid(),
+                new DateOnly(2026, 8, 1), 12, 100, false, null, usuario, Agora);
+            var grade = new MatriculaHorario(
+                Guid.NewGuid(), org, unidade, matricula.Id, horario.Id,
+                new DateOnly(2026, 8, 1), usuario, Agora);
+            db.AddRange(aluno, matricula, grade);
+        }
+        if (incluirGradeHistorica)
+        {
+            var gradeHistorica = new MatriculaHorario(
+                Guid.NewGuid(), org, unidade, Guid.NewGuid(), horario.Id,
+                new DateOnly(2026, 8, 1), usuario, Agora);
+            gradeHistorica.Encerrar(
+                new DateOnly(2026, 8, 15), usuario, Agora.AddDays(14));
+            db.Add(gradeHistorica);
+        }
         await db.SaveChangesAsync();
         return new(banco, org, unidade, turma.Id, vinculoAnterior.Id, vinculoNovo.Id);
     }
@@ -155,6 +236,20 @@ public sealed class TrocaProfessorTurmaRepositorioTests
                 return ValueTask.FromResult(InterceptionResult<int>.SuppressWithResult(1));
             return ValueTask.FromException<InterceptionResult<int>>(
                 new DbUpdateException("Falha simulada na criação dos novos horários."));
+        }
+    }
+
+    private sealed class FalharQuintoSave : ObservarOrdem
+    {
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result,
+            CancellationToken cancellationToken = default)
+        {
+            var observado = base.SavingChangesAsync(eventData, result, cancellationToken);
+            if (Quantidade < 5)
+                return ValueTask.FromResult(InterceptionResult<int>.SuppressWithResult(1));
+            return ValueTask.FromException<InterceptionResult<int>>(
+                new DbUpdateException("Falha simulada na migracao da Grade."));
         }
     }
 }

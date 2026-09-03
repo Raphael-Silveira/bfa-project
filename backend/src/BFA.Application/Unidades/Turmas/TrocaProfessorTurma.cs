@@ -24,6 +24,7 @@ public enum EstadoTrocaProfessorTurma
     MesmoProfessor,
     VigenciaInvalida,
     ConflitoHorario,
+    MigracaoGradeInvalida,
     Falha
 }
 
@@ -31,7 +32,14 @@ public sealed record ResultadoTrocaProfessorTurma<T>(
     EstadoTrocaProfessorTurma Estado,
     T? Valor = default,
     ConflitoHorarioProfessor? Conflito = null,
-    DateOnly? MenorDataTroca = null);
+    DateOnly? MenorDataTroca = null,
+    int HorariosMigrados = 0,
+    int GradesMigradas = 0);
+
+public sealed record ResultadoPersistenciaTrocaProfessor(
+    EstadoTrocaProfessorTurma Estado,
+    int HorariosMigrados = 0,
+    int GradesMigradas = 0);
 
 public interface ITrocaProfessorTurmaRepositorio
 {
@@ -39,7 +47,7 @@ public interface ITrocaProfessorTurmaRepositorio
         Guid organizacaoId, Guid unidadeId, Guid turmaId,
         CancellationToken cancellationToken);
 
-    Task<EstadoTrocaProfessorTurma> TrocarAsync(
+    Task<ResultadoPersistenciaTrocaProfessor> TrocarAsync(
         Guid organizacaoId, Guid unidadeId, Guid turmaId,
         Guid novoProfessorUnidadeId, DateOnly dataTroca,
         Guid usuarioId, DateTime atualizadoEmUtc,
@@ -99,13 +107,15 @@ public sealed class TrocaProfessorTurmaServico(
 
         var organizacaoId = await AutorizarAsync(usuarioId, unidadeId, cancellationToken);
         if (organizacaoId is null) return new(EstadoTrocaProfessorTurma.SemAcesso);
-        var estado = await repositorio.TrocarAsync(
+        var persistencia = await repositorio.TrocarAsync(
             organizacaoId.Value, unidadeId, turmaId,
             solicitacao.NovoProfessorUnidadeId, solicitacao.DataTroca,
             usuarioId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
-        return estado == EstadoTrocaProfessorTurma.Sucesso
-            ? new(estado, turmaId)
-            : new(estado);
+        return persistencia.Estado == EstadoTrocaProfessorTurma.Sucesso
+            ? new(persistencia.Estado, turmaId,
+                HorariosMigrados: persistencia.HorariosMigrados,
+                GradesMigradas: persistencia.GradesMigradas)
+            : new(persistencia.Estado);
     }
 
     private async Task<Guid?> AutorizarAsync(

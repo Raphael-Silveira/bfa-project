@@ -1,7 +1,9 @@
 using BFA.Domain.Acessos;
+using BFA.Domain.Alunos;
 using BFA.Domain.Contratos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Localidades;
+using BFA.Domain.Matriculas;
 using BFA.Domain.Organizacoes;
 using BFA.Domain.Planos;
 using BFA.Domain.Professores;
@@ -57,6 +59,19 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
     public DbSet<Plano> Planos => Set<Plano>();
 
     public DbSet<PlanoVersao> PlanosVersoes => Set<PlanoVersao>();
+
+    public DbSet<PlanoDisponibilidadeUnidade> PlanosDisponibilidadesUnidades =>
+        Set<PlanoDisponibilidadeUnidade>();
+
+    public DbSet<Matricula> Matriculas => Set<Matricula>();
+
+    public DbSet<MatriculaHorario> MatriculasHorarios => Set<MatriculaHorario>();
+
+    public DbSet<Aluno> Alunos => Set<Aluno>();
+
+    public DbSet<Responsavel> Responsaveis => Set<Responsavel>();
+
+    public DbSet<AlunoResponsavel> AlunosResponsaveis => Set<AlunoResponsavel>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

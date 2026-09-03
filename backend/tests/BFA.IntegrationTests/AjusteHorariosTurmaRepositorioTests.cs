@@ -1,4 +1,5 @@
 using BFA.Application.Unidades.Turmas;
+using BFA.Domain.Matriculas;
 using BFA.Domain.Professores;
 using BFA.Domain.Turmas;
 using BFA.Infrastructure.Persistence;
@@ -54,6 +55,73 @@ public sealed class AjusteHorariosTurmaRepositorioTests
         Assert.Null(horario.VigenciaFim);
     }
 
+    [Fact]
+    public async Task Horario_inalterado_preserva_id_e_adicao_cria_somente_o_novo()
+    {
+        var cenario = await CriarCenarioAsync();
+        await using var db = CriarContexto(cenario.Banco);
+
+        var resultado = await new AjusteHorariosTurmaRepositorio(db).AjustarAsync(
+            cenario.OrganizacaoId, cenario.UnidadeId, cenario.TurmaId,
+            Guid.NewGuid(), new(new DateOnly(2026, 9, 1),
+            [
+                new(DiaSemana.Segunda, new TimeOnly(19, 0), new TimeOnly(20, 0)),
+                new(DiaSemana.Quarta, new TimeOnly(19, 0), new TimeOnly(20, 0))
+            ]), Agora.AddMonths(1), CancellationToken.None);
+
+        Assert.Equal(EstadoAjusteHorariosTurma.Sucesso, resultado);
+        var horarios = await db.TurmasHorarios.OrderBy(item => item.Id).ToArrayAsync();
+        Assert.Equal(2, horarios.Length);
+        Assert.Contains(horarios, item => item.Id == cenario.HorarioId
+            && item.VigenciaFim == null);
+        Assert.Single(horarios, item => item.Id != cenario.HorarioId);
+    }
+
+    [Fact]
+    public async Task Remocao_com_grade_aberta_e_bloqueada_sem_alteracao_parcial()
+    {
+        var cenario = await CriarCenarioAsync();
+        await using var db = CriarContexto(cenario.Banco);
+        db.MatriculasHorarios.Add(CriarGrade(cenario));
+        await db.SaveChangesAsync();
+
+        var resultado = await new AjusteHorariosTurmaRepositorio(db).AjustarAsync(
+            cenario.OrganizacaoId, cenario.UnidadeId, cenario.TurmaId,
+            Guid.NewGuid(), new(new DateOnly(2026, 9, 1),
+            [new(DiaSemana.Quarta, new TimeOnly(20, 0), new TimeOnly(21, 0))]),
+            Agora.AddMonths(1), CancellationToken.None);
+
+        Assert.Equal(EstadoAjusteHorariosTurma.ExisteGradeAfetada, resultado);
+        var horario = await db.TurmasHorarios.SingleAsync();
+        Assert.Null(horario.VigenciaFim);
+        Assert.Equal(cenario.HorarioId, horario.Id);
+    }
+
+    [Theory]
+    [InlineData(8, 31, true)]
+    [InlineData(9, 1, false)]
+    public async Task Grade_historica_bloqueia_somente_se_ultrapassar_nova_vigencia(
+        int mesFim, int diaFim, bool permitido)
+    {
+        var cenario = await CriarCenarioAsync();
+        await using var db = CriarContexto(cenario.Banco);
+        var grade = CriarGrade(cenario);
+        grade.Encerrar(new DateOnly(2026, mesFim, diaFim), Guid.NewGuid(), Agora.AddDays(1));
+        db.MatriculasHorarios.Add(grade);
+        await db.SaveChangesAsync();
+
+        var resultado = await new AjusteHorariosTurmaRepositorio(db).AjustarAsync(
+            cenario.OrganizacaoId, cenario.UnidadeId, cenario.TurmaId,
+            Guid.NewGuid(), new(new DateOnly(2026, 9, 1),
+            [new(DiaSemana.Terca, new TimeOnly(19, 0), new TimeOnly(20, 0))]),
+            Agora.AddMonths(1), CancellationToken.None);
+
+        Assert.Equal(
+            permitido ? EstadoAjusteHorariosTurma.Sucesso
+                : EstadoAjusteHorariosTurma.ExisteGradeAfetada,
+            resultado);
+    }
+
     private static async Task<Cenario> CriarCenarioAsync()
     {
         var banco = $"ajuste-horarios-{Guid.NewGuid():N}";
@@ -75,7 +143,7 @@ public sealed class AjusteHorariosTurmaRepositorioTests
         db.Turmas.Add(turma);
         db.TurmasHorarios.Add(horario);
         await db.SaveChangesAsync();
-        return new(banco, organizacaoId, unidadeId, turma.Id);
+        return new(banco, organizacaoId, unidadeId, turma.Id, horario.Id);
     }
 
     private static BfaDbContext CriarContexto(
@@ -91,7 +159,13 @@ public sealed class AjusteHorariosTurmaRepositorioTests
     }
 
     private sealed record Cenario(
-        string Banco, Guid OrganizacaoId, Guid UnidadeId, Guid TurmaId);
+        string Banco, Guid OrganizacaoId, Guid UnidadeId, Guid TurmaId,
+        Guid HorarioId);
+
+    private static MatriculaHorario CriarGrade(Cenario cenario) => new(
+        Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+        Guid.NewGuid(), cenario.HorarioId, new DateOnly(2026, 8, 1),
+        Guid.NewGuid(), Agora);
 
     private class ObservarOrdemInterceptor : SaveChangesInterceptor
     {

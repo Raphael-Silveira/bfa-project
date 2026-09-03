@@ -15,6 +15,7 @@ public sealed class TurmaHorarioConfiguration : IEntityTypeConfiguration<TurmaHo
         builder.ToTable("turmas_horarios", tableBuilder =>
         {
             tableBuilder.HasTrigger("trg_proteger_turma_horario");
+            tableBuilder.HasTrigger("trg_proteger_turma_horario_grade_aberta");
             tableBuilder.HasCheckConstraint(
                 "ck_turmas_horarios_dia_semana_valido",
                 "dia_semana BETWEEN 1 AND 7");
@@ -104,6 +105,14 @@ public sealed class TurmaHorarioConfiguration : IEntityTypeConfiguration<TurmaHo
             .HasColumnName("atualizado_em_utc")
             .HasColumnType("timestamp with time zone")
             .IsRequired();
+
+        builder.HasAlternateKey(horario => new
+            {
+                horario.OrganizacaoId,
+                horario.UnidadeId,
+                horario.Id
+            })
+            .HasName("uq_turmas_horarios_organizacao_unidade_id");
 
         builder.HasIndex(horario => new
             {

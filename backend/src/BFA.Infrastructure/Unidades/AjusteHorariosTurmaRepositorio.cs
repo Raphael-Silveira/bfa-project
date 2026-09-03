@@ -119,7 +119,24 @@ public sealed class AjusteHorariosTurmaRepositorio(BfaDbContext dbContext)
                     && item.Ativo
                     && item.VigenciaFim == null)
                 .ToArrayAsync(cancellationToken);
-            if (atuais.Any(item =>
+
+            var solicitados = solicitacao.Horarios
+                .Select(item => new IdentidadeMaterialHorario(
+                    item.DiaSemana, item.HoraInicio, item.HoraFim,
+                    turma.ProfessorUnidadeId))
+                .ToHashSet();
+            var afetados = atuais
+                .Where(item => !solicitados.Contains(Identidade(item)))
+                .OrderBy(item => item.Id)
+                .ToArray();
+            var identidadesAtuais = atuais.Select(Identidade).ToHashSet();
+            var novosSolicitados = solicitacao.Horarios
+                .Where(item => !identidadesAtuais.Contains(new(
+                    item.DiaSemana, item.HoraInicio, item.HoraFim,
+                    turma.ProfessorUnidadeId)))
+                .ToArray();
+
+            if (afetados.Any(item =>
                     solicitacao.NovaVigenciaInicio <= item.VigenciaInicio))
                 return EstadoAjusteHorariosTurma.VigenciaInvalida;
 
@@ -133,18 +150,35 @@ public sealed class AjusteHorariosTurmaRepositorio(BfaDbContext dbContext)
             }
 
             var vigenciaFim = solicitacao.NovaVigenciaInicio.AddDays(-1);
-            foreach (var atual in atuais)
+            await GradeLoteLocks.BloquearTurmasHorariosAsync(
+                dbContext, organizacaoId, unidadeId,
+                afetados.Select(item => item.Id), cancellationToken);
+
+            var idsAfetados = afetados.Select(item => item.Id).ToArray();
+            var existeGradeAfetada = idsAfetados.Length > 0
+                && await dbContext.MatriculasHorarios.AsNoTracking().AnyAsync(item =>
+                    item.OrganizacaoId == organizacaoId
+                    && item.UnidadeId == unidadeId
+                    && idsAfetados.Contains(item.TurmaHorarioId)
+                    && (item.VigenciaFim == null || item.VigenciaFim > vigenciaFim),
+                    cancellationToken);
+            if (existeGradeAfetada)
+                return EstadoAjusteHorariosTurma.ExisteGradeAfetada;
+
+            foreach (var atual in afetados)
                 atual.Encerrar(vigenciaFim, usuarioId, atualizadoEmUtc);
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (afetados.Length > 0)
+                await dbContext.SaveChangesAsync(cancellationToken);
 
-            var novos = solicitacao.Horarios.Select(item => new TurmaHorario(
+            var novos = novosSolicitados.Select(item => new TurmaHorario(
                 Guid.NewGuid(), organizacaoId, unidadeId, turmaId,
                 turma.ProfessorUnidadeId, item.DiaSemana, item.HoraInicio,
                 item.HoraFim, solicitacao.NovaVigenciaInicio, null,
                 usuarioId, atualizadoEmUtc));
             dbContext.TurmasHorarios.AddRange(novos);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (novosSolicitados.Length > 0)
+                await dbContext.SaveChangesAsync(cancellationToken);
             await transacao.CommitAsync(cancellationToken);
             return EstadoAjusteHorariosTurma.Sucesso;
         }
@@ -168,4 +202,14 @@ public sealed class AjusteHorariosTurmaRepositorio(BfaDbContext dbContext)
             return EstadoAjusteHorariosTurma.Falha;
         }
     }
+
+    private static IdentidadeMaterialHorario Identidade(TurmaHorario horario) => new(
+        horario.DiaSemana, horario.HoraInicio, horario.HoraFim,
+        horario.ProfessorUnidadeId);
+
+    private sealed record IdentidadeMaterialHorario(
+        DiaSemana DiaSemana,
+        TimeOnly HoraInicio,
+        TimeOnly HoraFim,
+        Guid ProfessorUnidadeId);
 }

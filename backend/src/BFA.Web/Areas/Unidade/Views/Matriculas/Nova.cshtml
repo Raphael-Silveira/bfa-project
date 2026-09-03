@@ -1,0 +1,385 @@
+@using BFA.Domain.Alunos
+@model NovaMatriculaViewModel
+@{
+    ViewData["Title"] = "Nova matrícula";
+    Layout = "_UnidadeLayout";
+    var horariosPorDia = Model.Horarios
+        .GroupBy(item => new { item.DiaSemana, item.DiaSemanaOrdem })
+        .OrderBy(grupo => grupo.Key.DiaSemanaOrdem);
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-nova-matricula">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Matrículas</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-nova-matricula">Nova matrícula</h1>
+        <p class="bfa-admin-page-header__description">
+            Cadastre aluno, responsáveis, condições comerciais e Grade em uma única confirmação.
+        </p>
+    </div>
+</header>
+
+<form class="bfa-admin-form bfa-matricula-wizard"
+      action="/unidade/@Model.UnidadeId/matriculas/nova"
+      method="post"
+      data-bfa-matricula-wizard
+      data-passo-inicial="@Model.PassoInicial"
+      data-planos-url="/unidade/@Model.UnidadeId/matriculas/nova/planos"
+      data-horarios-url="/unidade/@Model.UnidadeId/matriculas/nova/horarios"
+      novalidate>
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="bfa-validation-summary" role="alert"></div>
+
+    <nav class="bfa-admin-card bfa-matricula-stepper" aria-label="Etapas da nova matrícula">
+        <ol>
+            @foreach (var etapa in new[] { (1, "Aluno"), (2, "Responsáveis"), (3, "Plano"), (4, "Grade"), (5, "Revisar") })
+            {
+                var estado = etapa.Item1 < Model.PassoInicial ? "is-complete" : etapa.Item1 == Model.PassoInicial ? "is-current" : "is-upcoming";
+                <li class="@estado" data-step-indicator="@etapa.Item1">
+                    <button type="button"
+                            data-go-step="@etapa.Item1"
+                            aria-label="Etapa @etapa.Item1: @etapa.Item2"
+                            aria-current="@(etapa.Item1 == Model.PassoInicial ? "step" : null)">
+                        <span class="bfa-matricula-stepper__number" aria-hidden="true">@etapa.Item1</span>
+                        <span class="bfa-matricula-stepper__label">@etapa.Item2</span>
+                        <span class="bfa-matricula-stepper__state">
+                            @(etapa.Item1 < Model.PassoInicial ? "Concluída" : etapa.Item1 == Model.PassoInicial ? "Atual" : "Próxima")
+                        </span>
+                    </button>
+                </li>
+            }
+        </ol>
+    </nav>
+
+    <div class="bfa-admin-form-sections">
+        <section class="bfa-admin-card bfa-admin-form-card bfa-matricula-step"
+                 data-step="1"
+                 aria-labelledby="etapa-aluno-titulo">
+            <header class="bfa-matricula-step__header">
+                <span>Etapa 1 de 5</span>
+                <h2 id="etapa-aluno-titulo">Aluno</h2>
+                <p>Selecione alguém que já passou pela unidade ou cadastre um novo aluno.</p>
+            </header>
+
+            <fieldset class="bfa-matricula-choice-fieldset">
+                <legend>Como deseja continuar?</legend>
+                <div class="bfa-matricula-mode-grid">
+                    <label class="bfa-matricula-mode-card">
+                        <input type="radio" asp-for="AlunoModo" value="existente" data-student-mode />
+                        <span><strong>Aluno existente</strong><small>Buscar entre alunos relacionados a esta unidade.</small></span>
+                    </label>
+                    <label class="bfa-matricula-mode-card">
+                        <input type="radio" asp-for="AlunoModo" value="novo" data-student-mode />
+                        <span><strong>Novo aluno</strong><small>Cadastrar os dados do aluno dentro desta matrícula.</small></span>
+                    </label>
+                </div>
+                <span asp-validation-for="AlunoModo" class="bfa-validation-message"></span>
+            </fieldset>
+
+            <div data-student-existing>
+                <div class="bfa-form-field bfa-matricula-student-search">
+                    <label class="bfa-form-label" for="busca-aluno-existente">Buscar por nome</label>
+                    <input class="form-control bfa-form-control"
+                           id="busca-aluno-existente"
+                           type="search"
+                           maxlength="150"
+                           autocomplete="off"
+                           placeholder="Digite o nome do aluno"
+                           data-student-search />
+                    <span class="bfa-admin-form-help">A busca considera somente alunos já relacionados a @Model.NomeUnidade.</span>
+                </div>
+                <fieldset class="bfa-matricula-choice-fieldset">
+                    <legend>Resultados</legend>
+                    <div class="bfa-matricula-student-list" data-student-list>
+                        @foreach (var aluno in Model.Alunos)
+                        {
+                            <label class="bfa-matricula-student-card @(aluno.PossuiMatriculaAtiva ? "is-disabled" : null)"
+                                   data-student-card
+                                   data-search-text="@aluno.NomeCompleto">
+                                <input type="radio"
+                                       name="AlunoId"
+                                       value="@aluno.AlunoId"
+                                       checked="@(Model.AlunoId == aluno.AlunoId)"
+                                       disabled="@aluno.PossuiMatriculaAtiva"
+                                       data-student-option
+                                       data-student-name="@aluno.NomeCompleto"
+                                       data-student-birth="@aluno.DataNascimento"
+                                       data-student-birth-iso="@aluno.DataNascimentoIso" />
+                                <span>
+                                    <strong>@aluno.NomeCompleto</strong>
+                                    <small>Nascimento · @aluno.DataNascimento</small>
+                                    @if (aluno.PossuiMatriculaAtiva)
+                                    {
+                                        <em>Matrícula ativa nesta unidade</em>
+                                    }
+                                </span>
+                            </label>
+                        }
+                    </div>
+                    <p class="bfa-matricula-inline-empty" data-student-empty hidden>Nenhum aluno corresponde à busca.</p>
+                    @if (Model.Alunos.Count == 0)
+                    {
+                        <p class="bfa-matricula-inline-empty">Nenhum aluno anterior nesta unidade. Selecione “Novo aluno”.</p>
+                    }
+                    <span asp-validation-for="AlunoId" class="bfa-validation-message"></span>
+                </fieldset>
+            </div>
+
+            <div class="bfa-matricula-new-student" data-student-new>
+                <div class="bfa-matricula-form-grid">
+                    <div class="bfa-form-field">
+                        <label asp-for="NovoAluno.NomeCompleto" class="bfa-form-label"></label>
+                        <input asp-for="NovoAluno.NomeCompleto" class="form-control bfa-form-control" maxlength="150" autocomplete="name" />
+                        <span asp-validation-for="NovoAluno.NomeCompleto" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field">
+                        <label asp-for="NovoAluno.DataNascimentoTexto" class="bfa-form-label"></label>
+                        <div class="bfa-admin-date-field" data-bfa-date-field>
+                            <input asp-for="NovoAluno.DataNascimentoTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input />
+                            <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data de nascimento" data-bfa-date-trigger>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                            </button>
+                        </div>
+                        <span asp-validation-for="NovoAluno.DataNascimentoTexto" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field">
+                        <label asp-for="NovoAluno.Cpf" class="bfa-form-label"></label>
+                        <input asp-for="NovoAluno.Cpf" class="form-control bfa-form-control" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00" maxlength="14" data-bfa-mask="document" />
+                        <span asp-validation-for="NovoAluno.Cpf" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field">
+                        <label asp-for="NovoAluno.Telefone" class="bfa-form-label"></label>
+                        <input asp-for="NovoAluno.Telefone" class="form-control bfa-form-control" type="tel" autocomplete="tel" maxlength="30" data-bfa-mask="phone" />
+                        <span asp-validation-for="NovoAluno.Telefone" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field bfa-matricula-grid-wide">
+                        <label asp-for="NovoAluno.Email" class="bfa-form-label"></label>
+                        <input asp-for="NovoAluno.Email" class="form-control bfa-form-control" type="email" autocomplete="email" maxlength="256" />
+                        <span asp-validation-for="NovoAluno.Email" class="bfa-validation-message"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bfa-admin-form-actions bfa-matricula-step-actions">
+                <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/matriculas" data-cancel-wizard>Cancelar</a>
+                <button class="bfa-btn-primary bfa-admin-button" type="button" data-next-step>Continuar</button>
+            </div>
+        </section>
+
+        <section class="bfa-admin-card bfa-admin-form-card bfa-matricula-step"
+                 data-step="2"
+                 aria-labelledby="etapa-responsaveis-titulo">
+            <header class="bfa-matricula-step__header">
+                <span>Etapa 2 de 5</span>
+                <h2 id="etapa-responsaveis-titulo">Responsáveis</h2>
+                <p data-guardian-guidance>Responsável não é obrigatório para este aluno.</p>
+            </header>
+
+            <section class="bfa-matricula-existing-guardians" data-existing-guardians aria-labelledby="responsaveis-existentes-titulo" hidden>
+                <h3 id="responsaveis-existentes-titulo">Vínculos existentes</h3>
+                @foreach (var aluno in Model.Alunos.Where(item => item.Responsaveis.Count > 0))
+                {
+                    <div data-existing-guardians-for="@aluno.AlunoId" hidden>
+                        @foreach (var responsavel in aluno.Responsaveis)
+                        {
+                            <article class="bfa-matricula-existing-guardian">
+                                <div><strong>@responsavel.NomeCompleto</strong><span>@responsavel.Relacao</span><small>@responsavel.Contato</small></div>
+                                <div class="bfa-matricula-badges">
+                                    @if (responsavel.PrincipalContato) { <span class="bfa-admin-badge is-active">Principal contato</span> }
+                                    @if (responsavel.ResponsavelFinanceiro) { <span class="bfa-admin-badge is-inactive">Responsável financeiro</span> }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+
+            <div class="bfa-matricula-guardian-list" data-guardian-list>
+                @for (var i = 0; i < Model.Responsaveis.Count; i++)
+                {
+                    <article class="bfa-matricula-guardian-card" data-guardian-card>
+                        <header><h3>Responsável <span data-guardian-number>@(i + 1)</span></h3><button type="button" class="bfa-btn-secondary bfa-admin-button" data-remove-guardian>Remover</button></header>
+                        <div class="bfa-matricula-form-grid">
+                            <div class="bfa-form-field"><label asp-for="Responsaveis[i].NomeCompleto" class="bfa-form-label"></label><input asp-for="Responsaveis[i].NomeCompleto" class="form-control bfa-form-control" maxlength="150" /><span asp-validation-for="Responsaveis[i].NomeCompleto" class="bfa-validation-message"></span></div>
+                            <div class="bfa-form-field"><label asp-for="Responsaveis[i].Cpf" class="bfa-form-label"></label><input asp-for="Responsaveis[i].Cpf" class="form-control bfa-form-control" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" data-bfa-mask="document" /><span asp-validation-for="Responsaveis[i].Cpf" class="bfa-validation-message"></span></div>
+                            <div class="bfa-form-field"><label asp-for="Responsaveis[i].Telefone" class="bfa-form-label"></label><input asp-for="Responsaveis[i].Telefone" class="form-control bfa-form-control" type="tel" maxlength="30" data-bfa-mask="phone" /><span asp-validation-for="Responsaveis[i].Telefone" class="bfa-validation-message"></span></div>
+                            <div class="bfa-form-field"><label asp-for="Responsaveis[i].Email" class="bfa-form-label"></label><input asp-for="Responsaveis[i].Email" class="form-control bfa-form-control" type="email" maxlength="256" /><span asp-validation-for="Responsaveis[i].Email" class="bfa-validation-message"></span></div>
+                            <div class="bfa-form-field"><label asp-for="Responsaveis[i].TipoRelacao" class="bfa-form-label"></label><select asp-for="Responsaveis[i].TipoRelacao" class="form-select bfa-form-control" data-relation-type><option value="">Selecione</option><option value="Pai">Pai</option><option value="Mae">Mãe</option><option value="ResponsavelLegal">Responsável legal</option><option value="Tutor">Tutor</option><option value="Avo">Avô/Avó</option><option value="Outro">Outro</option></select><span asp-validation-for="Responsaveis[i].TipoRelacao" class="bfa-validation-message"></span></div>
+                            <div class="bfa-form-field" data-other-relation><label asp-for="Responsaveis[i].DescricaoRelacao" class="bfa-form-label"></label><input asp-for="Responsaveis[i].DescricaoRelacao" class="form-control bfa-form-control" maxlength="100" /><span asp-validation-for="Responsaveis[i].DescricaoRelacao" class="bfa-validation-message"></span></div>
+                        </div>
+                        <div class="bfa-matricula-checkboxes">
+                            <label><input asp-for="Responsaveis[i].PrincipalContato" data-primary-guardian /> Principal contato</label>
+                            <label><input asp-for="Responsaveis[i].ResponsavelFinanceiro" /> Responsável financeiro</label>
+                        </div>
+                    </article>
+                }
+            </div>
+            <span asp-validation-for="Responsaveis" class="bfa-validation-message"></span>
+            <button class="bfa-btn-secondary bfa-admin-button bfa-matricula-add-guardian" type="button" data-add-guardian>+ Adicionar responsável</button>
+
+            <div class="bfa-admin-form-actions bfa-matricula-step-actions">
+                <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/matriculas" data-cancel-wizard>Cancelar</a>
+                <button class="bfa-btn-secondary bfa-admin-button" type="button" data-previous-step>Voltar</button>
+                <button class="bfa-btn-primary bfa-admin-button" type="button" data-next-step>Continuar</button>
+            </div>
+        </section>
+
+        <section class="bfa-admin-card bfa-admin-form-card bfa-matricula-step"
+                 data-step="3"
+                 aria-labelledby="etapa-plano-titulo">
+            <header class="bfa-matricula-step__header">
+                <span>Etapa 3 de 5</span>
+                <h2 id="etapa-plano-titulo">Plano</h2>
+                <p>Defina o início para consultar somente condições comercialmente válidas.</p>
+            </header>
+
+            <div class="bfa-matricula-start-date">
+                <div class="bfa-form-field">
+                    <label asp-for="DataInicioTexto" class="bfa-form-label"></label>
+                    <div class="bfa-admin-date-field" data-bfa-date-field>
+                        <input asp-for="DataInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" />
+                        <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data de início" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button>
+                    </div>
+                    <span asp-validation-for="DataInicioTexto" class="bfa-validation-message"></span>
+                </div>
+                <p class="bfa-matricula-loading" data-plan-loading role="status" hidden>Atualizando planos...</p>
+            </div>
+
+            <fieldset class="bfa-matricula-choice-fieldset">
+                <legend>Planos elegíveis</legend>
+                <div class="bfa-matricula-plan-grid" data-plan-list>
+                    @foreach (var plano in Model.Planos)
+                    {
+                        <label class="bfa-matricula-plan-card">
+                            <input type="radio" name="PlanoVersaoId" value="@plano.PlanoVersaoId" checked="@(Model.PlanoVersaoId == plano.PlanoVersaoId)" data-plan-option data-plan-name="@plano.Nome" data-plan-frequency="@plano.FrequenciaSemanal" data-plan-duration="@plano.DuracaoMeses" data-plan-price="@plano.ValorMensalInput" data-plan-fee-enabled="@plano.CobraMatricula.ToString().ToLowerInvariant()" data-plan-fee="@plano.ValorMatriculaInput" />
+                            <span class="bfa-matricula-plan-card__scope">@plano.Escopo</span>
+                            <strong>@plano.Nome</strong>
+                            <span>@plano.Frequencia · @plano.Duracao</span>
+                            <b>@plano.ValorMensal <small>/ mês</small></b>
+                            <span>Taxa de matrícula<br /><strong>@plano.ValorMatricula</strong></span>
+                            <em>Selecionar</em>
+                        </label>
+                    }
+                </div>
+                <p class="bfa-matricula-inline-empty" data-plan-empty hidden>Nenhum plano disponível para a data informada.</p>
+                <span asp-validation-for="PlanoVersaoId" class="bfa-validation-message"></span>
+            </fieldset>
+
+            <section class="bfa-matricula-commercial" data-commercial-fields aria-labelledby="condicoes-comerciais-titulo">
+                <header><h3 id="condicoes-comerciais-titulo">Condições contratadas</h3><p data-selected-plan-summary>Selecione um plano.</p></header>
+                <div class="bfa-matricula-form-grid">
+                    <div class="bfa-form-field">
+                        <label asp-for="ValorMensalContratadoTexto" class="bfa-form-label"></label>
+                        <div class="bfa-matricula-money"><span>R$</span><input asp-for="ValorMensalContratadoTexto" class="form-control bfa-form-control" type="text" inputmode="decimal" maxlength="18" data-bfa-number="money" data-bfa-number-min="0.01" /></div>
+                        <span class="bfa-admin-form-help">Catálogo: <strong data-catalog-price>—</strong></span>
+                        <span asp-validation-for="ValorMensalContratadoTexto" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-form-field">
+                        <span class="bfa-form-label">Taxa de matrícula</span>
+                        <label class="bfa-matricula-toggle"><input asp-for="CobraTaxaMatricula" data-fee-toggle /> Cobrar taxa de matrícula</label>
+                        <div class="bfa-matricula-money"><span>R$</span><input asp-for="ValorTaxaMatriculaTexto" class="form-control bfa-form-control" type="text" inputmode="decimal" maxlength="18" data-bfa-number="money" data-bfa-number-min="0.01" data-fee-value /></div>
+                        <span asp-validation-for="ValorTaxaMatriculaTexto" class="bfa-validation-message"></span>
+                    </div>
+                </div>
+                <p class="bfa-matricula-end-date">Término previsto: <strong data-end-date>—</strong></p>
+            </section>
+
+            <div class="bfa-admin-form-actions bfa-matricula-step-actions">
+                <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/matriculas" data-cancel-wizard>Cancelar</a>
+                <button class="bfa-btn-secondary bfa-admin-button" type="button" data-previous-step>Voltar</button>
+                <button class="bfa-btn-primary bfa-admin-button" type="button" data-next-step>Continuar</button>
+            </div>
+        </section>
+
+        <section class="bfa-admin-card bfa-admin-form-card bfa-matricula-step"
+                 data-step="4"
+                 aria-labelledby="etapa-grade-titulo">
+            <header class="bfa-matricula-step__header">
+                <span>Etapa 4 de 5</span>
+                <h2 id="etapa-grade-titulo">Grade</h2>
+                <p>Selecione horários recorrentes sem ultrapassar o limite do plano.</p>
+            </header>
+            <div class="bfa-matricula-frequency" role="status">
+                <strong data-grade-plan>Plano não selecionado</strong>
+                <span>Permite até: <b data-grade-limit>—</b></span>
+                <span>Selecionados: <b data-grade-count>0 de —</b></span>
+            </div>
+            <p class="bfa-matricula-loading" data-schedule-loading role="status" hidden>Atualizando horários e ocupação...</p>
+            <div class="bfa-matricula-schedule-days" data-schedule-list>
+                @foreach (var grupo in horariosPorDia)
+                {
+                    <section class="bfa-matricula-schedule-day" aria-labelledby="dia-@grupo.Key.DiaSemanaOrdem">
+                        <h3 id="dia-@grupo.Key.DiaSemanaOrdem">@grupo.Key.DiaSemana</h3>
+                        <div class="bfa-matricula-schedule-grid">
+                            @foreach (var horario in grupo)
+                            {
+                                var selecionado = Model.TurmaHorarioIds.Contains(horario.TurmaHorarioId) && !horario.Lotado;
+                                <label class="bfa-matricula-schedule-card @(horario.Lotado ? "is-full" : null)">
+                                    <input type="checkbox" name="TurmaHorarioIds" value="@horario.TurmaHorarioId" checked="@selecionado" disabled="@horario.Lotado" data-schedule-option data-day="@horario.DiaSemanaOrdem" data-start="@horario.HoraInicio" data-end="@horario.HoraFim" data-class-name="@horario.NomeTurma" data-professor="@horario.Professor" data-day-name="@horario.DiaSemana" />
+                                    <strong>@horario.NomeTurma</strong>
+                                    <b>@horario.Horario</b>
+                                    <span>Professor <strong>@horario.Professor</strong></span>
+                                    <span>Ocupação <strong>@horario.Ocupacao / @horario.Capacidade</strong></span>
+                                    <em>@(horario.Lotado ? "Lotado" : horario.VagasDisponiveis == 1 ? "1 vaga disponível" : $"{horario.VagasDisponiveis} vagas disponíveis")</em>
+                                    <small>@(horario.Lotado ? "Indisponível" : "Selecionar")</small>
+                                </label>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+            <p class="bfa-matricula-inline-empty" data-schedule-empty hidden>Nenhum horário elegível para o período informado.</p>
+            <span asp-validation-for="TurmaHorarioIds" class="bfa-validation-message"></span>
+
+            <div class="bfa-admin-form-actions bfa-matricula-step-actions">
+                <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/matriculas" data-cancel-wizard>Cancelar</a>
+                <button class="bfa-btn-secondary bfa-admin-button" type="button" data-previous-step>Voltar</button>
+                <button class="bfa-btn-primary bfa-admin-button" type="button" data-next-step>Continuar</button>
+            </div>
+        </section>
+
+        <section class="bfa-admin-card bfa-admin-form-card bfa-matricula-step"
+                 data-step="5"
+                 aria-labelledby="etapa-revisar-titulo">
+            <header class="bfa-matricula-step__header">
+                <span>Etapa 5 de 5</span>
+                <h2 id="etapa-revisar-titulo">Revisar</h2>
+                <p>Confira todos os dados. Nada foi persistido até este momento.</p>
+            </header>
+            <div class="bfa-matricula-review">
+                <section><header><h3>Aluno</h3><button type="button" data-edit-step="1">Editar</button></header><div data-review-student>—</div></section>
+                <section><header><h3>Responsáveis</h3><button type="button" data-edit-step="2">Editar</button></header><div data-review-guardians>—</div></section>
+                <section><header><h3>Plano</h3><button type="button" data-edit-step="3">Editar</button></header><div data-review-plan>—</div></section>
+                <section><header><h3>Grade</h3><button type="button" data-edit-step="4">Editar</button></header><div data-review-schedule>—</div></section>
+            </div>
+
+            <div class="bfa-admin-form-actions bfa-matricula-step-actions">
+                <button class="bfa-btn-secondary bfa-admin-button" type="button" data-previous-step>Voltar</button>
+                <button class="bfa-btn-primary bfa-admin-button" type="submit" data-submit-matricula data-loading-text="Criando matrícula...">Confirmar matrícula</button>
+            </div>
+        </section>
+    </div>
+</form>
+
+<template id="bfa-guardian-template">
+    <article class="bfa-matricula-guardian-card" data-guardian-card>
+        <header><h3>Responsável <span data-guardian-number></span></h3><button type="button" class="bfa-btn-secondary bfa-admin-button" data-remove-guardian>Remover</button></header>
+        <div class="bfa-matricula-form-grid">
+            <div class="bfa-form-field"><label class="bfa-form-label" for="Responsaveis___index____NomeCompleto">Nome completo</label><input class="form-control bfa-form-control" id="Responsaveis___index____NomeCompleto" name="Responsaveis[__index__].NomeCompleto" maxlength="150" /><span class="bfa-validation-message" data-valmsg-for="Responsaveis[__index__].NomeCompleto"></span></div>
+            <div class="bfa-form-field"><label class="bfa-form-label" for="Responsaveis___index____Cpf">CPF</label><input class="form-control bfa-form-control" id="Responsaveis___index____Cpf" name="Responsaveis[__index__].Cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" data-bfa-mask="document" /></div>
+            <div class="bfa-form-field"><label class="bfa-form-label" for="Responsaveis___index____Telefone">Telefone</label><input class="form-control bfa-form-control" id="Responsaveis___index____Telefone" name="Responsaveis[__index__].Telefone" type="tel" maxlength="30" data-bfa-mask="phone" /></div>
+            <div class="bfa-form-field"><label class="bfa-form-label" for="Responsaveis___index____Email">E-mail</label><input class="form-control bfa-form-control" id="Responsaveis___index____Email" name="Responsaveis[__index__].Email" type="email" maxlength="256" /></div>
+            <div class="bfa-form-field"><label class="bfa-form-label" for="Responsaveis___index____TipoRelacao">Tipo de relação</label><select class="form-select bfa-form-control" id="Responsaveis___index____TipoRelacao" name="Responsaveis[__index__].TipoRelacao" data-relation-type><option value="">Selecione</option><option value="Pai">Pai</option><option value="Mae">Mãe</option><option value="ResponsavelLegal">Responsável legal</option><option value="Tutor">Tutor</option><option value="Avo">Avô/Avó</option><option value="Outro">Outro</option></select></div>
+            <div class="bfa-form-field" data-other-relation hidden><label class="bfa-form-label" for="Responsaveis___index____DescricaoRelacao">Descrição da relação</label><input class="form-control bfa-form-control" id="Responsaveis___index____DescricaoRelacao" name="Responsaveis[__index__].DescricaoRelacao" maxlength="100" /></div>
+        </div>
+        <div class="bfa-matricula-checkboxes"><label><input id="Responsaveis___index____PrincipalContato" name="Responsaveis[__index__].PrincipalContato" type="checkbox" value="true" data-primary-guardian /><input name="Responsaveis[__index__].PrincipalContato" type="hidden" value="false" /> Principal contato</label><label><input id="Responsaveis___index____ResponsavelFinanceiro" name="Responsaveis[__index__].ResponsavelFinanceiro" type="checkbox" value="true" /><input name="Responsaveis[__index__].ResponsavelFinanceiro" type="hidden" value="false" /> Responsável financeiro</label></div>
+    </article>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-input-masks.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-number-field.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-matricula-wizard.js" asp-append-version="true"></script>
+}

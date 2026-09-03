@@ -1,5 +1,6 @@
 using System.Net;
 using BFA.Domain.Acessos;
+using BFA.Domain.Matriculas;
 using BFA.Domain.Professores;
 using BFA.Domain.Turmas;
 using BFA.Infrastructure.Persistence;
@@ -263,6 +264,59 @@ public sealed partial class AreaUnidadeEndpointTests
         Assert.Equal(horarioIds, await contexto.TurmasHorarios.OrderBy(item => item.Id)
             .Select(item => item.Id).ToArrayAsync());
         Assert.Equal(2, await contexto.TurmasHorarios.CountAsync());
+    }
+
+    [Fact]
+    public async Task Ajuste_de_horario_com_grade_exibe_erro_amigavel_sem_alteracao()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var organizacao = await AdicionarOrganizacaoAsync(
+            application, "BFA", "bfa-turmas-grade-ajuste");
+        var unidade = await AdicionarUnidadeAsync(application, organizacao.Id, "BFA Unidade");
+        await AdicionarVinculoAsync(application, application.UsuarioStore.Usuario.Id,
+            organizacao.Id, unidade.Id, PerfilAcesso.AdministradorUnidade);
+        var professor = await AdicionarProfessorTurmaAsync(
+            application, organizacao.Id, unidade.Id, "Professora Ana");
+        await AdicionarTurmaHorarioAsync(application, organizacao.Id, unidade.Id,
+            professor.Vinculo.Id, "Turma com Grade", new TimeOnly(19, 0), new TimeOnly(20, 0));
+
+        Guid turmaId;
+        Guid horarioId;
+        await using (var scope = application.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+            turmaId = (await db.Turmas.SingleAsync()).Id;
+            horarioId = (await db.TurmasHorarios.SingleAsync()).Id;
+            db.MatriculasHorarios.Add(new MatriculaHorario(
+                Guid.NewGuid(), organizacao.Id, unidade.Id, Guid.NewGuid(), horarioId,
+                new DateOnly(2026, 2, 1), application.UsuarioStore.Usuario.Id, CriadoEmUtc));
+            await db.SaveChangesAsync();
+        }
+
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+        var pagina = await client.GetStringAsync(
+            $"/unidade/{unidade.Id:D}/turmas/{turmaId:D}/horarios");
+        var token = ObterAntiforgery(pagina);
+        using var response = await client.PostAsync(
+            $"/unidade/{unidade.Id:D}/turmas/{turmaId:D}/horarios",
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = token,
+                ["NovaVigenciaInicioTexto"] = "01/09/2026",
+                ["Horarios[0].DiaSemana"] = ((short)DiaSemana.Terca).ToString(),
+                ["Horarios[0].HoraInicio"] = "20:00",
+                ["Horarios[0].HoraFim"] = "21:00"
+            }));
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Este horário possui alunos alocados", html, StringComparison.Ordinal);
+        await using var verificacao = application.Services.CreateAsyncScope();
+        var horario = await verificacao.ServiceProvider.GetRequiredService<BfaDbContext>()
+            .TurmasHorarios.SingleAsync();
+        Assert.Equal(horarioId, horario.Id);
+        Assert.Null(horario.VigenciaFim);
     }
 
     [Fact]
