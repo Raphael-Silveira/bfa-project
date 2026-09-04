@@ -1,0 +1,69 @@
+@model AulaFormViewModel
+@{
+    ViewData["Title"] = "Nova Aula";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-nova-aula">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-nova-aula">Nova Aula</h1>
+        <p class="bfa-admin-page-header__description">
+            Programe uma nova aula em @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<div class="bfa-admin-card">
+    <form asp-area="Unidade"
+          asp-controller="Aulas"
+          asp-action="Nova"
+          asp-route-unidadeId="@Model.UnidadeId"
+          method="post"
+          class="bfa-form">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="bfa-validation-summary"></div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" asp-for="TurmaHorarioId"></label>
+            <select class="form-control bfa-form-control" asp-for="TurmaHorarioId">
+                <option value="">Selecione o horário da turma</option>
+            </select>
+            <span asp-validation-for="TurmaHorarioId" class="bfa-validation-message"></span>
+        </div>
+
+        <div class="bfa-form-row">
+            <div class="bfa-form-field">
+                <label class="bfa-form-label" asp-for="Data"></label>
+                <input class="form-control bfa-form-control" asp-for="Data" type="date" />
+                <span asp-validation-for="Data" class="bfa-validation-message"></span>
+            </div>
+            <div class="bfa-form-field">
+                <label class="bfa-form-label" asp-for="HoraInicio"></label>
+                <input class="form-control bfa-form-control" asp-for="HoraInicio" type="time" />
+                <span asp-validation-for="HoraInicio" class="bfa-validation-message"></span>
+            </div>
+            <div class="bfa-form-field">
+                <label class="bfa-form-label" asp-for="HoraFim"></label>
+                <input class="form-control bfa-form-control" asp-for="HoraFim" type="time" />
+                <span asp-validation-for="HoraFim" class="bfa-validation-message"></span>
+            </div>
+        </div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" asp-for="Observacoes"></label>
+            <textarea class="form-control bfa-form-control" asp-for="Observacoes" rows="3" maxlength="500"></textarea>
+            <span asp-validation-for="Observacoes" class="bfa-validation-message"></span>
+        </div>
+
+        <div class="bfa-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Criar aula</button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Aulas"
+               asp-action="Index"
+               asp-route-unidadeId="@Model.UnidadeId">Cancelar</a>
+        </div>
+    </form>
+</div>

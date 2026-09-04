@@ -1,6 +1,6 @@
 # PROJECT-STATE.md — BFA Platform
 
-**Última atualização:** 2026-09-03  
+**Última atualização:** 2026-09-04  
 **Status:** Em desenvolvimento ativo  
 **Branch:** feature/login-mvc  
 **Testes:** 1.177 aprovados (484 unitários + 693 integração)  
@@ -59,6 +59,7 @@ backend/
 - Planos Locais (`PlanosController`)
 - Matrículas (`MatriculasController`) — CRUD completo com Grade
 - Alunos (`AlunosController`) — Listagem + Detalhe + Editar dados + Gerenciar Responsáveis
+- Aulas (`AulasController`) — CRUD + Chamada + Frequência
 - Contrato (read-only)
 
 ### Professor (Area: `/professor`)
@@ -111,6 +112,7 @@ Governança centralizada via `IGovernancaOperacionalUnidade`:
 | V012 | Disponibilidade de Planos e Matrículas |
 | V013 | Grade das Matrículas |
 | V014 | Correção de validação de unidade na matrícula |
+| V015 | Aulas e Presenças |
 
 **Regra:** Migrations são imutáveis. Correções são novas migrations.
 
@@ -185,11 +187,12 @@ O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
 - Módulo Alunos — Etapa 1 (Listagem + Detalhe) CONCLUÍDO
 - Módulo Alunos — Etapa 2 (Editar Dados) CONCLUÍDO
 - Módulo Alunos — Etapa 3 (Gerenciar Responsáveis) CONCLUÍDO
+- Módulo Aulas e Presenças CONCLUÍDO
 
 ## Próximos Passos (Roadmap)
 
-1. Aulas
-2. Presença
+1. ~~Aulas~~ ✅
+2. ~~Presença~~ ✅ (incluída no módulo Aulas)
 3. Financeiro Unidade x Aluno
 4. Cobrança
 5. Pagamento
@@ -220,6 +223,7 @@ Planos sequenciais em `docs/plans/`:
 | 03 | Padronizar Validação de Datas e Mensagens | Concluído |
 | 04 | Módulo Alunos e Responsáveis | Concluído |
 | 05 | Logging Informativo para Produção | Concluído |
+| 06 | Módulo Aulas e Presenças | Concluído |
 
 ## Documentos de Referência
 

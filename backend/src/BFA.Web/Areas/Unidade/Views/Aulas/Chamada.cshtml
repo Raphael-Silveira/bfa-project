@@ -1,0 +1,144 @@
+@model AulaChamadaViewModel
+@{
+    ViewData["Title"] = "Chamada";
+    Layout = "_UnidadeLayout";
+    var aula = Model.Aula;
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-chamada">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-chamada">Chamada</h1>
+        <p class="bfa-admin-page-header__description">
+            @aula.TurmaNome — @aula.Data · @aula.HoraInicio – @aula.HoraFim
+        </p>
+    </div>
+</header>
+
+<form asp-area="Unidade"
+      asp-controller="Aulas"
+      asp-action="Chamada"
+      asp-route-unidadeId="@Model.UnidadeId"
+      asp-route-aulaId="@aula.AulaId"
+      method="post"
+      class="bfa-form">
+    @Html.AntiForgeryToken()
+
+    @if (Model.Alunos.Count == 0)
+    {
+        <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+            <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+            <div>
+                <h2>Nenhum aluno inscrito.</h2>
+                <p>Não há alunos matriculados neste horário de turma.</p>
+            </div>
+        </section>
+    }
+    else
+    {
+        <div class="bfa-admin-table-container bfa-admin-desktop-list">
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Presente</th>
+                        <th>Ausente</th>
+                        <th>Justificado</th>
+                        <th>Isento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for (var i = 0; i < Model.Alunos.Count; i++)
+                {
+                    var aluno = Model.Alunos[i];
+                    <tr>
+                        <td>
+                            <input type="hidden" name="Registros[@i].AlunoId" value="@aluno.AlunoId" />
+                            <strong>@aluno.NomeCompleto</strong>
+                        </td>
+                        <td>
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Presente"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Presente ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Ausente"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Ausente ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Justificado"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Justificado ? "checked" : "") />
+                        </td>
+                        <td>
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Isento"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Isento ? "checked" : "") />
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <section class="bfa-admin-mobile-list" aria-label="Chamada">
+            @for (var i = 0; i < Model.Alunos.Count; i++)
+            {
+                var aluno = Model.Alunos[i];
+                <article class="bfa-admin-card">
+                    <header>
+                        <div>
+                            <h2>@aluno.NomeCompleto</h2>
+                        </div>
+                    </header>
+                    <input type="hidden" name="Registros[@i].AlunoId" value="@aluno.AlunoId" />
+                    <div class="bfa-chamada-options">
+                        <label class="bfa-chamada-option">
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Presente"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Presente ? "checked" : "") />
+                            Presente
+                        </label>
+                        <label class="bfa-chamada-option">
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Ausente"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Ausente ? "checked" : "") />
+                            Ausente
+                        </label>
+                        <label class="bfa-chamada-option">
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Justificado"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Justificado ? "checked" : "") />
+                            Justificado
+                        </label>
+                        <label class="bfa-chamada-option">
+                            <input type="radio"
+                                   name="Registros[@i].Status"
+                                   value="Isento"
+                                   @(aluno.Status == BFA.Domain.Aulas.StatusPresenca.Isento ? "checked" : "") />
+                            Isento
+                        </label>
+                    </div>
+                </article>
+            }
+        </section>
+
+        <div class="bfa-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar chamada</button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Aulas"
+               asp-action="Detalhes"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-aulaId="@aula.AulaId">Voltar</a>
+        </div>
+    }
+</form>

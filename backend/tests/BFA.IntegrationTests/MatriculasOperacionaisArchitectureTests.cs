@@ -59,7 +59,7 @@ public sealed class MatriculasOperacionaisArchitectureTests
 
         var migrations = Path.Combine(raiz, "database", "migrations");
         var files = Directory.GetFiles(migrations, "V*.sql");
-        Assert.True(files.Length == 14, $"Esperadas 14 migrations, encontradas {files.Length}.");
+        Assert.True(files.Length == 15, $"Esperadas 15 migrations, encontradas {files.Length}.");
         Assert.Contains(files, item => Path.GetFileName(item)
             .Equals("V014__corrigir_validacao_de_unidade_na_matricula.sql",
                 StringComparison.Ordinal));

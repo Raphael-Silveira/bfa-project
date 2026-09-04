@@ -1,0 +1,129 @@
+@model AulaDetalheViewModel
+@{
+    ViewData["Title"] = "Detalhes da Aula";
+    Layout = "_UnidadeLayout";
+    var aula = Model.Aula;
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-detalhe-aula">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-detalhe-aula">
+            @aula.TurmaNome — @aula.Data
+        </h1>
+        <p class="bfa-admin-page-header__description">
+            @aula.HoraInicio – @aula.HoraFim · @aula.ProfessorNome
+        </p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <span class="bfa-admin-badge @(aula.Status == "Programada" ? "is-active" : aula.Status == "Concluida" ? "is-completed" : "is-inactive")">
+            @aula.Status
+        </span>
+        @if (Model.PodeGerenciar && aula.PodeChamada)
+        {
+            <a class="bfa-btn-primary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Aulas"
+               asp-action="Chamada"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-aulaId="@aula.AulaId">Chamada</a>
+        }
+        @if (Model.PodeGerenciar && aula.PodeConcluir)
+        {
+            <form asp-area="Unidade"
+                  asp-controller="Aulas"
+                  asp-action="Concluir"
+                  asp-route-unidadeId="@Model.UnidadeId"
+                  asp-route-aulaId="@aula.AulaId"
+                  method="post"
+                  class="bfa-inline-form">
+                @Html.AntiForgeryToken()
+                <button class="bfa-btn-primary bfa-admin-button" type="submit"
+                        onclick="return confirm('Deseja concluir esta aula?')">
+                    Concluir
+                </button>
+            </form>
+        }
+        @if (Model.PodeGerenciar && aula.PodeCancelar)
+        {
+            <form asp-area="Unidade"
+                  asp-controller="Aulas"
+                  asp-action="Cancelar"
+                  asp-route-unidadeId="@Model.UnidadeId"
+                  asp-route-aulaId="@aula.AulaId"
+                  method="post"
+                  class="bfa-inline-form">
+                @Html.AntiForgeryToken()
+                <button class="bfa-btn-secondary bfa-admin-button" type="submit"
+                        onclick="return confirm('Deseja cancelar esta aula?')">
+                    Cancelar aula
+                </button>
+            </form>
+        }
+        @if (Model.PodeGerenciar)
+        {
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Aulas"
+               asp-action="Editar"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-aulaId="@aula.AulaId">Editar</a>
+        }
+    </div>
+</header>
+
+<div class="bfa-admin-card">
+    <dl class="bfa-detail-list">
+        <div><dt>Turma</dt><dd>@aula.TurmaNome</dd></div>
+        <div><dt>Professor</dt><dd>@aula.ProfessorNome</dd></div>
+        <div><dt>Data</dt><dd>@aula.Data</dd></div>
+        <div><dt>Horário</dt><dd>@aula.HoraInicio – @aula.HoraFim</dd></div>
+        <div><dt>Capacidade</dt><dd>@aula.Capacidade</dd></div>
+        @if (aula.Observacoes is not null)
+        {
+            <div><dt>Observações</dt><dd>@aula.Observacoes</dd></div>
+        }
+    </dl>
+</div>
+
+@if (aula.Alunos.Count > 0)
+{
+    <h2 class="bfa-admin-section-title">Alunos presentes</h2>
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th>Status</th>
+                    <th>Chegou</th>
+                    <th>Saiu</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var aluno in aula.Alunos)
+            {
+                <tr>
+                    <td><strong>@aluno.NomeCompleto</strong></td>
+                    <td>
+                        <span class="bfa-admin-badge @(aluno.Status == "Presente" ? "is-active" : "is-inactive")">
+                            @(aluno.Status ?? "Não registrado")
+                        </span>
+                    </td>
+                    <td>@(aluno.ChegouAs ?? "—")</td>
+                    <td>@(aluno.SaiuAs ?? "—")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else if (aula.Status == "Programada")
+{
+    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhuma presença registrada.</h2>
+            <p>Registre a presença dos alunos utilizando a chamada.</p>
+        </div>
+    </section>
+}

@@ -1,0 +1,115 @@
+@model AulaFrequenciaViewModel
+@{
+    ViewData["Title"] = "Frequência";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-frequencia">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-frequencia">Relatório de Frequência</h1>
+        <p class="bfa-admin-page-header__description">
+            Frequência dos alunos em @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<form class="bfa-admin-card bfa-matricula-filters"
+      action="/unidade/@Model.UnidadeId/aulas/frequencia"
+      method="get"
+      role="search">
+    <div class="bfa-form-field">
+        <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
+        <input class="form-control bfa-form-control"
+               id="filtro-data-inicio"
+               name="dataInicio"
+               type="date"
+               value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="bfa-form-field">
+        <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
+        <input class="form-control bfa-form-control"
+               id="filtro-data-fim"
+               name="dataFim"
+               type="date"
+               value="@Model.DataFim.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="bfa-matricula-filter-actions">
+        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Unidade"
+           asp-controller="Aulas"
+           asp-action="Frequencia"
+           asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
+    </div>
+</form>
+
+@if (Model.Alunos.Count == 0)
+{
+    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhum dado de frequência encontrado.</h2>
+            <p>Registre chamadas para gerar o relatório de frequência.</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th>Total Aulas</th>
+                    <th>Presentes</th>
+                    <th>Ausentes</th>
+                    <th>Justificados</th>
+                    <th>Isentos</th>
+                    <th>Frequência</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.Alunos)
+            {
+                <tr>
+                    <td><strong>@item.NomeCompleto</strong></td>
+                    <td>@item.TotalAulas</td>
+                    <td>@item.Presentes</td>
+                    <td>@item.Ausentes</td>
+                    <td>@item.Justificados</td>
+                    <td>@item.Isentos</td>
+                    <td>
+                        <span class="bfa-admin-badge @(decimal.Parse(item.PercentualFrequencia.Replace("%","")) >= 75 ? "is-active" : "is-inactive")">
+                            @item.PercentualFrequencia
+                        </span>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <section class="bfa-admin-mobile-list" aria-label="Frequência dos alunos">
+        @foreach (var item in Model.Alunos)
+        {
+            <article class="bfa-admin-card">
+                <header>
+                    <div>
+                        <h2>@item.NomeCompleto</h2>
+                    </div>
+                    <span class="bfa-admin-badge @(decimal.Parse(item.PercentualFrequencia.Replace("%","")) >= 75 ? "is-active" : "is-inactive")">
+                        @item.PercentualFrequencia
+                    </span>
+                </header>
+                <dl>
+                    <div><dt>Total</dt><dd>@item.TotalAulas aulas</dd></div>
+                    <div><dt>Presentes</dt><dd>@item.Presentes</dd></div>
+                    <div><dt>Ausentes</dt><dd>@item.Ausentes</dd></div>
+                    <div><dt>Justificados</dt><dd>@item.Justificados</dd></div>
+                    <div><dt>Isentos</dt><dd>@item.Isentos</dd></div>
+                </dl>
+            </article>
+        }
+    </section>
+}

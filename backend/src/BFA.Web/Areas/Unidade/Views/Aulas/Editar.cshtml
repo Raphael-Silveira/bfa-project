@@ -1,0 +1,50 @@
+@model AulaEdicaoFormViewModel
+@{
+    ViewData["Title"] = "Editar Aula";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-editar-aula">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-editar-aula">Editar Aula</h1>
+        <p class="bfa-admin-page-header__description">
+            Altere os dados da aula em @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<div class="bfa-admin-card">
+    <form asp-area="Unidade"
+          asp-controller="Aulas"
+          asp-action="Editar"
+          asp-route-unidadeId="@Model.UnidadeId"
+          asp-route-aulaId="@Model.AulaId"
+          method="post"
+          class="bfa-form">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="bfa-validation-summary"></div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label">Status atual</label>
+            <input class="form-control bfa-form-control" value="@Model.StatusAtual" disabled />
+        </div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" asp-for="Observacoes"></label>
+            <textarea class="form-control bfa-form-control" asp-for="Observacoes" rows="3" maxlength="500"></textarea>
+            <span asp-validation-for="Observacoes" class="bfa-validation-message"></span>
+        </div>
+
+        <div class="bfa-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar alterações</button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Aulas"
+               asp-action="Detalhes"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-aulaId="@Model.AulaId">Cancelar</a>
+        </div>
+    </form>
+</div>
