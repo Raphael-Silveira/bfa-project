@@ -15,6 +15,8 @@ public enum EstadoAlunosUnidade
     DataNascimentoInvalida,
     MenorSemResponsavel,
     DadosInvalidos,
+    ResponsavelNaoEncontrado,
+    ResponsavelJaVinculado,
     Falha
 }
 
@@ -50,6 +52,19 @@ public sealed record ResponsavelAlunoResumo(
     bool VinculoAtivo,
     bool ResponsavelAtivo);
 
+public sealed record ResponsavelDetalhe(
+    Guid ResponsavelId,
+    string NomeCompleto,
+    string? Cpf,
+    string? Telefone,
+    string? Email,
+    bool Ativo,
+    TipoRelacaoResponsavel TipoRelacao,
+    string? DescricaoRelacao,
+    bool PrincipalContato,
+    bool ResponsavelFinanceiro,
+    bool VinculoAtivo);
+
 public sealed record MatriculaAlunoResumo(
     Guid MatriculaId,
     string Plano,
@@ -72,6 +87,10 @@ public sealed record AlunoDetalhe(
     IReadOnlyList<ResponsavelAlunoResumo> Responsaveis,
     MatriculaAlunoResumo? MatriculaAtiva,
     IReadOnlyList<MatriculaAlunoResumo> HistoricoMatriculas);
+
+public sealed record ResultadoAlunosUnidadeSimples(
+    EstadoAlunosUnidade Estado,
+    ContextoAlunosResumo? Contexto = null);
 
 public sealed record ResultadoAlunosUnidade<T>(
     EstadoAlunosUnidade Estado,
@@ -127,6 +146,37 @@ public interface IAlunosRepositorio
         CancellationToken cancellationToken);
 
     Task<bool> PersistirAtualizacaoAsync(Aluno aluno, CancellationToken cancellationToken);
+
+    // Responsavel CRUD
+    Task<IReadOnlyList<ResponsavelAlunoResumo>> ListarResponsaveisAlunoAsync(
+        Guid organizacaoId, Guid alunoId, CancellationToken cancellationToken);
+
+    Task<Responsavel?> ObterResponsavelAsync(
+        Guid organizacaoId, Guid responsavelId, CancellationToken cancellationToken);
+
+    Task<AlunoResponsavel?> ObterVinculoAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId, CancellationToken cancellationToken);
+
+    Task<bool> CriarResponsavelAsync(
+        Responsavel responsavel, AlunoResponsavel vinculo, CancellationToken cancellationToken);
+
+    Task<bool> AtualizarResponsavelAsync(
+        Responsavel responsavel, CancellationToken cancellationToken);
+
+    Task<bool> AtualizarVinculoAsync(
+        AlunoResponsavel vinculo, CancellationToken cancellationToken);
+
+    Task<bool> DesativarVinculoAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId, DateTime atualizadoEmUtc, CancellationToken cancellationToken);
+
+    Task<bool> AtivarVinculoAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId, DateTime atualizadoEmUtc, CancellationToken cancellationToken);
+
+    Task<bool> ExisteResponsavelNaOrganizacaoAsync(
+        Guid organizacaoId, Guid responsavelId, CancellationToken cancellationToken);
+
+    Task<bool> ExisteVinculoAtivoAlunoResponsavelAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId, CancellationToken cancellationToken);
 }
 
 public interface IAlunosServico
@@ -146,6 +196,37 @@ public interface IAlunosServico
     Task<ResultadoAlunosUnidade<Guid>> AtualizarDadosAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
         string nomeCompleto, DateOnly dataNascimento, string? telefone, string? email,
+        CancellationToken cancellationToken);
+
+    // Responsavel management
+    Task<ResultadoAlunosUnidade<IReadOnlyList<ResponsavelAlunoResumo>>> ListarResponsaveisAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAlunosUnidade<ResponsavelDetalhe>> ObterResponsavelAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAlunosUnidade<Guid>> CriarResponsavelAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId,
+        string nomeCompleto, string? cpf, string? telefone, string? email,
+        TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
+        bool principalContato, bool responsavelFinanceiro,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAlunosUnidade<Guid>> AtualizarResponsavelAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        string nomeCompleto, string? cpf, string? telefone, string? email,
+        TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
+        bool principalContato, bool responsavelFinanceiro,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAlunosUnidadeSimples> DesativarVinculoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAlunosUnidadeSimples> AtivarVinculoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
         CancellationToken cancellationToken);
 }
 
@@ -275,6 +356,269 @@ public sealed class AlunosServico(
 
         return sucesso
             ? new(EstadoAlunosUnidade.Sucesso, alunoId, contexto.Valor)
+            : new(EstadoAlunosUnidade.Falha);
+    }
+
+    public async Task<ResultadoAlunosUnidade<IReadOnlyList<ResponsavelAlunoResumo>>> ListarResponsaveisAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
+        if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
+            return new(contexto.Estado);
+        if (alunoId == Guid.Empty)
+            return new(EstadoAlunosUnidade.AlunoNaoEncontrado);
+
+        var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
+        if (!relacionado)
+            return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
+
+        var itens = await repositorio.ListarResponsaveisAlunoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, cancellationToken);
+        return new(EstadoAlunosUnidade.Sucesso, itens, contexto.Valor);
+    }
+
+    public async Task<ResultadoAlunosUnidade<ResponsavelDetalhe>> ObterResponsavelAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
+        if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
+            return new(contexto.Estado);
+        if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
+        if (!relacionado)
+            return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
+
+        var responsavel = await repositorio.ObterResponsavelAsync(
+            contexto.Valor.OrganizacaoId, responsavelId, cancellationToken);
+        if (responsavel is null)
+            return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+
+        var vinculo = await repositorio.ObterVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, cancellationToken);
+
+        var detalhe = new ResponsavelDetalhe(
+            responsavel.Id,
+            responsavel.NomeCompleto,
+            responsavel.Cpf,
+            responsavel.Telefone,
+            responsavel.Email,
+            responsavel.Ativo,
+            vinculo?.TipoRelacao ?? default,
+            vinculo?.DescricaoRelacao,
+            vinculo?.PrincipalContato ?? false,
+            vinculo?.ResponsavelFinanceiro ?? false,
+            vinculo?.Ativo ?? false);
+
+        return new(EstadoAlunosUnidade.Sucesso, detalhe, contexto.Valor);
+    }
+
+    public async Task<ResultadoAlunosUnidade<Guid>> CriarResponsavelAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId,
+        string nomeCompleto, string? cpf, string? telefone, string? email,
+        TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
+        bool principalContato, bool responsavelFinanceiro,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
+        if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
+            return new(contexto.Estado);
+        if (alunoId == Guid.Empty || string.IsNullOrWhiteSpace(nomeCompleto))
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
+        if (!relacionado)
+            return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
+
+        var agoraUtc = DateTime.UtcNow;
+        var responsavelId = Guid.NewGuid();
+        var vinculoId = Guid.NewGuid();
+
+        var responsavel = new Responsavel(
+            responsavelId,
+            contexto.Valor.OrganizacaoId,
+            nomeCompleto,
+            agoraUtc,
+            cpf: cpf,
+            telefone: telefone,
+            email: email);
+
+        var vinculo = new AlunoResponsavel(
+            vinculoId,
+            contexto.Valor.OrganizacaoId,
+            alunoId,
+            responsavelId,
+            tipoRelacao,
+            principalContato,
+            responsavelFinanceiro,
+            agoraUtc,
+            descricaoRelacao);
+
+        var sucesso = await repositorio.CriarResponsavelAsync(
+            responsavel, vinculo, cancellationToken);
+
+        if (sucesso)
+        {
+            logger.LogInformation(
+                "CriarResponsavel concluido: responsavel {ResponsavelId} vinculado ao aluno {AlunoId}",
+                responsavelId, alunoId);
+        }
+
+        return sucesso
+            ? new(EstadoAlunosUnidade.Sucesso, Valor: responsavelId, Contexto: contexto.Valor)
+            : new(EstadoAlunosUnidade.Falha);
+    }
+
+    public async Task<ResultadoAlunosUnidade<Guid>> AtualizarResponsavelAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        string nomeCompleto, string? cpf, string? telefone, string? email,
+        TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
+        bool principalContato, bool responsavelFinanceiro,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
+        if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
+            return new(contexto.Estado);
+        if (alunoId == Guid.Empty || responsavelId == Guid.Empty
+            || string.IsNullOrWhiteSpace(nomeCompleto))
+        {
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+        }
+
+        var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
+        if (!relacionado)
+            return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
+
+        var responsavelExistente = await repositorio.ObterResponsavelAsync(
+            contexto.Valor.OrganizacaoId, responsavelId, cancellationToken);
+        if (responsavelExistente is null)
+            return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+
+        var vinculoExistente = await repositorio.ObterVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, cancellationToken);
+        if (vinculoExistente is null)
+            return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+
+        var agoraUtc = DateTime.UtcNow;
+
+        var responsavel = new Responsavel(
+            responsavelId,
+            contexto.Valor.OrganizacaoId,
+            nomeCompleto,
+            responsavelExistente.CriadoEmUtc,
+            cpf: cpf,
+            telefone: telefone,
+            email: email);
+
+        var responsavelAtualizado = await repositorio.AtualizarResponsavelAsync(
+            responsavel, cancellationToken);
+        if (!responsavelAtualizado)
+            return new(EstadoAlunosUnidade.Falha);
+
+        vinculoExistente.AtualizarClassificacao(
+            tipoRelacao,
+            descricaoRelacao,
+            principalContato,
+            responsavelFinanceiro,
+            agoraUtc);
+
+        var vinculoAtualizado = await repositorio.AtualizarVinculoAsync(
+            vinculoExistente, cancellationToken);
+
+        if (vinculoAtualizado)
+        {
+            logger.LogInformation(
+                "AtualizarResponsavel concluido: responsavel {ResponsavelId} no aluno {AlunoId}",
+                responsavelId, alunoId);
+        }
+
+        return vinculoAtualizado
+            ? new(EstadoAlunosUnidade.Sucesso, responsavelId, contexto.Valor)
+            : new(EstadoAlunosUnidade.Falha);
+    }
+
+    public async Task<ResultadoAlunosUnidadeSimples> DesativarVinculoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
+        if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
+            return new(contexto.Estado);
+        if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
+        if (!relacionado)
+            return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
+
+        var vinculoAtivo = await repositorio.ExisteVinculoAtivoAlunoResponsavelAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, cancellationToken);
+        if (!vinculoAtivo)
+            return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+
+        var agoraUtc = DateTime.UtcNow;
+        var sucesso = await repositorio.DesativarVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, agoraUtc, cancellationToken);
+
+        if (sucesso)
+        {
+            logger.LogInformation(
+                "DesativarVinculo concluido: aluno {AlunoId} responsavel {ResponsavelId}",
+                alunoId, responsavelId);
+        }
+
+        return sucesso
+            ? new(EstadoAlunosUnidade.Sucesso, Contexto: contexto.Valor)
+            : new(EstadoAlunosUnidade.Falha);
+    }
+
+    public async Task<ResultadoAlunosUnidadeSimples> AtivarVinculoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
+        if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
+            return new(contexto.Estado);
+        if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
+        if (!relacionado)
+            return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
+
+        var existeVinculo = await repositorio.ObterVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, cancellationToken);
+        if (existeVinculo is null)
+            return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+
+        var agoraUtc = DateTime.UtcNow;
+        var sucesso = await repositorio.AtivarVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, agoraUtc, cancellationToken);
+
+        if (sucesso)
+        {
+            logger.LogInformation(
+                "AtivarVinculo concluido: aluno {AlunoId} responsavel {ResponsavelId}",
+                alunoId, responsavelId);
+        }
+
+        return sucesso
+            ? new(EstadoAlunosUnidade.Sucesso, contexto.Valor)
             : new(EstadoAlunosUnidade.Falha);
     }
 

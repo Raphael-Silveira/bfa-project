@@ -2,7 +2,7 @@
 
 ## Status
 
-**Em andamento — Etapa 3**
+**Concluído**
 
 ## Objetivo
 

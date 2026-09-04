@@ -202,6 +202,86 @@ internal static class AlunosViewModelMapper
         };
     }
 
+    public static ResponsaveisListaViewModel MapearListaResponsaveis(
+        ContextoAlunosResumo contexto,
+        Guid alunoId,
+        string nomeAluno,
+        IReadOnlyList<ResponsavelAlunoResumo> responsaveis,
+        bool podeTrocar) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.NomeUnidade,
+        PodeTrocarUnidade = podeTrocar,
+        PodeGerenciar = contexto.PodeGerenciar,
+        AlunoId = alunoId,
+        NomeAluno = nomeAluno,
+        Responsaveis = responsaveis.Select(r => new ResponsavelListaItemViewModel(
+            r.ResponsavelId,
+            r.NomeCompleto,
+            r.Telefone,
+            r.Email,
+            FormatTipoRelacao(r.TipoRelacao, r.DescricaoRelacao),
+            r.PrincipalContato,
+            r.ResponsavelFinanceiro,
+            r.VinculoAtivo,
+            r.ResponsavelAtivo)).ToArray()
+    };
+
+    public static ResponsavelDetalheViewModel MapearDetalheResponsavel(
+        ContextoAlunosResumo contexto,
+        Guid alunoId,
+        string nomeAluno,
+        ResponsavelDetalhe responsavel,
+        bool podeTrocar) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.NomeUnidade,
+        PodeTrocarUnidade = podeTrocar,
+        PodeGerenciar = contexto.PodeGerenciar,
+        AlunoId = alunoId,
+        NomeAluno = nomeAluno,
+        Responsavel = new ResponsavelDetalheItemViewModel
+        {
+            ResponsavelId = responsavel.ResponsavelId,
+            NomeCompleto = responsavel.NomeCompleto,
+            CpfMascarado = FormatCpf(responsavel.Cpf),
+            Telefone = responsavel.Telefone,
+            Email = responsavel.Email,
+            Ativo = responsavel.Ativo,
+            TipoRelacao = FormatTipoRelacao(responsavel.TipoRelacao, responsavel.DescricaoRelacao),
+            DescricaoRelacao = responsavel.DescricaoRelacao,
+            PrincipalContato = responsavel.PrincipalContato,
+            ResponsavelFinanceiro = responsavel.ResponsavelFinanceiro,
+            VinculoAtivo = responsavel.VinculoAtivo
+        }
+    };
+
+    public static ResponsavelFormViewModel MapearFormResponsavel(
+        ContextoAlunosResumo contexto,
+        Guid alunoId,
+        string nomeAluno,
+        ResponsavelDetalhe? existente,
+        bool podeTrocar) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.NomeUnidade,
+        PodeTrocarUnidade = podeTrocar,
+        AlunoId = alunoId,
+        NomeAluno = nomeAluno,
+        ResponsavelId = existente?.ResponsavelId,
+        NomeCompleto = existente?.NomeCompleto ?? string.Empty,
+        Cpf = existente?.Cpf,
+        Telefone = existente?.Telefone,
+        Email = existente?.Email,
+        TipoRelacao = existente?.TipoRelacao ?? TipoRelacaoResponsavel.Outro,
+        DescricaoRelacao = existente?.DescricaoRelacao,
+        PrincipalContato = existente?.PrincipalContato ?? false,
+        ResponsavelFinanceiro = existente?.ResponsavelFinanceiro ?? false
+    };
+
     private static string FormatContact(string? telefone, string? email)
     {
         if (!string.IsNullOrWhiteSpace(telefone) && !string.IsNullOrWhiteSpace(email))
@@ -262,6 +342,103 @@ public sealed class EditarAlunoViewModel : IUnidadeContextoViewModel
 
     [Display(Name = "CPF")]
     public string? CpfMascarado { get; init; }
+}
+
+// Responsáveis do Aluno — Lista
+public sealed class ResponsaveisListaViewModel : IUnidadeContextoViewModel
+{
+    public required Guid OrganizacaoId { get; init; }
+    public required Guid UnidadeId { get; init; }
+    public required string NomeUnidade { get; init; }
+    public required bool PodeTrocarUnidade { get; init; }
+    public required bool PodeGerenciar { get; init; }
+    public required Guid AlunoId { get; init; }
+    public required string NomeAluno { get; init; }
+    public IReadOnlyList<ResponsavelListaItemViewModel> Responsaveis { get; init; } = [];
+}
+
+public sealed record ResponsavelListaItemViewModel(
+    Guid ResponsavelId,
+    string NomeCompleto,
+    string? Telefone,
+    string? Email,
+    string TipoRelacao,
+    bool PrincipalContato,
+    bool ResponsavelFinanceiro,
+    bool VinculoAtivo,
+    bool ResponsavelAtivo);
+
+// Responsáveis do Aluno — Detalhe
+public sealed class ResponsavelDetalheViewModel : IUnidadeContextoViewModel
+{
+    public required Guid OrganizacaoId { get; init; }
+    public required Guid UnidadeId { get; init; }
+    public required string NomeUnidade { get; init; }
+    public required bool PodeTrocarUnidade { get; init; }
+    public required bool PodeGerenciar { get; init; }
+    public required Guid AlunoId { get; init; }
+    public required string NomeAluno { get; init; }
+    public required ResponsavelDetalheItemViewModel Responsavel { get; init; }
+}
+
+public sealed class ResponsavelDetalheItemViewModel
+{
+    public required Guid ResponsavelId { get; init; }
+    public required string NomeCompleto { get; init; }
+    public string? CpfMascarado { get; init; }
+    public string? Telefone { get; init; }
+    public string? Email { get; init; }
+    public required bool Ativo { get; init; }
+    public required string TipoRelacao { get; init; }
+    public string? DescricaoRelacao { get; init; }
+    public required bool PrincipalContato { get; init; }
+    public required bool ResponsavelFinanceiro { get; init; }
+    public required bool VinculoAtivo { get; init; }
+}
+
+// Responsáveis do Aluno — Formulário Criar/Editar
+public sealed class ResponsavelFormViewModel : IUnidadeContextoViewModel
+{
+    public required Guid OrganizacaoId { get; init; }
+    public required Guid UnidadeId { get; init; }
+    public required string NomeUnidade { get; init; }
+    public required bool PodeTrocarUnidade { get; init; }
+    public required Guid AlunoId { get; init; }
+    public required string NomeAluno { get; init; }
+
+    [HiddenInput]
+    public Guid? ResponsavelId { get; init; }
+
+    [Required(ErrorMessage = "O nome completo deve ser informado.")]
+    [StringLength(Responsavel.NomeCompletoTamanhoMaximo, ErrorMessage = "O nome completo deve possuir no máximo {1} caracteres.")]
+    [Display(Name = "Nome completo")]
+    public string NomeCompleto { get; set; } = string.Empty;
+
+    [Display(Name = "CPF")]
+    public string? Cpf { get; set; }
+
+    [Display(Name = "Telefone")]
+    [StringLength(Responsavel.TelefoneTamanhoMaximo, ErrorMessage = "O telefone deve possuir no máximo {1} caracteres.")]
+    public string? Telefone { get; set; }
+
+    [EmailAddress(ErrorMessage = "O e-mail informado não é válido.")]
+    [StringLength(Responsavel.EmailTamanhoMaximo, ErrorMessage = "O e-mail deve possuir no máximo {1} caracteres.")]
+    [Display(Name = "E-mail")]
+    public string? Email { get; set; }
+
+    [Required(ErrorMessage = "O tipo de relação deve ser informado.")]
+    [Display(Name = "Tipo de relação")]
+    public TipoRelacaoResponsavel TipoRelacao { get; set; }
+
+    [Display(Name = "Descrição da relação")]
+    [StringLength(AlunoResponsavel.DescricaoRelacaoTamanhoMaximo, ErrorMessage = "A descrição deve possuir no máximo {1} caracteres.")]
+    public string? DescricaoRelacao { get; set; }
+
+    [Display(Name = "Principal contato")]
+    public bool PrincipalContato { get; set; }
+
+    [Display(Name = "Responsável financeiro")]
+    public bool ResponsavelFinanceiro { get; set; }
 }
 
 internal static class EditarAlunoMapper

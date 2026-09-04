@@ -328,4 +328,225 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
 
         return true;
     }
+
+    public async Task<IReadOnlyList<ResponsavelAlunoResumo>> ListarResponsaveisAlunoAsync(
+        Guid organizacaoId, Guid alunoId, CancellationToken cancellationToken)
+    {
+        var vinculosAluno = await dbContext.AlunosResponsaveis.AsNoTracking()
+            .Where(ar => ar.OrganizacaoId == organizacaoId && ar.AlunoId == alunoId)
+            .ToListAsync(cancellationToken);
+
+        var responsavelIds = vinculosAluno.Select(v => v.ResponsavelId).Distinct().ToList();
+
+        var responsaveisMap = await dbContext.Responsaveis.AsNoTracking()
+            .Where(r => responsavelIds.Contains(r.Id))
+            .ToDictionaryAsync(r => r.Id, cancellationToken);
+
+        return vinculosAluno
+            .Where(ar => responsaveisMap.ContainsKey(ar.ResponsavelId))
+            .Select(ar =>
+            {
+                var r = responsaveisMap[ar.ResponsavelId];
+                return new ResponsavelAlunoResumo(
+                    r.Id,
+                    r.NomeCompleto,
+                    r.Telefone,
+                    r.Email,
+                    ar.TipoRelacao,
+                    ar.DescricaoRelacao,
+                    ar.PrincipalContato,
+                    ar.ResponsavelFinanceiro,
+                    ar.Ativo,
+                    r.Ativo);
+            })
+            .OrderBy(x => x.NomeCompleto)
+            .ToList();
+    }
+
+    public async Task<Responsavel?> ObterResponsavelAsync(
+        Guid organizacaoId, Guid responsavelId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Responsaveis.AsNoTracking()
+            .FirstOrDefaultAsync(
+                r => r.Id == responsavelId && r.OrganizacaoId == organizacaoId,
+                cancellationToken);
+    }
+
+    public async Task<AlunoResponsavel?> ObterVinculoAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId, CancellationToken cancellationToken)
+    {
+        return await dbContext.AlunosResponsaveis.AsNoTracking()
+            .FirstOrDefaultAsync(
+                ar => ar.OrganizacaoId == organizacaoId
+                    && ar.AlunoId == alunoId
+                    && ar.ResponsavelId == responsavelId,
+                cancellationToken);
+    }
+
+    public async Task<bool> CriarResponsavelAsync(
+        Responsavel responsavel, AlunoResponsavel vinculo, CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            dbContext.Responsaveis.Add(responsavel);
+            dbContext.AlunosResponsaveis.Add(vinculo);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            logger.LogError(exception,
+                "Falha ao criar responsavel {ResponsavelId} na organizacao {OrganizacaoId}",
+                responsavel.Id, responsavel.OrganizacaoId);
+            throw;
+        }
+    }
+
+    public async Task<bool> AtualizarResponsavelAsync(
+        Responsavel responsavel, CancellationToken cancellationToken)
+    {
+        var existente = await dbContext.Responsaveis
+            .FirstOrDefaultAsync(
+                r => r.Id == responsavel.Id && r.OrganizacaoId == responsavel.OrganizacaoId,
+                cancellationToken);
+        if (existente is null)
+            return false;
+
+        existente.AtualizarDados(
+            responsavel.NomeCompleto,
+            responsavel.Cpf,
+            responsavel.Telefone,
+            responsavel.Email,
+            DateTime.UtcNow);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Falha ao atualizar responsavel {ResponsavelId} na organizacao {OrganizacaoId}",
+                responsavel.Id, responsavel.OrganizacaoId);
+            throw;
+        }
+
+        return true;
+    }
+
+    public async Task<bool> AtualizarVinculoAsync(
+        AlunoResponsavel vinculo, CancellationToken cancellationToken)
+    {
+        var existente = await dbContext.AlunosResponsaveis
+            .FirstOrDefaultAsync(
+                ar => ar.Id == vinculo.Id && ar.OrganizacaoId == vinculo.OrganizacaoId,
+                cancellationToken);
+        if (existente is null)
+            return false;
+
+        existente.AtualizarClassificacao(
+            vinculo.TipoRelacao,
+            vinculo.DescricaoRelacao,
+            vinculo.PrincipalContato,
+            vinculo.ResponsavelFinanceiro,
+            DateTime.UtcNow);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Falha ao atualizar vinculo {VinculoId} na organizacao {OrganizacaoId}",
+                vinculo.Id, vinculo.OrganizacaoId);
+            throw;
+        }
+
+        return true;
+    }
+
+    public async Task<bool> DesativarVinculoAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId,
+        DateTime atualizadoEmUtc, CancellationToken cancellationToken)
+    {
+        var vinculo = await dbContext.AlunosResponsaveis
+            .FirstOrDefaultAsync(
+                ar => ar.OrganizacaoId == organizacaoId
+                    && ar.AlunoId == alunoId
+                    && ar.ResponsavelId == responsavelId,
+                cancellationToken);
+        if (vinculo is null)
+            return false;
+
+        vinculo.Desativar(atualizadoEmUtc);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Falha ao desativar vinculo aluno {AlunoId} responsavel {ResponsavelId} na organizacao {OrganizacaoId}",
+                alunoId, responsavelId, organizacaoId);
+            throw;
+        }
+
+        return true;
+    }
+
+    public async Task<bool> AtivarVinculoAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId,
+        DateTime atualizadoEmUtc, CancellationToken cancellationToken)
+    {
+        var vinculo = await dbContext.AlunosResponsaveis
+            .FirstOrDefaultAsync(
+                ar => ar.OrganizacaoId == organizacaoId
+                    && ar.AlunoId == alunoId
+                    && ar.ResponsavelId == responsavelId,
+                cancellationToken);
+        if (vinculo is null)
+            return false;
+
+        vinculo.Ativar(atualizadoEmUtc);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Falha ao ativar vinculo aluno {AlunoId} responsavel {ResponsavelId} na organizacao {OrganizacaoId}",
+                alunoId, responsavelId, organizacaoId);
+            throw;
+        }
+
+        return true;
+    }
+
+    public async Task<bool> ExisteResponsavelNaOrganizacaoAsync(
+        Guid organizacaoId, Guid responsavelId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Responsaveis.AsNoTracking()
+            .AnyAsync(
+                r => r.Id == responsavelId && r.OrganizacaoId == organizacaoId,
+                cancellationToken);
+    }
+
+    public async Task<bool> ExisteVinculoAtivoAlunoResponsavelAsync(
+        Guid organizacaoId, Guid alunoId, Guid responsavelId, CancellationToken cancellationToken)
+    {
+        return await dbContext.AlunosResponsaveis.AsNoTracking()
+            .AnyAsync(
+                ar => ar.OrganizacaoId == organizacaoId
+                    && ar.AlunoId == alunoId
+                    && ar.ResponsavelId == responsavelId
+                    && ar.Ativo,
+                cancellationToken);
+    }
 }

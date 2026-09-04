@@ -1,0 +1,113 @@
+@model ResponsavelDetalheViewModel
+@{
+    ViewData["Title"] = Model.Responsavel.NomeCompleto;
+    Layout = "_UnidadeLayout";
+    var responsavel = Model.Responsavel;
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-detalhe-responsavel">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Aluno · @Model.NomeUnidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-detalhe-responsavel">@responsavel.NomeCompleto</h1>
+        <p class="bfa-admin-page-header__description">@responsavel.TipoRelacao</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        @if (Model.PodeGerenciar)
+        {
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Alunos"
+               asp-action="EditarResponsavel"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-alunoId="@Model.AlunoId"
+               asp-route-responsavelId="@responsavel.ResponsavelId">Editar</a>
+
+            @if (responsavel.VinculoAtivo)
+            {
+                <form method="post"
+                      asp-area="Unidade"
+                      asp-controller="Alunos"
+                      asp-action="DesativarResponsavel"
+                      asp-route-unidadeId="@Model.UnidadeId"
+                      asp-route-alunoId="@Model.AlunoId"
+                      asp-route-responsavelId="@responsavel.ResponsavelId"
+                      class="bfa-inline-form">
+                    @Html.AntiForgeryToken()
+                    <button class="bfa-btn-secondary bfa-admin-button" type="submit">Desativar</button>
+                </form>
+            }
+            else
+            {
+                <form method="post"
+                      asp-area="Unidade"
+                      asp-controller="Alunos"
+                      asp-action="AtivarResponsavel"
+                      asp-route-unidadeId="@Model.UnidadeId"
+                      asp-route-alunoId="@Model.AlunoId"
+                      asp-route-responsavelId="@responsavel.ResponsavelId"
+                      class="bfa-inline-form">
+                    @Html.AntiForgeryToken()
+                    <button class="bfa-btn-secondary bfa-admin-button" type="submit">Ativar</button>
+                </form>
+            }
+        }
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Unidade"
+           asp-controller="Alunos"
+           asp-action="Responsaveis"
+           asp-route-unidadeId="@Model.UnidadeId"
+           asp-route-alunoId="@Model.AlunoId">Voltar aos responsáveis</a>
+    </div>
+</header>
+
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+@if (TempData["Erro"] is string erro)
+{
+    <div class="bfa-admin-notice bfa-admin-notice--error" role="alert"><strong>@erro</strong></div>
+}
+
+<div class="bfa-matricula-detail-sections">
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-contato-responsavel">
+        <header>
+            <p>Contato</p>
+            <h2 id="titulo-contato-responsavel">Dados de contato</h2>
+        </header>
+        <dl class="bfa-matricula-detail-grid">
+            <div><dt>Nome</dt><dd>@responsavel.NomeCompleto</dd></div>
+            <div><dt>CPF</dt><dd>@(responsavel.CpfMascarado ?? "Não informado")</dd></div>
+            <div><dt>Telefone</dt><dd>@(responsavel.Telefone ?? "Não informado")</dd></div>
+            <div><dt>E-mail</dt><dd>@(responsavel.Email ?? "Não informado")</dd></div>
+        </dl>
+    </section>
+
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-classificacao-responsavel">
+        <header>
+            <p>Vínculo</p>
+            <h2 id="titulo-classificacao-responsavel">Classificação</h2>
+        </header>
+        <dl class="bfa-matricula-detail-grid">
+            <div><dt>Tipo de relação</dt><dd>@responsavel.TipoRelacao</dd></div>
+            @if (!string.IsNullOrWhiteSpace(responsavel.DescricaoRelacao))
+            {
+                <div><dt>Descrição</dt><dd>@responsavel.DescricaoRelacao</dd></div>
+            }
+            <div><dt>Situação do vínculo</dt><dd>@(responsavel.VinculoAtivo ? "Ativo" : "Inativo")</dd></div>
+        </dl>
+        @if (responsavel.PrincipalContato || responsavel.ResponsavelFinanceiro)
+        {
+            <footer>
+                @if (responsavel.PrincipalContato)
+                {
+                    <span class="bfa-admin-badge is-active">Principal contato</span>
+                }
+                @if (responsavel.ResponsavelFinanceiro)
+                {
+                    <span class="bfa-admin-badge is-inactive">Responsável financeiro</span>
+                }
+            </footer>
+        }
+    </section>
+</div>
