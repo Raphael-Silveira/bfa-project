@@ -1716,3 +1716,27 @@
     flex-direction: column;
   }
 }
+
+@media (min-width: 90rem) {
+  .bfa-professor-form {
+    max-width: 76rem;
+  }
+
+  .bfa-professor-search,
+  .bfa-professor-search-results,
+  .bfa-professor-selected {
+    max-width: 76rem;
+  }
+
+  .bfa-professor-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bfa-turma-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .bfa-matricula-filters {
+    max-width: 76rem;
+  }
+}

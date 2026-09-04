@@ -1267,6 +1267,10 @@
   text-decoration: none;
 }
 
+.bfa-admin-card--narrow {
+  width: 100%;
+}
+
 .bfa-admin-brand:focus-visible,
 .bfa-admin-nav-link:focus-visible,
 .bfa-admin-logout__button:focus-visible,
@@ -1498,5 +1502,9 @@
 
   .bfa-admin-table {
     min-width: 0;
+  }
+
+  .bfa-admin-card--narrow {
+    max-width: 64rem;
   }
 }
