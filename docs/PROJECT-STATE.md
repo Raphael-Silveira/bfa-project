@@ -3,7 +3,7 @@
 **Última atualização:** 2026-09-03  
 **Status:** Em desenvolvimento ativo  
 **Branch:** feature/login-mvc  
-**Testes:** 1.177 aprovados  
+**Testes:** 1.177 aprovados (484 unitários + 693 integração)  
 **Build:** 0 erros, 0 warnings
 
 ## Visão do Produto
@@ -58,6 +58,7 @@ backend/
 - Turmas (`TurmasController`)
 - Planos Locais (`PlanosController`)
 - Matrículas (`MatriculasController`) — CRUD completo com Grade
+- Alunos (`AlunosController`) — Listagem + Detalhe + Editar dados
 - Contrato (read-only)
 
 ### Professor (Area: `/professor`)
@@ -88,6 +89,7 @@ Governança centralizada via `IGovernancaOperacionalUnidade`:
 - `PodeGerenciarTurmas`
 - `PodeGerenciarPlanoLocal`
 - `PodeGerenciarMatriculas`
+- `PodeGerenciarAlunos`
 
 ## Banco de Dados
 
@@ -131,11 +133,26 @@ DDL exclusivamente por `bfa_dev_deploy`. Aplicação é apenas DML.
 - `unidade.css` — estilos para matrículas
 - `bfa-matricula-wizard.js` — scripts de grade
 - `AreaUnidadeMatriculasEndpointTests.cs` — testes de endpoint
+- `GovernancaOperacionalUnidade.cs` — adicionada `PodeGerenciarAlunos`
+- `_UnidadeNavLinks.cshtml` — adicionado menu "Alunos"
+- `Professores/Encerrar.cshtml` — validação `data-bfa-date-min`
+- `AlunosUnidade.cs` — adicionados `AtualizarDadosAsync`, `ObterDadosEdicaoAsync`, DTOs
+- `AlunosRepositorio.cs` — adicionados `ObterParaEdicaoAsync`, `PersistirAtualizacaoAsync`, etc.
+- `AlunoViewModels.cs` — adicionados `EditarAlunoViewModel`, `EditarAlunoMapper`
+- `AlunosController.cs` — adicionadas actions `Editar` GET/POST
+- `Alunos/Detalhes.cshtml` — adicionado botão [ Editar dados ] e mensagem de sucesso
 
 ### Arquivos Novos (Não Rastreados)
 - `AlterarGrade.cshtml` — tela de alteração de grade
 - `Cancelar.cshtml` — tela de cancelamento
 - `Encerrar.cshtml` — tela de encerramento
+- `AlunosUnidade.cs` — Application layer (Alunos)
+- `AlunosRepositorio.cs` — Infrastructure layer (Alunos)
+- `AlunoViewModels.cs` — ViewModels (Alunos) + EditarAlunoViewModel + EditarAlunoMapper
+- `AlunosController.cs` — Controller (Alunos) — Index, Detalhes, Editar GET/POST
+- `Alunos/Index.cshtml` — Listagem de alunos
+- `Alunos/Detalhes.cshtml` — Detalhe do aluno
+- `Alunos/Editar.cshtml` — Formulário de edição de dados cadastrais
 
 ## Bug Conhecido: Alterar Grade
 
@@ -162,21 +179,20 @@ O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
 
 ## Funcionalidades em Andamento
 
-- Alterar Grade (bug conhecido)
-- Encerrar Matrícula
-- Cancelar Matrícula
+- Alterar Grade (bug conhecido) — CONCLUÍDO
+- Encerrar Matrícula — CONCLUÍDO
+- Cancelar Matrícula — CONCLUÍDO
+- Módulo Alunos — Etapa 1 (Listagem + Detalhe) CONCLUÍDO
+- Módulo Alunos — Etapa 2 (Editar Dados) CONCLUÍDO
 
 ## Próximos Passos (Roadmap)
 
-1. **Corrigir Alterar Grade** (prioridade imediata)
-2. Manutenção cadastral de Alunos
-3. Gerenciamento de Responsáveis
-4. Menu Alunos (possivelmente)
-5. Aulas
-6. Presença
-7. Financeiro Unidade x Aluno
-8. Cobrança
-9. Pagamento
+1. **Gerenciar Responsáveis** (Etapa 3 do módulo Alunos)
+2. Aulas
+3. Presença
+4. Financeiro Unidade x Aluno
+5. Cobrança
+6. Pagamento
 
 ## Identidade Visual
 
@@ -202,6 +218,7 @@ Planos sequenciais em `docs/plans/`:
 | 01 | Corrigir Salvamento de Alterar Grade | Concluído |
 | 02 | Melhorar UX de Encerrar/Cancelar Matrícula | Concluído |
 | 03 | Padronizar Validação de Datas e Mensagens | Concluído |
+| 04 | Módulo Alunos e Responsáveis | Em andamento (Etapa 3) |
 
 ## Documentos de Referência
 

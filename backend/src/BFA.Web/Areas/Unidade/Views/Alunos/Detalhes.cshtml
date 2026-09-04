@@ -1,0 +1,163 @@
+@model AlunoDetalheViewModel
+@{
+    ViewData["Title"] = Model.Aluno.NomeCompleto;
+    Layout = "_UnidadeLayout";
+    var aluno = Model.Aluno;
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-detalhe-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Aluno · @Model.NomeUnidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-detalhe-aluno">@aluno.NomeCompleto</h1>
+        <p class="bfa-admin-page-header__description">
+            Cadastro@(aluno.Ativo ? " ativo" : " inativo") · @aluno.Idade anos
+        </p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        @if (Model.PodeGerenciar)
+        {
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Alunos"
+               asp-action="Editar"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-alunoId="@aluno.AlunoId">Editar dados</a>
+        }
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Unidade"
+           asp-controller="Alunos"
+           asp-action="Index"
+           asp-route-unidadeId="@Model.UnidadeId">Voltar aos alunos</a>
+    </div>
+</header>
+
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+<div class="bfa-matricula-detail-sections">
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-dados-aluno">
+        <header>
+            <p>Cadastro</p>
+            <h2 id="titulo-dados-aluno">Dados do aluno</h2>
+        </header>
+        <dl class="bfa-matricula-detail-grid">
+            <div><dt>Nome</dt><dd>@aluno.NomeCompleto</dd></div>
+            <div><dt>Data de nascimento</dt><dd>@aluno.DataNascimento</dd></div>
+            <div><dt>CPF</dt><dd>@aluno.CpfMascarado</dd></div>
+            <div><dt>Telefone</dt><dd>@(aluno.Telefone ?? "Não informado")</dd></div>
+            <div><dt>E-mail</dt><dd>@(aluno.Email ?? "Não informado")</dd></div>
+            <div><dt>Situação</dt><dd>@(aluno.Ativo ? "Ativo" : "Inativo")</dd></div>
+        </dl>
+    </section>
+
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-responsaveis-aluno">
+        <header>
+            <p>Contatos relacionados</p>
+            <h2 id="titulo-responsaveis-aluno">Responsáveis</h2>
+        </header>
+        @if (aluno.Responsaveis.Count == 0)
+        {
+            <p class="bfa-matricula-muted">Nenhum responsável vinculado.</p>
+        }
+        else
+        {
+            <div class="bfa-matricula-responsaveis">
+                @foreach (var responsavel in aluno.Responsaveis)
+                {
+                    <article class="bfa-matricula-responsavel">
+                        <header>
+                            <div>
+                                <strong>@responsavel.NomeCompleto</strong>
+                                <span>@responsavel.TipoRelacao</span>
+                            </div>
+                            @if (!responsavel.VinculoAtivo)
+                            {
+                                <span class="bfa-admin-badge is-inactive">Vínculo inativo</span>
+                            }
+                        </header>
+                        <dl>
+                            <div><dt>Telefone</dt><dd>@(responsavel.Telefone ?? "Não informado")</dd></div>
+                            <div><dt>E-mail</dt><dd>@(responsavel.Email ?? "Não informado")</dd></div>
+                        </dl>
+                        @if (responsavel.PrincipalContato || responsavel.ResponsavelFinanceiro)
+                        {
+                            <footer>
+                                @if (responsavel.PrincipalContato)
+                                {
+                                    <span class="bfa-admin-badge is-active">Principal contato</span>
+                                }
+                                @if (responsavel.ResponsavelFinanceiro)
+                                {
+                                    <span class="bfa-admin-badge is-inactive">Responsável financeiro</span>
+                                }
+                            </footer>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    @if (aluno.MatriculaAtiva is { } matriculaAtiva)
+    {
+        <section class="bfa-admin-card bfa-matricula-overview" aria-labelledby="titulo-matricula-atual">
+            <header>
+                <div>
+                    <p>Matrícula ativa</p>
+                    <h2 id="titulo-matricula-atual">@matriculaAtiva.Plano</h2>
+                    <span>@matriculaAtiva.FrequenciaSemanal x por semana</span>
+                </div>
+                <span class="bfa-admin-badge is-active">@matriculaAtiva.Status</span>
+            </header>
+            <dl class="bfa-matricula-detail-grid">
+                <div><dt>Período</dt><dd>@matriculaAtiva.DataInicio a @matriculaAtiva.DataFimPrevista</dd></div>
+                <div><dt>Mensalidade</dt><dd>@matriculaAtiva.ValorMensalContratado.ToString("C", new System.Globalization.CultureInfo("pt-BR"))</dd></div>
+            </dl>
+            <footer>
+                <a class="bfa-btn-secondary bfa-admin-button"
+                   asp-area="Unidade"
+                   asp-controller="Matriculas"
+                   asp-action="Detalhes"
+                   asp-route-unidadeId="@Model.UnidadeId"
+                   asp-route-matriculaId="@matriculaAtiva.MatriculaId">Ver matrícula <span aria-hidden="true">→</span></a>
+            </footer>
+        </section>
+    }
+
+    @if (aluno.HistoricoMatriculas.Count > 0)
+    {
+        <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-historico-matriculas">
+            <header>
+                <p>Matrículas anteriores</p>
+                <h2 id="titulo-historico-matriculas">Histórico de matrículas</h2>
+            </header>
+            <div class="bfa-matricula-history-list">
+                @foreach (var matricula in aluno.HistoricoMatriculas)
+                {
+                    <article class="bfa-matricula-history-item">
+                        <div class="bfa-matricula-history-period">
+                            <span>Período</span>
+                            <strong>@matricula.DataInicio a @matricula.DataFimPrevista</strong>
+                        </div>
+                        <div><span>Plano</span><strong>@matricula.Plano</strong></div>
+                        <div><span>Status</span><strong>@matricula.Status</strong></div>
+                        @if (matricula.DataFimReal is not null)
+                        {
+                            <div><span>Data final</span><strong>@matricula.DataFimReal</strong></div>
+                        }
+                        <footer>
+                            <a class="bfa-btn-secondary bfa-admin-button"
+                               asp-area="Unidade"
+                               asp-controller="Matriculas"
+                               asp-action="Detalhes"
+                               asp-route-unidadeId="@Model.UnidadeId"
+                               asp-route-matriculaId="@matricula.MatriculaId">Ver matrícula <span aria-hidden="true">→</span></a>
+                        </footer>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>
