@@ -1,0 +1,26 @@
+@model IAlunoContextoViewModel
+@{
+    Layout = "/Views/Shared/_AdminLayout.cshtml";
+    ViewData[AdminShellViewData.Chave] = new AdminShellViewModel
+    {
+        AreaNome = "Aluno",
+        ContextoNome = Model.NomeAluno,
+        HomeUrl = $"/aluno/{Model.UnidadeId:D}",
+        HomeAriaLabel = $"Ir para o painel do aluno {Model.NomeAluno}",
+        NavegacaoAriaLabel = $"Navegação do aluno {Model.NomeAluno}",
+        NavegacaoTitulo = "Minha Área",
+        MenuDescricao = "menu do aluno",
+        NavegacaoPartial = "/Areas/Aluno/Views/Shared/_AlunoNavLinks.cshtml"
+    };
+}
+
+@RenderBody()
+
+@section AreaStyles {
+    <link rel="stylesheet" href="~/css/unidade.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+}
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

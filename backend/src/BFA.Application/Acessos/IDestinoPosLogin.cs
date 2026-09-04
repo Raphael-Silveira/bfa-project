@@ -8,7 +8,8 @@ public enum DestinoAcesso
     SelecionarUnidade = 4,
     SemAcesso = 5,
     ProfessorUnidade = 6,
-    SelecionarUnidadeProfessor = 7
+    SelecionarUnidadeProfessor = 7,
+    AlunoUnidade = 8
 }
 
 public sealed record DestinoPosLoginResultado(

@@ -17,6 +17,8 @@ public static class DestinoPosLoginUrl
             DestinoAcesso.ProfessorUnidade when resultado.UnidadeId is { } unidadeProfessorId =>
                 $"/professor/unidade/{unidadeProfessorId:D}",
             DestinoAcesso.SelecionarUnidadeProfessor => "/professor/selecionar-unidade",
+            DestinoAcesso.AlunoUnidade when resultado.UnidadeId is { } unidadeAlunoId =>
+                $"/aluno/{unidadeAlunoId:D}",
             DestinoAcesso.SemAcesso => "/acesso-negado",
             DestinoAcesso.Padrao => "/",
             _ => throw new ArgumentOutOfRangeException(

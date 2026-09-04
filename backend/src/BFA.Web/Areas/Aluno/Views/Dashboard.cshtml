@@ -1,0 +1,58 @@
+@model DashboardAlunoViewModel
+@{
+    ViewData["Title"] = "Painel do Aluno";
+    Layout = "_AlunoLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-painel-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Bem-vindo(a)</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-painel-aluno">@Model.NomeAluno</h1>
+        <p class="bfa-admin-page-header__description">@Model.NomeUnidade</p>
+    </div>
+</header>
+
+<div class="bfa-admin-card-grid">
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Frequência</div>
+        <div class="bfa-admin-metric-card__value">@Model.PercentualFrequencia</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Aulas (mês)</div>
+        <div class="bfa-admin-metric-card__value">@Model.TotalAulas</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Pendente</div>
+        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalPendente</div>
+    </div>
+</div>
+
+<div class="bfa-admin-card">
+    <h2 class="bfa-admin-card__title">Próxima Aula</h2>
+    @if (Model.ProximaAula is not null)
+    {
+        <p>@Model.ProximaAula</p>
+    }
+    else
+    {
+        <p class="bfa-admin-empty-state">Nenhuma aula programada.</p>
+    }
+</div>
+
+<div class="bfa-admin-card">
+    <h2 class="bfa-admin-card__title">Atalhos</h2>
+    <div class="bfa-admin-card-grid">
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Aluno" asp-controller="Aluno" asp-action="Matriculas"
+           asp-route-unidadeId="@Model.UnidadeId">Matrículas</a>
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Aluno" asp-controller="Aluno" asp-action="Agenda"
+           asp-route-unidadeId="@Model.UnidadeId">Agenda</a>
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Aluno" asp-controller="Aluno" asp-action="Frequencia"
+           asp-route-unidadeId="@Model.UnidadeId">Frequência</a>
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Aluno" asp-controller="Aluno" asp-action="Financeiro"
+           asp-route-unidadeId="@Model.UnidadeId">Financeiro</a>
+    </div>
+</div>

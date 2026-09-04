@@ -1,0 +1,85 @@
+@{
+    var caminhoAtual = Context.Request.Path.Value?.TrimEnd('/') ?? string.Empty;
+    var unidadeId = Context.Request.RouteValues["unidadeId"]?.ToString();
+    var rotaAluno = $"/aluno/{unidadeId}";
+    var rotaPerfil = $"{rotaAluno}/perfil";
+    var rotaMatriculas = $"{rotaAluno}/matriculas";
+    var rotaAgenda = $"{rotaAluno}/agenda";
+    var rotaFrequencia = $"{rotaAluno}/frequencia";
+    var rotaFinanceiro = $"{rotaAluno}/financeiro";
+    var perfilAtivo = caminhoAtual.StartsWith(
+        rotaPerfil, StringComparison.OrdinalIgnoreCase);
+    var matriculasAtivo = caminhoAtual.StartsWith(
+        rotaMatriculas, StringComparison.OrdinalIgnoreCase);
+    var agendaAtivo = caminhoAtual.StartsWith(
+        rotaAgenda, StringComparison.OrdinalIgnoreCase);
+    var frequenciaAtivo = caminhoAtual.StartsWith(
+        rotaFrequencia, StringComparison.OrdinalIgnoreCase);
+    var financeiroAtivo = caminhoAtual.StartsWith(
+        rotaFinanceiro, StringComparison.OrdinalIgnoreCase);
+    var dashboardAtivo = !perfilAtivo && !matriculasAtivo && !agendaAtivo
+        && !frequenciaAtivo && !financeiroAtivo
+        && caminhoAtual.Equals(rotaAluno, StringComparison.OrdinalIgnoreCase);
+}
+
+<a class="bfa-admin-nav-link @(dashboardAtivo ? "is-active" : null)"
+   href="@rotaAluno"
+   aria-current="@(dashboardAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 4h6v6H4z"></path>
+        <path d="M14 4h6v6h-6z"></path>
+        <path d="M4 14h6v6H4z"></path>
+        <path d="M14 14h6v6h-6z"></path>
+    </svg>
+    <span>Painel</span>
+</a>
+
+<a class="bfa-admin-nav-link @(perfilAtivo ? "is-active" : null)"
+   href="@rotaPerfil"
+   aria-current="@(perfilAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+    <span>Meu Perfil</span>
+</a>
+
+<a class="bfa-admin-nav-link @(matriculasAtivo ? "is-active" : null)"
+   href="@rotaMatriculas"
+   aria-current="@(matriculasAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M16 11l2 2 4-4"></path>
+    </svg>
+    <span>Matrículas</span>
+</a>
+
+<a class="bfa-admin-nav-link @(agendaAtivo ? "is-active" : null)"
+   href="@rotaAgenda"
+   aria-current="@(agendaAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+        <path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"></path>
+    </svg>
+    <span>Agenda</span>
+</a>
+
+<a class="bfa-admin-nav-link @(frequenciaAtivo ? "is-active" : null)"
+   href="@rotaFrequencia"
+   aria-current="@(frequenciaAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span>Frequência</span>
+</a>
+
+<a class="bfa-admin-nav-link @(financeiroAtivo ? "is-active" : null)"
+   href="@rotaFinanceiro"
+   aria-current="@(financeiroAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+    </svg>
+    <span>Financeiro</span>
+</a>

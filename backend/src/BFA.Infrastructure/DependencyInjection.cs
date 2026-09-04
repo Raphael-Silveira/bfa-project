@@ -1,4 +1,5 @@
 using BFA.Application.Alunos;
+using BFA.Application.AlunoArea;
 using BFA.Application.Acessos;
 using BFA.Application.Aulas;
 using BFA.Application.Bootstrap;
@@ -22,6 +23,7 @@ using BFA.Application.Unidades.Professores;
 using BFA.Application.Unidades.Turmas;
 using BFA.Application.Usuarios;
 using BFA.Infrastructure.Alunos;
+using BFA.Infrastructure.AlunoArea;
 using BFA.Infrastructure.Acessos;
 using BFA.Infrastructure.Aulas;
 using BFA.Infrastructure.Bootstrap;
@@ -187,6 +189,8 @@ public static class DependencyInjection
         services.AddScoped<ICobrancasServico, CobrancasServico>();
         services.AddScoped<IRelatoriosRepositorio, RelatoriosRepositorio>();
         services.AddScoped<IRelatoriosServico, RelatoriosServico>();
+        services.AddScoped<IAlunoAreaRepositorio, AlunoAreaRepositorio>();
+        services.AddScoped<IAlunoAreaServico, AlunoAreaServico>();
         services.AddHttpClient<IIbgeLocalidadesClient, IbgeLocalidadesClient>(httpClient =>
         {
             const string configurationKey = "Integracoes:Ibge:BaseUrl";

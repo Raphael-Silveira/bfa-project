@@ -1,0 +1,86 @@
+@model FrequenciaResumoAlunoViewModel
+@{
+    ViewData["Title"] = "Frequência";
+    Layout = "_AlunoLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-frequencia-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Frequência</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-frequencia-aluno">Registro de Frequência</h1>
+        <p class="bfa-admin-page-header__description">
+            Período: @Model.PeriodoInicio – @Model.PeriodoFim
+        </p>
+    </div>
+</header>
+
+<div class="bfa-admin-card-grid">
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Frequência</div>
+        <div class="bfa-admin-metric-card__value">@Model.Percentual%</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Presentes</div>
+        <div class="bfa-admin-metric-card__value">@Model.Presentes / @Model.TotalAulas</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Ausências</div>
+        <div class="bfa-admin-metric-card__value">@Model.Ausentes</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Justificados</div>
+        <div class="bfa-admin-metric-card__value">@Model.Justificados</div>
+    </div>
+</div>
+
+@if (Model.Presencas.Count > 0)
+{
+    <div class="bfa-admin-card">
+        <h2 class="bfa-admin-card__title">Histórico</h2>
+        <div class="bfa-admin-table-container bfa-admin-desktop-list">
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Turma</th>
+                        <th>Horário</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Presencas)
+                    {
+                        <tr>
+                            <td>@p.Data</td>
+                            <td>@p.TurmaNome</td>
+                            <td>@p.HoraInicio – @p.HoraFim</td>
+                            <td>
+                                <span class="bfa-admin-badge @(p.Status == "Presente" ? "is-active" : null)">
+                                    @p.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bfa-admin-mobile-list">
+            @foreach (var p in Model.Presencas)
+            {
+                <div class="bfa-admin-mobile-list__item">
+                    <div class="bfa-admin-mobile-list__header">
+                        <span class="bfa-admin-mobile-list__name">@p.TurmaNome</span>
+                        <span class="bfa-admin-badge @(p.Status == "Presente" ? "is-active" : null)">
+                            @p.Status
+                        </span>
+                    </div>
+                    <div class="bfa-admin-mobile-list__details">
+                        <span>@p.Data</span>
+                        <span>@p.HoraInicio – @p.HoraFim</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

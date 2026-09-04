@@ -190,6 +190,7 @@ O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
 - Módulo Aulas e Presenças CONCLUÍDO
 - Módulo Financeiro (Cobranças + Pagamentos) CONCLUÍDO
 - Módulo Relatórios (Financeiro, Inadimplência, Frequência) CONCLUÍDO
+- Área do Aluno (Dashboard, Perfil, Matrículas, Agenda, Frequência, Financeiro) CONCLUÍDO
 
 ## Próximos Passos (Roadmap)
 
@@ -200,8 +201,9 @@ O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
 5. ~~Pagamento~~ ✅ (incluído no módulo Financeiro)
 6. ~~Relatórios~~ ✅
 7. ~~Inadimplência~~ ✅ (incluída no módulo Relatórios)
-8. Campeonatos
-9. Comércio
+8. ~~Área do Aluno~~ ✅
+9. Campeonatos
+10. Comércio
 
 ## Identidade Visual
 

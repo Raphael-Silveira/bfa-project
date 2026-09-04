@@ -24,4 +24,13 @@ public interface IUnidadesUsuarioConsulta
         Guid usuarioId,
         Guid unidadeId,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<UnidadeAcessoResumo>> ListarAlunoAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken);
+
+    Task<UnidadeAcessoResumo?> ObterAlunoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        CancellationToken cancellationToken);
 }

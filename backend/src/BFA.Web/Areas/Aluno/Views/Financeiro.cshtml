@@ -1,0 +1,108 @@
+@model FinanceiroAlunoViewModel
+@{
+    ViewData["Title"] = "Financeiro";
+    Layout = "_AlunoLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-financeiro-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Financeiro</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-financeiro-aluno">Situação Financeira</h1>
+    </div>
+</header>
+
+<div class="bfa-admin-card-grid">
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Pendente</div>
+        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalPendente</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Pago</div>
+        <div class="bfa-admin-metric-card__value">@Model.TotalPago</div>
+    </div>
+</div>
+
+@if (Model.Cobrancas.Count > 0)
+{
+    <div class="bfa-admin-card">
+        <h2 class="bfa-admin-card__title">Cobranças</h2>
+        <div class="bfa-admin-table-container bfa-admin-desktop-list">
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Cobrancas)
+                    {
+                        <tr>
+                            <td>@c.Descricao</td>
+                            <td>@c.Tipo</td>
+                            <td>@c.Valor</td>
+                            <td>@c.DataVencimento</td>
+                            <td>
+                                <span class="bfa-admin-badge @(c.IsAtrasada ? "is-overdue" : null)">
+                                    @c.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bfa-admin-mobile-list">
+            @foreach (var c in Model.Cobrancas)
+            {
+                <div class="bfa-admin-mobile-list__item">
+                    <div class="bfa-admin-mobile-list__header">
+                        <span class="bfa-admin-mobile-list__name">@c.Descricao</span>
+                        <span class="bfa-admin-badge @(c.IsAtrasada ? "is-overdue" : null)">
+                            @c.Status
+                        </span>
+                    </div>
+                    <div class="bfa-admin-mobile-list__details">
+                        <span>@c.Tipo</span>
+                        <span>@c.Valor</span>
+                    </div>
+                    <div class="bfa-admin-mobile-list__details">
+                        <span>Venc: @c.DataVencimento</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.Pagamentos.Count > 0)
+{
+    <div class="bfa-admin-card">
+        <h2 class="bfa-admin-card__title">Pagamentos</h2>
+        <div class="bfa-admin-table-container bfa-admin-desktop-list">
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Valor</th>
+                        <th>Forma</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Pagamentos)
+                    {
+                        <tr>
+                            <td>@p.DataPagamento</td>
+                            <td>@p.Valor</td>
+                            <td>@p.FormaPagamento</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

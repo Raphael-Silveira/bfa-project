@@ -1,0 +1,71 @@
+@model IReadOnlyList<MatriculaAlunoViewModel>
+@{
+    ViewData["Title"] = "Matrículas";
+    Layout = "_AlunoLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-matriculas-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Matrículas</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-matriculas-aluno">Minhas Matrículas</h1>
+    </div>
+</header>
+
+@if (Model.Count == 0)
+{
+    <div class="bfa-admin-card">
+        <p class="bfa-admin-empty-state">Nenhuma matrícula encontrada.</p>
+    </div>
+}
+else
+{
+    <div class="bfa-admin-card">
+        <div class="bfa-admin-table-container bfa-admin-desktop-list">
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Plano</th>
+                        <th>Status</th>
+                        <th>Início</th>
+                        <th>Término previsto</th>
+                        <th>Valor mensal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var matricula in Model)
+                    {
+                        <tr>
+                            <td>@matricula.PlanoNome</td>
+                            <td>
+                                <span class="bfa-admin-badge @(matricula.Status == "Ativa" ? "is-active" : null)">
+                                    @matricula.Status
+                                </span>
+                            </td>
+                            <td>@matricula.DataInicio</td>
+                            <td>@matricula.DataFimPrevista</td>
+                            <td>@matricula.ValorMensal</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bfa-admin-mobile-list">
+            @foreach (var matricula in Model)
+            {
+                <div class="bfa-admin-mobile-list__item">
+                    <div class="bfa-admin-mobile-list__header">
+                        <span class="bfa-admin-mobile-list__name">@matricula.PlanoNome</span>
+                        <span class="bfa-admin-badge @(matricula.Status == "Ativa" ? "is-active" : null)">
+                            @matricula.Status
+                        </span>
+                    </div>
+                    <div class="bfa-admin-mobile-list__details">
+                        <span>Início: @matricula.DataInicio</span>
+                        <span>@matricula.ValorMensal/mês</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}

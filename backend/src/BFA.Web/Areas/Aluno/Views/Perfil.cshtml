@@ -1,0 +1,38 @@
+@model PerfilAlunoViewModel
+@{
+    ViewData["Title"] = "Meu Perfil";
+    Layout = "_AlunoLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-perfil-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Perfil</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-perfil-aluno">@Model.NomeCompleto</h1>
+    </div>
+</header>
+
+<div class="bfa-admin-card">
+    <h2 class="bfa-admin-card__title">Dados Cadastrais</h2>
+    <dl class="bfa-unidade-contract-grid">
+        <div>
+            <dt>Nome completo</dt>
+            <dd>@Model.NomeCompleto</dd>
+        </div>
+        <div>
+            <dt>CPF</dt>
+            <dd>@(Model.CpfFormatado ?? "Não informado")</dd>
+        </div>
+        <div>
+            <dt>E-mail</dt>
+            <dd>@(Model.Email ?? "Não informado")</dd>
+        </div>
+        <div>
+            <dt>Telefone</dt>
+            <dd>@(Model.Telefone ?? "Não informado")</dd>
+        </div>
+        <div>
+            <dt>Data de nascimento</dt>
+            <dd>@Model.DataNascimento (@Model.Idade)</dd>
+        </div>
+    </dl>
+</div>

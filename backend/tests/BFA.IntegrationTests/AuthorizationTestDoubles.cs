@@ -27,11 +27,13 @@ public sealed class TestUnidadesUsuarioConsulta : IUnidadesUsuarioConsulta
 {
     private readonly List<TestUnidadeUsuario> _unidades = [];
     private readonly List<TestUnidadeUsuario> _unidadesProfessor = [];
+    private readonly List<TestUnidadeUsuario> _unidadesAluno = [];
 
     public void Limpar()
     {
         _unidades.Clear();
         _unidadesProfessor.Clear();
+        _unidadesAluno.Clear();
     }
 
     public void Adicionar(
@@ -106,6 +108,45 @@ public sealed class TestUnidadesUsuarioConsulta : IUnidadesUsuarioConsulta
     {
         cancellationToken.ThrowIfCancellationRequested();
         var unidade = _unidadesProfessor
+            .Where(item => item.UsuarioId == usuarioId && item.Ativa)
+            .Select(item => item.Unidade)
+            .SingleOrDefault(item => item.UnidadeId == unidadeId);
+        return Task.FromResult(unidade);
+    }
+
+    public void AdicionarAluno(
+        Guid usuarioId,
+        Guid organizacaoId,
+        Guid unidadeId,
+        string nome,
+        bool ativa = true)
+    {
+        _unidadesAluno.Add(new TestUnidadeUsuario(
+            usuarioId,
+            new UnidadeAcessoResumo(organizacaoId, unidadeId, nome),
+            ativa));
+    }
+
+    public Task<IReadOnlyList<UnidadeAcessoResumo>> ListarAlunoAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IReadOnlyList<UnidadeAcessoResumo> unidades = _unidadesAluno
+            .Where(item => item.UsuarioId == usuarioId && item.Ativa)
+            .Select(item => item.Unidade)
+            .OrderBy(unidade => unidade.Nome)
+            .ToArray();
+        return Task.FromResult(unidades);
+    }
+
+    public Task<UnidadeAcessoResumo?> ObterAlunoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var unidade = _unidadesAluno
             .Where(item => item.UsuarioId == usuarioId && item.Ativa)
             .Select(item => item.Unidade)
             .SingleOrDefault(item => item.UnidadeId == unidadeId);

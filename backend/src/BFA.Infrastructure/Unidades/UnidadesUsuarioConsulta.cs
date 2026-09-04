@@ -50,6 +50,30 @@ public sealed class UnidadesUsuarioConsulta(BfaDbContext dbContext)
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<UnidadeAcessoResumo>> ListarAlunoAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        return await UnidadesPorPerfil(usuarioId, PerfilAcesso.Aluno)
+            .OrderBy(unidade => unidade.Nome)
+            .ThenBy(unidade => unidade.Id)
+            .Select(unidade => new UnidadeAcessoResumo(
+                unidade.OrganizacaoId, unidade.Id, unidade.Nome))
+            .ToArrayAsync(cancellationToken);
+    }
+
+    public Task<UnidadeAcessoResumo?> ObterAlunoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        return UnidadesPorPerfil(usuarioId, PerfilAcesso.Aluno)
+            .Where(unidade => unidade.Id == unidadeId)
+            .Select(unidade => new UnidadeAcessoResumo(
+                unidade.OrganizacaoId, unidade.Id, unidade.Nome))
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
     public Task<UnidadeContextoResumo?> ObterAtivaAsync(
         Guid unidadeId,
         CancellationToken cancellationToken)

@@ -52,3 +52,4 @@ Exemplo: `01_corrigir-salvamento-alterar-grade.md`
 | 06 | [modulo-aulas-e-presencas](06_modulo-aulas-e-presencas.md) | Concluído |
 | 07 | [financeiro-unidade-aluno](07_financeiro-unidade-aluno.md) | Concluído |
 | 08 | [relatorios](08_relatorios.md) | Concluído |
+| 09 | [area-do-aluno](09_area-do-aluno.md) | Concluído |
