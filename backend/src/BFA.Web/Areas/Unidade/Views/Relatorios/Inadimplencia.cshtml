@@ -1,0 +1,113 @@
+@model RelatorioInadimplenciaViewModel
+@{
+    ViewData["Title"] = "Relatório de Inadimplência";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-inadimplencia">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Relatórios</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-inadimplencia">Relatório de Inadimplência</h1>
+        <p class="bfa-admin-page-header__description">
+            Alunos com cobranças atrasadas em @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<div class="bfa-admin-card-grid">
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Total Atrasado</div>
+        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalAtrasado</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Alunos com Débito</div>
+        <div class="bfa-admin-metric-card__value">@Model.TotalAlunos</div>
+    </div>
+</div>
+
+@if (Model.Alunos.Count == 0)
+{
+    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhuma inadimplência encontrada.</h2>
+            <p>Todas as cobranças estão em dia.</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="bfa-admin-table-container bfa-admin-desktop-list">
+        <table class="bfa-admin-table">
+            <thead>
+                <tr>
+                    <th>Aluno</th>
+                    <th>CPF</th>
+                    <th>Cobranças Atrasadas</th>
+                    <th>Valor Total</th>
+                    <th>Primeiro Vencimento</th>
+                    <th>Último Vencimento</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var aluno in Model.Alunos)
+                {
+                    <tr>
+                        <td>@aluno.NomeCompleto</td>
+                        <td>@(aluno.Cpf ?? "—")</td>
+                        <td>@aluno.CobrancasAtrasadas</td>
+                        <td>@aluno.ValorTotalAtrasado</td>
+                        <td>@(aluno.PrimeiraDataVencimento ?? "—")</td>
+                        <td>@(aluno.UltimaDataVencimento ?? "—")</td>
+                        <td class="bfa-admin-actions">
+                            <a class="bfa-admin-icon-action"
+                               asp-area="Unidade"
+                               asp-controller="Cobrancas"
+                               asp-action="Index"
+                               asp-route-unidadeId="@Model.UnidadeId"
+                               asp-route-alunoId="@aluno.AlunoId"
+                               asp-route-status="Atrasada"
+                               title="Ver cobranças">
+                                <span class="bfa-admin-icon-action__symbol" aria-hidden="true">i</span>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bfa-admin-mobile-list">
+        @foreach (var aluno in Model.Alunos)
+        {
+            <a class="bfa-admin-mobile-list__item"
+               asp-area="Unidade"
+               asp-controller="Cobrancas"
+               asp-action="Index"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-alunoId="@aluno.AlunoId"
+               asp-route-status="Atrasada">
+                <div class="bfa-admin-mobile-list__header">
+                    <span class="bfa-admin-mobile-list__name">@aluno.NomeCompleto</span>
+                    <span class="bfa-admin-badge bfa-admin-badge--overdue">@aluno.CobrancasAtrasadas</span>
+                </div>
+                <div class="bfa-admin-mobile-list__details">
+                    <span>CPF: @(aluno.Cpf ?? "—")</span>
+                </div>
+                <div class="bfa-admin-mobile-list__details">
+                    <span>@aluno.ValorTotalAtrasado</span>
+                    <span>Venc: @(aluno.UltimaDataVencimento ?? "—")</span>
+                </div>
+            </a>
+        }
+    </div>
+}
+
+<div class="bfa-admin-form-actions">
+    <a class="bfa-btn-secondary bfa-admin-button"
+       asp-area="Unidade"
+       asp-controller="Relatorios"
+       asp-action="Index"
+       asp-route-unidadeId="@Model.UnidadeId">Voltar</a>
+</div>

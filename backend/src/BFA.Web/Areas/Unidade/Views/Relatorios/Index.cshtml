@@ -1,0 +1,97 @@
+@model RelatorioIndexViewModel
+@{
+    ViewData["Title"] = "Relatórios";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-relatorios">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-relatorios">Relatórios</h1>
+        <p class="bfa-admin-page-header__description">
+            Relatórios e indicadores de @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<div class="bfa-admin-card-grid">
+    <a class="bfa-admin-card bfa-admin-report-card"
+       asp-area="Unidade"
+       asp-controller="Relatorios"
+       asp-action="Financeiro"
+       asp-route-unidadeId="@Model.UnidadeId">
+        <div class="bfa-admin-report-card__icon" aria-hidden="true">$</div>
+        <div class="bfa-admin-report-card__content">
+            <h2 class="bfa-admin-report-card__title">Financeiro</h2>
+            <p class="bfa-admin-report-card__description">Receita, pendências e inadimplência por período</p>
+        </div>
+    </a>
+
+    <a class="bfa-admin-card bfa-admin-report-card"
+       asp-area="Unidade"
+       asp-controller="Relatorios"
+       asp-action="Inadimplencia"
+       asp-route-unidadeId="@Model.UnidadeId">
+        <div class="bfa-admin-report-card__icon" aria-hidden="true">!</div>
+        <div class="bfa-admin-report-card__content">
+            <h2 class="bfa-admin-report-card__title">Inadimplência</h2>
+            <p class="bfa-admin-report-card__description">Alunos com cobranças atrasadas</p>
+        </div>
+    </a>
+
+    <a class="bfa-admin-card bfa-admin-report-card"
+       asp-area="Unidade"
+       asp-controller="Aulas"
+       asp-action="Frequencia"
+       asp-route-unidadeId="@Model.UnidadeId">
+        <div class="bfa-admin-report-card__icon" aria-hidden="true">%</div>
+        <div class="bfa-admin-report-card__content">
+            <h2 class="bfa-admin-report-card__title">Frequência</h2>
+            <p class="bfa-admin-report-card__description">Presença dos alunos por período</p>
+        </div>
+    </a>
+
+    <a class="bfa-admin-card bfa-admin-report-card"
+       asp-area="Unidade"
+       asp-controller="Cobrancas"
+       asp-action="Resumo"
+       asp-route-unidadeId="@Model.UnidadeId">
+        <div class="bfa-admin-report-card__icon" aria-hidden="true">R</div>
+        <div class="bfa-admin-report-card__content">
+            <h2 class="bfa-admin-report-card__title">Resumo Financeiro</h2>
+            <p class="bfa-admin-report-card__description">Visão geral de receitas e pendências</p>
+        </div>
+    </a>
+</div>
+
+<div class="bfa-admin-card">
+    <h2 class="bfa-admin-card__title">Indicadores Gerais</h2>
+    <div class="bfa-admin-card-grid">
+        <div class="bfa-admin-metric-card">
+            <div class="bfa-admin-metric-card__label">Alunos Ativos</div>
+            <div class="bfa-admin-metric-card__value">@Model.Resumo.TotalAlunosAtivos</div>
+        </div>
+        <div class="bfa-admin-metric-card">
+            <div class="bfa-admin-metric-card__label">Matrículas Ativas</div>
+            <div class="bfa-admin-metric-card__value">@Model.Resumo.TotalMatriculasAtivas</div>
+        </div>
+        <div class="bfa-admin-metric-card">
+            <div class="bfa-admin-metric-card__label">Aulas Concluídas</div>
+            <div class="bfa-admin-metric-card__value">@Model.Resumo.TotalAulasConcluidas</div>
+        </div>
+    </div>
+    <div class="bfa-admin-card-grid">
+        <div class="bfa-admin-metric-card">
+            <div class="bfa-admin-metric-card__label">Receita Total</div>
+            <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--success">@Model.Resumo.TotalReceita.ToString("C")</div>
+        </div>
+        <div class="bfa-admin-metric-card">
+            <div class="bfa-admin-metric-card__label">Pendente</div>
+            <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--warning">@Model.Resumo.TotalPendente.ToString("C")</div>
+        </div>
+        <div class="bfa-admin-metric-card">
+            <div class="bfa-admin-metric-card__label">Atrasado</div>
+            <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.Resumo.TotalAtrasado.ToString("C")</div>
+        </div>
+    </div>
+</div>
