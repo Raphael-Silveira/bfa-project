@@ -58,7 +58,7 @@ backend/
 - Turmas (`TurmasController`)
 - Planos Locais (`PlanosController`)
 - Matrículas (`MatriculasController`) — CRUD completo com Grade
-- Alunos (`AlunosController`) — Listagem + Detalhe + Editar dados
+- Alunos (`AlunosController`) — Listagem + Detalhe + Editar dados + Gerenciar Responsáveis
 - Contrato (read-only)
 
 ### Professor (Area: `/professor`)
@@ -184,15 +184,15 @@ O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
 - Cancelar Matrícula — CONCLUÍDO
 - Módulo Alunos — Etapa 1 (Listagem + Detalhe) CONCLUÍDO
 - Módulo Alunos — Etapa 2 (Editar Dados) CONCLUÍDO
+- Módulo Alunos — Etapa 3 (Gerenciar Responsáveis) CONCLUÍDO
 
 ## Próximos Passos (Roadmap)
 
-1. **Gerenciar Responsáveis** (Etapa 3 do módulo Alunos)
-2. Aulas
-3. Presença
-4. Financeiro Unidade x Aluno
-5. Cobrança
-6. Pagamento
+1. Aulas
+2. Presença
+3. Financeiro Unidade x Aluno
+4. Cobrança
+5. Pagamento
 
 ## Identidade Visual
 
@@ -218,7 +218,8 @@ Planos sequenciais em `docs/plans/`:
 | 01 | Corrigir Salvamento de Alterar Grade | Concluído |
 | 02 | Melhorar UX de Encerrar/Cancelar Matrícula | Concluído |
 | 03 | Padronizar Validação de Datas e Mensagens | Concluído |
-| 04 | Módulo Alunos e Responsáveis | Em andamento (Etapa 3) |
+| 04 | Módulo Alunos e Responsáveis | Concluído |
+| 05 | Logging Informativo para Produção | Concluído |
 
 ## Documentos de Referência
 

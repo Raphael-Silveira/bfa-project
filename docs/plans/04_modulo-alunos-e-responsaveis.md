@@ -519,19 +519,23 @@ Se no futuro for necessário algum campo novo (ex: `foto_perfil`), será criada 
 
 ### ETAPA 3 — Gerenciar Responsáveis
 
-**Escopo:**
-- Criar `Responsaveis.cshtml` (gestão de vínculos)
-- Adicionar actions de CRUD no controller
-- Adicionar operações no service
-- Validações de trigger
-- Testes
+**Status:** Concluído
 
-**Arquivos:**
-- `AlunosController.cs` (modificado)
-- `AlunoViewModels.cs` (modificado)
-- `AlunosUnidade.cs` (modificado)
-- `Responsaveis.cshtml` (novo)
-- Testes correspondentes
+**Escopo implementado:**
+- Repository: CPF lookup, criação de vínculo isolado, troca atômica de PrincipalContato, consulta de aluno + matrículas
+- Service: Reuso de Responsável por CPF, reativação de vínculo inativo, validação de regra de menor na inativação, troca atômica de PrincipalContato
+- Controller: CRUD completo (listar, criar, detalhar, editar, inativar, reativar), tratamento de estados de erro
+- Views: listagem separada (ativos/inativos), formulário com CPF readonly na edição, confirmação de inativação
+- Mutabilidade real documentada: todos os campos de AlunoResponsavel são mutáveis via Domain; PrincipalContato tem unique parcial no DB
+
+**Arquivos modificados:**
+- `AlunosUnidade.cs` — interface + service (CPF reuse, minor rule, atomic swap, reativação)
+- `AlunosRepositorio.cs` — 5 novos métodos
+- `AlunosController.cs` — actions de inativação/reativação corrigidas
+- `AlunoViewModels.cs` — ViewModels para listagem/detalhe/formulário
+- `Responsaveis.cshtml` — separação ativos/inativos
+- `DetalhesResponsavel.cshtml` — confirmação de inativação + reativação
+- `ResponsavelForm.cshtml` — CPF readonly na edição
 
 ---
 

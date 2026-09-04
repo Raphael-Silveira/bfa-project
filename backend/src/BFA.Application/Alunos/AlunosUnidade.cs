@@ -17,6 +17,8 @@ public enum EstadoAlunosUnidade
     DadosInvalidos,
     ResponsavelNaoEncontrado,
     ResponsavelJaVinculado,
+    VinculoJaInativo,
+    VinculoJaAtivo,
     Falha
 }
 
@@ -177,6 +179,25 @@ public interface IAlunosRepositorio
 
     Task<bool> ExisteVinculoAtivoAlunoResponsavelAsync(
         Guid organizacaoId, Guid alunoId, Guid responsavelId, CancellationToken cancellationToken);
+
+    Task<Responsavel?> ObterResponsavelPorCpfAsync(
+        Guid organizacaoId, string cpf, CancellationToken cancellationToken);
+
+    Task<bool> CriarVinculoAsync(
+        AlunoResponsavel vinculo, CancellationToken cancellationToken);
+
+    Task<bool> TrocarPrincipalContatoAsync(
+        Guid organizacaoId, Guid alunoId,
+        Guid? vinculoAnteriorId, bool novoValorVinculoAnterior,
+        Guid? vinculoNovoId, bool novoValorVinculoNovo,
+        DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken);
+
+    Task<Aluno?> ObterAlunoAsync(
+        Guid organizacaoId, Guid alunoId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<MatriculaAtivaResumo>> ObterMatriculasAtivasAsync(
+        Guid organizacaoId, Guid alunoId, CancellationToken cancellationToken);
 }
 
 public interface IAlunosServico
@@ -226,6 +247,10 @@ public interface IAlunosServico
         CancellationToken cancellationToken);
 
     Task<ResultadoAlunosUnidadeSimples> AtivarVinculoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAlunosUnidadeSimples> ReativarVinculoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
         CancellationToken cancellationToken);
 }
@@ -439,43 +464,147 @@ public sealed class AlunosServico(
         if (!relacionado)
             return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
 
-        var agoraUtc = DateTime.UtcNow;
-        var responsavelId = Guid.NewGuid();
-        var vinculoId = Guid.NewGuid();
-
-        var responsavel = new Responsavel(
-            responsavelId,
-            contexto.Valor.OrganizacaoId,
-            nomeCompleto,
-            agoraUtc,
-            cpf: cpf,
-            telefone: telefone,
-            email: email);
-
-        var vinculo = new AlunoResponsavel(
-            vinculoId,
-            contexto.Valor.OrganizacaoId,
-            alunoId,
-            responsavelId,
-            tipoRelacao,
-            principalContato,
-            responsavelFinanceiro,
-            agoraUtc,
-            descricaoRelacao);
-
-        var sucesso = await repositorio.CriarResponsavelAsync(
-            responsavel, vinculo, cancellationToken);
-
-        if (sucesso)
+        string? cpfNormalizado = null;
+        if (!string.IsNullOrWhiteSpace(cpf))
         {
-            logger.LogInformation(
-                "CriarResponsavel concluido: responsavel {ResponsavelId} vinculado ao aluno {AlunoId}",
-                responsavelId, alunoId);
+            cpfNormalizado = cpf.Trim();
+            if (cpfNormalizado.Length != 11)
+                cpfNormalizado = null;
         }
 
-        return sucesso
-            ? new(EstadoAlunosUnidade.Sucesso, Valor: responsavelId, Contexto: contexto.Valor)
-            : new(EstadoAlunosUnidade.Falha);
+        var agoraUtc = DateTime.UtcNow;
+        Responsavel responsavel;
+        Guid responsavelId;
+
+        Responsavel? responsavelExistente = null;
+        if (cpfNormalizado is not null)
+        {
+            responsavelExistente = await repositorio.ObterResponsavelPorCpfAsync(
+                contexto.Valor.OrganizacaoId, cpfNormalizado, cancellationToken);
+        }
+
+        if (responsavelExistente is not null)
+        {
+            responsavelId = responsavelExistente.Id;
+            responsavelExistente.AtualizarDados(
+                nomeCompleto, cpf, telefone, email, agoraUtc);
+            if (!responsavelExistente.Ativo)
+            {
+                responsavelExistente.Ativar(agoraUtc);
+            }
+            responsavel = responsavelExistente;
+        }
+        else
+        {
+            responsavelId = Guid.NewGuid();
+            responsavel = new Responsavel(
+                responsavelId,
+                contexto.Valor.OrganizacaoId,
+                nomeCompleto,
+                agoraUtc,
+                cpf: cpf,
+                telefone: telefone,
+                email: email);
+        }
+
+        var vinculoExistente = await repositorio.ObterVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, cancellationToken);
+
+        Guid vinculoId;
+        bool criouVinculoNovo = false;
+
+        if (vinculoExistente is not null)
+        {
+            vinculoId = vinculoExistente.Id;
+
+            if (vinculoExistente.Ativo)
+            {
+                logger.LogWarning(
+                    "CriarResponsavel rejeitado: vinculo ja ativo entre aluno {AlunoId} e responsavel {ResponsavelId}",
+                    alunoId, responsavelId);
+                return new(EstadoAlunosUnidade.ResponsavelJaVinculado);
+            }
+
+            vinculoExistente.Ativar(agoraUtc);
+            vinculoExistente.AtualizarClassificacao(
+                tipoRelacao, descricaoRelacao, principalContato, responsavelFinanceiro, agoraUtc);
+
+            if (responsavelExistente is not null)
+            {
+                var atualizado = await repositorio.AtualizarResponsavelAsync(
+                    responsavel, cancellationToken);
+                if (!atualizado)
+                    return new(EstadoAlunosUnidade.Falha);
+            }
+
+            var vinculoAtualizado = await repositorio.AtualizarVinculoAsync(
+                vinculoExistente, cancellationToken);
+            if (!vinculoAtualizado)
+                return new(EstadoAlunosUnidade.Falha);
+        }
+        else
+        {
+            vinculoId = Guid.NewGuid();
+            var vinculo = new AlunoResponsavel(
+                vinculoId,
+                contexto.Valor.OrganizacaoId,
+                alunoId,
+                responsavelId,
+                tipoRelacao,
+                principalContato,
+                responsavelFinanceiro,
+                agoraUtc,
+                descricaoRelacao);
+
+            if (responsavelExistente is not null)
+            {
+                var atualizado = await repositorio.AtualizarResponsavelAsync(
+                    responsavel, cancellationToken);
+                if (!atualizado)
+                    return new(EstadoAlunosUnidade.Falha);
+
+                var criouVinculo = await repositorio.CriarVinculoAsync(
+                    vinculo, cancellationToken);
+                if (!criouVinculo)
+                    return new(EstadoAlunosUnidade.Falha);
+            }
+            else
+            {
+                var sucesso = await repositorio.CriarResponsavelAsync(
+                    responsavel, vinculo, cancellationToken);
+                if (!sucesso)
+                    return new(EstadoAlunosUnidade.Falha);
+            }
+            criouVinculoNovo = true;
+        }
+
+        if (principalContato && criouVinculoNovo)
+        {
+            var vinculosAluno = await repositorio.ListarResponsaveisAlunoAsync(
+                contexto.Valor.OrganizacaoId, alunoId, cancellationToken);
+
+            var outroPrincipal = vinculosAluno.FirstOrDefault(v =>
+                v.VinculoAtivo && v.PrincipalContato && v.ResponsavelId != responsavelId);
+
+            if (outroPrincipal is not null)
+            {
+                await repositorio.TrocarPrincipalContatoAsync(
+                    contexto.Valor.OrganizacaoId,
+                    alunoId,
+                    outroPrincipal.ResponsavelId,
+                    false,
+                    responsavelId,
+                    true,
+                    agoraUtc,
+                    cancellationToken);
+            }
+        }
+
+        logger.LogInformation(
+            "CriarResponsavel concluido: responsavel {ResponsavelId} vinculado ao aluno {AlunoId}",
+            responsavelId, alunoId);
+
+        return new(EstadoAlunosUnidade.Sucesso, Valor: responsavelId, Contexto: contexto.Valor);
     }
 
     public async Task<ResultadoAlunosUnidade<Guid>> AtualizarResponsavelAsync(
@@ -526,6 +655,28 @@ public sealed class AlunosServico(
         if (!responsavelAtualizado)
             return new(EstadoAlunosUnidade.Falha);
 
+        if (principalContato && !vinculoExistente.PrincipalContato)
+        {
+            var vinculosAluno = await repositorio.ListarResponsaveisAlunoAsync(
+                contexto.Valor.OrganizacaoId, alunoId, cancellationToken);
+
+            var outroPrincipal = vinculosAluno.FirstOrDefault(v =>
+                v.VinculoAtivo && v.PrincipalContato && v.ResponsavelId != responsavelId);
+
+            if (outroPrincipal is not null)
+            {
+                await repositorio.TrocarPrincipalContatoAsync(
+                    contexto.Valor.OrganizacaoId,
+                    alunoId,
+                    outroPrincipal.ResponsavelId,
+                    false,
+                    responsavelId,
+                    true,
+                    agoraUtc,
+                    cancellationToken);
+            }
+        }
+
         vinculoExistente.AtualizarClassificacao(
             tipoRelacao,
             descricaoRelacao,
@@ -564,10 +715,40 @@ public sealed class AlunosServico(
         if (!relacionado)
             return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
 
-        var vinculoAtivo = await repositorio.ExisteVinculoAtivoAlunoResponsavelAsync(
+        var vinculo = await repositorio.ObterVinculoAsync(
             contexto.Valor.OrganizacaoId, alunoId, responsavelId, cancellationToken);
-        if (!vinculoAtivo)
+        if (vinculo is null || !vinculo.Ativo)
             return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+
+        var aluno = await repositorio.ObterAlunoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, cancellationToken);
+        if (aluno is null)
+            return new(EstadoAlunosUnidade.AlunoNaoEncontrado);
+
+        var dataCivilAtual = DateOnly.FromDateTime(DateTime.Today);
+        if (aluno.EhMenorEm(dataCivilAtual))
+        {
+            var responsaveisAluno = await repositorio.ListarResponsaveisAlunoAsync(
+                contexto.Valor.OrganizacaoId, alunoId, cancellationToken);
+
+            var responsaveisAtivosRestantes = responsaveisAluno.Count(v =>
+                v.VinculoAtivo && v.ResponsavelAtivo && v.ResponsavelId != responsavelId);
+
+            if (responsaveisAtivosRestantes == 0)
+            {
+                logger.LogWarning(
+                    "DesativarVinculo rejeitado: aluno menor {AlunoId} ficaria sem responsavel ativo",
+                    alunoId);
+                return new(EstadoAlunosUnidade.MenorSemResponsavel);
+            }
+        }
+
+        if (vinculo.PrincipalContato)
+        {
+            logger.LogWarning(
+                "DesativarVinculo: vinculo {ResponsavelId} do aluno {AlunoId} possuia PrincipalContato=true",
+                responsavelId, alunoId);
+        }
 
         var agoraUtc = DateTime.UtcNow;
         var sucesso = await repositorio.DesativarVinculoAsync(
@@ -614,6 +795,61 @@ public sealed class AlunosServico(
         {
             logger.LogInformation(
                 "AtivarVinculo concluido: aluno {AlunoId} responsavel {ResponsavelId}",
+                alunoId, responsavelId);
+        }
+
+        return sucesso
+            ? new(EstadoAlunosUnidade.Sucesso, contexto.Valor)
+            : new(EstadoAlunosUnidade.Falha);
+    }
+
+    public async Task<ResultadoAlunosUnidadeSimples> ReativarVinculoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
+        if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
+            return new(contexto.Estado);
+        if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
+        if (!relacionado)
+            return new(EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade);
+
+        var vinculo = await repositorio.ObterVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, cancellationToken);
+        if (vinculo is null)
+            return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+
+        if (vinculo.Ativo)
+        {
+            logger.LogWarning(
+                "ReativarVinculo rejeitado: vinculo entre aluno {AlunoId} e responsavel {ResponsavelId} ja esta ativo",
+                alunoId, responsavelId);
+            return new(EstadoAlunosUnidade.VinculoJaAtivo);
+        }
+
+        var responsavel = await repositorio.ObterResponsavelAsync(
+            contexto.Valor.OrganizacaoId, responsavelId, cancellationToken);
+        if (responsavel is null || !responsavel.Ativo)
+        {
+            logger.LogWarning(
+                "ReativarVinculo rejeitado: responsavel {ResponsavelId} esta inativo",
+                responsavelId);
+            return new(EstadoAlunosUnidade.ResponsavelNaoEncontrado);
+        }
+
+        var agoraUtc = DateTime.UtcNow;
+        var sucesso = await repositorio.AtivarVinculoAsync(
+            contexto.Valor.OrganizacaoId, alunoId, responsavelId, agoraUtc, cancellationToken);
+
+        if (sucesso)
+        {
+            logger.LogInformation(
+                "ReativarVinculo concluido: aluno {AlunoId} responsavel {ResponsavelId}",
                 alunoId, responsavelId);
         }
 

@@ -31,7 +31,8 @@
                       asp-route-unidadeId="@Model.UnidadeId"
                       asp-route-alunoId="@Model.AlunoId"
                       asp-route-responsavelId="@responsavel.ResponsavelId"
-                      class="bfa-inline-form">
+                      class="bfa-inline-form"
+                      onsubmit="return confirm('Tem certeza que deseja inativar este vínculo?\n\nO cadastro da pessoa responsável não será excluído.')">
                     @Html.AntiForgeryToken()
                     <button class="bfa-btn-secondary bfa-admin-button" type="submit">Desativar</button>
                 </form>
@@ -41,13 +42,13 @@
                 <form method="post"
                       asp-area="Unidade"
                       asp-controller="Alunos"
-                      asp-action="AtivarResponsavel"
+                      asp-action="ReativarResponsavel"
                       asp-route-unidadeId="@Model.UnidadeId"
                       asp-route-alunoId="@Model.AlunoId"
                       asp-route-responsavelId="@responsavel.ResponsavelId"
                       class="bfa-inline-form">
                     @Html.AntiForgeryToken()
-                    <button class="bfa-btn-secondary bfa-admin-button" type="submit">Ativar</button>
+                    <button class="bfa-btn-secondary bfa-admin-button" type="submit">Reativar</button>
                 </form>
             }
         }

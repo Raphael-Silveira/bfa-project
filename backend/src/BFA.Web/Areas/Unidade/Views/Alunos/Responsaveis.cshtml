@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = $"Responsáveis de {Model.NomeAluno}";
     Layout = "_UnidadeLayout";
+    var responsaveisAtivos = Model.Responsaveis.Where(r => r.VinculoAtivo).ToList();
+    var responsaveisInativos = Model.Responsaveis.Where(r => !r.VinculoAtivo).ToList();
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-responsaveis">
@@ -32,59 +34,137 @@
 {
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
 }
+@if (TempData["Erro"] is string erro)
+{
+    <div class="bfa-admin-notice bfa-admin-notice--error" role="alert"><strong>@erro</strong></div>
+}
 
 <div class="bfa-matricula-detail-sections">
-    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-lista-responsaveis">
+    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-responsaveis-ativos">
         <header>
             <p>Contatos relacionados</p>
-            <h2 id="titulo-lista-responsaveis">Responsáveis</h2>
+            <h2 id="titulo-responsaveis-ativos">Responsáveis ativos</h2>
         </header>
-        @if (Model.Responsaveis.Count == 0)
+        @if (responsaveisAtivos.Count == 0)
         {
-            <p class="bfa-matricula-muted">Nenhum responsável vinculado.</p>
+            <p class="bfa-matricula-muted">Nenhum responsável ativo vinculado.</p>
         }
         else
         {
             <div class="bfa-matricula-responsaveis">
-                @foreach (var responsavel in Model.Responsaveis)
+                @foreach (var responsavel in responsaveisAtivos)
                 {
-                    <a class="bfa-matricula-responsavel"
-                       asp-area="Unidade"
-                       asp-controller="Alunos"
-                       asp-action="DetalhesResponsavel"
-                       asp-route-unidadeId="@Model.UnidadeId"
-                       asp-route-alunoId="@Model.AlunoId"
-                       asp-route-responsavelId="@responsavel.ResponsavelId">
-                        <header>
-                            <div>
-                                <strong>@responsavel.NomeCompleto</strong>
-                                <span>@responsavel.TipoRelacao</span>
-                            </div>
-                            @if (!responsavel.VinculoAtivo)
+                    <div class="bfa-matricula-responsavel">
+                        <a class="bfa-matricula-responsavel-link"
+                           asp-area="Unidade"
+                           asp-controller="Alunos"
+                           asp-action="DetalhesResponsavel"
+                           asp-route-unidadeId="@Model.UnidadeId"
+                           asp-route-alunoId="@Model.AlunoId"
+                           asp-route-responsavelId="@responsavel.ResponsavelId">
+                            <header>
+                                <div>
+                                    <strong>@responsavel.NomeCompleto</strong>
+                                    <span>@responsavel.TipoRelacao</span>
+                                </div>
+                            </header>
+                            <dl>
+                                <div><dt>Telefone</dt><dd>@(responsavel.Telefone ?? "Não informado")</dd></div>
+                                <div><dt>E-mail</dt><dd>@(responsavel.Email ?? "Não informado")</dd></div>
+                            </dl>
+                            @if (responsavel.PrincipalContato || responsavel.ResponsavelFinanceiro)
                             {
-                                <span class="bfa-admin-badge is-inactive">Vínculo inativo</span>
+                                <footer>
+                                    @if (responsavel.PrincipalContato)
+                                    {
+                                        <span class="bfa-admin-badge is-active">Principal contato</span>
+                                    }
+                                    @if (responsavel.ResponsavelFinanceiro)
+                                    {
+                                        <span class="bfa-admin-badge is-inactive">Responsável financeiro</span>
+                                    }
+                                </footer>
                             }
-                        </header>
-                        <dl>
-                            <div><dt>Telefone</dt><dd>@(responsavel.Telefone ?? "Não informado")</dd></div>
-                            <div><dt>E-mail</dt><dd>@(responsavel.Email ?? "Não informado")</dd></div>
-                        </dl>
-                        @if (responsavel.PrincipalContato || responsavel.ResponsavelFinanceiro)
+                        </a>
+                        @if (Model.PodeGerenciar)
                         {
-                            <footer>
-                                @if (responsavel.PrincipalContato)
-                                {
-                                    <span class="bfa-admin-badge is-active">Principal contato</span>
-                                }
-                                @if (responsavel.ResponsavelFinanceiro)
-                                {
-                                    <span class="bfa-admin-badge is-inactive">Responsável financeiro</span>
-                                }
-                            </footer>
+                            <div class="bfa-matricula-responsavel-actions">
+                                <a class="bfa-btn-secondary bfa-admin-button bfa-btn-sm"
+                                   asp-area="Unidade"
+                                   asp-controller="Alunos"
+                                   asp-action="EditarResponsavel"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-alunoId="@Model.AlunoId"
+                                   asp-route-responsavelId="@responsavel.ResponsavelId">Editar</a>
+                                <form method="post"
+                                      asp-area="Unidade"
+                                      asp-controller="Alunos"
+                                      asp-action="DesativarResponsavel"
+                                      asp-route-unidadeId="@Model.UnidadeId"
+                                      asp-route-alunoId="@Model.AlunoId"
+                                      asp-route-responsavelId="@responsavel.ResponsavelId"
+                                      class="bfa-inline-form"
+                                      onsubmit="return confirm('Tem certeza que deseja inativar este vínculo?')">
+                                    @Html.AntiForgeryToken()
+                                    <button class="bfa-btn-secondary bfa-admin-button bfa-btn-sm" type="submit">Desativar</button>
+                                </form>
+                            </div>
                         }
-                    </a>
+                    </div>
                 }
             </div>
         }
     </section>
+
+    @if (responsaveisInativos.Count > 0)
+    {
+        <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-vinculos-inativos">
+            <header>
+                <p>Histórico</p>
+                <h2 id="titulo-vinculos-inativos">Vínculos inativos</h2>
+            </header>
+            <div class="bfa-matricula-responsaveis">
+                @foreach (var responsavel in responsaveisInativos)
+                {
+                    <div class="bfa-matricula-responsavel bfa-matricula-responsavel--inactive">
+                        <a class="bfa-matricula-responsavel-link"
+                           asp-area="Unidade"
+                           asp-controller="Alunos"
+                           asp-action="DetalhesResponsavel"
+                           asp-route-unidadeId="@Model.UnidadeId"
+                           asp-route-alunoId="@Model.AlunoId"
+                           asp-route-responsavelId="@responsavel.ResponsavelId">
+                            <header>
+                                <div>
+                                    <strong>@responsavel.NomeCompleto</strong>
+                                    <span>@responsavel.TipoRelacao</span>
+                                </div>
+                                <span class="bfa-admin-badge is-inactive">Vínculo inativo</span>
+                            </header>
+                            <dl>
+                                <div><dt>Telefone</dt><dd>@(responsavel.Telefone ?? "Não informado")</dd></div>
+                                <div><dt>E-mail</dt><dd>@(responsavel.Email ?? "Não informado")</dd></div>
+                            </dl>
+                        </a>
+                        @if (Model.PodeGerenciar)
+                        {
+                            <div class="bfa-matricula-responsavel-actions">
+                                <form method="post"
+                                      asp-area="Unidade"
+                                      asp-controller="Alunos"
+                                      asp-action="ReativarResponsavel"
+                                      asp-route-unidadeId="@Model.UnidadeId"
+                                      asp-route-alunoId="@Model.AlunoId"
+                                      asp-route-responsavelId="@responsavel.ResponsavelId"
+                                      class="bfa-inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <button class="bfa-btn-secondary bfa-admin-button bfa-btn-sm" type="submit">Reativar</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    }
 </div>

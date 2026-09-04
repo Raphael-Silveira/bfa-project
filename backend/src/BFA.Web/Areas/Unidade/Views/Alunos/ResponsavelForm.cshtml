@@ -36,10 +36,22 @@
                 </div>
                 <div class="bfa-form-field">
                     <label asp-for="Cpf" class="bfa-form-label"></label>
-                    <input asp-for="Cpf"
-                           class="form-control bfa-form-control"
-                           inputmode="numeric"
-                           data-bfa-mask="cpf" />
+                    @if (isEdicao)
+                    {
+                        <input asp-for="Cpf"
+                               class="form-control bfa-form-control"
+                               inputmode="numeric"
+                               readonly
+                               disabled />
+                        <span class="bfa-form-hint">CPF não pode ser alterado após o cadastro.</span>
+                    }
+                    else
+                    {
+                        <input asp-for="Cpf"
+                               class="form-control bfa-form-control"
+                               inputmode="numeric"
+                               data-bfa-mask="cpf" />
+                    }
                     <span asp-validation-for="Cpf" class="bfa-validation-message"></span>
                 </div>
                 <div class="bfa-form-field">

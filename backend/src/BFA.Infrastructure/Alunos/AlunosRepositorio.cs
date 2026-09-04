@@ -549,4 +549,125 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
                     && ar.Ativo,
                 cancellationToken);
     }
+
+    public async Task<Responsavel?> ObterResponsavelPorCpfAsync(
+        Guid organizacaoId, string cpf, CancellationToken cancellationToken)
+    {
+        var cpfNormalizado = cpf.Trim();
+        if (cpfNormalizado.Length != 11)
+            return null;
+
+        return await dbContext.Responsaveis
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                r => r.OrganizacaoId == organizacaoId && r.Cpf == cpfNormalizado,
+                cancellationToken);
+    }
+
+    public async Task<bool> CriarVinculoAsync(
+        AlunoResponsavel vinculo, CancellationToken cancellationToken)
+    {
+        dbContext.AlunosResponsaveis.Add(vinculo);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Falha ao criar vinculo aluno {AlunoId} responsavel {ResponsavelId} na organizacao {OrganizacaoId}",
+                vinculo.AlunoId, vinculo.ResponsavelId, vinculo.OrganizacaoId);
+            throw;
+        }
+    }
+
+    public async Task<bool> TrocarPrincipalContatoAsync(
+        Guid organizacaoId, Guid alunoId,
+        Guid? vinculoAnteriorId, bool novoValorVinculoAnterior,
+        Guid? vinculoNovoId, bool novoValorVinculoNovo,
+        DateTime atualizadoEmUtc, CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            if (vinculoAnteriorId.HasValue)
+            {
+                var anterior = await dbContext.AlunosResponsaveis
+                    .FirstOrDefaultAsync(
+                        ar => ar.OrganizacaoId == organizacaoId
+                            && ar.AlunoId == alunoId
+                            && ar.ResponsavelId == vinculoAnteriorId.Value,
+                        cancellationToken);
+                if (anterior is not null && anterior.PrincipalContato != novoValorVinculoAnterior)
+                {
+                    anterior.AtualizarClassificacao(
+                        anterior.TipoRelacao,
+                        anterior.DescricaoRelacao,
+                        novoValorVinculoAnterior,
+                        anterior.ResponsavelFinanceiro,
+                        atualizadoEmUtc);
+                }
+            }
+
+            if (vinculoNovoId.HasValue)
+            {
+                var novo = await dbContext.AlunosResponsaveis
+                    .FirstOrDefaultAsync(
+                        ar => ar.OrganizacaoId == organizacaoId
+                            && ar.AlunoId == alunoId
+                            && ar.ResponsavelId == vinculoNovoId.Value,
+                        cancellationToken);
+                if (novo is null)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return false;
+                }
+
+                if (novo.PrincipalContato != novoValorVinculoNovo)
+                {
+                    novo.AtualizarClassificacao(
+                        novo.TipoRelacao,
+                        novo.DescricaoRelacao,
+                        novoValorVinculoNovo,
+                        novo.ResponsavelFinanceiro,
+                        atualizadoEmUtc);
+                }
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            logger.LogError(exception,
+                "Falha ao trocar PrincipalContato aluno {AlunoId} na organizacao {OrganizacaoId}",
+                alunoId, organizacaoId);
+            throw;
+        }
+    }
+
+    public async Task<Aluno?> ObterAlunoAsync(
+        Guid organizacaoId, Guid alunoId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Alunos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                a => a.OrganizacaoId == organizacaoId && a.Id == alunoId,
+                cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<MatriculaAtivaResumo>> ObterMatriculasAtivasAsync(
+        Guid organizacaoId, Guid alunoId, CancellationToken cancellationToken)
+    {
+        return await dbContext.Matriculas
+            .AsNoTracking()
+            .Where(m => m.OrganizacaoId == organizacaoId
+                && m.AlunoId == alunoId
+                && m.Status == StatusMatricula.Ativa)
+            .Select(m => new MatriculaAtivaResumo(m.Id, m.DataInicio))
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -490,7 +490,10 @@ public sealed class AlunosController(
             await PodeTrocarAsync(usuarioId, cancellationToken));
         model.NomeCompleto = Request.Form["NomeCompleto"].FirstOrDefault()
             ?? model.NomeCompleto;
-        model.Cpf = Request.Form["Cpf"].FirstOrDefault();
+
+        var cpfForm = Request.Form["Cpf"].FirstOrDefault();
+        model.Cpf = !string.IsNullOrWhiteSpace(cpfForm) ? cpfForm : model.Cpf;
+
         model.Telefone = Request.Form["Telefone"].FirstOrDefault();
         model.Email = Request.Form["Email"].FirstOrDefault();
 
@@ -553,15 +556,6 @@ public sealed class AlunosController(
             return Forbid();
         }
 
-        var contexto = await alunosServico.ListarAsync(
-            usuarioId, unidadeId, null, cancellationToken);
-
-        if (contexto.Estado == EstadoAlunosUnidade.UnidadeNaoEncontrada)
-            return NotFound();
-        if (contexto.Estado != EstadoAlunosUnidade.Sucesso
-            || contexto.Contexto is null)
-            return Forbid();
-
         var resultadoDesativar = await alunosServico.DesativarVinculoAsync(
             usuarioId, unidadeId, alunoId, responsavelId, cancellationToken);
 
@@ -572,17 +566,71 @@ public sealed class AlunosController(
         {
             logger.LogWarning("{Controller} {Action} negado: {Estado}", "Alunos", "DesativarResponsavel", resultadoDesativar.Estado);
             TempData["Erro"] = "Não foi possível desativar o vínculo do responsável.";
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis");
+        }
+        if (resultadoDesativar.Estado == EstadoAlunosUnidade.MenorSemResponsavel)
+        {
+            logger.LogWarning("{Controller} {Action} negado: menor sem responsavel", "Alunos", "DesativarResponsavel");
+            TempData["Erro"] = "Este vínculo não pode ser inativo porque o aluno precisa manter pelo menos um responsável ativo.";
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis/{responsavelId:D}");
+        }
+        if (resultadoDesativar.Estado == EstadoAlunosUnidade.VinculoJaInativo)
+        {
+            TempData["Erro"] = "Este vínculo já está inativo.";
             return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis/{responsavelId:D}");
         }
         if (resultadoDesativar.Estado != EstadoAlunosUnidade.Sucesso)
         {
             logger.LogWarning("{Controller} {Action} falhou: {Estado}", "Alunos", "DesativarResponsavel", resultadoDesativar.Estado);
             TempData["Erro"] = "Não foi possível desativar o vínculo do responsável.";
-            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis/{responsavelId:D}");
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis");
         }
 
         TempData["Sucesso"] = "Vínculo do responsável desativado com sucesso.";
         logger.LogInformation("{Controller} {Action} concluído: {ResponsavelId}", "Alunos", "DesativarResponsavel", responsavelId);
+        return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis");
+    }
+
+    [HttpPost("{alunoId:guid}/responsaveis/{responsavelId:guid}/reativar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReativarResponsavel(
+        Guid unidadeId,
+        Guid alunoId,
+        Guid responsavelId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        {
+            logger.LogWarning("{Controller} {Action} negado: usuario nao identificado", "Alunos", "ReativarResponsavel");
+            return Forbid();
+        }
+
+        var resultadoReativar = await alunosServico.ReativarVinculoAsync(
+            usuarioId, unidadeId, alunoId, responsavelId, cancellationToken);
+
+        if (resultadoReativar.Estado == EstadoAlunosUnidade.UnidadeNaoEncontrada)
+            return NotFound();
+        if (resultadoReativar.Estado == EstadoAlunosUnidade.AlunoNaoRelacionadoUnidade
+            || resultadoReativar.Estado == EstadoAlunosUnidade.ResponsavelNaoEncontrado)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Alunos", "ReativarResponsavel", resultadoReativar.Estado);
+            TempData["Erro"] = "Não foi possível reativar o vínculo do responsável.";
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis");
+        }
+        if (resultadoReativar.Estado == EstadoAlunosUnidade.VinculoJaAtivo)
+        {
+            TempData["Erro"] = "Este vínculo já está ativo.";
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis/{responsavelId:D}");
+        }
+        if (resultadoReativar.Estado != EstadoAlunosUnidade.Sucesso)
+        {
+            logger.LogWarning("{Controller} {Action} falhou: {Estado}", "Alunos", "ReativarResponsavel", resultadoReativar.Estado);
+            TempData["Erro"] = "Não foi possível reativar o vínculo do responsável.";
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis");
+        }
+
+        TempData["Sucesso"] = "Vínculo reativado com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {ResponsavelId}", "Alunos", "ReativarResponsavel", responsavelId);
         return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}/responsaveis/{responsavelId:D}");
     }
 

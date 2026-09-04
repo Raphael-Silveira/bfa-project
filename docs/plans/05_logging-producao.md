@@ -2,7 +2,7 @@
 
 ## Status
 
-**Aprovado — Aguardando implementação**
+**Concluído**
 
 ## Objetivo
 
