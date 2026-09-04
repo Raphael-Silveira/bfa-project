@@ -1,0 +1,53 @@
+@model ResumoFinanceiroViewModel
+@{
+    ViewData["Title"] = "Resumo Financeiro";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-resumo-financeiro">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-resumo-financeiro">Resumo Financeiro</h1>
+        <p class="bfa-admin-page-header__description">
+            Panorama financeiro de @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<div class="bfa-admin-card-grid">
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Total Receita</div>
+        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--success">@Model.TotalReceita</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Total Pendente</div>
+        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--warning">@Model.TotalPendente</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Total Atrasado</div>
+        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalAtrasado</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Alunos com Débito</div>
+        <div class="bfa-admin-metric-card__value">@Model.TotalAlunosComDebito</div>
+    </div>
+</div>
+
+<div class="bfa-admin-card-grid">
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Cobranças Pendentes</div>
+        <div class="bfa-admin-metric-card__value">@Model.CobrancasPendentes</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Cobranças Atrasadas</div>
+        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.CobrancasAtrasadas</div>
+    </div>
+</div>
+
+<div class="bfa-admin-form-actions">
+    <a class="bfa-btn-secondary bfa-admin-button"
+       asp-area="Unidade"
+       asp-controller="Cobrancas"
+       asp-action="Index"
+       asp-route-unidadeId="@Model.UnidadeId">Ver todas as cobranças</a>
+</div>

@@ -188,14 +188,17 @@ O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
 - Módulo Alunos — Etapa 2 (Editar Dados) CONCLUÍDO
 - Módulo Alunos — Etapa 3 (Gerenciar Responsáveis) CONCLUÍDO
 - Módulo Aulas e Presenças CONCLUÍDO
+- Módulo Financeiro (Cobranças + Pagamentos) CONCLUÍDO
 
 ## Próximos Passos (Roadmap)
 
 1. ~~Aulas~~ ✅
 2. ~~Presença~~ ✅ (incluída no módulo Aulas)
-3. Financeiro Unidade x Aluno
-4. Cobrança
-5. Pagamento
+3. ~~Financeiro Unidade x Aluno~~ ✅
+4. ~~Cobrança~~ ✅ (incluída no módulo Financeiro)
+5. ~~Pagamento~~ ✅ (incluído no módulo Financeiro)
+6. Relatórios
+7. Inadimplência
 
 ## Identidade Visual
 

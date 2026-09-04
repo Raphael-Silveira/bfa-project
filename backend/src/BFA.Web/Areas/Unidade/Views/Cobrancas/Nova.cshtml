@@ -1,0 +1,106 @@
+@model CobrancaFormViewModel
+@{
+    ViewData["Title"] = "Nova Cobrança";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-nova-cobranca">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-nova-cobranca">Nova Cobrança</h1>
+        <p class="bfa-admin-page-header__description">
+            Registre uma nova cobrança em @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<div class="bfa-admin-form-card">
+    <form class="bfa-admin-form"
+          asp-area="Unidade"
+          asp-controller="Cobrancas"
+          asp-action="Nova"
+          asp-route-unidadeId="@Model.UnidadeId"
+          method="post">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-notice--error" role="alert"></div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="aluno-id">Aluno *</label>
+            <select class="form-control bfa-form-control"
+                    id="aluno-id"
+                    asp-for="AlunoId"
+                    asp-items="@(new SelectList(Model.Alunos, "AlunoId", "NomeCompleto"))">
+                <option value="">Selecione o aluno</option>
+            </select>
+            <span asp-validation-for="AlunoId" class="bfa-form-validation"></span>
+        </div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="tipo">Tipo *</label>
+            <select class="form-control bfa-form-control"
+                    id="tipo"
+                    asp-for="Tipo">
+                <option value="">Selecione o tipo</option>
+                <option value="Matricula">Matrícula</option>
+                <option value="Mensalidade">Mensalidade</option>
+                <option value="Avulso">Avulso</option>
+            </select>
+            <span asp-validation-for="Tipo" class="bfa-form-validation"></span>
+        </div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="descricao">Descrição *</label>
+            <input class="form-control bfa-form-control"
+                   id="descricao"
+                   asp-for="Descricao"
+                   maxlength="200"
+                   placeholder="Ex: Mensalidade Setembro/2026" />
+            <span asp-validation-for="Descricao" class="bfa-form-validation"></span>
+        </div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="valor">Valor (R$) *</label>
+            <input class="form-control bfa-form-control"
+                   id="valor"
+                   asp-for="Valor"
+                   type="number"
+                   step="0.01"
+                   min="0.01"
+                   placeholder="0,00" />
+            <span asp-validation-for="Valor" class="bfa-form-validation"></span>
+        </div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="data-vencimento">Data de vencimento *</label>
+            <input class="form-control bfa-form-control"
+                   id="data-vencimento"
+                   asp-for="DataVencimento"
+                   type="date" />
+            <span asp-validation-for="DataVencimento" class="bfa-form-validation"></span>
+        </div>
+
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="observacoes">Observações</label>
+            <textarea class="form-control bfa-form-control"
+                      id="observacoes"
+                      asp-for="Observacoes"
+                      rows="3"
+                      maxlength="500"
+                      placeholder="Observações internas (opcional)"></textarea>
+        </div>
+
+        <div class="bfa-admin-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Criar cobrança</button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Cobrancas"
+               asp-action="Index"
+               asp-route-unidadeId="@Model.UnidadeId">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

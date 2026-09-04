@@ -1,0 +1,200 @@
+@model CobrancaDetalheViewModel
+@{
+    ViewData["Title"] = "Detalhes da Cobrança";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-detalhe-cobranca">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-detalhe-cobranca">Detalhes da Cobrança</h1>
+        <p class="bfa-admin-page-header__description">
+            @Model.Cobranca.AlunoNome — @Model.Cobranca.Descricao
+        </p>
+    </div>
+</header>
+
+@if (TempData["Erro"] is string erroMsg)
+{
+    <div class="bfa-admin-notice bfa-admin-notice--error" role="alert">
+        @erroMsg
+    </div>
+}
+
+<div class="bfa-admin-card">
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Valor</div>
+        <div class="bfa-admin-metric-card__value">@Model.Cobranca.Valor</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Pago</div>
+        <div class="bfa-admin-metric-card__value">@Model.Cobranca.ValorPago</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Saldo Devedor</div>
+        <div class="bfa-admin-metric-card__value">@Model.Cobranca.SaldoDevedor</div>
+    </div>
+    <div class="bfa-admin-metric-card">
+        <div class="bfa-admin-metric-card__label">Vencimento</div>
+        <div class="bfa-admin-metric-card__value">@Model.Cobranca.DataVencimento</div>
+    </div>
+</div>
+
+<div class="bfa-admin-card">
+    <dl class="bfa-admin-detail-list">
+        <dt>Aluno</dt>
+        <dd>@Model.Cobranca.AlunoNome</dd>
+
+        <dt>CPF</dt>
+        <dd>@(Model.Cobranca.AlunoCpf ?? "—")</dd>
+
+        <dt>Tipo</dt>
+        <dd>@Model.Cobranca.Tipo</dd>
+
+        <dt>Data de Emissão</dt>
+        <dd>@Model.Cobranca.DataEmissao</dd>
+
+        <dt>Data de Pagamento</dt>
+        <dd>@(Model.Cobranca.DataPagamento ?? "—")</dd>
+
+        <dt>Status</dt>
+        <dd>
+            @{
+                var statusClass = Model.Cobranca.Status switch
+                {
+                    "Pendente" => "bfa-admin-badge--pending",
+                    "Paga" => "bfa-admin-badge--active",
+                    "Atrasada" => "bfa-admin-badge--overdue",
+                    "Cancelada" => "bfa-admin-badge--inactive",
+                    _ => ""
+                };
+            }
+            <span class="bfa-admin-badge @statusClass">@Model.Cobranca.Status</span>
+        </dd>
+
+        <dt>Observações</dt>
+        <dd>@(Model.Cobranca.Observacoes ?? "—")</dd>
+    </dl>
+</div>
+
+@if (Model.Cobranca.PodeRegistrarPagamento)
+{
+    <div class="bfa-admin-card">
+        <h2 class="bfa-admin-card__title">Registrar Pagamento</h2>
+        <form class="bfa-admin-form"
+              asp-area="Unidade"
+              asp-controller="Cobrancas"
+              asp-action="RegistrarPagamento"
+              asp-route-unidadeId="@Model.UnidadeId"
+              asp-route-cobrancaId="@Model.Cobranca.CobrancaId"
+              method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="bfa-form-field">
+                <label class="bfa-form-label" for="pag-valor">Valor (R$) *</label>
+                <input class="form-control bfa-form-control"
+                       id="pag-valor"
+                       name="Valor"
+                       type="number"
+                       step="0.01"
+                       min="0.01"
+                       max="@(Model.Cobranca.SaldoDevedor.Replace("R$", "").Replace(".", "").Replace(",", ".").Trim())"
+                       placeholder="0,00" />
+            </div>
+
+            <div class="bfa-form-field">
+                <label class="bfa-form-label" for="pag-data">Data do Pagamento *</label>
+                <input class="form-control bfa-form-control"
+                       id="pag-data"
+                       name="DataPagamento"
+                       type="date"
+                       value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="bfa-form-field">
+                <label class="bfa-form-label" for="pag-forma">Forma de Pagamento *</label>
+                <select class="form-control bfa-form-control"
+                        id="pag-forma"
+                        name="FormaPagamento">
+                    <option value="">Selecione</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Pix">Pix</option>
+                    <option value="CartaoCredito">Cartão de Crédito</option>
+                    <option value="CartaoDebito">Cartão de Débito</option>
+                    <option value="Boleto">Boleto</option>
+                    <option value="Transferencia">Transferência</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+
+            <div class="bfa-form-field">
+                <label class="bfa-form-label" for="pag-obs">Observações</label>
+                <textarea class="form-control bfa-form-control"
+                          id="pag-obs"
+                          name="Observacoes"
+                          rows="2"
+                          maxlength="500"
+                          placeholder="Observações do pagamento (opcional)"></textarea>
+            </div>
+
+            <div class="bfa-admin-form-actions">
+                <button class="bfa-btn-primary bfa-admin-button" type="submit">Registrar pagamento</button>
+            </div>
+        </form>
+    </div>
+}
+
+@if (Model.Cobranca.Pagamentos.Count > 0)
+{
+    <div class="bfa-admin-card">
+        <h2 class="bfa-admin-card__title">Pagamentos Registrados</h2>
+        <div class="bfa-admin-table-container">
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Valor</th>
+                        <th>Forma</th>
+                        <th>Observações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pgto in Model.Cobranca.Pagamentos)
+                    {
+                        <tr>
+                            <td>@pgto.DataPagamento</td>
+                            <td>@pgto.Valor</td>
+                            <td>@pgto.FormaPagamento</td>
+                            <td>@(pgto.Observacoes ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<div class="bfa-admin-form-actions">
+    @if (Model.Cobranca.PodeCancelar)
+    {
+        <form asp-area="Unidade"
+              asp-controller="Cobrancas"
+              asp-action="Cancelar"
+              asp-route-unidadeId="@Model.UnidadeId"
+              asp-route-cobrancaId="@Model.Cobranca.CobrancaId"
+              method="post"
+              style="display:inline">
+            @Html.AntiForgeryToken()
+            <button class="bfa-btn-danger bfa-admin-button"
+                    type="submit"
+                    onclick="return confirm('Tem certeza que deseja cancelar esta cobrança?')">
+                Cancelar cobrança
+            </button>
+        </form>
+    }
+    <a class="bfa-btn-secondary bfa-admin-button"
+       asp-area="Unidade"
+       asp-controller="Cobrancas"
+       asp-action="Index"
+       asp-route-unidadeId="@Model.UnidadeId">Voltar</a>
+</div>
