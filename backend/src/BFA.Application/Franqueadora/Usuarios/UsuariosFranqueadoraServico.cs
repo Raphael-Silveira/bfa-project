@@ -5,6 +5,7 @@ using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Usuarios;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Franqueadora.Usuarios;
 
@@ -12,7 +13,8 @@ public sealed class UsuariosFranqueadoraServico(
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IUsuariosFranqueadoraRepositorio repositorio,
     ILocalidadesConsulta localidadesConsulta,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<UsuariosFranqueadoraServico> logger)
     : IUsuariosFranqueadoraConsulta, IUsuariosFranqueadoraServico
 {
     public async Task<ResultadoUsuariosFranqueadora<IReadOnlyList<UsuarioFranqueadoraResumo>>> ListarAsync(
@@ -172,6 +174,11 @@ public sealed class UsuariosFranqueadoraServico(
                 : solicitacao.Telefone.Trim(),
             timeProvider.GetUtcNow().UtcDateTime);
         var resultado = await repositorio.AtualizarAsync(dados, cancellationToken);
+
+        if (resultado.Estado == EstadoPersistenciaEdicaoUsuario.Sucesso)
+        {
+            logger.LogInformation("EditarUsuario concluído para usuário {UsuarioId}", solicitacao.UsuarioId);
+        }
 
         return resultado.Estado switch
         {
@@ -395,6 +402,7 @@ public sealed class UsuariosFranqueadoraServico(
         if (resultado.Estado == EstadoPersistenciaCadastroUsuario.Sucesso
             && !string.IsNullOrWhiteSpace(resultado.TokenDefinicaoSenha))
         {
+            logger.LogInformation("CriarUsuario concluído para organização {OrganizacaoId}", cadastro.Email);
             return new(
                 EstadoGerenciamentoUsuario.Sucesso,
                 new UsuarioFranqueadoraCriado(

@@ -788,7 +788,92 @@ Never claim they pass unless actually executed.
 
 ---
 
-## 21. Dependencies
+## 21. Logging and Observability Standards
+
+Every new controller, application service, infrastructure component, and authorization handler must include structured logging from its creation.
+
+### ILogger injection
+
+- Every MVC controller must receive `ILogger<T>` via primary constructor.
+- Every concrete application service must receive `ILogger<T>` via primary constructor.
+- Every infrastructure component that performs I/O (repositories, HTTP clients, storage) must receive `ILogger<T>`.
+- Every authorization handler must receive `ILogger<T>`.
+
+### Log levels
+
+| Level | When |
+|---|---|
+| `LogDebug` | Tracing internal flow, authorization grants, cache hits, query parameters |
+| `LogInformation` | State-changing operations completed successfully (create, update, delete, activate, deactivate), request entry/exit, external call success |
+| `LogWarning` | Business rule violations, Forbid() paths, 4xx responses, validation failures, degraded state |
+| `LogError` | Unhandled exceptions, external service failures, database errors, file I/O failures |
+
+### What to log
+
+**Controllers:**
+- Entry of state-changing actions (POST) with entity IDs: `LogInformation("{Action} iniciado para {EntityId}", action, entityId)`
+- Failure paths (Forbid, NotFound, business error) with context: `LogWarning("{Action} negado para {EntityId}: {Reason}", ...)`
+- Unexpected exceptions: `LogError(exception, "{Action} falhou", action)`
+
+**Application Services:**
+- Use case entry at Debug: `LogDebug("{UseCase} iniciado por {UsuarioId}", useCase, usuarioId)`
+- Operation success at Information: `LogInformation("{UseCase} concluído: {EntityId}", useCase, entityId)`
+- Business rule violation at Warning: `LogWarning("{UseCase} rejeitado: {Rule}", useCase, rule)`
+- Unexpected failure at Error: `LogError(exception, "{UseCase} falhou", useCase)`
+
+**Infrastructure:**
+- External HTTP calls at Debug (method, URI, status)
+- External call failures at Error (method, URI, status, exception)
+- File storage operations at Debug (operation, key)
+- File storage failures at Error (operation, key, exception)
+- Database operation failures at Error (operation, exception)
+
+**Authorization Handlers:**
+- Access decision at Debug: `LogDebug("{Handler}: {Decision} para {UsuarioId} em {Contexto}", handler, decision, userId, context)`
+
+### What NEVER to log
+
+- Passwords, tokens, connection strings, API keys
+- Full CPF, full credit card numbers, or other sensitive personal data
+- EF Core connection strings
+- Raw request/response bodies containing secrets
+- Stack traces in public responses (already correct)
+
+### Log enrichment
+
+Include contextual properties when available:
+- `UsuarioId` — when authenticated
+- `OrganizacaoId` — tenant context
+- `UnidadeId` — unit context
+- `ActionName` — controller + action for MVC requests
+
+### Production log levels
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Microsoft.AspNetCore": "Warning",
+      "BFA": "Information"
+    }
+  }
+}
+```
+
+Framework noise stays at Warning; application namespace `BFA.*` emits Information.
+
+### Request logging middleware
+
+A `RequestLoggingMiddleware` logs every incoming request with method, path, query string, user ID, response status code, and duration in milliseconds. Status 2xx/3xx = Information, 4xx = Warning, 5xx = Error.
+
+### New code must comply
+
+Any new controller, service, repository, handler, or middleware created without `ILogger<T>` and appropriate log calls is considered incomplete.
+
+---
+
+## 22. Dependencies
 
 Do not add packages casually.
 
@@ -806,7 +891,7 @@ Do not introduce a second ORM without an ADR.
 
 ---
 
-## 22. Git Discipline
+## 23. Git Discipline
 
 Keep changes small and reviewable.
 
@@ -828,7 +913,7 @@ Database changes and corresponding application mapping changes should be reviewa
 
 ---
 
-## 23. ADRs
+## 24. ADRs
 
 Material architecture changes require an ADR in:
 
@@ -858,7 +943,7 @@ Consequences
 
 ---
 
-## 24. Codex Working Protocol
+## 25. Codex Working Protocol
 
 Before coding:
 
@@ -888,7 +973,7 @@ After coding:
 
 ---
 
-## 25. Development Order
+## 26. Development Order
 
 ### Phase 0 — Foundation
 
@@ -958,7 +1043,7 @@ Aplicativo do aluno consumindo /api/v1
 
 ---
 
-## 26. Definition of Done
+## 27. Definition of Done
 
 Applicable work is Done only when:
 
@@ -971,4 +1056,5 @@ Applicable work is Done only when:
 - `dotnet build` passes.
 - `dotnet test` passes.
 - No secrets were introduced.
+- New controllers, services, and infrastructure components include `ILogger<T>` and appropriate log calls (see section 21).
 - Architectural/operational changes are documented.

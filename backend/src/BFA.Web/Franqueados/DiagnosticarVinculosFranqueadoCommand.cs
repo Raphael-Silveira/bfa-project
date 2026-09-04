@@ -4,7 +4,8 @@ namespace BFA.Web.Franqueados;
 
 public sealed class DiagnosticarVinculosFranqueadoCommand(
     IHostEnvironment environment,
-    IDiagnosticoVinculosFranqueadoConsulta consulta)
+    IDiagnosticoVinculosFranqueadoConsulta consulta,
+    ILogger<DiagnosticarVinculosFranqueadoCommand> logger)
 {
     private const string Argumento = "--diagnosticar-vinculos-franqueados";
 
@@ -26,6 +27,8 @@ public sealed class DiagnosticarVinculosFranqueadoCommand(
 
         if (!environment.IsDevelopment())
         {
+            logger.LogWarning(
+                "Diagnóstico de vínculos recusado: ambiente não é Development");
             await erro.WriteLineAsync(
                 "O diagnóstico de vínculos somente pode ser executado em Development.");
             return 1;
@@ -33,8 +36,10 @@ public sealed class DiagnosticarVinculosFranqueadoCommand(
 
         try
         {
+            logger.LogInformation("Diagnóstico de vínculos iniciado");
             var resultado = await consulta.DiagnosticarAsync(cancellationToken);
 
+            logger.LogInformation("Diagnóstico somente leitura concluído");
             await saida.WriteLineAsync("Diagnóstico somente leitura concluído.");
             await EscreverGrupoAsync(
                 saida,
@@ -49,11 +54,13 @@ public sealed class DiagnosticarVinculosFranqueadoCommand(
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            logger.LogWarning("Diagnóstico de vínculos cancelado");
             await erro.WriteLineAsync("Diagnóstico de vínculos cancelado.");
             return 1;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            logger.LogError(exception, "Diagnóstico de vínculos falhou");
             await erro.WriteLineAsync(
                 "Diagnóstico de vínculos falhou. Nenhum detalhe interno foi exibido.");
             return 1;

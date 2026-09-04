@@ -2,10 +2,11 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BFA.Application.Localidades;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Infrastructure.Localidades;
 
-public sealed class IbgeLocalidadesClient(HttpClient httpClient) : IIbgeLocalidadesClient
+public sealed class IbgeLocalidadesClient(HttpClient httpClient, ILogger<IbgeLocalidadesClient> logger) : IIbgeLocalidadesClient
 {
     public async Task<IReadOnlyList<EstadoIbgeDados>> ListarEstadosAsync(
         CancellationToken cancellationToken)
@@ -45,6 +46,8 @@ public sealed class IbgeLocalidadesClient(HttpClient httpClient) : IIbgeLocalida
         string recurso,
         CancellationToken cancellationToken)
     {
+        logger.LogDebug("Consultando IBGE: {Recurso} em {Caminho}", recurso, caminho);
+
         try
         {
             using var resposta = await httpClient.GetAsync(
@@ -54,6 +57,9 @@ public sealed class IbgeLocalidadesClient(HttpClient httpClient) : IIbgeLocalida
 
             if (!resposta.IsSuccessStatusCode)
             {
+                logger.LogError(
+                    "IBGE retornou status {StatusCode} ao obter {Recurso}",
+                    resposta.StatusCode, recurso);
                 throw new IbgeLocalidadesException(
                     $"Não foi possível obter {recurso} no serviço de localidades do IBGE.");
             }
@@ -79,24 +85,32 @@ public sealed class IbgeLocalidadesClient(HttpClient httpClient) : IIbgeLocalida
         }
         catch (HttpRequestException exception)
         {
+            logger.LogError(exception,
+                "Falha de conexao ao obter {Recurso} no IBGE", recurso);
             throw new IbgeLocalidadesException(
                 $"Não foi possível acessar {recurso} no serviço de localidades do IBGE.",
                 exception);
         }
         catch (OperationCanceledException exception)
         {
+            logger.LogError(exception,
+                "Timeout ao obter {Recurso} no IBGE", recurso);
             throw new IbgeLocalidadesException(
                 $"O tempo limite para obter {recurso} no serviço de localidades do IBGE foi excedido.",
                 exception);
         }
         catch (JsonException exception)
         {
+            logger.LogError(exception,
+                "Resposta invalida ao obter {Recurso} no IBGE", recurso);
             throw new IbgeLocalidadesException(
                 $"O serviço de localidades do IBGE retornou {recurso} em formato inválido.",
                 exception);
         }
         catch (NotSupportedException exception)
         {
+            logger.LogError(exception,
+                "Formato nao suportado ao obter {Recurso} no IBGE", recurso);
             throw new IbgeLocalidadesException(
                 $"O serviço de localidades do IBGE retornou {recurso} em formato inválido.",
                 exception);

@@ -1,12 +1,14 @@
 using BFA.Application.Acessos;
 using BFA.Domain.Unidades;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Franqueadora.Unidades;
 
 public sealed class UnidadesFranqueadoraServico(
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IUnidadesFranqueadoraRepositorio repositorio,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<UnidadesFranqueadoraServico> logger)
     : IUnidadesFranqueadoraConsulta, IUnidadesFranqueadoraServico
 {
     public async Task<ResultadoUnidadesFranqueadora<IReadOnlyList<UnidadeResumo>>> ListarAsync(
@@ -77,7 +79,12 @@ public sealed class UnidadesFranqueadoraServico(
         }
 
         repositorio.Adicionar(unidade);
-        return await SalvarAsync(cancellationToken);
+        var resultado = await SalvarAsync(cancellationToken);
+        if (resultado.Estado == EstadoGerenciamentoUnidade.Sucesso)
+        {
+            logger.LogInformation("CriarUnidade concluído para organização {OrganizacaoId}", organizacaoId);
+        }
+        return resultado;
     }
 
     public async Task<ResultadoOperacaoUnidade> AtualizarAsync(
@@ -120,7 +127,12 @@ public sealed class UnidadesFranqueadoraServico(
             slugNormalizado,
             timeProvider.GetUtcNow().UtcDateTime);
 
-        return await SalvarAsync(cancellationToken);
+        var resultado = await SalvarAsync(cancellationToken);
+        if (resultado.Estado == EstadoGerenciamentoUnidade.Sucesso)
+        {
+            logger.LogInformation("AtualizarUnidade concluído para unidade {UnidadeId}", unidadeId);
+        }
+        return resultado;
     }
 
     public Task<ResultadoOperacaoUnidade> AtivarAsync(
@@ -173,7 +185,13 @@ public sealed class UnidadesFranqueadoraServico(
             unidade.Desativar(agoraUtc);
         }
 
-        return await SalvarAsync(cancellationToken);
+        var resultado = await SalvarAsync(cancellationToken);
+        if (resultado.Estado == EstadoGerenciamentoUnidade.Sucesso)
+        {
+            var operacao = ativar ? "AtivarUnidade" : "DesativarUnidade";
+            logger.LogInformation("{Operacao} concluído para unidade {UnidadeId}", operacao, unidadeId);
+        }
+        return resultado;
     }
 
     private async Task<ContextoOrganizacao> ObterContextoAsync(

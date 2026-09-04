@@ -1,5 +1,6 @@
 using BFA.Application.Acessos;
 using BFA.Domain.Acessos;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Franqueadora.AcessosUnidade;
 
@@ -7,7 +8,8 @@ public sealed class AcessosUnidadeServico(
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IUsuarioPorEmailConsulta usuarioPorEmailConsulta,
     IAcessosUnidadeRepositorio repositorio,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<AcessosUnidadeServico> logger)
     : IAcessosUnidadeConsulta, IAcessosUnidadeServico
 {
     public async Task<ResultadoAcessosUnidade<AcessosUnidadeDetalhe>> ObterAsync(
@@ -103,7 +105,12 @@ public sealed class AcessosUnidadeServico(
                 agoraUtc));
         }
 
-        return await SalvarAsync(cancellationToken);
+        var resultado = await SalvarAsync(cancellationToken);
+        if (resultado.Estado == EstadoGerenciamentoAcessoUnidade.Sucesso)
+        {
+            logger.LogInformation("AdicionarAcessoUnidade concluído para unidade {UnidadeId}", unidadeId);
+        }
+        return resultado;
     }
 
     public Task<ResultadoOperacaoAcessoUnidade> AtivarAsync(
@@ -175,7 +182,13 @@ public sealed class AcessosUnidadeServico(
             vinculo.Desativar(agoraUtc);
         }
 
-        return await SalvarAsync(cancellationToken);
+        var resultado = await SalvarAsync(cancellationToken);
+        if (resultado.Estado == EstadoGerenciamentoAcessoUnidade.Sucesso)
+        {
+            var operacao = ativar ? "AtivarAcessoUnidade" : "DesativarAcessoUnidade";
+            logger.LogInformation("{Operacao} concluído para vínculo {VinculoId}", operacao, vinculoId);
+        }
+        return resultado;
     }
 
     private async Task<bool> UnidadeExisteAsync(

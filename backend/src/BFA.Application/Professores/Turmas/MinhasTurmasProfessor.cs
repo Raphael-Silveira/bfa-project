@@ -2,6 +2,7 @@ using BFA.Application.Acessos;
 using BFA.Application.Unidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Turmas;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Professores.Turmas;
 
@@ -95,7 +96,8 @@ public sealed class MinhasTurmasProfessorConsulta(
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IMinhasTurmasProfessorRepositorio repositorio,
-    TimeProvider timeProvider) : IMinhasTurmasProfessorConsulta
+    TimeProvider timeProvider,
+    ILogger<MinhasTurmasProfessorConsulta> logger) : IMinhasTurmasProfessorConsulta
 {
     public async Task<ResultadoMinhasTurmasProfessor<int>> ContarAtivasAsync(
         Guid usuarioId,

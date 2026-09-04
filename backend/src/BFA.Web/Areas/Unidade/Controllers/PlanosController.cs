@@ -5,6 +5,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Planos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -15,7 +16,8 @@ namespace BFA.Web.Areas.Unidade.Controllers;
 public sealed class PlanosController(
     IUsuarioAtual usuarioAtual,
     IPlanosServico planosServico,
-    IUnidadesUsuarioConsulta unidadesUsuarioConsulta) : Controller
+    IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
+    ILogger<PlanosController> logger) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
@@ -61,7 +63,11 @@ public sealed class PlanosController(
     {
         var contexto = await ObterContextoAsync(unidadeId, cancellationToken);
         if (contexto.Resultado is not null) return contexto.Resultado;
-        if (!contexto.Valor!.PodeGerenciar) return Forbid();
+        if (!contexto.Valor!.PodeGerenciar)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Motivo}", "Planos", "Novo", "Sem permissão de gerenciamento");
+            return Forbid();
+        }
         PreencherContexto(model, contexto.Valor,
             await PodeTrocarAsync(usuarioAtual.UsuarioId!.Value, cancellationToken));
         if (!model.TentarCriarTermos(out var termos))
@@ -73,6 +79,7 @@ public sealed class PlanosController(
         if (resultado.Estado != EstadoPlanos.Sucesso)
             return ErroFormulario(model, resultado.Estado);
         TempData["Sucesso"] = "Plano local criado com a versão 1.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Planos", "Novo", resultado.Valor);
         return Redirect($"{RotaBase(unidadeId)}/{resultado.Valor:D}");
     }
 
@@ -124,7 +131,11 @@ public sealed class PlanosController(
     {
         var contexto = await ObterContextoAsync(unidadeId, cancellationToken);
         if (contexto.Resultado is not null) return contexto.Resultado;
-        if (!contexto.Valor!.PodeGerenciar) return Forbid();
+        if (!contexto.Valor!.PodeGerenciar)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Motivo}", "Planos", "NovaVersao", "Sem permissão de gerenciamento");
+            return Forbid();
+        }
         PreencherContexto(model, contexto.Valor,
             await PodeTrocarAsync(usuarioAtual.UsuarioId!.Value, cancellationToken));
         model.NovaVersao = true;
@@ -141,6 +152,7 @@ public sealed class PlanosController(
         if (resultado.Estado != EstadoPlanos.Sucesso)
             return ErroFormulario(model, resultado.Estado);
         TempData["Sucesso"] = "Nova versão comercial criada com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Planos", "NovaVersao", planoId);
         return Redirect($"{RotaBase(unidadeId)}/{planoId:D}");
     }
 
@@ -169,8 +181,13 @@ public sealed class PlanosController(
             TempData["Erro"] = "O plano precisa possuir uma versão comercial aberta para ser reativado.";
             return Redirect($"{RotaBase(unidadeId)}/{planoId:D}");
         }
-        if (resultado.Estado != EstadoPlanos.Sucesso) return Forbid();
+        if (resultado.Estado != EstadoPlanos.Sucesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Planos", ativar ? "Ativar" : "Inativar", resultado.Estado);
+            return Forbid();
+        }
         TempData["Sucesso"] = ativar ? "Plano reativado." : "Plano inativado.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Planos", ativar ? "Ativar" : "Inativar", planoId);
         return Redirect($"{RotaBase(unidadeId)}/{planoId:D}");
     }
 

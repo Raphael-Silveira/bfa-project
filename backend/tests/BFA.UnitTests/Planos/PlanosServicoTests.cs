@@ -3,6 +3,7 @@ using BFA.Application.Planos;
 using BFA.Application.Unidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Planos;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.UnitTests.Planos;
 
@@ -250,7 +251,8 @@ public sealed class PlanosServicoTests
             new UnidadeContextoFake(),
             governanca ?? new GovernancaFake(new(false, true, false)),
             repositorio ?? new RepositorioFake(),
-            new TimeProviderFake(AgoraUtc));
+            new TimeProviderFake(AgoraUtc),
+            NullLogger<PlanosServico>.Instance);
 
     private static PlanoTermosSolicitacao Termos(
         int duracao = 12, int frequencia = 3, decimal valor = 280m,

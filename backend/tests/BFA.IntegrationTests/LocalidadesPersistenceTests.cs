@@ -100,7 +100,8 @@ public sealed class LocalidadesPersistenceTests
         var servico = new LocalidadesSincronizacaoServico(
             new IbgeClientComFalhaParcial(),
             repositorio,
-            new FixedTimeProvider(new DateTimeOffset(PrimeiroInstante.AddHours(1))));
+            new FixedTimeProvider(new DateTimeOffset(PrimeiroInstante.AddHours(1))),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<LocalidadesSincronizacaoServico>.Instance);
 
         await Assert.ThrowsAsync<IbgeLocalidadesException>(() =>
             servico.SincronizarAsync(CancellationToken.None));

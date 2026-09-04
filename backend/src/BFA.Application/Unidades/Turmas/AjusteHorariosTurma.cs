@@ -3,6 +3,7 @@ using BFA.Application.Professores.Turmas;
 using BFA.Application.Unidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Turmas;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Unidades.Turmas;
 
@@ -84,7 +85,8 @@ public sealed class AjusteHorariosTurmaServico(
     IGovernancaOperacionalUnidade governancaOperacional,
     IMinhasTurmasProfessorRepositorio minhasTurmasRepositorio,
     IAjusteHorariosTurmaRepositorio repositorio,
-    TimeProvider timeProvider) : IAjusteHorariosTurmaServico
+    TimeProvider timeProvider,
+    ILogger<AjusteHorariosTurmaServico> logger) : IAjusteHorariosTurmaServico
 {
     public Task<ResultadoAjusteHorariosTurma<ProgramacaoTurmaResumo>>
         ObterAdministracaoAsync(Guid usuarioId, Guid unidadeId, Guid turmaId,
@@ -170,6 +172,10 @@ public sealed class AjusteHorariosTurmaServico(
         var estado = await repositorio.AjustarAsync(
             contexto.OrganizacaoId, unidadeId, turmaId, usuarioId, solicitacao,
             timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+        if (estado == EstadoAjusteHorariosTurma.Sucesso)
+        {
+            logger.LogInformation("AjustarHorários concluído para turma {TurmaId}", turmaId);
+        }
         return estado == EstadoAjusteHorariosTurma.Sucesso
             ? new(estado, turmaId)
             : new(estado);

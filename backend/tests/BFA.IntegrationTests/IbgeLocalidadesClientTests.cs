@@ -2,6 +2,8 @@ using System.Net;
 using System.Text;
 using BFA.Application.Localidades;
 using BFA.Infrastructure.Localidades;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -83,7 +85,7 @@ public sealed class IbgeLocalidadesClientTests
             BaseAddress = BaseAddress,
             Timeout = TimeSpan.FromMilliseconds(100),
         };
-        var client = new IbgeLocalidadesClient(httpClient);
+        var client = new IbgeLocalidadesClient(httpClient, NullLogger<IbgeLocalidadesClient>.Instance);
 
         await Assert.ThrowsAsync<IbgeLocalidadesException>(() =>
             client.ListarEstadosAsync(CancellationToken.None));
@@ -95,7 +97,7 @@ public sealed class IbgeLocalidadesClientTests
         {
             BaseAddress = BaseAddress,
             Timeout = TimeSpan.FromSeconds(2),
-        });
+        }, NullLogger<IbgeLocalidadesClient>.Instance);
     }
 
     private static HttpResponseMessage Json(

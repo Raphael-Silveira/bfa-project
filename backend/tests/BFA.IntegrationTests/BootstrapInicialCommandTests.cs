@@ -3,6 +3,8 @@ using BFA.Web.Bootstrap;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -24,7 +26,8 @@ public sealed class BootstrapInicialCommandTests
         var command = new BootstrapInicialCommand(
             CreateEnvironment(Environments.Development),
             configuration,
-            bootstrap);
+            bootstrap,
+            NullLogger<BootstrapInicialCommand>.Instance);
         using var output = new StringWriter();
         using var error = new StringWriter();
 
@@ -43,7 +46,8 @@ public sealed class BootstrapInicialCommandTests
         var command = new BootstrapInicialCommand(
             CreateEnvironment(Environments.Development),
             configuration,
-            bootstrap);
+            bootstrap,
+            NullLogger<BootstrapInicialCommand>.Instance);
         using var output = new StringWriter();
         using var error = new StringWriter();
 
@@ -69,7 +73,8 @@ public sealed class BootstrapInicialCommandTests
         var command = new BootstrapInicialCommand(
             CreateEnvironment(Environments.Production),
             new ConfigurationBuilder().Build(),
-            bootstrap);
+            bootstrap,
+            NullLogger<BootstrapInicialCommand>.Instance);
         using var output = new StringWriter();
         using var error = new StringWriter();
 

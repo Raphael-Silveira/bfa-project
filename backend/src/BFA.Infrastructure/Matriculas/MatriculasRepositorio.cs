@@ -5,11 +5,12 @@ using BFA.Domain.Turmas;
 using BFA.Infrastructure.Persistence;
 using BFA.Infrastructure.Unidades;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace BFA.Infrastructure.Matriculas;
 
-public sealed class MatriculasRepositorio(BfaDbContext dbContext)
+public sealed class MatriculasRepositorio(BfaDbContext dbContext, ILogger<MatriculasRepositorio> logger)
     : IMatriculasRepositorio
 {
     public async Task<IReadOnlyList<MatriculaListaItem>> ListarAsync(
@@ -395,6 +396,9 @@ public sealed class MatriculasRepositorio(BfaDbContext dbContext)
         }
         catch (DbUpdateException exception)
         {
+            logger.LogError(exception,
+                "Falha ao criar matricula na organizacao {OrganizacaoId}, unidade {UnidadeId}",
+                organizacaoId, unidadeId);
             await transacao.RollbackAsync(cancellationToken);
             return new(MapearErroBanco(exception));
         }
@@ -484,6 +488,9 @@ public sealed class MatriculasRepositorio(BfaDbContext dbContext)
         }
         catch (DbUpdateException exception)
         {
+            logger.LogError(exception,
+                "Falha ao alterar grade da matricula {MatriculaId} na organizacao {OrganizacaoId}",
+                matriculaId, organizacaoId);
             await transacao.RollbackAsync(cancellationToken);
             return new(MapearErroBanco(exception));
         }
@@ -549,6 +556,9 @@ public sealed class MatriculasRepositorio(BfaDbContext dbContext)
         }
         catch (DbUpdateException exception)
         {
+            logger.LogError(exception,
+                "Falha ao finalizar matricula {MatriculaId} na organizacao {OrganizacaoId}",
+                matriculaId, organizacaoId);
             await transacao.RollbackAsync(cancellationToken);
             return MapearErroBanco(exception);
         }

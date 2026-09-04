@@ -5,7 +5,8 @@ namespace BFA.Web.Authorization;
 
 public sealed class AcessoUnidadeHandler(
     IUsuarioAtual usuarioAtual,
-    IAcessoUsuarioConsulta acessoUsuarioConsulta)
+    IAcessoUsuarioConsulta acessoUsuarioConsulta,
+    ILogger<AcessoUnidadeHandler> logger)
     : AuthorizationHandler<AcessoUnidadeRequirement, ContextoUnidade>
 {
     protected override async Task HandleRequirementAsync(
@@ -24,7 +25,16 @@ public sealed class AcessoUnidadeHandler(
                 resource.UnidadeId,
                 CancellationToken.None))
         {
+            logger.LogDebug(
+                "AcessoUnidadeHandler: Concedido para {UsuarioId} na Unidade {UnidadeId}",
+                usuarioId, resource.UnidadeId);
             context.Succeed(requirement);
+        }
+        else
+        {
+            logger.LogDebug(
+                "AcessoUnidadeHandler: Negado para {UsuarioId} na Unidade {UnidadeId}",
+                usuarioId, resource.UnidadeId);
         }
     }
 }

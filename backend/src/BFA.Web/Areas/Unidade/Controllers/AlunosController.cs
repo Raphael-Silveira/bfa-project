@@ -5,6 +5,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -15,7 +16,8 @@ namespace BFA.Web.Areas.Unidade.Controllers;
 public sealed class AlunosController(
     IUsuarioAtual usuarioAtual,
     IAlunosServico alunosServico,
-    IUnidadesUsuarioConsulta unidadesUsuarioConsulta) : Controller
+    IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
+    ILogger<AlunosController> logger) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
@@ -105,7 +107,11 @@ public sealed class AlunosController(
         EditarAlunoViewModel model,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        {
+            logger.LogWarning("{Controller} {Action} negado para {UsuarioId}", "Alunos", "Editar", (object?)null);
+            return Forbid();
+        }
 
         var dadosExistentes = await alunosServico.ObterDadosEdicaoAsync(
             usuarioId, unidadeId, alunoId, cancellationToken);
@@ -114,11 +120,17 @@ public sealed class AlunosController(
         if (dadosExistentes.Estado == EstadoAlunosUnidade.AlunoNaoEncontrado)
             return NotFound();
         if (dadosExistentes.Estado == EstadoAlunosUnidade.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Alunos", "Editar", dadosExistentes.Estado);
             return Forbid();
+        }
         if (dadosExistentes.Estado != EstadoAlunosUnidade.Sucesso
             || dadosExistentes.Valor is null
             || dadosExistentes.Contexto is null)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Alunos", "Editar", dadosExistentes.Estado);
             return Forbid();
+        }
 
         var contexto = dadosExistentes.Contexto;
         var dadosAluno = dadosExistentes.Valor.Aluno;
@@ -160,7 +172,10 @@ public sealed class AlunosController(
         if (resultado.Estado == EstadoAlunosUnidade.AlunoNaoEncontrado)
             return NotFound();
         if (resultado.Estado == EstadoAlunosUnidade.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Alunos", "Editar", resultado.Estado);
             return Forbid();
+        }
         if (resultado.Estado == EstadoAlunosUnidade.DadosInvalidos)
         {
             ModelState.AddModelError(string.Empty,
@@ -181,6 +196,7 @@ public sealed class AlunosController(
         }
 
         TempData["Sucesso"] = "Dados do aluno atualizados com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Alunos", "Editar", alunoId);
         return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}");
     }
 

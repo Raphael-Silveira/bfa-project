@@ -2,6 +2,8 @@ using BFA.Application.Franqueadora.Franqueados;
 using BFA.Web.Franqueados;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -27,7 +29,8 @@ public sealed class DiagnosticarVinculosFranqueadoCommandTests
             [comercialSemAcesso]));
         var command = new DiagnosticarVinculosFranqueadoCommand(
             CriarAmbiente(Environments.Development),
-            consulta);
+            consulta,
+            NullLogger<DiagnosticarVinculosFranqueadoCommand>.Instance);
         using var output = new StringWriter();
         using var error = new StringWriter();
 
@@ -48,7 +51,8 @@ public sealed class DiagnosticarVinculosFranqueadoCommandTests
         var consulta = new TestDiagnosticoConsulta(new([], []));
         var command = new DiagnosticarVinculosFranqueadoCommand(
             CriarAmbiente(Environments.Production),
-            consulta);
+            consulta,
+            NullLogger<DiagnosticarVinculosFranqueadoCommand>.Instance);
         using var output = new StringWriter();
         using var error = new StringWriter();
 

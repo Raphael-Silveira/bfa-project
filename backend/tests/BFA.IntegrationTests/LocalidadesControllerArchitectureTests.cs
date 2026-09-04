@@ -5,6 +5,7 @@ using BFA.Web.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.IntegrationTests;
 
@@ -66,7 +67,7 @@ public sealed class LocalidadesControllerArchitectureTests
             RequestAborted = requestAborted,
         };
 
-        return new LocalidadesController(consulta)
+        return new LocalidadesController(consulta, null!)
         {
             ControllerContext = new ControllerContext
             {

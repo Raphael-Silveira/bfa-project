@@ -1,6 +1,7 @@
 using BFA.Application.Unidades;
 using BFA.Domain.Alunos;
 using BFA.Domain.Matriculas;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Alunos;
 
@@ -151,7 +152,8 @@ public interface IAlunosServico
 public sealed class AlunosServico(
     IAlunosRepositorio repositorio,
     IGovernancaOperacionalUnidade governancaOperacional,
-    IUnidadeContextoConsulta unidadeContextoConsulta) : IAlunosServico
+    IUnidadeContextoConsulta unidadeContextoConsulta,
+    ILogger<AlunosServico> logger) : IAlunosServico
 {
     public async Task<ResultadoAlunosUnidade<IReadOnlyList<AlunoListaItem>>> ListarAsync(
         Guid usuarioId, Guid unidadeId, string? texto,
@@ -246,6 +248,7 @@ public sealed class AlunosServico(
 
                 if (!possuiResponsavelAtivo)
                 {
+                    logger.LogWarning("AtualizarDados rejeitado: aluno menor sem responsável ativo");
                     return new(EstadoAlunosUnidade.MenorSemResponsavel);
                 }
             }
@@ -264,6 +267,11 @@ public sealed class AlunosServico(
 
         var sucesso = await repositorio.PersistirAtualizacaoAsync(
             alunoParaAtualizar, cancellationToken);
+
+        if (sucesso)
+        {
+            logger.LogInformation("AtualizarDados concluído para aluno {AlunoId}", alunoId);
+        }
 
         return sucesso
             ? new(EstadoAlunosUnidade.Sucesso, alunoId, contexto.Valor)

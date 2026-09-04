@@ -1,4 +1,5 @@
 using BFA.Application.Unidades;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Unidades.Turmas;
 
@@ -70,7 +71,8 @@ public sealed class TrocaProfessorTurmaServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IGovernancaOperacionalUnidade governancaOperacional,
     ITrocaProfessorTurmaRepositorio repositorio,
-    TimeProvider timeProvider) : ITrocaProfessorTurmaServico
+    TimeProvider timeProvider,
+    ILogger<TrocaProfessorTurmaServico> logger) : ITrocaProfessorTurmaServico
 {
     public async Task<ResultadoTrocaProfessorTurma<TrocaProfessorTurmaResumo>> ObterAsync(
         Guid usuarioId, Guid unidadeId, Guid turmaId,
@@ -111,6 +113,10 @@ public sealed class TrocaProfessorTurmaServico(
             organizacaoId.Value, unidadeId, turmaId,
             solicitacao.NovoProfessorUnidadeId, solicitacao.DataTroca,
             usuarioId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+        if (persistencia.Estado == EstadoTrocaProfessorTurma.Sucesso)
+        {
+            logger.LogInformation("TrocarProfessor concluído para turma {TurmaId}", turmaId);
+        }
         return persistencia.Estado == EstadoTrocaProfessorTurma.Sucesso
             ? new(persistencia.Estado, turmaId,
                 HorariosMigrados: persistencia.HorariosMigrados,

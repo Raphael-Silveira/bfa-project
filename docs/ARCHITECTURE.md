@@ -255,6 +255,7 @@ No DbContext.
 - ViewModels
 - API controllers
 - Authentication/authorization middleware
+- Request logging middleware (`RequestLoggingMiddleware`)
 - OpenAPI
 - Dependency injection composition
 

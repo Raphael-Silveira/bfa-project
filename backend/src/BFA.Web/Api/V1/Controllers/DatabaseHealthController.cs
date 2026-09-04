@@ -1,12 +1,14 @@
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Api.V1.Controllers;
 
 [ApiController]
 [Route("api/v1/health/database")]
-public sealed class DatabaseHealthController(IDatabaseConnectionProbe databaseConnectionProbe)
-    : ControllerBase
+public sealed class DatabaseHealthController(
+    IDatabaseConnectionProbe databaseConnectionProbe,
+    ILogger<DatabaseHealthController> logger) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
@@ -15,6 +17,7 @@ public sealed class DatabaseHealthController(IDatabaseConnectionProbe databaseCo
 
         if (!canConnect)
         {
+            logger.LogWarning("DatabaseHealth check falhou: nao foi possivel conectar ao banco de dados");
             return StatusCode(
                 StatusCodes.Status503ServiceUnavailable,
                 new { status = "unhealthy" });

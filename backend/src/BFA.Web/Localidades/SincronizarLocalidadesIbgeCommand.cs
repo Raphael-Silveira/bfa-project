@@ -3,7 +3,8 @@ using BFA.Application.Localidades;
 namespace BFA.Web.Localidades;
 
 public sealed class SincronizarLocalidadesIbgeCommand(
-    ILocalidadesSincronizacaoServico sincronizacaoServico)
+    ILocalidadesSincronizacaoServico sincronizacaoServico,
+    ILogger<SincronizarLocalidadesIbgeCommand> logger)
 {
     private const string Argumento = "--sincronizar-localidades-ibge";
 
@@ -25,7 +26,11 @@ public sealed class SincronizarLocalidadesIbgeCommand(
 
         try
         {
+            logger.LogInformation("Sincronização de localidades do IBGE iniciada");
             var resultado = await sincronizacaoServico.SincronizarAsync(cancellationToken);
+            logger.LogInformation(
+                "Sincronização de localidades do IBGE concluída: {Estados} estados, {Municipios} municípios",
+                resultado.EstadosProcessados, resultado.MunicipiosProcessados);
             await saida.WriteLineAsync("Sincronização de localidades do IBGE concluída.");
             await saida.WriteLineAsync($"Estados processados: {resultado.EstadosProcessados}.");
             await saida.WriteLineAsync($"Municípios processados: {resultado.MunicipiosProcessados}.");
@@ -33,17 +38,20 @@ public sealed class SincronizarLocalidadesIbgeCommand(
         }
         catch (LocalidadesSincronizacaoException exception)
         {
+            logger.LogWarning(exception, "Sincronização de localidades não executada");
             await erro.WriteLineAsync(
                 $"Sincronização de localidades não executada: {exception.Message}");
             return 1;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            logger.LogWarning("Sincronização de localidades cancelada");
             await erro.WriteLineAsync("Sincronização de localidades cancelada.");
             return 1;
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            logger.LogError(exception, "Sincronização de localidades falhou");
             await erro.WriteLineAsync(
                 "Sincronização de localidades falhou. Nenhum detalhe interno foi exibido.");
             return 1;

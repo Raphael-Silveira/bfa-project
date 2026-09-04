@@ -1,5 +1,6 @@
 using BFA.Application.Acessos;
 using BFA.Domain.Acessos;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Unidades;
 
@@ -42,7 +43,8 @@ public interface IGovernancaOperacionalUnidade
 
 public sealed class GovernancaOperacionalUnidadeServico(
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
-    IEstadoOperacionalUnidadeConsulta estadoOperacionalConsulta)
+    IEstadoOperacionalUnidadeConsulta estadoOperacionalConsulta,
+    ILogger<GovernancaOperacionalUnidadeServico> logger)
     : IGovernancaOperacionalUnidade
 {
     public async Task<GovernancaOperacionalUnidade> ObterAsync(

@@ -2,11 +2,12 @@ using BFA.Application.Planos;
 using BFA.Domain.Planos;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace BFA.Infrastructure.Planos;
 
-public sealed class PlanosRepositorio(BfaDbContext dbContext) : IPlanosRepositorio
+public sealed class PlanosRepositorio(BfaDbContext dbContext, ILogger<PlanosRepositorio> logger) : IPlanosRepositorio
 {
     public async Task<IReadOnlyList<PlanoResumo>> ListarAsync(
         Guid organizacaoId,
@@ -112,6 +113,8 @@ public sealed class PlanosRepositorio(BfaDbContext dbContext) : IPlanosRepositor
         }
         catch (DbUpdateException exception) when (EhConflitoControlado(exception))
         {
+            logger.LogWarning(exception,
+                "Conflito ao criar plano na organizacao {OrganizacaoId}", plano.OrganizacaoId);
             await transaction.RollbackAsync(cancellationToken);
             return EstadoPersistenciaPlano.ConflitoConcorrencia;
         }
@@ -174,6 +177,9 @@ public sealed class PlanosRepositorio(BfaDbContext dbContext) : IPlanosRepositor
         }
         catch (DbUpdateException exception) when (EhConflitoControlado(exception))
         {
+            logger.LogWarning(exception,
+                "Conflito ao criar nova versao do plano {PlanoId} na organizacao {OrganizacaoId}",
+                planoId, organizacaoId);
             await transaction.RollbackAsync(cancellationToken);
             return EstadoPersistenciaPlano.ConflitoConcorrencia;
         }
@@ -208,8 +214,18 @@ public sealed class PlanosRepositorio(BfaDbContext dbContext) : IPlanosRepositor
 
         if (ativar) plano.Ativar(usuarioId, agoraUtc);
         else plano.Desativar(usuarioId, agoraUtc);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Falha ao alterar estado do plano {PlanoId} na organizacao {OrganizacaoId}",
+                planoId, organizacaoId);
+            throw;
+        }
         return EstadoPersistenciaPlano.Sucesso;
     }
 

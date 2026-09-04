@@ -2,14 +2,16 @@ using BFA.Application.Localidades;
 using BFA.Web.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Franqueadora.Controllers;
 
 [Area("Franqueadora")]
 [Authorize(Policy = PoliticasAcesso.AdministradorRede)]
 [Route("franqueadora/localidades")]
-public sealed class LocalidadesController(ILocalidadesConsulta localidadesConsulta)
-    : Controller
+public sealed class LocalidadesController(
+    ILocalidadesConsulta localidadesConsulta,
+    ILogger<LocalidadesController> logger) : Controller
 {
     [HttpGet("municipios")]
     public async Task<IActionResult> Municipios(

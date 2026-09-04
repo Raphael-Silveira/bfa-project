@@ -6,6 +6,7 @@ using BFA.Web.Identidade;
 using BFA.Web.ViewModels.Franqueadora;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Franqueadora.Controllers;
 
@@ -16,7 +17,8 @@ public sealed class UsuariosController(
     IUsuarioAtual usuarioAtual,
     IUsuariosFranqueadoraConsulta consulta,
     IUsuariosFranqueadoraServico servico,
-    ILocalidadesConsulta localidadesConsulta) : Controller
+    ILocalidadesConsulta localidadesConsulta,
+    ILogger<UsuariosController> logger) : Controller
 {
     public const string MensagemUsuarioAtualizado = "Usuário atualizado com sucesso.";
 
@@ -89,6 +91,9 @@ public sealed class UsuariosController(
         if (resultado.Estado == EstadoGerenciamentoUsuario.Sucesso
             && resultado.Usuario is { } usuarioCriado)
         {
+            logger.LogInformation(
+                "{Controller} {Action} concluído: {EntityId}",
+                "Usuarios", "Novo", usuarioCriado.UsuarioId);
             var tokenCodificado = TokenPrimeiroAcesso.Codificar(
                 usuarioCriado.TokenDefinicaoSenha);
             var link = Url.Action(
@@ -185,6 +190,9 @@ public sealed class UsuariosController(
 
         if (resultado.Estado == EstadoGerenciamentoUsuario.Sucesso)
         {
+            logger.LogInformation(
+                "{Controller} {Action} concluído: {EntityId}",
+                "Usuarios", "Editar", usuarioId);
             TempData[nameof(MensagemUsuarioAtualizado)] = MensagemUsuarioAtualizado;
             return Redirect("/franqueadora/usuarios");
         }

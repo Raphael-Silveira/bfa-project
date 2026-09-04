@@ -1,6 +1,7 @@
 using BFA.Application.Acessos;
 using BFA.Application.Contratos;
 using BFA.Domain.Contratos;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Franqueadora.Contratos;
 
@@ -8,7 +9,8 @@ public sealed class ContratosFranquiaServico(
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IContratosFranquiaRepositorio repositorio,
     IArmazenamentoDocumentosContrato armazenamento,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<ContratosFranquiaServico> logger)
     : IContratosFranquiaConsulta, IContratosFranquiaServico
 {
     private static readonly TipoDocumentoContratoFranquia[] DocumentoPrincipal =
@@ -191,6 +193,10 @@ public sealed class ContratosFranquiaServico(
         }
 
         var persistencia = await repositorio.SalvarTransacaoAsync(cancellationToken);
+        if (persistencia == EstadoPersistenciaContratoFranquia.Sucesso)
+        {
+            logger.LogInformation("CriarContrato concluído para unidade {UnidadeId}", unidadeId);
+        }
         return persistencia == EstadoPersistenciaContratoFranquia.Sucesso
             ? new(EstadoGerenciamentoContratoFranquia.Sucesso, contratoId)
             : MapearPersistencia<Guid>(persistencia);
@@ -422,8 +428,13 @@ public sealed class ContratosFranquiaServico(
             StatusContratoFranquia.Ativo,
             timeProvider.GetUtcNow().UtcDateTime);
         versao.AlterarStatus(StatusVersaoContratoFranquia.Vigente);
-        return MapearPersistenciaOperacao(
+        var resultado = MapearPersistenciaOperacao(
             await repositorio.SalvarTransacaoAsync(cancellationToken));
+        if (resultado.Estado == EstadoGerenciamentoContratoFranquia.Sucesso)
+        {
+            logger.LogInformation("AtivarContrato concluído para contrato {ContratoId}", contratoId);
+        }
+        return resultado;
     }
 
     public async Task<ResultadoContratoFranquia<Guid>> CriarNovaVersaoAsync(
@@ -573,11 +584,16 @@ public sealed class ContratosFranquiaServico(
 
         vigente.AlterarStatus(StatusVersaoContratoFranquia.Substituida);
         nova.AlterarStatus(StatusVersaoContratoFranquia.Vigente);
-        return MapearPersistenciaOperacao(
+        var resultado = MapearPersistenciaOperacao(
             await repositorio.SalvarFormalizacaoAsync(
                 vigente,
                 nova,
                 cancellationToken));
+        if (resultado.Estado == EstadoGerenciamentoContratoFranquia.Sucesso)
+        {
+            logger.LogInformation("FormalizarVersão concluído para contrato {ContratoId}", contratoId);
+        }
+        return resultado;
     }
 
     public async Task<ResultadoOperacaoContratoFranquia> CancelarAsync(
@@ -644,8 +660,13 @@ public sealed class ContratosFranquiaServico(
             versao.AlterarStatus(StatusVersaoContratoFranquia.Cancelada);
         }
 
-        return MapearPersistenciaOperacao(
+        var resultado = MapearPersistenciaOperacao(
             await repositorio.SalvarTransacaoAsync(cancellationToken));
+        if (resultado.Estado == EstadoGerenciamentoContratoFranquia.Sucesso)
+        {
+            logger.LogInformation("CancelarContrato concluído para contrato {ContratoId}", contratoId);
+        }
+        return resultado;
     }
 
     public async Task<ResultadoOperacaoContratoFranquia> EncerrarAsync(
@@ -686,8 +707,13 @@ public sealed class ContratosFranquiaServico(
         contrato.AlterarStatus(
             StatusContratoFranquia.Encerrado,
             timeProvider.GetUtcNow().UtcDateTime);
-        return MapearPersistenciaOperacao(
+        var resultado = MapearPersistenciaOperacao(
             await repositorio.SalvarTransacaoAsync(cancellationToken));
+        if (resultado.Estado == EstadoGerenciamentoContratoFranquia.Sucesso)
+        {
+            logger.LogInformation("EncerrarContrato concluído para contrato {ContratoId}", contratoId);
+        }
+        return resultado;
     }
 
     private async Task<ResultadoContratoFranquia<EntidadesContrato>> ObterEntidadesAsync(

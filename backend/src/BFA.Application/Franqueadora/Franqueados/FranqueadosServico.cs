@@ -3,6 +3,7 @@ using BFA.Application.Acessos;
 using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Franqueadora.Franqueados;
 
@@ -10,7 +11,8 @@ public sealed class FranqueadosServico(
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IFranqueadosRepositorio repositorio,
     ILocalidadesConsulta localidadesConsulta,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    ILogger<FranqueadosServico> logger)
     : IFranqueadosConsulta, IFranqueadosServico
 {
     public async Task<ResultadoFranqueado<IReadOnlyList<FranqueadoResumo>>> ListarAsync(
@@ -159,7 +161,12 @@ public sealed class FranqueadosServico(
                 "Já existe um franqueado cadastrado com este documento.");
         }
 
-        return MapearPersistencia(await repositorio.SalvarAsync(cancellationToken));
+        var resultado = MapearPersistencia(await repositorio.SalvarAsync(cancellationToken));
+        if (resultado.Estado == EstadoGerenciamentoFranqueado.Sucesso)
+        {
+            logger.LogInformation("EditarFranqueado concluído para franqueado {FranqueadoId}", franqueadoId);
+        }
+        return resultado;
     }
 
     public async Task<ResultadoOperacaoFranqueado> VincularUnidadeAsync(
@@ -251,7 +258,12 @@ public sealed class FranqueadosServico(
             repositorio.Adicionar(resultadoVinculos.AcessoAdministradorUnidade);
         }
 
-        return MapearPersistencia(await repositorio.SalvarAsync(cancellationToken));
+        var resultado = MapearPersistencia(await repositorio.SalvarAsync(cancellationToken));
+        if (resultado.Estado == EstadoGerenciamentoFranqueado.Sucesso)
+        {
+            logger.LogInformation("VincularUnidadeFranqueado concluído para franqueado {FranqueadoId}", franqueadoId);
+        }
+        return resultado;
     }
 
     public async Task<ResultadoOperacaoFranqueado> DesativarUnidadeAsync(
@@ -311,7 +323,12 @@ public sealed class FranqueadosServico(
             }
         }
 
-        return MapearPersistencia(await repositorio.SalvarAsync(cancellationToken));
+        var resultado = MapearPersistencia(await repositorio.SalvarAsync(cancellationToken));
+        if (resultado.Estado == EstadoGerenciamentoFranqueado.Sucesso)
+        {
+            logger.LogInformation("DesativarUnidadeFranqueado concluído para franqueado {FranqueadoId}", franqueadoId);
+        }
+        return resultado;
     }
 
     private async Task<ResultadoFranqueado<LocalidadeValidada>> ValidarLocalidadeAsync(

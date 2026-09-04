@@ -6,6 +6,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -17,7 +18,8 @@ public sealed class MatriculasController(
     IUsuarioAtual usuarioAtual,
     IMatriculasServico matriculasServico,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
-    TimeProvider timeProvider) : Controller
+    TimeProvider timeProvider,
+    ILogger<MatriculasController> logger) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
@@ -117,6 +119,7 @@ public sealed class MatriculasController(
             && resultado.Valor is not null)
         {
             TempData["Sucesso"] = "Matrícula criada com sucesso.";
+            logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Matriculas", "Nova", resultado.Valor.MatriculaId);
             return RedirectToAction(nameof(Detalhes), new
             {
                 unidadeId,
@@ -262,7 +265,10 @@ public sealed class MatriculasController(
             || detalhe.Contexto is null
             || !detalhe.Contexto.PodeGerenciar
             || detalhe.Valor.Status != StatusMatricula.Ativa)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Matriculas", "AlterarGrade", detalhe.Estado);
             return Forbid();
+        }
 
         var data = NovaMatriculaViewModelMapper.ParseData(model.DataInicioTexto);
         if (data is null)
@@ -288,12 +294,17 @@ public sealed class MatriculasController(
                         && resultado.Valor.HorariosCriados == 0
                     ? "Nenhuma alteração foi identificada na Grade."
                     : "Grade alterada com sucesso.";
+                logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Matriculas", "AlterarGrade", matriculaId);
                 return RedirectToAction(nameof(Detalhes), new { unidadeId, matriculaId });
             }
             if (resultado.Estado is EstadoMatriculas.UnidadeNaoEncontrada
                 or EstadoMatriculas.MatriculaNaoEncontrada)
                 return NotFound();
-            if (resultado.Estado == EstadoMatriculas.SemAcesso) return Forbid();
+            if (resultado.Estado == EstadoMatriculas.SemAcesso)
+            {
+                logger.LogWarning("{Controller} {Action} negado: {Estado}", "Matriculas", "AlterarGrade", resultado.Estado);
+                return Forbid();
+            }
             ModelState.AddModelError(string.Empty, MensagemErroAlterarGrade(resultado.Estado));
         }
 
@@ -413,12 +424,19 @@ public sealed class MatriculasController(
                 TempData["Sucesso"] = cancelar
                     ? "Matrícula cancelada. O histórico foi preservado."
                     : "Matrícula encerrada com sucesso.";
+                logger.LogInformation("{Controller} {Action} concluído: {EntityId}",
+                    "Matriculas", cancelar ? "Cancelar" : "Encerrar", matriculaId);
                 return RedirectToAction(nameof(Detalhes), new { unidadeId, matriculaId });
             }
             if (resultado.Estado is EstadoMatriculas.UnidadeNaoEncontrada
                 or EstadoMatriculas.MatriculaNaoEncontrada)
                 return NotFound();
-            if (resultado.Estado == EstadoMatriculas.SemAcesso) return Forbid();
+            if (resultado.Estado == EstadoMatriculas.SemAcesso)
+            {
+                logger.LogWarning("{Controller} {Action} negado: {Estado}",
+                    "Matriculas", cancelar ? "Cancelar" : "Encerrar", resultado.Estado);
+                return Forbid();
+            }
             ModelState.AddModelError(string.Empty, MensagemErro(resultado.Estado));
         }
 

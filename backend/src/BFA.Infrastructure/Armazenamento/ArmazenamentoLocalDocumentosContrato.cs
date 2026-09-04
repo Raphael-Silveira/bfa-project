@@ -1,4 +1,5 @@
 using BFA.Application.Contratos;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 
@@ -9,11 +10,14 @@ public sealed class ArmazenamentoLocalDocumentosContrato
 {
     private readonly string _diretorioBase;
     private readonly long _tamanhoMaximoBytes;
+    private readonly ILogger<ArmazenamentoLocalDocumentosContrato> _logger;
 
     public ArmazenamentoLocalDocumentosContrato(
-        IOptions<ArmazenamentoDocumentosContratoOptions> options)
+        IOptions<ArmazenamentoDocumentosContratoOptions> options,
+        ILogger<ArmazenamentoLocalDocumentosContrato> logger)
     {
         ArgumentNullException.ThrowIfNull(options);
+        _logger = logger;
 
         var diretorioConfigurado = options.Value.DiretorioBase;
 
@@ -71,8 +75,12 @@ public sealed class ArmazenamentoLocalDocumentosContrato
             await conteudo.CopyToAsync(arquivo, cancellationToken);
             await arquivo.FlushAsync(cancellationToken);
         }
-        catch
+        catch (Exception exception)
         {
+            _logger.LogError(exception,
+                "Falha ao salvar documento {Chave} em {Diretorio}",
+                chaveArmazenamento, diretorioArquivo);
+
             if (arquivoCriado && File.Exists(caminhoArquivo))
             {
                 File.Delete(caminhoArquivo);
@@ -172,8 +180,11 @@ public sealed class ArmazenamentoLocalDocumentosContrato
                 && assinatura.AsSpan().SequenceEqual("%PDF-"u8);
             return new(identificador, tamanho, hashSha256, pdf);
         }
-        catch
+        catch (Exception exception)
         {
+            _logger.LogError(exception,
+                "Falha ao salvar documento temporario em {Caminho}", caminho);
+
             if (File.Exists(caminho))
             {
                 File.Delete(caminho);

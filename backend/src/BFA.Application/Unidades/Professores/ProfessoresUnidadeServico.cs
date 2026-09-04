@@ -1,6 +1,7 @@
 using BFA.Application.Acessos;
 using BFA.Domain.Acessos;
 using BFA.Domain.Professores;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Unidades.Professores;
 
@@ -131,7 +132,8 @@ public sealed class ProfessoresUnidadeServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IProfessoresUnidadeRepositorio repositorio,
-    TimeProvider timeProvider) : IProfessoresUnidadeConsulta, IProfessoresUnidadeServico
+    TimeProvider timeProvider,
+    ILogger<ProfessoresUnidadeServico> logger) : IProfessoresUnidadeConsulta, IProfessoresUnidadeServico
 {
     public async Task<ResultadoProfessoresUnidade<IReadOnlyList<ProfessorUnidadeResumo>>> ListarAsync(
         Guid usuarioId,
@@ -209,6 +211,10 @@ public sealed class ProfessoresUnidadeServico(
 
             var estado = await repositorio.CriarAsync(
                 professor, vinculo, remuneracao, cancellationToken);
+            if (estado == EstadoPersistenciaProfessorUnidade.Sucesso)
+            {
+                logger.LogInformation("CriarProfessor concluído para unidade {UnidadeId}", unidadeId);
+            }
             return estado switch
             {
                 EstadoPersistenciaProfessorUnidade.Sucesso =>
@@ -303,6 +309,11 @@ public sealed class ProfessoresUnidadeServico(
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
 
+        if (estado == EstadoPersistenciaProfessorUnidade.Sucesso)
+        {
+            logger.LogInformation("VincularProfessor concluído para unidade {UnidadeId}", unidadeId);
+        }
+
         return estado switch
         {
             EstadoPersistenciaProfessorUnidade.Sucesso =>
@@ -384,6 +395,10 @@ public sealed class ProfessoresUnidadeServico(
             solicitacao.Email,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+        if (estado == EstadoPersistenciaProfessorUnidade.Sucesso)
+        {
+            logger.LogInformation("EditarProfessor concluído para professor {ProfessorId}", professorId);
+        }
         return MapearPersistencia(estado, professorId);
     }
 
@@ -412,6 +427,10 @@ public sealed class ProfessoresUnidadeServico(
             dataEncerramento,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+        if (estado == EstadoPersistenciaProfessorUnidade.Sucesso)
+        {
+            logger.LogInformation("EncerrarVinculo concluído para professor {ProfessorId}", professorId);
+        }
         return MapearPersistencia(estado, professorId);
     }
 
@@ -448,6 +467,10 @@ public sealed class ProfessoresUnidadeServico(
             usuarioId,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+        if (estado == EstadoPersistenciaProfessorUnidade.Sucesso)
+        {
+            logger.LogInformation("AlterarRemuneração concluído para professor {ProfessorId}", professorId);
+        }
         return MapearPersistencia(estado, professorId);
     }
 

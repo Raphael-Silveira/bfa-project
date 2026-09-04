@@ -4,6 +4,7 @@ using BFA.Application.Franqueadora.Usuarios;
 using BFA.Application.Localidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.UnitTests.Usuarios;
 
@@ -433,7 +434,8 @@ public sealed class UsuariosFranqueadoraServicoTests
             acessos,
             repositorio,
             localidades,
-            new TimeProviderTeste(new DateTimeOffset(AgoraUtc)));
+            new TimeProviderTeste(new DateTimeOffset(AgoraUtc)),
+            NullLogger<UsuariosFranqueadoraServico>.Instance);
         return new(
             usuarioAtualId,
             organizacaoId,

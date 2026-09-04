@@ -1,6 +1,7 @@
 using BFA.Application.Acessos;
 using BFA.Application.Franqueadora.AcessosUnidade;
 using BFA.Domain.Acessos;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.UnitTests.Acessos;
 
@@ -284,7 +285,8 @@ public sealed class AcessosUnidadeServicoTests
             acessos,
             usuarios,
             repositorio,
-            new TimeProviderTeste(new DateTimeOffset(AgoraUtc)));
+            new TimeProviderTeste(new DateTimeOffset(AgoraUtc)),
+            NullLogger<AcessosUnidadeServico>.Instance);
 
         return new(
             usuarioAtualId,

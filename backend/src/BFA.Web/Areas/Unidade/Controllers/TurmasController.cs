@@ -6,6 +6,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -22,7 +23,8 @@ public sealed class TurmasController(
     IAjusteHorariosTurmaServico ajusteHorariosServico,
     ITrocaProfessorTurmaServico trocaProfessorServico,
     IAuthorizationService authorizationService,
-    TimeProvider timeProvider) : Controller
+    TimeProvider timeProvider,
+    ILogger<TurmasController> logger) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
@@ -86,7 +88,11 @@ public sealed class TurmasController(
 
         var resultado = await servico.CriarAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, solicitacao, cancellationToken);
-        if (resultado.Estado == EstadoTurmasUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoTurmasUnidade.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Turmas", "Nova", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado is EstadoTurmasUnidade.ProfessorNaoEncontrado
             or EstadoTurmasUnidade.ProfessorInativo)
         {
@@ -110,6 +116,7 @@ public sealed class TurmasController(
         }
 
         TempData["Sucesso"] = "Turma cadastrada com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Turmas", "Nova", (object?)null);
         return Redirect($"/unidade/{unidadeId:D}/turmas");
     }
 
@@ -144,7 +151,11 @@ public sealed class TurmasController(
         var resultado = await servico.AtualizarAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, turmaId,
             new(model.Nome, model.Capacidade!.Value), cancellationToken);
-        if (resultado.Estado == EstadoTurmasUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoTurmasUnidade.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Turmas", "Editar", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado == EstadoTurmasUnidade.TurmaNaoEncontrada) return NotFound();
         if (resultado.Estado != EstadoTurmasUnidade.Sucesso)
         {
@@ -152,6 +163,7 @@ public sealed class TurmasController(
             return View(model);
         }
         TempData["Sucesso"] = "Turma atualizada com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Turmas", "Editar", turmaId);
         return Redirect($"/unidade/{unidadeId:D}/turmas");
     }
 
@@ -190,11 +202,16 @@ public sealed class TurmasController(
         var resultado = await ajusteHorariosServico.AjustarAdministracaoAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, turmaId,
             solicitacao!, cancellationToken);
-        if (resultado.Estado == EstadoAjusteHorariosTurma.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoAjusteHorariosTurma.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Turmas", "Horarios", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado == EstadoAjusteHorariosTurma.TurmaNaoEncontrada)
             return NotFound();
         if (AdicionarErroAjuste(ModelState, resultado)) return View(model);
         TempData["Sucesso"] = "Programação recorrente ajustada com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Turmas", "Horarios", turmaId);
         return Redirect($"/unidade/{unidadeId:D}/turmas");
     }
 
@@ -232,7 +249,11 @@ public sealed class TurmasController(
         var resultado = await trocaProfessorServico.TrocarAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, turmaId,
             solicitacao!, cancellationToken);
-        if (resultado.Estado == EstadoTrocaProfessorTurma.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoTrocaProfessorTurma.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Turmas", "Professor", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado == EstadoTrocaProfessorTurma.TurmaNaoEncontrada)
             return NotFound();
         if (resultado.Estado != EstadoTrocaProfessorTurma.Sucesso)
@@ -258,6 +279,7 @@ public sealed class TurmasController(
             ? "Professor responsável alterado com sucesso."
             : $"Professor alterado com sucesso. {resultado.HorariosMigrados} horário(s) e "
                 + $"{resultado.GradesMigradas} alocação(ões) de Grade migrados.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Turmas", "Professor", turmaId);
         return Redirect($"/unidade/{unidadeId:D}/turmas");
     }
 

@@ -2,6 +2,7 @@ using BFA.Infrastructure;
 using BFA.Web;
 using BFA.Web.Bootstrap;
 using BFA.Web.Franqueados;
+using BFA.Web.Infrastructure;
 using BFA.Web.Localidades;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,6 +46,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseRouting();

@@ -3,6 +3,8 @@ using System.Security.Cryptography;
 using BFA.Application.Contratos;
 using BFA.Infrastructure.Armazenamento;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -170,5 +172,6 @@ public sealed class ArmazenamentoLocalDocumentosContratoTests : IDisposable
         {
             DiretorioBase = _diretorioBase,
             TamanhoMaximoBytes = tamanhoMaximoBytes
-        }));
+        }),
+        NullLogger<ArmazenamentoLocalDocumentosContrato>.Instance);
 }

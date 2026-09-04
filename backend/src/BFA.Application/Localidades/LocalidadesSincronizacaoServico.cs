@@ -1,9 +1,12 @@
+using Microsoft.Extensions.Logging;
+
 namespace BFA.Application.Localidades;
 
 public sealed class LocalidadesSincronizacaoServico(
     IIbgeLocalidadesClient ibgeClient,
     ILocalidadesSincronizacaoRepositorio repositorio,
-    TimeProvider timeProvider) : ILocalidadesSincronizacaoServico
+    TimeProvider timeProvider,
+    ILogger<LocalidadesSincronizacaoServico> logger) : ILocalidadesSincronizacaoServico
 {
     public async Task<LocalidadesSincronizacaoResultado> SincronizarAsync(
         CancellationToken cancellationToken)
@@ -40,6 +43,11 @@ public sealed class LocalidadesSincronizacaoServico(
             catalogo,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+
+        logger.LogInformation(
+            "SincronizarLocalidades concluído: {QtdEstados} estados, {QtdMunicipios} municípios",
+            catalogo.Estados.Count,
+            catalogo.Municipios.Count);
 
         return new LocalidadesSincronizacaoResultado(
             catalogo.Estados.Count,

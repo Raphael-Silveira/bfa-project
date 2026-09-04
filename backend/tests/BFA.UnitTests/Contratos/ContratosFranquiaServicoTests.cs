@@ -3,6 +3,7 @@ using BFA.Application.Contratos;
 using BFA.Application.Franqueadora.Contratos;
 using BFA.Domain.Acessos;
 using BFA.Domain.Contratos;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.UnitTests.Contratos;
 
@@ -425,7 +426,8 @@ public sealed class ContratosFranquiaServicoTests
             acesso,
             repositorio,
             armazenamento,
-            new TimeProviderFake(AgoraUtc));
+            new TimeProviderFake(AgoraUtc),
+            NullLogger<ContratosFranquiaServico>.Instance);
         return new(servico, repositorio, armazenamento, usuarioId, franqueadoId, unidadeId);
     }
 

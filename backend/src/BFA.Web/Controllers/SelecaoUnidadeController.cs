@@ -4,6 +4,7 @@ using BFA.Application.Usuarios;
 using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Controllers;
 
@@ -11,7 +12,8 @@ namespace BFA.Web.Controllers;
 public sealed class SelecaoUnidadeController(
     IUsuarioAtual usuarioAtual,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
-    IUsuarioApresentacaoConsulta usuarioApresentacaoConsulta) : Controller
+    IUsuarioApresentacaoConsulta usuarioApresentacaoConsulta,
+    ILogger<SelecaoUnidadeController> logger) : Controller
 {
     [HttpGet("selecionar-unidade")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -53,6 +55,7 @@ public sealed class SelecaoUnidadeController(
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId || unidadeId == Guid.Empty)
         {
+            logger.LogWarning("SelecaoUnidade {Action} negado: usuario ou unidade invalidos", "Selecionar");
             return Forbid();
         }
 
@@ -61,9 +64,14 @@ public sealed class SelecaoUnidadeController(
             unidadeId,
             cancellationToken);
 
-        return unidade is null
-            ? Forbid()
-            : Redirect(ObterUrlUnidade(unidade.UnidadeId));
+        if (unidade is null)
+        {
+            logger.LogWarning("SelecaoUnidade {Action} negado: unidade {UnidadeId} nao autorizada", "Selecionar", unidadeId);
+            return Forbid();
+        }
+
+        logger.LogInformation("SelecaoUnidade {Action} concluido: {UnidadeId}", "Selecionar", unidadeId);
+        return Redirect(ObterUrlUnidade(unidade.UnidadeId));
     }
 
     private static string ObterUrlUnidade(Guid unidadeId)

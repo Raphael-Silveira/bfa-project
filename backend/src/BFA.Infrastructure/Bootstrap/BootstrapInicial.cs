@@ -6,12 +6,14 @@ using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Infrastructure.Bootstrap;
 
 public sealed class BootstrapInicial(
     BfaDbContext dbContext,
-    UserManager<UsuarioIdentity> userManager) : IBootstrapInicial
+    UserManager<UsuarioIdentity> userManager,
+    ILogger<BootstrapInicial> logger) : IBootstrapInicial
 {
     private const string NomeOrganizacao = "Brazilian Footvolley Academy";
     private const string SlugOrganizacao = "bfa";
@@ -145,8 +147,10 @@ public sealed class BootstrapInicial(
         {
             usuario = await userManager.FindByEmailAsync(credencial.Email);
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException exception)
         {
+            logger.LogError(exception,
+                "Falha ao identificar Administrador {Numero} por email", credencial.Numero);
             throw new BootstrapInicialException(
                 $"Não foi possível identificar unicamente o Administrador {credencial.Numero}.");
         }
@@ -185,6 +189,9 @@ public sealed class BootstrapInicial(
                 codigos = "erro não especificado";
             }
 
+            logger.LogError(
+                "Falha ao criar Administrador {Numero}: {Codigos}",
+                credencial.Numero, codigos);
             throw new BootstrapInicialException(
                 $"Não foi possível criar o Administrador {credencial.Numero}: {codigos}.");
         }

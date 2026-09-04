@@ -1,4 +1,5 @@
 using BFA.Application.Localidades;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.UnitTests.Localidades;
 
@@ -124,7 +125,8 @@ public sealed class LocalidadesSincronizacaoServicoTests
         return new LocalidadesSincronizacaoServico(
             client,
             repositorio,
-            new FixedTimeProvider(Agora));
+            new FixedTimeProvider(Agora),
+            NullLogger<LocalidadesSincronizacaoServico>.Instance);
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider

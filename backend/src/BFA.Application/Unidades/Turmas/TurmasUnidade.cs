@@ -1,4 +1,5 @@
 using BFA.Domain.Turmas;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Unidades.Turmas;
 
@@ -138,7 +139,8 @@ public sealed class TurmasUnidadeServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IGovernancaOperacionalUnidade governancaOperacional,
     ITurmasUnidadeRepositorio repositorio,
-    TimeProvider timeProvider) : ITurmasUnidadeConsulta, ITurmasUnidadeServico
+    TimeProvider timeProvider,
+    ILogger<TurmasUnidadeServico> logger) : ITurmasUnidadeConsulta, ITurmasUnidadeServico
 {
     public async Task<ResultadoTurmasUnidade<IReadOnlyList<TurmaResumo>>> ListarAsync(
         Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
@@ -230,6 +232,10 @@ public sealed class TurmasUnidadeServico(
                 item.HoraFim, item.VigenciaInicio, null, usuarioId, agora)).ToArray();
 
             var estado = await repositorio.CriarAsync(turma, horarios, cancellationToken);
+            if (estado == EstadoPersistenciaTurma.Sucesso)
+            {
+                logger.LogInformation("CriarTurma concluído para unidade {UnidadeId}", unidadeId);
+            }
             return estado switch
             {
                 EstadoPersistenciaTurma.Sucesso =>
@@ -262,6 +268,10 @@ public sealed class TurmasUnidadeServico(
             contexto.Valor!.OrganizacaoId, unidadeId, turmaId,
             solicitacao.Nome, solicitacao.Capacidade, usuarioId,
             timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+        if (estado == EstadoPersistenciaTurma.Sucesso)
+        {
+            logger.LogInformation("AtualizarTurma concluído para turma {TurmaId}", turmaId);
+        }
         return estado switch
         {
             EstadoPersistenciaTurma.Sucesso => new(EstadoTurmasUnidade.Sucesso, turmaId),

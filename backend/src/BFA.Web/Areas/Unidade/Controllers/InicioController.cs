@@ -6,6 +6,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -18,7 +19,8 @@ public sealed class InicioController(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     IContratoUnidadeConsulta contratoUnidadeConsulta,
-    IAuthorizationService authorizationService) : Controller
+    IAuthorizationService authorizationService,
+    ILogger<InicioController> logger) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(

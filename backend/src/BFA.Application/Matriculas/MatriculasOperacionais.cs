@@ -2,6 +2,7 @@ using BFA.Application.Unidades;
 using BFA.Domain.Alunos;
 using BFA.Domain.Matriculas;
 using BFA.Domain.Turmas;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Matriculas;
 
@@ -309,7 +310,8 @@ public sealed class MatriculasServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IGovernancaOperacionalUnidade governancaOperacional,
     IMatriculasRepositorio repositorio,
-    TimeProvider timeProvider) : IMatriculasServico
+    TimeProvider timeProvider,
+    ILogger<MatriculasServico> logger) : IMatriculasServico
 {
     public async Task<ResultadoMatriculas<IReadOnlyList<MatriculaListaItem>>> ListarAsync(
         Guid usuarioId, Guid unidadeId, string? texto, StatusMatricula? status,
@@ -388,7 +390,7 @@ public sealed class MatriculasServico(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
         if (contexto.Estado != EstadoMatriculas.Sucesso) return new(contexto.Estado);
         if (!SolicitacaoCriacaoValida(solicitacao, out var erro)) return new(erro);
-        return await repositorio.CriarAsync(
+        var resultado = await repositorio.CriarAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, usuarioId,
             contexto.Valor.PossuiFranqueadoAtivo is false
                 && await EhAdministradorRedeAsync(usuarioId, contexto.Valor, cancellationToken),
@@ -396,6 +398,11 @@ public sealed class MatriculasServico(
             DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime),
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+        if (resultado.Estado == EstadoMatriculas.Sucesso)
+        {
+            logger.LogInformation("CriarMatrícula concluído para unidade {UnidadeId}", unidadeId);
+        }
+        return resultado;
     }
 
     public async Task<ResultadoMatriculas<ResultadoAlteracaoGrade>> AlterarGradeAsync(
@@ -411,9 +418,14 @@ public sealed class MatriculasServico(
             return new(EstadoMatriculas.DataInvalida);
         if (!IdsHorariosValidos(solicitacao.TurmaHorarioIds, out var erro))
             return new(erro);
-        return await repositorio.AlterarGradeAsync(
+        var resultado = await repositorio.AlterarGradeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, matriculaId, usuarioId,
             solicitacao, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+        if (resultado.Estado == EstadoMatriculas.Sucesso)
+        {
+            logger.LogInformation("AlterarGrade concluído para matrícula {MatriculaId}", matriculaId);
+        }
+        return resultado;
     }
 
     public Task<ResultadoMatriculas<Guid>> EncerrarAsync(
@@ -441,6 +453,11 @@ public sealed class MatriculasServico(
             contexto.Valor!.OrganizacaoId, unidadeId, matriculaId, usuarioId,
             dataFinalEfetiva, cancelar, timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+        if (estado == EstadoMatriculas.Sucesso)
+        {
+            var operacao = cancelar ? "Cancelar" : "Encerrar";
+            logger.LogInformation("{Operacao}Matrícula concluído para matrícula {MatriculaId}", operacao, matriculaId);
+        }
         return estado == EstadoMatriculas.Sucesso
             ? new(estado, matriculaId, contexto.Valor)
             : new(estado);

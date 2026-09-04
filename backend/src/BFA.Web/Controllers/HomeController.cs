@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using BFA.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Controllers;
 
-public class HomeController : Controller
+public class HomeController(ILogger<HomeController> logger) : Controller
 {
     public IActionResult Index()
     {

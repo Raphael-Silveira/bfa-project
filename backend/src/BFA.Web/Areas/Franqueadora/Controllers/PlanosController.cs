@@ -4,6 +4,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Planos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Franqueadora.Controllers;
 
@@ -12,7 +13,8 @@ namespace BFA.Web.Areas.Franqueadora.Controllers;
 [Route("franqueadora/planos")]
 public sealed class PlanosController(
     IUsuarioAtual usuarioAtual,
-    IPlanosServico planosServico) : Controller
+    IPlanosServico planosServico,
+    ILogger<PlanosController> logger) : Controller
 {
     private const string RotaBase = "/franqueadora/planos";
 
@@ -56,6 +58,9 @@ public sealed class PlanosController(
             usuarioId, new(model.Nome!, termos!), cancellationToken);
         if (resultado.Estado != EstadoPlanos.Sucesso)
             return ErroFormulario(model, resultado.Estado);
+        logger.LogInformation(
+            "{Controller} {Action} concluído: {EntityId}",
+            "Planos", "Novo", resultado.Valor);
         TempData["Sucesso"] = "Plano da Rede criado com a versão 1.";
         return Redirect($"{RotaBase}/{resultado.Valor:D}");
     }
@@ -115,6 +120,9 @@ public sealed class PlanosController(
             usuarioId, planoId, termos!, cancellationToken);
         if (resultado.Estado != EstadoPlanos.Sucesso)
             return ErroFormulario(model, resultado.Estado);
+        logger.LogInformation(
+            "{Controller} {Action} concluído: {EntityId}",
+            "Planos", "NovaVersao", planoId);
         TempData["Sucesso"] = "Nova versão comercial criada com sucesso.";
         return Redirect($"{RotaBase}/{planoId:D}");
     }
@@ -144,6 +152,9 @@ public sealed class PlanosController(
             return Redirect($"{RotaBase}/{planoId:D}");
         }
         if (resultado.Estado != EstadoPlanos.Sucesso) return Forbid();
+        logger.LogInformation(
+            "{Controller} {Action} concluído: {EntityId}",
+            "Planos", ativar ? "Ativar" : "Inativar", planoId);
         TempData["Sucesso"] = ativar ? "Plano reativado." : "Plano inativado.";
         return Redirect($"{RotaBase}/{planoId:D}");
     }

@@ -2,6 +2,7 @@ using BFA.Application.Acessos;
 using BFA.Application.Franqueadora.Unidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Unidades;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.UnitTests.Unidades;
 
@@ -196,7 +197,11 @@ public sealed class UnidadesFranqueadoraServicoTests
         acessos.Organizacoes.Add(organizacaoId);
         var repositorio = new UnidadesRepositorioTeste();
         var timeProvider = new TimeProviderTeste(new DateTimeOffset(AgoraUtc));
-        var servico = new UnidadesFranqueadoraServico(acessos, repositorio, timeProvider);
+        var servico = new UnidadesFranqueadoraServico(
+            acessos,
+            repositorio,
+            timeProvider,
+            NullLogger<UnidadesFranqueadoraServico>.Instance);
         return new ContextoTeste(usuarioId, organizacaoId, repositorio, servico);
     }
 

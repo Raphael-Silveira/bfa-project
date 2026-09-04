@@ -4,6 +4,8 @@ using BFA.Infrastructure.Persistence;
 using BFA.Infrastructure.Planos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 
 namespace BFA.IntegrationTests;
@@ -17,7 +19,7 @@ public sealed class PlanosRepositorioTests
         await connection.OpenAsync();
         await CriarTabelasTemporariasAsync(connection);
         await using var dbContext = CriarDbContext(connection);
-        var repositorio = new PlanosRepositorio(dbContext);
+        var repositorio = new PlanosRepositorio(dbContext, NullLogger<PlanosRepositorio>.Instance);
         var cenario = await CriarPlanoInicialAsync(repositorio);
 
         var resultado = await repositorio.CriarNovaVersaoAsync(
@@ -54,7 +56,7 @@ public sealed class PlanosRepositorioTests
         await connection.OpenAsync();
         await CriarTabelasTemporariasAsync(connection);
         await using var dbContext = CriarDbContext(connection);
-        var repositorio = new PlanosRepositorio(dbContext);
+        var repositorio = new PlanosRepositorio(dbContext, NullLogger<PlanosRepositorio>.Instance);
         var cenario = await CriarPlanoInicialAsync(repositorio);
 
         var resultado = await repositorio.CriarNovaVersaoAsync(

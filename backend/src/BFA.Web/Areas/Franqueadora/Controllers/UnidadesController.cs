@@ -4,6 +4,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Franqueadora;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Franqueadora.Controllers;
 
@@ -13,7 +14,8 @@ namespace BFA.Web.Areas.Franqueadora.Controllers;
 public sealed class UnidadesController(
     IUsuarioAtual usuarioAtual,
     IUnidadesFranqueadoraConsulta consulta,
-    IUnidadesFranqueadoraServico servico) : Controller
+    IUnidadesFranqueadoraServico servico,
+    ILogger<UnidadesController> logger) : Controller
 {
     private const string MensagemSlugDuplicado =
         "Já existe uma unidade com este identificador.";
@@ -81,9 +83,15 @@ public sealed class UnidadesController(
             return View(model);
         }
 
-        return resultado.Estado == EstadoGerenciamentoUnidade.Sucesso
-            ? Redirect("/franqueadora/unidades")
-            : Forbid();
+        if (resultado.Estado == EstadoGerenciamentoUnidade.Sucesso)
+        {
+            logger.LogInformation(
+                "{Controller} {Action} concluído",
+                "Unidades", "Nova");
+            return Redirect("/franqueadora/unidades");
+        }
+
+        return Forbid();
     }
 
     [HttpGet("{id:guid}/editar")]
@@ -158,9 +166,15 @@ public sealed class UnidadesController(
             return NotFound();
         }
 
-        return resultado.Estado == EstadoGerenciamentoUnidade.Sucesso
-            ? Redirect("/franqueadora/unidades")
-            : Forbid();
+        if (resultado.Estado == EstadoGerenciamentoUnidade.Sucesso)
+        {
+            logger.LogInformation(
+                "{Controller} {Action} concluído: {EntityId}",
+                "Unidades", "Editar", id);
+            return Redirect("/franqueadora/unidades");
+        }
+
+        return Forbid();
     }
 
     [HttpPost("{id:guid}/ativar")]
@@ -196,8 +210,14 @@ public sealed class UnidadesController(
             return NotFound();
         }
 
-        return resultado.Estado == EstadoGerenciamentoUnidade.Sucesso
-            ? Redirect("/franqueadora/unidades")
-            : Forbid();
+        if (resultado.Estado == EstadoGerenciamentoUnidade.Sucesso)
+        {
+            logger.LogInformation(
+                "{Controller} {Action} concluído: {EntityId}",
+                "Unidades", ativar ? "Ativar" : "Desativar", id);
+            return Redirect("/franqueadora/unidades");
+        }
+
+        return Forbid();
     }
 }

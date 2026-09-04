@@ -2,6 +2,8 @@ using System.Security.Claims;
 using BFA.Domain.Acessos;
 using BFA.Web.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -23,7 +25,7 @@ public sealed class AuthorizationHandlerTests
             ativo);
         var requirement = new AdministradorRedeRequirement();
         var context = CreateContext(requirement);
-        var handler = new AdministradorRedeHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new AdministradorRedeHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<AdministradorRedeHandler>.Instance);
 
         await handler.HandleAsync(context);
 
@@ -40,7 +42,7 @@ public sealed class AuthorizationHandlerTests
             fixture.UnidadeId,
             PerfilAcesso.AdministradorUnidade);
         var requirement = new AcessoUnidadeRequirement();
-        var handler = new AcessoUnidadeHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new AcessoUnidadeHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<AcessoUnidadeHandler>.Instance);
         var contextCorreto = CreateContext(
             requirement,
             new ContextoUnidade(fixture.OrganizacaoId, fixture.UnidadeId));
@@ -65,7 +67,7 @@ public sealed class AuthorizationHandlerTests
             null,
             PerfilAcesso.AdministradorRede);
         var requirement = new AcessoUnidadeRequirement();
-        var handler = new AcessoUnidadeHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new AcessoUnidadeHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<AcessoUnidadeHandler>.Instance);
         var contextOrganizacaoCorreta = CreateContext(
             requirement,
             new ContextoUnidade(fixture.OrganizacaoId, Guid.NewGuid()));
@@ -94,7 +96,7 @@ public sealed class AuthorizationHandlerTests
             ativo);
         var requirement = new PerfilAcessoRequirement(PerfilAcesso.Professor);
         var context = CreateContext(requirement);
-        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<PerfilAcessoHandler>.Instance);
 
         await handler.HandleAsync(context);
 
@@ -114,7 +116,7 @@ public sealed class AuthorizationHandlerTests
             perfil);
         var requirement = new PerfilAcessoRequirement(perfil);
         var context = CreateContext(requirement);
-        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<PerfilAcessoHandler>.Instance);
 
         await handler.HandleAsync(context);
 
@@ -127,7 +129,7 @@ public sealed class AuthorizationHandlerTests
         var fixture = CreateFixture();
         var requirement = new PerfilAcessoRequirement(PerfilAcesso.Aluno);
         var context = CreateContext(requirement);
-        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<PerfilAcessoHandler>.Instance);
 
         await handler.HandleAsync(context);
 
@@ -147,7 +149,7 @@ public sealed class AuthorizationHandlerTests
             PerfilAcesso.AdministradorRede,
             PerfilAcesso.AdministradorUnidade);
         var context = CreateContext(requirement);
-        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new PerfilAcessoHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<PerfilAcessoHandler>.Instance);
 
         await handler.HandleAsync(context);
 
@@ -164,7 +166,7 @@ public sealed class AuthorizationHandlerTests
             fixture.UnidadeId,
             PerfilAcesso.Professor);
         var requirement = new AcessoUnidadePorPerfilRequirement(PerfilAcesso.Professor);
-        var handler = new AcessoUnidadePorPerfilHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new AcessoUnidadePorPerfilHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<AcessoUnidadePorPerfilHandler>.Instance);
         var contextCorreto = CreateContext(
             requirement,
             new ContextoUnidade(fixture.OrganizacaoId, fixture.UnidadeId));
@@ -189,7 +191,7 @@ public sealed class AuthorizationHandlerTests
             null,
             PerfilAcesso.AdministradorRede);
         var requirement = new AcessoUnidadePorPerfilRequirement(PerfilAcesso.Professor);
-        var handler = new AcessoUnidadePorPerfilHandler(fixture.UsuarioAtual, fixture.Acessos);
+        var handler = new AcessoUnidadePorPerfilHandler(fixture.UsuarioAtual, fixture.Acessos, NullLogger<AcessoUnidadePorPerfilHandler>.Instance);
         var context = CreateContext(
             requirement,
             new ContextoUnidade(fixture.OrganizacaoId, Guid.NewGuid()));

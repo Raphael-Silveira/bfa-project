@@ -3,12 +3,14 @@ using BFA.Web.Identidade;
 using BFA.Web.ViewModels.Conta;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Controllers;
 
 [AllowAnonymous]
-public sealed class PrimeiroAcessoController(IPrimeiroAcessoServico primeiroAcessoServico)
-    : Controller
+public sealed class PrimeiroAcessoController(
+    IPrimeiroAcessoServico primeiroAcessoServico,
+    ILogger<PrimeiroAcessoController> logger) : Controller
 {
     public const string MensagemSenhaDefinida =
         "Senha definida com sucesso. Você já pode entrar na sua conta.";
@@ -75,6 +77,7 @@ public sealed class PrimeiroAcessoController(IPrimeiroAcessoServico primeiroAces
 
         if (resultado.Estado == EstadoDefinicaoSenha.Sucesso)
         {
+            logger.LogInformation("PrimeiroAcesso {Action} concluido", "DefinirSenha");
             TempData[nameof(MensagemSenhaDefinida)] = MensagemSenhaDefinida;
             return Redirect("/login");
         }

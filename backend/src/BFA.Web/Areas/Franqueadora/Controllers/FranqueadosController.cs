@@ -6,6 +6,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Franqueadora;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Franqueadora.Controllers;
 
@@ -16,7 +17,8 @@ public sealed class FranqueadosController(
     IUsuarioAtual usuarioAtual,
     IFranqueadosConsulta consulta,
     IFranqueadosServico servico,
-    ILocalidadesConsulta localidadesConsulta) : Controller
+    ILocalidadesConsulta localidadesConsulta,
+    ILogger<FranqueadosController> logger) : Controller
 {
     public const string MensagemSucesso = "Operação concluída com sucesso.";
     public const string MensagemErro = "Não foi possível concluir a operação.";
@@ -113,6 +115,9 @@ public sealed class FranqueadosController(
 
         if (resultado.Estado == EstadoGerenciamentoFranqueado.Sucesso)
         {
+            logger.LogInformation(
+                "{Controller} {Action} concluído: {EntityId}",
+                "Franqueados", "Editar", franqueadoId);
             TempData[nameof(MensagemSucesso)] = "Dados do franqueado atualizados.";
             return Redirect($"/franqueadora/franqueados/{franqueadoId}");
         }
@@ -291,6 +296,13 @@ public sealed class FranqueadosController(
         if (resposta is not null)
         {
             return resposta;
+        }
+
+        if (resultado.Estado == EstadoGerenciamentoFranqueado.Sucesso)
+        {
+            logger.LogInformation(
+                "{Controller} Operação de unidade concluído: {EntityId}",
+                "Franqueados", franqueadoId);
         }
 
         TempData[resultado.Estado == EstadoGerenciamentoFranqueado.Sucesso

@@ -1,5 +1,6 @@
 using BFA.Application.Acessos;
 using BFA.Domain.Acessos;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Unidades.Professores;
 
@@ -80,7 +81,8 @@ public sealed class AcessoProfessorServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IAcessoUsuarioConsulta acessoUsuarioConsulta,
     IAcessoProfessorRepositorio repositorio,
-    TimeProvider timeProvider) : IAcessoProfessorServico
+    TimeProvider timeProvider,
+    ILogger<AcessoProfessorServico> logger) : IAcessoProfessorServico
 {
     public async Task<(EstadoAcessoProfessor Estado, AcessoProfessorResumo? Acesso)> ObterAsync(
         Guid administradorId,
@@ -116,13 +118,18 @@ public sealed class AcessoProfessorServico(
             return new(EstadoAcessoProfessor.SemAcesso);
         }
 
-        return await repositorio.ConcederAsync(
+        var resultado = await repositorio.ConcederAsync(
             organizacaoId.Value,
             unidadeId,
             professorId,
             nomeUsuario,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+        if (resultado.Estado == EstadoAcessoProfessor.Sucesso)
+        {
+            logger.LogInformation("ConcederAcessoProfessor concluído para professor {ProfessorId}", professorId);
+        }
+        return resultado;
     }
 
     public async Task<EstadoAcessoProfessor> RevogarAsync(
@@ -138,12 +145,17 @@ public sealed class AcessoProfessorServico(
             return EstadoAcessoProfessor.SemAcesso;
         }
 
-        return await repositorio.RevogarAsync(
+        var resultado = await repositorio.RevogarAsync(
             organizacaoId.Value,
             unidadeId,
             professorId,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
+        if (resultado == EstadoAcessoProfessor.Sucesso)
+        {
+            logger.LogInformation("RevogarAcessoProfessor concluído para professor {ProfessorId}", professorId);
+        }
+        return resultado;
     }
 
     private async Task<Guid?> ObterOrganizacaoAutorizadaAsync(

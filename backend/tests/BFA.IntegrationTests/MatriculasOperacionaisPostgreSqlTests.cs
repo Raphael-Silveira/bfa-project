@@ -4,6 +4,8 @@ using BFA.Domain.Matriculas;
 using BFA.Infrastructure.Matriculas;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -24,7 +26,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         var baselineGrade = await ContarAsync(db => db.MatriculasHorarios.CountAsync());
 
         await using var db = CriarContexto();
-        var resultado = await new MatriculasRepositorio(db).CriarAsync(
+        var resultado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).CriarAsync(
             fixture.OrganizacaoId, fixture.UnidadeUmId, fixture.UsuarioId,
             true,
             new(
@@ -73,7 +75,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         {
             largada.SignalAndWait();
             await using var db = CriarContexto();
-            return await new MatriculasRepositorio(db).CriarAsync(
+            return await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).CriarAsync(
                 fixture.OrganizacaoId, fixture.UnidadeUmId, fixture.UsuarioId,
                 true, NovaSolicitacao(cpf, fixture.UnidadeUmId,
                     fixture.HorariosUnidadeUm[0]),
@@ -101,7 +103,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         {
             largada.SignalAndWait();
             await using var db = CriarContexto();
-            return await new MatriculasRepositorio(db).CriarAsync(
+            return await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).CriarAsync(
                 fixture.OrganizacaoId, fixture.UnidadeUmId, fixture.UsuarioId,
                 true, ExistenteSolicitacao(alunoId, fixture.HorariosUnidadeUm[0]),
                 Inicio, Agora, CancellationToken.None);
@@ -132,7 +134,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         {
             largada.SignalAndWait();
             await using var db = CriarContexto();
-            return await new MatriculasRepositorio(db).CriarAsync(
+            return await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).CriarAsync(
                 fixture.OrganizacaoId, entrada.Item1, fixture.UsuarioId,
                 true, ExistenteSolicitacao(alunoId, entrada.Item2),
                 Inicio, Agora, CancellationToken.None);
@@ -171,7 +173,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         {
             largada.SignalAndWait();
             await using var db = CriarContexto();
-            return await new MatriculasRepositorio(db).AlterarGradeAsync(
+            return await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).AlterarGradeAsync(
                 fixture.OrganizacaoId, fixture.UnidadeUmId,
                 fixture.MatriculaUnidadeUmId, fixture.UsuarioId,
                 new(Inicio, selecao), Agora, CancellationToken.None);
@@ -208,7 +210,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         try
         {
             await using var db = CriarContexto();
-            var resultado = await new MatriculasRepositorio(db).CriarAsync(
+            var resultado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).CriarAsync(
                 fixture.OrganizacaoId, fixture.UnidadeUmId, fixture.UsuarioId,
                 true, new(
                     null,
@@ -252,7 +254,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         await fixture.InsertGradeAsync(
             fixture.MatriculaUnidadeUmId, fixture.HorariosUnidadeUm[0]);
         await using var db = CriarContexto();
-        var repositorio = new MatriculasRepositorio(db);
+        var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var lista = await repositorio.ListarAsync(
             fixture.OrganizacaoId, fixture.UnidadeUmId, null, null,
@@ -307,7 +309,7 @@ public sealed class MatriculasOperacionaisPostgreSqlTests(
         try
         {
             await using var db = CriarContexto();
-            var estado = await new MatriculasRepositorio(db).FinalizarAsync(
+            var estado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).FinalizarAsync(
                 fixture.OrganizacaoId, fixture.UnidadeUmId,
                 fixture.MatriculaUnidadeUmId, fixture.UsuarioId,
                 new DateOnly(2026, 8, 31), false, Agora,

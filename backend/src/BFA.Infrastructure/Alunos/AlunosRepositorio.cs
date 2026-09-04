@@ -3,10 +3,11 @@ using BFA.Domain.Alunos;
 using BFA.Domain.Matriculas;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Infrastructure.Alunos;
 
-public sealed class AlunosRepositorio(BfaDbContext dbContext) : IAlunosRepositorio
+public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepositorio> logger) : IAlunosRepositorio
 {
     public async Task<IReadOnlyList<AlunoListaItem>> ListarAsync(
         Guid organizacaoId, Guid unidadeId, string? texto,
@@ -313,7 +314,18 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext) : IAlunosRepositor
             aluno.Email,
             DateTime.UtcNow);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Falha ao persistir atualizacao do aluno {AlunoId} na organizacao {OrganizacaoId}",
+                aluno.Id, aluno.OrganizacaoId);
+            throw;
+        }
+
         return true;
     }
 }

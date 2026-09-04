@@ -1,5 +1,7 @@
 using BFA.Application.Localidades;
 using BFA.Web.Localidades;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -20,7 +22,7 @@ public sealed class SincronizarLocalidadesIbgeCommandTests
     {
         var servico = new TestSincronizacaoServico(
             new LocalidadesSincronizacaoResultado(2, 3));
-        var command = new SincronizarLocalidadesIbgeCommand(servico);
+        var command = new SincronizarLocalidadesIbgeCommand(servico, NullLogger<SincronizarLocalidadesIbgeCommand>.Instance);
         using var output = new StringWriter();
         using var error = new StringWriter();
 
@@ -38,7 +40,7 @@ public sealed class SincronizarLocalidadesIbgeCommandTests
     {
         var servico = new TestSincronizacaoServico(
             new LocalidadesSincronizacaoException("Catálogo incompleto."));
-        var command = new SincronizarLocalidadesIbgeCommand(servico);
+        var command = new SincronizarLocalidadesIbgeCommand(servico, NullLogger<SincronizarLocalidadesIbgeCommand>.Instance);
         using var output = new StringWriter();
         using var error = new StringWriter();
 

@@ -1,6 +1,7 @@
 using BFA.Application.Matriculas;
 using BFA.Application.Unidades;
 using BFA.Domain.Matriculas;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.UnitTests.Matriculas;
 
@@ -107,7 +108,8 @@ public sealed class MatriculasServicoTests
             new UnidadeContextoFake(_organizacaoId, _unidadeId),
             new GovernancaFake(governanca),
             repositorio,
-            TimeProvider.System);
+            TimeProvider.System,
+            NullLogger<MatriculasServico>.Instance);
 
     private static CriarMatriculaSolicitacao SolicitacaoValida() => new(
         Guid.NewGuid(), null, [], Guid.NewGuid(), new DateOnly(2026, 9, 1),

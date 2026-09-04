@@ -9,6 +9,7 @@ using BFA.Web.Identidade;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -24,7 +25,8 @@ public sealed class ProfessoresController(
     IProfessoresUnidadeServico servico,
     IAcessoProfessorServico acessoProfessorServico,
     IAuthorizationService authorizationService,
-    TimeProvider timeProvider) : Controller
+    TimeProvider timeProvider,
+    ILogger<ProfessoresController> logger) : Controller
 {
     [HttpGet("{professorId:guid}/acesso")]
     public async Task<IActionResult> Acesso(
@@ -51,7 +53,11 @@ public sealed class ProfessoresController(
         if (acessoUnidade.Resultado is not null) return acessoUnidade.Resultado;
         var atual = await acessoProfessorServico.ObterAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
-        if (atual.Estado == EstadoAcessoProfessor.SemAcesso) return Forbid();
+        if (atual.Estado == EstadoAcessoProfessor.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Professores", "Acesso", atual.Estado);
+            return Forbid();
+        }
         if (atual.Acesso is null) return NotFound();
         PreencherAcesso(model, atual.Acesso, acessoUnidade.Contexto!, acessoUnidade.PodeTrocar);
         if (!ModelState.IsValid) return View(model);
@@ -62,7 +68,11 @@ public sealed class ProfessoresController(
             professorId,
             model.NomeUsuario,
             cancellationToken);
-        if (resultado.Estado == EstadoAcessoProfessor.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoAcessoProfessor.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Professores", "Acesso", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado == EstadoAcessoProfessor.ProfessorNaoEncontrado) return NotFound();
         if (resultado.Estado is EstadoAcessoProfessor.NomeUsuarioDuplicado
             or EstadoAcessoProfessor.NomeUsuarioInvalido)
@@ -84,6 +94,8 @@ public sealed class ProfessoresController(
             ModelState.AddModelError(string.Empty, "Não foi possível conceder o acesso.");
             return View(model);
         }
+
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Professores", "Acesso", professorId);
 
         string? link = null;
         if (resultado.UsuarioId is { } usuarioId
@@ -118,7 +130,11 @@ public sealed class ProfessoresController(
         if (acessoUnidade.Resultado is not null) return acessoUnidade.Resultado;
         var estado = await acessoProfessorServico.RevogarAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, professorId, cancellationToken);
-        if (estado == EstadoAcessoProfessor.SemAcesso) return Forbid();
+        if (estado == EstadoAcessoProfessor.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Professores", "RevogarAcesso", estado);
+            return Forbid();
+        }
         if (estado is EstadoAcessoProfessor.ProfessorNaoEncontrado
             or EstadoAcessoProfessor.AcessoNaoEncontrado) return NotFound();
         if (estado != EstadoAcessoProfessor.Sucesso)
@@ -127,6 +143,7 @@ public sealed class ProfessoresController(
         }
 
         TempData["Sucesso"] = "Acesso do professor revogado nesta unidade.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Professores", "RevogarAcesso", professorId);
         return Redirect($"/unidade/{unidadeId:D}/professores");
     }
 
@@ -198,7 +215,11 @@ public sealed class ProfessoresController(
 
         var resultado = await servico.CriarAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, solicitacao, cancellationToken);
-        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Professores", "Novo", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado == EstadoProfessoresUnidade.CpfDuplicado)
         {
             model.CpfJaCadastradoNaRede = true;
@@ -213,6 +234,7 @@ public sealed class ProfessoresController(
         }
 
         TempData["Sucesso"] = "Professor cadastrado com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Professores", "Novo", (object?)null);
         return Redirect($"/unidade/{unidadeId:D}/professores");
     }
 
@@ -284,7 +306,11 @@ public sealed class ProfessoresController(
         if (!ModelState.IsValid || solicitacao is null) return View(model);
         var resultado = await servico.VincularExistenteAsync(
             usuarioAtual.UsuarioId!.Value, unidadeId, solicitacao, cancellationToken);
-        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Professores", "Vincular", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado == EstadoProfessoresUnidade.ProfessorNaoEncontrado) return NotFound();
         if (resultado.Estado == EstadoProfessoresUnidade.ProfessorInativo)
         {
@@ -313,6 +339,7 @@ public sealed class ProfessoresController(
         }
 
         TempData["Sucesso"] = "Professor vinculado à unidade com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Professores", "Vincular", (object?)null);
         return Redirect($"/unidade/{unidadeId:D}/professores");
     }
 
@@ -392,7 +419,11 @@ public sealed class ProfessoresController(
             professorId,
             solicitacao,
             cancellationToken);
-        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso)
+        {
+            logger.LogWarning("{Controller} {Action} negado: {Estado}", "Professores", "Remuneracao", resultado.Estado);
+            return Forbid();
+        }
         if (resultado.Estado is EstadoProfessoresUnidade.VinculoNaoEncontrado
             or EstadoProfessoresUnidade.VinculoJaEncerrado
             or EstadoProfessoresUnidade.RemuneracaoNaoEncontrada)
@@ -412,6 +443,7 @@ public sealed class ProfessoresController(
         }
 
         TempData["Sucesso"] = "Nova remuneração cadastrada e histórico preservado.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Professores", "Remuneracao", professorId);
         return Redirect($"/unidade/{unidadeId:D}/professores/{professorId:D}/remuneracao");
     }
 
@@ -445,6 +477,7 @@ public sealed class ProfessoresController(
             return View(model);
         }
         TempData["Sucesso"] = "Dados cadastrais atualizados com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Professores", "Editar", professorId);
         return Redirect($"/unidade/{unidadeId:D}/professores");
     }
 
@@ -501,6 +534,7 @@ public sealed class ProfessoresController(
             return View(model);
         }
         TempData["Sucesso"] = "Vínculo profissional encerrado com sucesso.";
+        logger.LogInformation("{Controller} {Action} concluído: {EntityId}", "Professores", "Encerrar", professorId);
         return Redirect($"/unidade/{unidadeId:D}/professores?filtro=encerrados");
     }
 

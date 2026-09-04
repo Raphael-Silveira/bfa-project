@@ -1,6 +1,7 @@
 using BFA.Application.Acessos;
 using BFA.Application.Unidades;
 using BFA.Domain.Planos;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Planos;
 
@@ -168,7 +169,8 @@ public sealed class PlanosServico(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IGovernancaOperacionalUnidade governancaOperacional,
     IPlanosRepositorio repositorio,
-    TimeProvider timeProvider) : IPlanosServico
+    TimeProvider timeProvider,
+    ILogger<PlanosServico> logger) : IPlanosServico
 {
     public async Task<ResultadoPlanos<ListaPlanosResultado>> ListarRedeAsync(
         Guid usuarioId, FiltroPlanos filtro, CancellationToken cancellationToken)
@@ -331,8 +333,13 @@ public sealed class PlanosServico(
                 termos.DuracaoMeses, termos.FrequenciaSemanal, termos.ValorMensal,
                 termos.CobraMatricula, termos.ValorMatricula, termos.VigenciaInicio,
                 null, usuarioId, agora);
-            return MapearPersistencia(
+            var resultado = MapearPersistencia(
                 await repositorio.CriarAsync(plano, versao, cancellationToken), plano.Id);
+            if (resultado.Estado == EstadoPlanos.Sucesso)
+            {
+                logger.LogInformation("CriarPlano concluído para organização {OrganizacaoId}", contexto.OrganizacaoId);
+            }
+            return resultado;
         }
         catch (ArgumentException)
         {
@@ -348,10 +355,15 @@ public sealed class PlanosServico(
         if (contexto is null) return new(estadoSemContexto);
         ArgumentNullException.ThrowIfNull(solicitacao);
         if (!TermosValidos(solicitacao)) return new(EstadoPlanos.DadosInvalidos);
-        var estado = await repositorio.CriarNovaVersaoAsync(
-            contexto.OrganizacaoId, contexto.UnidadeId, planoId, solicitacao,
-            usuarioId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
-        return MapearPersistencia(estado, planoId);
+        var resultado = MapearPersistencia(
+            await repositorio.CriarNovaVersaoAsync(
+                contexto.OrganizacaoId, contexto.UnidadeId, planoId, solicitacao,
+                usuarioId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken), planoId);
+        if (resultado.Estado == EstadoPlanos.Sucesso)
+        {
+            logger.LogInformation("NovaVersaoPlano concluído para plano {PlanoId}", planoId);
+        }
+        return resultado;
     }
 
     private async Task<ResultadoPlanos<Guid>> AlterarEstadoAsync(
@@ -360,10 +372,16 @@ public sealed class PlanosServico(
         EstadoPlanos estadoSemContexto = EstadoPlanos.SemAcesso)
     {
         if (contexto is null) return new(estadoSemContexto);
-        var estado = await repositorio.AlterarEstadoAsync(
-            contexto.OrganizacaoId, contexto.UnidadeId, planoId, ativar,
-            usuarioId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
-        return MapearPersistencia(estado, planoId);
+        var resultado = MapearPersistencia(
+            await repositorio.AlterarEstadoAsync(
+                contexto.OrganizacaoId, contexto.UnidadeId, planoId, ativar,
+                usuarioId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken), planoId);
+        if (resultado.Estado == EstadoPlanos.Sucesso)
+        {
+            var operacao = ativar ? "AtivarPlano" : "DesativarPlano";
+            logger.LogInformation("{Operacao} concluído para plano {PlanoId}", operacao, planoId);
+        }
+        return resultado;
     }
 
     private static bool TermosValidos(PlanoTermosSolicitacao termos) =>

@@ -6,28 +6,18 @@ using BFA.Web.ViewModels.Conta;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Controllers;
 
-public sealed class ContaController : Controller
+public sealed class ContaController(
+    UserManager<UsuarioIdentity> userManager,
+    SignInManager<UsuarioIdentity> signInManager,
+    IUsuarioAtual usuarioAtual,
+    IDestinoPosLogin destinoPosLogin,
+    ILogger<ContaController> logger) : Controller
 {
     private const string CredenciaisInvalidas = "E-mail/usuário ou senha inválidos.";
-    private readonly UserManager<UsuarioIdentity> _userManager;
-    private readonly SignInManager<UsuarioIdentity> _signInManager;
-    private readonly IUsuarioAtual _usuarioAtual;
-    private readonly IDestinoPosLogin _destinoPosLogin;
-
-    public ContaController(
-        UserManager<UsuarioIdentity> userManager,
-        SignInManager<UsuarioIdentity> signInManager,
-        IUsuarioAtual usuarioAtual,
-        IDestinoPosLogin destinoPosLogin)
-    {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _usuarioAtual = usuarioAtual;
-        _destinoPosLogin = destinoPosLogin;
-    }
 
     [AllowAnonymous]
     [HttpGet("login")]
@@ -35,7 +25,7 @@ public sealed class ContaController : Controller
         string? returnUrl = null,
         CancellationToken cancellationToken = default)
     {
-        if (_usuarioAtual.Autenticado)
+        if (usuarioAtual.Autenticado)
         {
             return await RedirecionarUsuarioAtualAsync(cancellationToken);
         }
@@ -55,15 +45,16 @@ public sealed class ContaController : Controller
             return View(model);
         }
 
-        var usuario = await _userManager.FindByNameAsync(model.Email.Trim());
+        var usuario = await userManager.FindByNameAsync(model.Email.Trim());
 
         if (usuario is null)
         {
+            logger.LogWarning("Conta {Action} falhou para {Email}", "Entrar", model.Email);
             ModelState.AddModelError(string.Empty, CredenciaisInvalidas);
             return View(model);
         }
 
-        var resultado = await _signInManager.PasswordSignInAsync(
+        var resultado = await signInManager.PasswordSignInAsync(
             usuario,
             model.Senha,
             model.LembrarMe,
@@ -71,9 +62,12 @@ public sealed class ContaController : Controller
 
         if (!resultado.Succeeded)
         {
+            logger.LogWarning("Conta {Action} falhou para {Email}", "Entrar", model.Email);
             ModelState.AddModelError(string.Empty, CredenciaisInvalidas);
             return View(model);
         }
+
+        logger.LogInformation("Conta {Action} bem-sucedido para {Email}", "Entrar", model.Email);
 
         if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
         {
@@ -87,7 +81,7 @@ public sealed class ContaController : Controller
     [HttpGet("acessar")]
     public async Task<IActionResult> Acessar(CancellationToken cancellationToken)
     {
-        if (!_usuarioAtual.Autenticado)
+        if (!usuarioAtual.Autenticado)
         {
             return Redirect("/login");
         }
@@ -99,7 +93,9 @@ public sealed class ContaController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Sair()
     {
-        await _signInManager.SignOutAsync();
+        await signInManager.SignOutAsync();
+
+        logger.LogInformation("Conta {Action} executado", "Sair");
 
         return Redirect("/");
     }
@@ -128,7 +124,7 @@ public sealed class ContaController : Controller
     private async Task<IActionResult> RedirecionarUsuarioAtualAsync(
         CancellationToken cancellationToken)
     {
-        return _usuarioAtual.UsuarioId is { } usuarioId
+        return usuarioAtual.UsuarioId is { } usuarioId
             ? await RedirecionarParaDestinoAsync(usuarioId, cancellationToken)
             : Redirect("/");
     }
@@ -137,7 +133,7 @@ public sealed class ContaController : Controller
         Guid usuarioId,
         CancellationToken cancellationToken)
     {
-        var destino = await _destinoPosLogin.ObterAsync(usuarioId, cancellationToken);
+        var destino = await destinoPosLogin.ObterAsync(usuarioId, cancellationToken);
 
         return Redirect(DestinoPosLoginUrl.Obter(destino));
     }

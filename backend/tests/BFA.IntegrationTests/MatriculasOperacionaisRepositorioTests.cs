@@ -8,6 +8,8 @@ using BFA.Infrastructure.Matriculas;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
 
@@ -37,7 +39,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
             cenario.UsuarioId, Agora));
         await db.SaveChangesAsync();
 
-        var itens = await new MatriculasRepositorio(db).ListarAsync(
+        var itens = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).ListarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, "aluno existente",
             StatusMatricula.Ativa, CancellationToken.None);
 
@@ -69,7 +71,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
         db.AddRange(matricula, responsavel, vinculo, atual, historico);
         await db.SaveChangesAsync();
 
-        var detalhe = await new MatriculasRepositorio(db).ObterAsync(
+        var detalhe = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).ObterAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, matricula.Id,
             CancellationToken.None);
 
@@ -95,7 +97,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
             cenario.UsuarioId, Agora));
         await db.SaveChangesAsync();
 
-        var planos = await new MatriculasRepositorio(db).ListarPlanosElegiveisAsync(
+        var planos = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).ListarPlanosElegiveisAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, Inicio, CancellationToken.None);
 
         Assert.Equal(2, planos.Count);
@@ -116,7 +118,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
         disponibilidade.Desativar(cenario.UsuarioId, Agora);
         await db.SaveChangesAsync();
 
-        var planos = await new MatriculasRepositorio(db).ListarPlanosElegiveisAsync(
+        var planos = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).ListarPlanosElegiveisAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, Inicio, CancellationToken.None);
 
         Assert.Empty(planos);
@@ -137,7 +139,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
             cenario.UsuarioId, Agora));
         await db.SaveChangesAsync();
 
-        var horarios = await new MatriculasRepositorio(db).ListarHorariosElegiveisAsync(
+        var horarios = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).ListarHorariosElegiveisAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, Inicio,
             new DateOnly(2027, 8, 31), CancellationToken.None);
 
@@ -152,7 +154,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
     {
         var cenario = await CriarCenarioAsync(frequencia: 2);
         await using var db = CriarContexto(cenario.Banco);
-        var repositorio = new MatriculasRepositorio(db);
+        var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var resultado = await repositorio.CriarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, cenario.UsuarioId,
@@ -183,7 +185,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
                 "12345678901", null, "adulto@teste.local")
         };
 
-        var resultado = await new MatriculasRepositorio(db).CriarAsync(
+        var resultado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).CriarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, cenario.UsuarioId,
             false, solicitacao, Inicio, Agora, CancellationToken.None);
 
@@ -203,7 +205,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
         {
             NovoAluno = new("Menor", new DateOnly(2012, 1, 1), null, null, null)
         };
-        var repositorio = new MatriculasRepositorio(db);
+        var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var semResponsavel = await repositorio.CriarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, cenario.UsuarioId,
@@ -241,7 +243,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
             cenario.UsuarioId, Agora);
         db.AddRange(aluno, planoExterno, versaoExterna);
         await db.SaveChangesAsync();
-        var repositorio = new MatriculasRepositorio(db);
+        var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var semRelacao = await repositorio.CriarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, cenario.UsuarioId,
@@ -262,7 +264,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
     {
         var cenario = await CriarCenarioAsync(frequencia: 2, capacidade: 1);
         await using var db = CriarContexto(cenario.Banco);
-        var repositorio = new MatriculasRepositorio(db);
+        var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var frequencia = await repositorio.CriarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, cenario.UsuarioId,
@@ -309,7 +311,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
         db.TurmasHorarios.Add(adjacente);
         await db.SaveChangesAsync();
 
-        var resultado = await new MatriculasRepositorio(db).CriarAsync(
+        var resultado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).CriarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, cenario.UsuarioId,
             false, Solicitacao(cenario, cenario.AlunoId,
                 [cenario.Horarios[0], adjacente.Id, cenario.Horarios[1]]),
@@ -334,7 +336,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
         db.AddRange(matricula, mantido, removido);
         await db.SaveChangesAsync();
 
-        var resultado = await new MatriculasRepositorio(db).AlterarGradeAsync(
+        var resultado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).AlterarGradeAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, matricula.Id,
             cenario.UsuarioId, new(new DateOnly(2026, 10, 1),
                 [cenario.Horarios[0], cenario.Horarios[2]]),
@@ -363,7 +365,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
             matricula.Id, cenario.Horarios[0], Inicio, cenario.UsuarioId, Agora));
         await db.SaveChangesAsync();
 
-        var resultado = await new MatriculasRepositorio(db).AlterarGradeAsync(
+        var resultado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).AlterarGradeAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, matricula.Id,
             cenario.UsuarioId, new(Inicio, [cenario.Horarios[1]]),
             Agora, CancellationToken.None);
@@ -385,7 +387,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
             matricula.Id, cenario.Horarios[1], Inicio, cenario.UsuarioId, Agora);
         db.AddRange(matricula, primeira, segunda);
         await db.SaveChangesAsync();
-        var repositorio = new MatriculasRepositorio(db);
+        var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var frequencia = await repositorio.AlterarGradeAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, matricula.Id,
@@ -424,7 +426,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
         db.AddRange(matricula, atual, ocupante, outraMatricula, ocupacao);
         await db.SaveChangesAsync();
 
-        var resultado = await new MatriculasRepositorio(db).AlterarGradeAsync(
+        var resultado = await new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance).AlterarGradeAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, matricula.Id,
             cenario.UsuarioId, new(new DateOnly(2026, 10, 1),
                 [cenario.Horarios[2]]), Agora.AddMonths(1), CancellationToken.None);
@@ -451,7 +453,7 @@ public sealed class MatriculasOperacionaisRepositorioTests
         db.AddRange(matricula, grade);
         await db.SaveChangesAsync();
         var fim = new DateOnly(2026, 12, 31);
-        var repositorio = new MatriculasRepositorio(db);
+        var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var estado = await repositorio.FinalizarAsync(
             cenario.OrganizacaoId, cenario.UnidadeId, matricula.Id,

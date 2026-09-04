@@ -5,7 +5,8 @@ namespace BFA.Web.Authorization;
 
 public sealed class AcessoUnidadePorPerfilHandler(
     IUsuarioAtual usuarioAtual,
-    IAcessoUsuarioConsulta acessoUsuarioConsulta)
+    IAcessoUsuarioConsulta acessoUsuarioConsulta,
+    ILogger<AcessoUnidadePorPerfilHandler> logger)
     : AuthorizationHandler<AcessoUnidadePorPerfilRequirement, ContextoUnidade>
 {
     protected override async Task HandleRequirementAsync(
@@ -29,7 +30,16 @@ public sealed class AcessoUnidadePorPerfilHandler(
                 requirement.PerfisPermitidos,
                 CancellationToken.None))
         {
+            logger.LogDebug(
+                "AcessoUnidadePorPerfilHandler: Concedido para {UsuarioId} na Unidade {UnidadeId}",
+                usuarioId, resource.UnidadeId);
             context.Succeed(requirement);
+        }
+        else
+        {
+            logger.LogDebug(
+                "AcessoUnidadePorPerfilHandler: Negado para {UsuarioId} na Unidade {UnidadeId}",
+                usuarioId, resource.UnidadeId);
         }
     }
 }

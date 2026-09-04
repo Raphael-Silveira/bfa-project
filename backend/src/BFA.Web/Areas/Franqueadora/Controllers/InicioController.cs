@@ -4,6 +4,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Franqueadora;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Franqueadora.Controllers;
 
@@ -12,7 +13,8 @@ namespace BFA.Web.Areas.Franqueadora.Controllers;
 [Route("franqueadora")]
 public sealed class InicioController(
     IUsuarioAtual usuarioAtual,
-    IPainelFranqueadoraConsulta painelConsulta) : Controller
+    IPainelFranqueadoraConsulta painelConsulta,
+    ILogger<InicioController> logger) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)

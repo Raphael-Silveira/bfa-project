@@ -1,9 +1,10 @@
 using BFA.Application.Identidade;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Infrastructure.Identity;
 
-public sealed class PrimeiroAcessoServico(UserManager<UsuarioIdentity> userManager)
+public sealed class PrimeiroAcessoServico(UserManager<UsuarioIdentity> userManager, ILogger<PrimeiroAcessoServico> logger)
     : IPrimeiroAcessoServico
 {
     public async Task<bool> TokenValidoAsync(
@@ -64,6 +65,11 @@ public sealed class PrimeiroAcessoServico(UserManager<UsuarioIdentity> userManag
         {
             return LinkInvalido();
         }
+
+        logger.LogWarning(
+            "Falha ao definir senha para usuario {UsuarioId}: {Erros}",
+            usuarioId,
+            string.Join(", ", resultado.Errors.Select(e => e.Code)));
 
         var erros = resultado.Errors
             .Select(MapearErroSenha)

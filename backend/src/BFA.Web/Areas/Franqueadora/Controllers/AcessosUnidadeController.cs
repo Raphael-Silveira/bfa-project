@@ -4,6 +4,7 @@ using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Franqueadora;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BFA.Web.Areas.Franqueadora.Controllers;
 
@@ -13,7 +14,8 @@ namespace BFA.Web.Areas.Franqueadora.Controllers;
 public sealed class AcessosUnidadeController(
     IUsuarioAtual usuarioAtual,
     IAcessosUnidadeConsulta consulta,
-    IAcessosUnidadeServico servico) : Controller
+    IAcessosUnidadeServico servico,
+    ILogger<AcessosUnidadeController> logger) : Controller
 {
     private const string MensagemUsuarioNaoEncontrado =
         "Não encontramos um usuário cadastrado com este email.";
@@ -84,7 +86,7 @@ public sealed class AcessosUnidadeController(
                 cancellationToken);
         }
 
-        return MapearOperacao(resultado, unidadeId);
+        return MapearOperacao(resultado, unidadeId, "Adicionar", usuarioId);
     }
 
     [HttpPost("{vinculoId:guid}/ativar")]
@@ -138,7 +140,7 @@ public sealed class AcessosUnidadeController(
                 vinculoId,
                 cancellationToken);
 
-        return MapearOperacao(resultado, unidadeId);
+        return MapearOperacao(resultado, unidadeId, ativar ? "Ativar" : "Desativar", usuarioId);
     }
 
     private async Task<IActionResult> ExibirAsync(
@@ -183,7 +185,9 @@ public sealed class AcessosUnidadeController(
 
     private IActionResult MapearOperacao(
         ResultadoOperacaoAcessoUnidade resultado,
-        Guid unidadeId)
+        Guid unidadeId,
+        string acao,
+        Guid usuarioId)
     {
         if (resultado.Estado is EstadoGerenciamentoAcessoUnidade.UnidadeNaoEncontrada
             or EstadoGerenciamentoAcessoUnidade.VinculoNaoEncontrado)
@@ -191,8 +195,17 @@ public sealed class AcessosUnidadeController(
             return NotFound();
         }
 
-        return resultado.Estado == EstadoGerenciamentoAcessoUnidade.Sucesso
-            ? Redirect($"/franqueadora/unidades/{unidadeId}/acessos")
-            : Forbid();
+        if (resultado.Estado == EstadoGerenciamentoAcessoUnidade.Sucesso)
+        {
+            logger.LogInformation(
+                "{Controller} {Action} concluído: {EntityId}",
+                "AcessosUnidade", acao, unidadeId);
+            return Redirect($"/franqueadora/unidades/{unidadeId}/acessos");
+        }
+
+        logger.LogWarning(
+            "{Controller} {Action} negado para {UsuarioId}",
+            "AcessosUnidade", acao, usuarioId);
+        return Forbid();
     }
 }
