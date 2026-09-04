@@ -60,6 +60,7 @@ public sealed class RelatorioInadimplenciaViewModel : IUnidadeContextoViewModel
     public required bool PodeGerenciar { get; init; }
     public required string TotalAtrasado { get; init; }
     public required int TotalAlunos { get; init; }
+    public IReadOnlyList<FaixaAtrasoViewModel> PorFaixa { get; init; } = [];
     public IReadOnlyList<InadimplenciaAlunoViewModel> Alunos { get; init; } = [];
 }
 
@@ -70,7 +71,38 @@ public sealed record InadimplenciaAlunoViewModel(
     int CobrancasAtrasadas,
     string ValorTotalAtrasado,
     string? PrimeiraDataVencimento,
-    string? UltimaDataVencimento);
+    string? UltimaDataVencimento,
+    int DiasEmAtraso,
+    string FaixaAtraso);
+
+public sealed record FaixaAtrasoViewModel(
+    string Faixa,
+    int QuantidadeAlunos,
+    string ValorTotal);
+
+public sealed class RelatorioInadimplenciaDetalheViewModel : IUnidadeContextoViewModel
+{
+    public required Guid OrganizacaoId { get; init; }
+    public required Guid UnidadeId { get; init; }
+    public required string NomeUnidade { get; init; }
+    public required bool PodeTrocarUnidade { get; init; }
+    public required bool PodeGerenciar { get; init; }
+    public required string AlunoNome { get; init; }
+    public required string? AlunoCpf { get; init; }
+    public required int DiasEmAtraso { get; init; }
+    public required string ValorTotalAtrasado { get; init; }
+    public IReadOnlyList<CobrancaAtrasadaDetalheViewModel> Cobrancas { get; init; } = [];
+}
+
+public sealed record CobrancaAtrasadaDetalheViewModel(
+    Guid CobrancaId,
+    string Descricao,
+    string Tipo,
+    string Valor,
+    string ValorPago,
+    string SaldoDevedor,
+    string DataVencimento,
+    int DiasAtraso);
 
 public static class RelatorioViewModelMapper
 {
@@ -127,6 +159,10 @@ public static class RelatorioViewModelMapper
         PodeGerenciar = true,
         TotalAtrasado = relatorio.TotalAtrasado.ToString("C"),
         TotalAlunos = relatorio.TotalAlunos,
+        PorFaixa = relatorio.PorFaixa.Select(f => new FaixaAtrasoViewModel(
+            f.Faixa,
+            f.QuantidadeAlunos,
+            f.ValorTotal.ToString("C"))).ToList(),
         Alunos = relatorio.Alunos.Select(a => new InadimplenciaAlunoViewModel(
             a.AlunoId,
             a.NomeCompleto,
@@ -134,7 +170,33 @@ public static class RelatorioViewModelMapper
             a.CobrancasAtrasadas,
             a.ValorTotalAtrasado.ToString("C"),
             a.PrimeiraDataVencimento?.ToString("dd/MM/yyyy"),
-            a.UltimaDataVencimento?.ToString("dd/MM/yyyy"))).ToList()
+            a.UltimaDataVencimento?.ToString("dd/MM/yyyy"),
+            a.DiasEmAtraso,
+            a.FaixaAtraso)).ToList()
+    };
+
+    public static RelatorioInadimplenciaDetalheViewModel MapearInadimplenciaDetalhe(
+        UnidadeAcessoResumo contexto,
+        InadimplenciaAlunoDetalhe detalhe) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.Nome,
+        PodeTrocarUnidade = false,
+        PodeGerenciar = true,
+        AlunoNome = detalhe.NomeCompleto,
+        AlunoCpf = detalhe.Cpf,
+        DiasEmAtraso = detalhe.DiasEmAtraso,
+        ValorTotalAtrasado = detalhe.ValorTotalAtrasado.ToString("C"),
+        Cobrancas = detalhe.Cobrancas.Select(c => new CobrancaAtrasadaDetalheViewModel(
+            c.CobrancaId,
+            c.Descricao,
+            c.Tipo,
+            c.Valor.ToString("C"),
+            c.ValorPago.ToString("C"),
+            c.SaldoDevedor.ToString("C"),
+            c.DataVencimento.ToString("dd/MM/yyyy"),
+            c.DiasAtraso)).ToList()
     };
 
     private static string MapearTipo(TipoCobranca tipo) => tipo switch

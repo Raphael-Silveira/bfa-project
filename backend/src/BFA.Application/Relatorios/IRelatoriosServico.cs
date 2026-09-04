@@ -52,7 +52,8 @@ public sealed record FinanceiroPorPeriodo(
 public sealed record InadimplenciaRelatorio(
     decimal TotalAtrasado,
     int TotalAlunos,
-    IReadOnlyList<InadimplenciaAluno> Alunos);
+    IReadOnlyList<InadimplenciaAluno> Alunos,
+    IReadOnlyList<FaixaAtraso> PorFaixa);
 
 public sealed record InadimplenciaAluno(
     Guid AlunoId,
@@ -61,7 +62,32 @@ public sealed record InadimplenciaAluno(
     int CobrancasAtrasadas,
     decimal ValorTotalAtrasado,
     DateOnly? PrimeiraDataVencimento,
-    DateOnly? UltimaDataVencimento);
+    DateOnly? UltimaDataVencimento,
+    int DiasEmAtraso,
+    string FaixaAtraso);
+
+public sealed record FaixaAtraso(
+    string Faixa,
+    int QuantidadeAlunos,
+    decimal ValorTotal);
+
+public sealed record CobrancaAtrasadaDetalhe(
+    Guid CobrancaId,
+    string Descricao,
+    string Tipo,
+    decimal Valor,
+    decimal ValorPago,
+    decimal SaldoDevedor,
+    DateOnly DataVencimento,
+    int DiasAtraso);
+
+public sealed record InadimplenciaAlunoDetalhe(
+    Guid AlunoId,
+    string NomeCompleto,
+    string? Cpf,
+    int DiasEmAtraso,
+    decimal ValorTotalAtrasado,
+    IReadOnlyList<CobrancaAtrasadaDetalhe> Cobrancas);
 
 public interface IRelatoriosServico
 {
@@ -73,4 +99,7 @@ public interface IRelatoriosServico
 
     Task<(EstadoRelatorios Estado, InadimplenciaRelatorio? Relatorio)> ObterInadimplenciaAsync(
         Guid usuarioId, Guid unidadeId);
+
+    Task<(EstadoRelatorios Estado, InadimplenciaAlunoDetalhe? Detalhe)> ObterInadimplenciaAlunoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId);
 }

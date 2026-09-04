@@ -127,41 +127,107 @@ public sealed class RelatoriosServico(
             return (contexto.Estado, null);
 
         var orgId = contexto.Valor!.OrganizacaoId;
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
 
-        var cobrancas = await repositorio.ListarCobrancasAsync(
-            orgId, unidadeId, null, null, CancellationToken.None);
-
-        var cobrancasAtrasadas = cobrancas
-            .Where(c => c.Status == StatusCobranca.Atrasada)
-            .ToList();
+        var cobrancasAtrasadas = await repositorio.ListarCobrancasAtrasadasAsync(
+            orgId, unidadeId, CancellationToken.None);
 
         if (cobrancasAtrasadas.Count == 0)
         {
-            return (EstadoRelatorios.Sucesso, new InadimplenciaRelatorio(0, 0, []));
+            return (EstadoRelatorios.Sucesso, new InadimplenciaRelatorio(0, 0, [], []));
         }
 
         var totalAtrasado = cobrancasAtrasadas.Sum(c => c.Valor - c.ValorPago);
 
         var alunosInadimplentes = cobrancasAtrasadas
             .GroupBy(c => c.AlunoId)
-            .Select(g => new InadimplenciaAluno(
-                g.Key,
-                "Aluno",
-                null,
-                g.Count(),
-                g.Sum(c => c.Valor - c.ValorPago),
-                g.Min(c => c.DataVencimento),
-                g.Max(c => c.DataVencimento)))
+            .Select(g =>
+            {
+                var diasEmAtraso = g.Min(c => hoje.DayNumber - c.DataVencimento.DayNumber);
+                return new InadimplenciaAluno(
+                    g.Key,
+                    "Aluno",
+                    null,
+                    g.Count(),
+                    g.Sum(c => c.Valor - c.ValorPago),
+                    g.Min(c => c.DataVencimento),
+                    g.Max(c => c.DataVencimento),
+                    diasEmAtraso,
+                    MapearFaixaAtraso(diasEmAtraso));
+            })
             .OrderByDescending(x => x.ValorTotalAtrasado)
+            .ToList();
+
+        var porFaixa = alunosInadimplentes
+            .GroupBy(a => a.FaixaAtraso)
+            .Select(g => new FaixaAtraso(
+                g.Key,
+                g.Count(),
+                g.Sum(a => a.ValorTotalAtrasado)))
+            .OrderBy(x => x.Faixa)
             .ToList();
 
         var relatorio = new InadimplenciaRelatorio(
             totalAtrasado,
             alunosInadimplentes.Count,
-            alunosInadimplentes);
+            alunosInadimplentes,
+            porFaixa);
 
         return (EstadoRelatorios.Sucesso, relatorio);
     }
+
+    public async Task<(EstadoRelatorios Estado, InadimplenciaAlunoDetalhe? Detalhe)> ObterInadimplenciaAlunoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId)
+    {
+        var contexto = await ObterContextoAsync(usuarioId, unidadeId);
+        if (contexto.Estado != EstadoRelatorios.Sucesso)
+            return (contexto.Estado, null);
+
+        var orgId = contexto.Valor!.OrganizacaoId;
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+
+        var cobrancas = await repositorio.ListarCobrancasAtrasadasPorAlunoAsync(
+            orgId, unidadeId, alunoId, CancellationToken.None);
+
+        if (cobrancas.Count == 0)
+            return (EstadoRelatorios.Sucesso, null);
+
+        var diasEmAtraso = cobrancas.Min(c => hoje.DayNumber - c.DataVencimento.DayNumber);
+
+        var detalhe = new InadimplenciaAlunoDetalhe(
+            alunoId,
+            "Aluno",
+            null,
+            diasEmAtraso,
+            cobrancas.Sum(c => c.Valor - c.ValorPago),
+            cobrancas.Select(c => new CobrancaAtrasadaDetalhe(
+                c.CobrancaId,
+                c.Descricao ?? "—",
+                MapearTipoRelatorio(c.Tipo),
+                c.Valor,
+                c.ValorPago,
+                c.Valor - c.ValorPago,
+                c.DataVencimento,
+                hoje.DayNumber - c.DataVencimento.DayNumber)).ToList());
+
+        return (EstadoRelatorios.Sucesso, detalhe);
+    }
+
+    private static string MapearFaixaAtraso(int dias) => dias switch
+    {
+        <= 30 => "1-30 dias",
+        <= 60 => "31-60 dias",
+        <= 90 => "61-90 dias",
+        _ => "90+ dias"
+    };
+
+    private static string MapearTipoRelatorio(Domain.Cobrancas.TipoCobranca tipo) => tipo switch
+    {
+        Domain.Cobrancas.TipoCobranca.Matricula => "Matrícula",
+        Domain.Cobrancas.TipoCobranca.Mensalidade => "Mensalidade",
+        Domain.Cobrancas.TipoCobranca.Avulso => "Avulso",
+        _ => tipo.ToString()
+    };
 
     private async Task<(EstadoRelatorios Estado, UnidadeContextoResumo? Valor)> ObterContextoAsync(
         Guid usuarioId, Guid unidadeId)

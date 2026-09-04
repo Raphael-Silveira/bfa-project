@@ -25,6 +25,22 @@
     </div>
 </div>
 
+@if (Model.PorFaixa.Count > 0)
+{
+    <div class="bfa-admin-card">
+        <h2 class="bfa-admin-card__title">Por Faixa de Atraso</h2>
+        <div class="bfa-admin-card-grid">
+            @foreach (var faixa in Model.PorFaixa)
+            {
+                <div class="bfa-admin-metric-card">
+                    <div class="bfa-admin-metric-card__label">@faixa.Faixa</div>
+                    <div class="bfa-admin-metric-card__value">@faixa.QuantidadeAlunos alunos · @faixa.ValorTotal</div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
 @if (Model.Alunos.Count == 0)
 {
     <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
@@ -43,10 +59,10 @@ else
                 <tr>
                     <th>Aluno</th>
                     <th>CPF</th>
-                    <th>Cobranças Atrasadas</th>
+                    <th>Cobranças</th>
                     <th>Valor Total</th>
-                    <th>Primeiro Vencimento</th>
-                    <th>Último Vencimento</th>
+                    <th>Dias em Atraso</th>
+                    <th>Faixa</th>
                     <th>Ação</th>
                 </tr>
             </thead>
@@ -58,17 +74,16 @@ else
                         <td>@(aluno.Cpf ?? "—")</td>
                         <td>@aluno.CobrancasAtrasadas</td>
                         <td>@aluno.ValorTotalAtrasado</td>
-                        <td>@(aluno.PrimeiraDataVencimento ?? "—")</td>
-                        <td>@(aluno.UltimaDataVencimento ?? "—")</td>
+                        <td>@aluno.DiasEmAtraso dias</td>
+                        <td><span class="bfa-admin-badge bfa-admin-badge--overdue">@aluno.FaixaAtraso</span></td>
                         <td class="bfa-admin-actions">
                             <a class="bfa-admin-icon-action"
                                asp-area="Unidade"
-                               asp-controller="Cobrancas"
-                               asp-action="Index"
+                               asp-controller="Relatorios"
+                               asp-action="InadimplenciaDetalhe"
                                asp-route-unidadeId="@Model.UnidadeId"
                                asp-route-alunoId="@aluno.AlunoId"
-                               asp-route-status="Atrasada"
-                               title="Ver cobranças">
+                               title="Detalhes">
                                 <span class="bfa-admin-icon-action__symbol" aria-hidden="true">i</span>
                             </a>
                         </td>
@@ -83,21 +98,21 @@ else
         {
             <a class="bfa-admin-mobile-list__item"
                asp-area="Unidade"
-               asp-controller="Cobrancas"
-               asp-action="Index"
+               asp-controller="Relatorios"
+               asp-action="InadimplenciaDetalhe"
                asp-route-unidadeId="@Model.UnidadeId"
-               asp-route-alunoId="@aluno.AlunoId"
-               asp-route-status="Atrasada">
+               asp-route-alunoId="@aluno.AlunoId">
                 <div class="bfa-admin-mobile-list__header">
                     <span class="bfa-admin-mobile-list__name">@aluno.NomeCompleto</span>
-                    <span class="bfa-admin-badge bfa-admin-badge--overdue">@aluno.CobrancasAtrasadas</span>
+                    <span class="bfa-admin-badge bfa-admin-badge--overdue">@aluno.DiasEmAtraso dias</span>
                 </div>
                 <div class="bfa-admin-mobile-list__details">
                     <span>CPF: @(aluno.Cpf ?? "—")</span>
+                    <span>@aluno.CobrancasAtrasadas cobranças</span>
                 </div>
                 <div class="bfa-admin-mobile-list__details">
                     <span>@aluno.ValorTotalAtrasado</span>
-                    <span>Venc: @(aluno.UltimaDataVencimento ?? "—")</span>
+                    <span>@aluno.FaixaAtraso</span>
                 </div>
             </a>
         }

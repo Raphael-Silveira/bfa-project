@@ -47,10 +47,12 @@ public sealed class RelatoriosRepositorio(BfaDbContext dbContext, ILogger<Relato
             query = query.Where(c => c.DataEmissao <= dataFim.Value);
 
         return await query.Select(c => new CobrancaRelatorio(
+            c.Id,
             c.Tipo,
             c.Status,
             c.Valor,
             c.ValorPago,
+            c.Descricao,
             c.DataEmissao,
             c.DataVencimento,
             c.AlunoId)).ToListAsync(cancellationToken);
@@ -75,5 +77,48 @@ public sealed class RelatoriosRepositorio(BfaDbContext dbContext, ILogger<Relato
                           && a.UnidadeId == unidadeId
                           && a.Status == StatusAula.Concluida
                           && a.Data <= ate, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CobrancaRelatorio>> ListarCobrancasAtrasadasAsync(
+        Guid organizacaoId, Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Cobrancas.AsNoTracking()
+            .Where(c => c.OrganizacaoId == organizacaoId
+                     && c.UnidadeId == unidadeId
+                     && c.Status == StatusCobranca.Atrasada)
+            .Select(c => new CobrancaRelatorio(
+                c.Id,
+                c.Tipo,
+                c.Status,
+                c.Valor,
+                c.ValorPago,
+                c.Descricao,
+                c.DataEmissao,
+                c.DataVencimento,
+                c.AlunoId))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CobrancaRelatorio>> ListarCobrancasAtrasadasPorAlunoAsync(
+        Guid organizacaoId, Guid unidadeId, Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Cobrancas.AsNoTracking()
+            .Where(c => c.OrganizacaoId == organizacaoId
+                     && c.UnidadeId == unidadeId
+                     && c.AlunoId == alunoId
+                     && c.Status == StatusCobranca.Atrasada)
+            .Select(c => new CobrancaRelatorio(
+                c.Id,
+                c.Tipo,
+                c.Status,
+                c.Valor,
+                c.ValorPago,
+                c.Descricao,
+                c.DataEmissao,
+                c.DataVencimento,
+                c.AlunoId))
+            .ToListAsync(cancellationToken);
     }
 }

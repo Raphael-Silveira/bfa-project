@@ -83,6 +83,28 @@ public sealed class RelatoriosController(
         return View(RelatorioViewModelMapper.MapearInadimplencia(contexto, relatorio));
     }
 
+    [HttpGet("inadimplencia/{alunoId:guid}")]
+    public async Task<IActionResult> InadimplenciaDetalhe(
+        Guid unidadeId,
+        Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+
+        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        if (contexto is null) return Forbid();
+
+        var (estado, detalhe) = await relatoriosServico.ObterInadimplenciaAlunoAsync(
+            usuarioId, unidadeId, alunoId);
+
+        if (estado == EstadoRelatorios.UnidadeNaoEncontrada)
+            return NotFound();
+        if (estado != EstadoRelatorios.Sucesso || detalhe is null)
+            return RedirectToAction(nameof(Inadimplencia), new { unidadeId });
+
+        return View(RelatorioViewModelMapper.MapearInadimplenciaDetalhe(contexto, detalhe));
+    }
+
     private async Task<UnidadeAcessoResumo?> ObterContextoAsync(
         Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
     {
