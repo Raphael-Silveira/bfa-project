@@ -201,6 +201,7 @@ Planos sequenciais em `docs/plans/`:
 |----|-------|--------|
 | 01 | Corrigir Salvamento de Alterar Grade | Concluído |
 | 02 | Melhorar UX de Encerrar/Cancelar Matrícula | Concluído |
+| 03 | Padronizar Validação de Datas e Mensagens | Concluído |
 
 ## Documentos de Referência
 

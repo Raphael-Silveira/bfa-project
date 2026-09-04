@@ -46,3 +46,4 @@ Exemplo: `01_corrigir-salvamento-alterar-grade.md`
 |----|-------|--------|
 | 01 | [corrigir-salvamento-alterar-grade](01_corrigir-salvamento-alterar-grade.md) | Concluído |
 | 02 | [melhorar-ux-encerrar-cancelar](02_melhorar-ux-encerrar-cancelar.md) | Concluído |
+| 03 | [padronizar-validacao-datas-e-mensagens](03_padronizar-validacao-datas-e-mensagens.md) | Concluído |
