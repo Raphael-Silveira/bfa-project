@@ -575,8 +575,138 @@
         if (planoSelecionado()) void carregarHorarios();
     };
 
-    const iniciar = () => document.querySelectorAll("[data-bfa-matricula-wizard]")
-        .forEach(iniciarWizard);
+    const iniciarGrade = (formulario) => {
+        const opcoes = [...formulario.querySelectorAll('input[name="TurmaHorarioIds"]')];
+        const dataInput = formulario.querySelector("#DataInicioTexto");
+        const dataMinimaTexto = dataInput?.dataset.minDate;
+        const dataMinima = dataMinimaTexto ? analisarData(dataMinimaTexto) : null;
+
+        const mostrarErroGrade = (mensagem) => {
+            let erro = formulario.querySelector(".bfa-grade-date-error");
+            if (!erro) {
+                erro = document.createElement("p");
+                erro.className = "bfa-validation-message bfa-grade-date-error";
+                erro.setAttribute("role", "alert");
+                dataInput?.parentElement?.appendChild(erro);
+            }
+            erro.textContent = mensagem;
+            erro.hidden = false;
+            dataInput?.focus();
+        };
+        const limparErroGrade = () => {
+            const erro = formulario.querySelector(".bfa-grade-date-error");
+            if (erro) erro.hidden = true;
+        };
+
+        const validarDataMinima = () => {
+            if (!dataInput || !dataMinima) return true;
+            limparErroGrade();
+            const digitada = analisarData(dataInput.value);
+            if (!digitada) return true;
+            if (digitada < dataMinima) {
+                mostrarErroGrade(
+                    `A nova Grade deve começar a partir de ${dataMinimaTexto}. ` +
+                    `Horários removidos não podem terminar antes de começar.`);
+                return false;
+            }
+            return true;
+        };
+
+        if (dataInput) {
+            dataInput.addEventListener("change", () => {
+                limparErroGrade();
+            });
+        }
+
+        formulario.addEventListener("submit", (evento) => {
+            if (!validarDataMinima()) {
+                evento.preventDefault();
+            }
+        });
+
+        const atualizar = () => {
+            const selecionados = opcoes.filter((opcao) => opcao.checked);
+            const limite = Number(formulario.dataset.gradeLimit ?? 0);
+            opcoes.forEach((opcao) => {
+                const card = opcao.closest(".bfa-matricula-schedule-card");
+                const conflito = !opcao.checked && selecionados.some((item) =>
+                    item.dataset.day === opcao.dataset.day
+                    && item.dataset.start < opcao.dataset.end
+                    && opcao.dataset.start < item.dataset.end);
+                const excede = !opcao.checked && limite > 0 && selecionados.length >= limite;
+                const indisponivel = opcao.dataset.baseUnavailable === "true";
+                opcao.disabled = indisponivel || conflito || excede;
+                card.classList.toggle("is-selected", opcao.checked);
+                card.classList.toggle("is-conflict", conflito);
+                card.classList.toggle("is-limit", excede && !conflito);
+                const indicacao = card.querySelector("small");
+                if (indicacao && !indisponivel)
+                    indicacao.textContent = conflito ? "Conflita com a seleção"
+                        : excede ? "Limite do plano atingido"
+                            : opcao.checked ? "Selecionado" : "Selecionar";
+            });
+        };
+        opcoes.forEach((opcao) => {
+            opcao.dataset.baseUnavailable = String(opcao.disabled);
+            opcao.addEventListener("change", atualizar);
+        });
+        atualizar();
+    };
+
+    const iniciarFinalizar = (formulario) => {
+        const dataInput = formulario.querySelector("#DataFinalTexto");
+        const dataMinimaTexto = dataInput?.dataset.minDate;
+        const dataMinima = dataMinimaTexto ? analisarData(dataMinimaTexto) : null;
+
+        const mostrarErroFinalizar = (mensagem) => {
+            let erro = formulario.querySelector(".bfa-finalizar-date-error");
+            if (!erro) {
+                erro = document.createElement("p");
+                erro.className = "bfa-validation-message bfa-finalizar-date-error";
+                erro.setAttribute("role", "alert");
+                dataInput?.parentElement?.appendChild(erro);
+            }
+            erro.textContent = mensagem;
+            erro.hidden = false;
+            dataInput?.focus();
+        };
+        const limparErroFinalizar = () => {
+            const erro = formulario.querySelector(".bfa-finalizar-date-error");
+            if (erro) erro.hidden = true;
+        };
+
+        const validarDataMinima = () => {
+            if (!dataInput || !dataMinima) return true;
+            limparErroFinalizar();
+            const digitada = analisarData(dataInput.value);
+            if (!digitada) return true;
+            if (digitada < dataMinima) {
+                mostrarErroFinalizar(
+                    `A data final deve ser a partir de ${dataMinimaTexto}. ` +
+                    `A grade atual não pode ser encerrada antes do seu início.`);
+                return false;
+            }
+            return true;
+        };
+
+        if (dataInput) {
+            dataInput.addEventListener("change", () => {
+                limparErroFinalizar();
+            });
+        }
+
+        formulario.addEventListener("submit", (evento) => {
+            if (!validarDataMinima()) {
+                evento.preventDefault();
+            }
+        });
+    };
+
+    const iniciar = () => {
+        document.querySelectorAll("[data-bfa-matricula-wizard]").forEach(iniciarWizard);
+        document.querySelectorAll("[data-bfa-matricula-grade]").forEach(iniciarGrade);
+        document.querySelectorAll("[data-bfa-matricula-finalizar]").forEach(iniciarFinalizar);
+    };
     if (document.readyState === "loading")
         document.addEventListener("DOMContentLoaded", iniciar, { once: true });
     else iniciar();

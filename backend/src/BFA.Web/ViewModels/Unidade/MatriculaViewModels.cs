@@ -3,6 +3,8 @@ using BFA.Application.Matriculas;
 using BFA.Domain.Alunos;
 using BFA.Domain.Matriculas;
 using BFA.Domain.Turmas;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace BFA.Web.ViewModels.Unidade;
 
@@ -41,6 +43,63 @@ public sealed class MatriculaDetalheViewModel : IUnidadeContextoViewModel
     public string? TextoRetorno { get; init; }
     public StatusMatricula? StatusRetorno { get; init; }
     public required MatriculaDetalheItemViewModel Matricula { get; init; }
+}
+
+public sealed class AlterarGradeMatriculaViewModel : IUnidadeContextoViewModel
+{
+    [BindNever, ValidateNever]
+    public required Guid OrganizacaoId { get; init; }
+    [BindNever, ValidateNever]
+    public required Guid UnidadeId { get; init; }
+    [BindNever, ValidateNever]
+    public required string NomeUnidade { get; init; }
+    [BindNever, ValidateNever]
+    public required bool PodeTrocarUnidade { get; init; }
+    [BindNever, ValidateNever]
+    public required Guid MatriculaId { get; init; }
+    [BindNever, ValidateNever]
+    public required string NomeAluno { get; init; }
+    [BindNever, ValidateNever]
+    public required string DataInicioMatricula { get; init; }
+    [BindNever, ValidateNever]
+    public required string DataFimPrevista { get; init; }
+    [BindNever, ValidateNever]
+    public required string FrequenciaSemanal { get; init; }
+    [BindNever, ValidateNever]
+    public required int FrequenciaSemanalNumero { get; init; }
+    public required string DataInicioTexto { get; set; }
+    public List<Guid> TurmaHorarioIds { get; set; } = [];
+    [BindNever, ValidateNever]
+    public IReadOnlyList<HorarioMatriculaOpcaoViewModel> Horarios { get; set; } = [];
+    [BindNever, ValidateNever]
+    public required IReadOnlySet<Guid> HorariosAtuais { get; set; } = new HashSet<Guid>();
+    [BindNever, ValidateNever]
+    public required string DataMinimaGrade { get; init; }
+}
+
+public sealed class FinalizarMatriculaViewModel : IUnidadeContextoViewModel
+{
+    [BindNever, ValidateNever]
+    public required Guid OrganizacaoId { get; init; }
+    [BindNever, ValidateNever]
+    public required Guid UnidadeId { get; init; }
+    [BindNever, ValidateNever]
+    public required string NomeUnidade { get; init; }
+    [BindNever, ValidateNever]
+    public required bool PodeTrocarUnidade { get; init; }
+    [BindNever, ValidateNever]
+    public required Guid MatriculaId { get; init; }
+    [BindNever, ValidateNever]
+    public required string NomeAluno { get; init; }
+    [BindNever, ValidateNever]
+    public required string DataInicioMatricula { get; init; }
+    [BindNever, ValidateNever]
+    public required string DataFimPrevista { get; init; }
+    [BindNever, ValidateNever]
+    public required bool Cancelar { get; init; }
+    public required string DataFinalTexto { get; set; }
+    [BindNever, ValidateNever]
+    public required string DataMinimaEncerramento { get; init; }
 }
 
 public sealed record MatriculaDetalheItemViewModel(
@@ -169,6 +228,59 @@ internal static class MatriculasViewModelMapper
                 .ThenBy(item => item.HoraInicio)
                 .Select(MapearGrade)
                 .ToArray())
+    };
+
+    public static AlterarGradeMatriculaViewModel AlterarGrade(
+        ContextoMatriculasResumo contexto,
+        MatriculaDetalhe matricula,
+        IReadOnlyList<HorarioElegivelMatriculaResumo> horarios,
+        DateOnly dataInicio) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.NomeUnidade,
+        PodeTrocarUnidade = false,
+        MatriculaId = matricula.MatriculaId,
+        NomeAluno = matricula.NomeAluno,
+        DataInicioMatricula = FormatarData(matricula.DataInicio),
+        DataFimPrevista = FormatarData(matricula.DataFimPrevista),
+        FrequenciaSemanal = FormatarFrequencia(matricula.FrequenciaSemanal),
+        FrequenciaSemanalNumero = matricula.FrequenciaSemanal,
+        DataInicioTexto = FormatarData(dataInicio),
+        Horarios = horarios.Select(NovaMatriculaViewModelMapper.MapearHorario).ToArray(),
+        HorariosAtuais = matricula.GradeAtual
+            .Where(item => item.VigenciaFim is null)
+            .Select(item => item.TurmaHorarioId)
+            .ToHashSet(),
+        DataMinimaGrade = FormatarData(
+            matricula.GradeAtual
+                .Where(item => item.VigenciaFim is null)
+                .Select(item => item.VigenciaInicio)
+                .DefaultIfEmpty(matricula.DataInicio)
+                .Max().AddDays(1))
+    };
+
+    public static FinalizarMatriculaViewModel Finalizar(
+        ContextoMatriculasResumo contexto,
+        MatriculaDetalhe matricula,
+        bool cancelar) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.NomeUnidade,
+        PodeTrocarUnidade = false,
+        MatriculaId = matricula.MatriculaId,
+        NomeAluno = matricula.NomeAluno,
+        DataInicioMatricula = FormatarData(matricula.DataInicio),
+        DataFimPrevista = FormatarData(matricula.DataFimPrevista),
+        Cancelar = cancelar,
+        DataFinalTexto = FormatarData(matricula.DataFimPrevista),
+        DataMinimaEncerramento = FormatarData(
+            matricula.GradeAtual
+                .Where(item => item.VigenciaFim is null)
+                .Select(item => item.VigenciaInicio)
+                .DefaultIfEmpty(matricula.DataInicio)
+                .Max())
     };
 
     private static ResponsavelMatriculaViewModel MapearResponsavel(

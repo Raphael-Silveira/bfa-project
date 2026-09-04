@@ -15,6 +15,29 @@
         </p>
     </div>
     <div class="bfa-admin-page-header__actions">
+        @if (Model.PodeGerenciar && matricula.Ativa)
+        {
+            <div class="bfa-admin-actions bfa-matricula-detail-actions">
+                <a class="bfa-btn-secondary bfa-admin-button"
+                   asp-area="Unidade"
+                   asp-controller="Matriculas"
+                   asp-action="AlterarGrade"
+                   asp-route-unidadeId="@Model.UnidadeId"
+                   asp-route-matriculaId="@matricula.MatriculaId">Alterar Grade</a>
+                <a class="bfa-btn-secondary bfa-admin-button"
+                   asp-area="Unidade"
+                   asp-controller="Matriculas"
+                   asp-action="Encerrar"
+                   asp-route-unidadeId="@Model.UnidadeId"
+                   asp-route-matriculaId="@matricula.MatriculaId">Encerrar matrícula</a>
+                <a class="bfa-btn-secondary bfa-admin-button bfa-matricula-terminal-action"
+                   asp-area="Unidade"
+                   asp-controller="Matriculas"
+                   asp-action="Cancelar"
+                   asp-route-unidadeId="@Model.UnidadeId"
+                   asp-route-matriculaId="@matricula.MatriculaId">Cancelar matrícula</a>
+            </div>
+        }
         @if (!Model.PodeGerenciar)
         {
             <span class="bfa-admin-badge is-inactive">Somente leitura</span>

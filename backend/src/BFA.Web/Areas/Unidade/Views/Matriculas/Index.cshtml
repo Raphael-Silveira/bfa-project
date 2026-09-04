@@ -117,14 +117,14 @@ else
                     </td>
                     <td>@item.GradeAtual</td>
                     <td>
-                        <a class="bfa-btn-secondary bfa-admin-button"
+                        <a class="bfa-btn-secondary bfa-admin-button bfa-matricula-detail-action"
                            asp-area="Unidade"
                            asp-controller="Matriculas"
                            asp-action="Detalhes"
                            asp-route-unidadeId="@Model.UnidadeId"
                            asp-route-matriculaId="@item.MatriculaId"
                            asp-route-texto="@Model.Texto"
-                           asp-route-status="@statusAtual">Ver detalhes</a>
+                           asp-route-status="@statusAtual">Ver detalhes <span aria-hidden="true">→</span></a>
                     </td>
                 </tr>
             }
@@ -152,14 +152,14 @@ else
                     <div><dt>Grade atual</dt><dd>@item.GradeAtual</dd></div>
                 </dl>
                 <footer>
-                    <a class="bfa-btn-secondary bfa-admin-button"
+                    <a class="bfa-btn-secondary bfa-admin-button bfa-matricula-detail-action"
                        asp-area="Unidade"
                        asp-controller="Matriculas"
                        asp-action="Detalhes"
                        asp-route-unidadeId="@Model.UnidadeId"
                        asp-route-matriculaId="@item.MatriculaId"
                        asp-route-texto="@Model.Texto"
-                       asp-route-status="@statusAtual">Ver detalhes</a>
+                       asp-route-status="@statusAtual">Ver detalhes <span aria-hidden="true">→</span></a>
                 </footer>
             </article>
         }

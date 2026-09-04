@@ -1,0 +1,40 @@
+@model FinalizarMatriculaViewModel
+@{
+    ViewData["Title"] = "Encerrar matrícula";
+    Layout = "_UnidadeLayout";
+    var dataMinima = Model.DataMinimaEncerramento;
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-encerrar-matricula">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Matrícula · @Model.NomeAluno</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-encerrar-matricula">Encerrar matrícula</h1>
+        <p class="bfa-admin-page-header__description">Informe a data final efetiva para concluir a matrícula.</p>
+    </div>
+</header>
+
+<form class="bfa-admin-form bfa-admin-form-sections"
+      method="post"
+      asp-area="Unidade"
+      asp-controller="Matriculas"
+      asp-action="Encerrar"
+      asp-route-unidadeId="@Model.UnidadeId"
+      asp-route-matriculaId="@Model.MatriculaId"
+      data-bfa-matricula-finalizar>
+    @Html.AntiForgeryToken()
+    <section class="bfa-admin-card bfa-admin-form-card" aria-labelledby="titulo-confirmar-encerramento">
+        <div asp-validation-summary="ModelOnly" class="bfa-validation-summary" role="alert"></div>
+        <h2 id="titulo-confirmar-encerramento">Confirmar encerramento</h2>
+        <p class="bfa-matricula-muted">A matrícula será encerrada e a Grade atual também será finalizada na mesma data.</p>
+        <div class="bfa-form-field">
+            <label asp-for="DataFinalTexto" class="bfa-form-label">Data final efetiva</label>
+            <input asp-for="DataFinalTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/MM/aaaa" maxlength="10" data-min-date="@dataMinima" />
+            <span asp-validation-for="DataFinalTexto" class="bfa-validation-message"></span>
+            <p class="bfa-matricula-muted">A data mínima é @dataMinima.</p>
+        </div>
+        <div class="bfa-admin-form-actions">
+            <a class="bfa-btn-secondary bfa-admin-button" asp-action="Detalhes" asp-route-unidadeId="@Model.UnidadeId" asp-route-matriculaId="@Model.MatriculaId">Voltar</a>
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Confirmar encerramento</button>
+        </div>
+    </section>
+</form>

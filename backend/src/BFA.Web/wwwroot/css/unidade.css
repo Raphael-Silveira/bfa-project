@@ -1411,7 +1411,14 @@
 
 .bfa-matricula-table th:last-child,
 .bfa-matricula-table td:last-child {
-  width: 9.5rem;
+  width: 10.5rem;
+  white-space: nowrap;
+}
+
+.bfa-matricula-detail-action {
+  min-height: 2.65rem;
+  padding-inline: 0.9rem;
+  white-space: nowrap;
 }
 
 .bfa-matricula-primary {
@@ -1503,6 +1510,28 @@
   border-top: 1px solid var(--bfa-border);
 }
 
+.bfa-matricula-terminal-action {
+  border-color: rgba(220, 53, 69, 0.65);
+  color: #f08a96;
+}
+
+.bfa-matricula-terminal-action:hover {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.14);
+  color: #fff;
+}
+
+@media (max-width: 44rem) {
+  .bfa-matricula-detail-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .bfa-matricula-detail-actions .bfa-admin-button {
+    width: 100%;
+  }
+}
+
 .bfa-matricula-detail-sections {
   display: grid;
   width: 100%;
@@ -1513,6 +1542,31 @@
 .bfa-matricula-overview,
 .bfa-matricula-section {
   padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+@media (min-width: 90rem) {
+  .bfa-matricula-detail-sections {
+    max-width: 96rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+
+  .bfa-matricula-detail-sections > .bfa-matricula-overview {
+    grid-column: 1;
+  }
+
+  .bfa-matricula-detail-sections > .bfa-matricula-section:nth-of-type(2) {
+    grid-column: 2;
+  }
+
+  .bfa-matricula-detail-sections > .bfa-matricula-section:nth-of-type(n + 3) {
+    grid-column: 1 / -1;
+  }
+
+  .bfa-matricula-detail-actions {
+    max-width: 40rem;
+    justify-content: flex-end;
+  }
 }
 
 .bfa-matricula-overview > header > div,

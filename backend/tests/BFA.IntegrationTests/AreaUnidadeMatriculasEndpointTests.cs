@@ -211,7 +211,8 @@ public sealed partial class AreaUnidadeEndpointTests
         var inicioHistorico = html.IndexOf("Histórico da Grade", StringComparison.Ordinal);
         Assert.True(inicioHistorico >= 0);
         Assert.Contains("Professor Histórico", html[inicioHistorico..], StringComparison.Ordinal);
-        Assert.DoesNotContain(cenario.MatriculaId.ToString(), html, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"/matriculas/{cenario.MatriculaId:D}", html,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -236,6 +237,84 @@ public sealed partial class AreaUnidadeEndpointTests
         Assert.Contains("31/12/2026", html, StringComparison.Ordinal);
         Assert.Contains("Nenhum horário vigente nesta matrícula.", html,
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Detalhe_ativo_exibe_acoes_operacionais_e_exige_antiforgery()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var cenario = await AdicionarDetalheCompletoAsync(application);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var url = $"/unidade/{cenario.UnidadeId:D}/matriculas/{cenario.MatriculaId:D}";
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync(url));
+
+        Assert.Contains("Alterar Grade", html, StringComparison.Ordinal);
+        Assert.Contains("Encerrar matrícula", html, StringComparison.Ordinal);
+        Assert.Contains("Cancelar matrícula", html, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(
+            $"{url}/alterar-grade")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(
+            $"{url}/encerrar")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(
+            $"{url}/cancelar")).StatusCode);
+
+        using var semToken = await client.PostAsync(
+            $"{url}/encerrar", new FormUrlEncodedContent(
+                new Dictionary<string, string> { ["DataFinalTexto"] = "30/09/2026" }));
+        Assert.Equal(HttpStatusCode.BadRequest, semToken.StatusCode);
+    }
+
+    [Fact]
+    public async Task Alterar_grade_e_cancelar_usam_prg_e_preservam_historico()
+    {
+        using var application = new AreaUnidadeWebApplicationFactory();
+        var cenario = await AdicionarDetalheCompletoAsync(application);
+        Guid horarioId;
+        await using (var scope = application.Services.CreateAsyncScope())
+        {
+            horarioId = await scope.ServiceProvider.GetRequiredService<BfaDbContext>()
+                .MatriculasHorarios
+                .Where(item => item.MatriculaId == cenario.MatriculaId
+                    && item.VigenciaFim == null)
+                .Select(item => item.TurmaHorarioId)
+                .SingleAsync();
+        }
+
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+        var gradeUrl = $"/unidade/{cenario.UnidadeId:D}/matriculas/{cenario.MatriculaId:D}/alterar-grade";
+        var gradePage = await client.GetStringAsync(gradeUrl);
+        Assert.Contains("data-bfa-matricula-grade", gradePage, StringComparison.Ordinal);
+        Assert.Contains("name=\"TurmaHorarioIds\"", gradePage, StringComparison.Ordinal);
+        Assert.Contains($"value=\"{horarioId:D}\"", gradePage, StringComparison.Ordinal);
+        Assert.Contains("checked=\"checked\"", gradePage, StringComparison.Ordinal);
+        Assert.Contains("data-day=", gradePage, StringComparison.Ordinal);
+        Assert.Contains("data-start=", gradePage, StringComparison.Ordinal);
+        Assert.Contains("data-end=", gradePage, StringComparison.Ordinal);
+        var gradeForm = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = ObterAntiforgery(gradePage),
+            ["DataInicioTexto"] = "01/09/2026",
+            ["TurmaHorarioIds"] = horarioId.ToString()
+        });
+        using var gradeResponse = await client.PostAsync(gradeUrl, gradeForm);
+        Assert.Equal(HttpStatusCode.Found, gradeResponse.StatusCode);
+
+        var cancelarUrl = $"/unidade/{cenario.UnidadeId:D}/matriculas/{cenario.MatriculaId:D}/cancelar";
+        var cancelarPage = await client.GetStringAsync(cancelarUrl);
+        using var cancelarResponse = await client.PostAsync(cancelarUrl,
+            new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["__RequestVerificationToken"] = ObterAntiforgery(cancelarPage),
+                ["DataFinalTexto"] = "30/09/2026"
+            }));
+        Assert.Equal(HttpStatusCode.Found, cancelarResponse.StatusCode);
+        var detalhe = WebUtility.HtmlDecode(await client.GetStringAsync(
+            cancelarResponse.Headers.Location!.OriginalString));
+        Assert.Contains("Cancelada", detalhe, StringComparison.Ordinal);
+        Assert.Contains("Histórico da Grade", detalhe, StringComparison.Ordinal);
     }
 
     [Fact]

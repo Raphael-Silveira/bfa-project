@@ -1,0 +1,109 @@
+@model AlterarGradeMatriculaViewModel
+@{
+    ViewData["Title"] = "Alterar Grade";
+    Layout = "_UnidadeLayout";
+    var horariosPorDia = Model.Horarios
+        .GroupBy(item => new { item.DiaSemana, item.DiaSemanaOrdem })
+        .OrderBy(grupo => grupo.Key.DiaSemanaOrdem);
+    var dataMinima = Model.DataMinimaGrade;
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-alterar-grade">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Matrícula · @Model.NomeAluno</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-alterar-grade">Alterar Grade</h1>
+        <p class="bfa-admin-page-header__description">
+            Escolha a nova programação sem alterar as condições comerciais da contratação.
+        </p>
+    </div>
+</header>
+
+<form class="bfa-admin-form bfa-admin-form-sections"
+      data-bfa-matricula-grade
+      data-grade-limit="@Model.FrequenciaSemanalNumero"
+      method="post"
+      asp-area="Unidade"
+      asp-controller="Matriculas"
+      asp-action="AlterarGrade"
+      asp-route-unidadeId="@Model.UnidadeId"
+      asp-route-matriculaId="@Model.MatriculaId">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="bfa-validation-summary" role="alert"></div>
+
+    <section class="bfa-admin-card bfa-matricula-step" aria-labelledby="titulo-vigencia-grade">
+        <header class="bfa-matricula-step__header">
+            <span>Programação vigente</span>
+            <h2 id="titulo-vigencia-grade">Grade de @Model.NomeAluno</h2>
+            <p>Atual: @Model.DataInicioMatricula a @Model.DataFimPrevista · @Model.FrequenciaSemanal</p>
+        </header>
+
+        <div class="bfa-matricula-start-date">
+            <div class="bfa-form-field">
+                <label asp-for="DataInicioTexto" class="bfa-form-label">Início da nova Grade</label>
+                <input asp-for="DataInicioTexto"
+                       class="form-control bfa-form-control"
+                       type="text"
+                       inputmode="numeric"
+                       placeholder="dd/MM/aaaa"
+                       maxlength="10"
+                       data-min-date="@dataMinima" />
+                <span asp-validation-for="DataInicioTexto" class="bfa-validation-message"></span>
+            </div>
+            <p class="bfa-matricula-end-date">
+                Horários removidos terminam no dia anterior; novos horários começam nesta data. A data mínima é @dataMinima.
+            </p>
+        </div>
+
+        <fieldset class="bfa-matricula-choice-fieldset">
+            <legend>Selecione os horários</legend>
+            @foreach (var grupo in horariosPorDia)
+            {
+                <section class="bfa-matricula-schedule-day" aria-labelledby="dia-@grupo.Key.DiaSemanaOrdem">
+                    <h3 id="dia-@grupo.Key.DiaSemanaOrdem">@grupo.Key.DiaSemana</h3>
+                    <div class="bfa-matricula-schedule-grid">
+                        @foreach (var horario in grupo)
+                        {
+                            var selecionado = Model.TurmaHorarioIds.Contains(horario.TurmaHorarioId)
+                                || Model.HorariosAtuais.Contains(horario.TurmaHorarioId);
+                            var indisponivel = horario.Lotado && !Model.HorariosAtuais.Contains(horario.TurmaHorarioId);
+                            <label class="bfa-matricula-schedule-card @(selecionado ? "is-selected" : null) @(indisponivel ? "is-full" : null)">
+                                <input type="checkbox"
+                                       name="TurmaHorarioIds"
+                                       value="@horario.TurmaHorarioId"
+                                       checked="@selecionado"
+                                       disabled="@indisponivel"
+                                       data-day="@horario.DiaSemanaOrdem"
+                                       data-start="@horario.HoraInicio"
+                                       data-end="@horario.HoraFim"
+                                       data-base-unavailable="@indisponivel" />
+                                <strong>@horario.Horario</strong>
+                                <span><strong>@horario.NomeTurma</strong><br />Professor: @horario.Professor</span>
+                                <small>@(indisponivel ? "Sem vagas" : $"{horario.VagasDisponiveis} vaga(s) disponível(is)")</small>
+                            </label>
+                        }
+                    </div>
+                </section>
+            }
+            @if (Model.Horarios.Count == 0)
+            {
+                <p class="bfa-matricula-inline-empty">Nenhum horário disponível para o período informado.</p>
+            }
+            <span asp-validation-for="TurmaHorarioIds" class="bfa-validation-message"></span>
+        </fieldset>
+
+        <div class="bfa-admin-form-actions bfa-matricula-step-actions">
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Matriculas"
+               asp-action="Detalhes"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-matriculaId="@Model.MatriculaId">Voltar</a>
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar nova Grade</button>
+        </div>
+    </section>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-matricula-wizard.js" asp-append-version="true"></script>
+}

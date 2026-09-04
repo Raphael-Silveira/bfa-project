@@ -218,6 +218,243 @@ public sealed class MatriculasController(
             ParseStatus(status)));
     }
 
+    [HttpGet("{matriculaId:guid}/alterar-grade")]
+    public async Task<IActionResult> AlterarGrade(
+        Guid unidadeId,
+        Guid matriculaId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var detalhe = await matriculasServico.ObterAsync(
+            usuarioId, unidadeId, matriculaId, cancellationToken);
+        if (detalhe.Estado is EstadoMatriculas.UnidadeNaoEncontrada
+            or EstadoMatriculas.MatriculaNaoEncontrada)
+            return NotFound();
+        if (detalhe.Estado != EstadoMatriculas.Sucesso
+            || detalhe.Valor is null
+            || detalhe.Contexto is null)
+            return Forbid();
+        if (!detalhe.Contexto.PodeGerenciar || detalhe.Valor.Status != StatusMatricula.Ativa)
+            return Forbid();
+
+        return await ReexibirAlterarGradeAsync(
+            usuarioId, unidadeId, detalhe.Valor, detalhe.Contexto,
+            DataInicialParaOpcoes(detalhe.Valor, detalhe.Valor.DataInicio),
+            [], cancellationToken);
+    }
+
+    [HttpPost("{matriculaId:guid}/alterar-grade")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AlterarGrade(
+        Guid unidadeId,
+        Guid matriculaId,
+        AlterarGradeMatriculaViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var detalhe = await matriculasServico.ObterAsync(
+            usuarioId, unidadeId, matriculaId, cancellationToken);
+        if (detalhe.Estado is EstadoMatriculas.UnidadeNaoEncontrada
+            or EstadoMatriculas.MatriculaNaoEncontrada)
+            return NotFound();
+        if (detalhe.Estado != EstadoMatriculas.Sucesso
+            || detalhe.Valor is null
+            || detalhe.Contexto is null
+            || !detalhe.Contexto.PodeGerenciar
+            || detalhe.Valor.Status != StatusMatricula.Ativa)
+            return Forbid();
+
+        var data = NovaMatriculaViewModelMapper.ParseData(model.DataInicioTexto);
+        if (data is null)
+            ModelState.AddModelError(nameof(model.DataInicioTexto),
+                "Informe uma data de início válida.");
+        if (model.TurmaHorarioIds.Count == 0)
+            ModelState.AddModelError(nameof(model.TurmaHorarioIds),
+                "Selecione ao menos um horário para a Grade.");
+
+        if (ModelState.IsValid && data is { } dataValida)
+        {
+            var resultado = await matriculasServico.AlterarGradeAsync(
+                usuarioId,
+                unidadeId,
+                matriculaId,
+                new AlterarGradeMatriculaSolicitacao(
+                    dataValida,
+                    model.TurmaHorarioIds.Distinct().ToArray()),
+                cancellationToken);
+            if (resultado.Estado == EstadoMatriculas.Sucesso && resultado.Valor is not null)
+            {
+                TempData["Sucesso"] = resultado.Valor.HorariosEncerrados == 0
+                        && resultado.Valor.HorariosCriados == 0
+                    ? "Nenhuma alteração foi identificada na Grade."
+                    : "Grade alterada com sucesso.";
+                return RedirectToAction(nameof(Detalhes), new { unidadeId, matriculaId });
+            }
+            if (resultado.Estado is EstadoMatriculas.UnidadeNaoEncontrada
+                or EstadoMatriculas.MatriculaNaoEncontrada)
+                return NotFound();
+            if (resultado.Estado == EstadoMatriculas.SemAcesso) return Forbid();
+            ModelState.AddModelError(string.Empty, MensagemErroAlterarGrade(resultado.Estado));
+        }
+
+        var dataParaOpcoes = data is { } dataParaOpcoesValida
+            ? dataParaOpcoesValida < detalhe.Valor.DataInicio
+                ? detalhe.Valor.DataInicio
+                : dataParaOpcoesValida > detalhe.Valor.DataFimPrevista
+                    ? detalhe.Valor.DataFimPrevista
+                    : dataParaOpcoesValida
+            : detalhe.Valor.DataInicio;
+        dataParaOpcoes = DataInicialParaOpcoes(detalhe.Valor, dataParaOpcoes);
+        return await ReexibirAlterarGradeAsync(
+            usuarioId,
+            unidadeId,
+            detalhe.Valor,
+            detalhe.Contexto,
+            dataParaOpcoes,
+            model.TurmaHorarioIds,
+            cancellationToken,
+            model);
+    }
+
+    private static DateOnly DataInicialParaOpcoes(
+        MatriculaDetalhe matricula, DateOnly dataSolicitada)
+    {
+        var inicioGradeAtual = matricula.GradeAtual
+            .Where(item => item.VigenciaFim is null)
+            .Select(item => item.VigenciaInicio)
+            .DefaultIfEmpty(dataSolicitada)
+            .Max();
+        return inicioGradeAtual > dataSolicitada ? inicioGradeAtual : dataSolicitada;
+    }
+
+    [HttpGet("{matriculaId:guid}/encerrar")]
+    public Task<IActionResult> Encerrar(
+        Guid unidadeId, Guid matriculaId, CancellationToken cancellationToken) =>
+        ExibirFinalizacaoAsync(unidadeId, matriculaId, cancelar: false, cancellationToken);
+
+    [HttpPost("{matriculaId:guid}/encerrar")]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> Encerrar(
+        Guid unidadeId,
+        Guid matriculaId,
+        FinalizarMatriculaViewModel model,
+        CancellationToken cancellationToken) =>
+        FinalizarAsync(unidadeId, matriculaId, model, cancelar: false, cancellationToken);
+
+    [HttpGet("{matriculaId:guid}/cancelar")]
+    public Task<IActionResult> Cancelar(
+        Guid unidadeId, Guid matriculaId, CancellationToken cancellationToken) =>
+        ExibirFinalizacaoAsync(unidadeId, matriculaId, cancelar: true, cancellationToken);
+
+    [HttpPost("{matriculaId:guid}/cancelar")]
+    [ValidateAntiForgeryToken]
+    public Task<IActionResult> Cancelar(
+        Guid unidadeId,
+        Guid matriculaId,
+        FinalizarMatriculaViewModel model,
+        CancellationToken cancellationToken) =>
+        FinalizarAsync(unidadeId, matriculaId, model, cancelar: true, cancellationToken);
+
+    private async Task<IActionResult> ExibirFinalizacaoAsync(
+        Guid unidadeId,
+        Guid matriculaId,
+        bool cancelar,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var detalhe = await matriculasServico.ObterAsync(
+            usuarioId, unidadeId, matriculaId, cancellationToken);
+        if (detalhe.Estado is EstadoMatriculas.UnidadeNaoEncontrada
+            or EstadoMatriculas.MatriculaNaoEncontrada)
+            return NotFound();
+        if (detalhe.Estado != EstadoMatriculas.Sucesso
+            || detalhe.Valor is null
+            || detalhe.Contexto is null
+            || !detalhe.Contexto.PodeGerenciar
+            || detalhe.Valor.Status != StatusMatricula.Ativa)
+            return Forbid();
+        return View(cancelar ? "Cancelar" : "Encerrar",
+            MatriculasViewModelMapper.Finalizar(detalhe.Contexto, detalhe.Valor, cancelar));
+    }
+
+    private async Task<IActionResult> FinalizarAsync(
+        Guid unidadeId,
+        Guid matriculaId,
+        FinalizarMatriculaViewModel model,
+        bool cancelar,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var detalhe = await matriculasServico.ObterAsync(
+            usuarioId, unidadeId, matriculaId, cancellationToken);
+        if (detalhe.Estado is EstadoMatriculas.UnidadeNaoEncontrada
+            or EstadoMatriculas.MatriculaNaoEncontrada)
+            return NotFound();
+        if (detalhe.Estado != EstadoMatriculas.Sucesso
+            || detalhe.Valor is null
+            || detalhe.Contexto is null
+            || !detalhe.Contexto.PodeGerenciar
+            || detalhe.Valor.Status != StatusMatricula.Ativa)
+            return Forbid();
+
+        var data = NovaMatriculaViewModelMapper.ParseData(model.DataFinalTexto);
+        if (data is null)
+            ModelState.AddModelError(nameof(model.DataFinalTexto),
+                "Informe uma data final válida.");
+        if (ModelState.IsValid && data is { } dataValida)
+        {
+            var resultado = cancelar
+                ? await matriculasServico.CancelarAsync(
+                    usuarioId, unidadeId, matriculaId, dataValida, cancellationToken)
+                : await matriculasServico.EncerrarAsync(
+                    usuarioId, unidadeId, matriculaId, dataValida, cancellationToken);
+            if (resultado.Estado == EstadoMatriculas.Sucesso)
+            {
+                TempData["Sucesso"] = cancelar
+                    ? "Matrícula cancelada. O histórico foi preservado."
+                    : "Matrícula encerrada com sucesso.";
+                return RedirectToAction(nameof(Detalhes), new { unidadeId, matriculaId });
+            }
+            if (resultado.Estado is EstadoMatriculas.UnidadeNaoEncontrada
+                or EstadoMatriculas.MatriculaNaoEncontrada)
+                return NotFound();
+            if (resultado.Estado == EstadoMatriculas.SemAcesso) return Forbid();
+            ModelState.AddModelError(string.Empty, MensagemErro(resultado.Estado));
+        }
+
+        var viewModel = MatriculasViewModelMapper.Finalizar(
+            detalhe.Contexto, detalhe.Valor, cancelar);
+        viewModel.DataFinalTexto = model.DataFinalTexto;
+        return View(cancelar ? "Cancelar" : "Encerrar", viewModel);
+    }
+
+    private async Task<IActionResult> ReexibirAlterarGradeAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        MatriculaDetalhe matricula,
+        ContextoMatriculasResumo contexto,
+        DateOnly dataInicio,
+        IReadOnlyList<Guid> idsSelecionados,
+        CancellationToken cancellationToken,
+        AlterarGradeMatriculaViewModel? model = null)
+    {
+        var horarios = await matriculasServico.ListarHorariosElegiveisAsync(
+            usuarioId, unidadeId, dataInicio, matricula.DataFimPrevista, cancellationToken);
+        if (horarios.Estado != EstadoMatriculas.Sucesso || horarios.Valor is null)
+            return Forbid();
+        var viewModel = MatriculasViewModelMapper.AlterarGrade(
+            contexto, matricula, horarios.Valor, dataInicio);
+        viewModel.DataInicioTexto = model?.DataInicioTexto
+            ?? NovaMatriculaViewModelMapper.FormatarData(dataInicio);
+        viewModel.TurmaHorarioIds = idsSelecionados.Count > 0
+            ? idsSelecionados.Distinct().ToList()
+            : matricula.GradeAtual
+                .Where(item => item.VigenciaFim is null)
+                .Select(item => item.TurmaHorarioId)
+                .ToList();
+        return View(viewModel);
+    }
+
     private async Task<bool> PodeTrocarAsync(
         Guid usuarioId, CancellationToken cancellationToken) =>
         (await unidadesUsuarioConsulta.ListarAdministradasAsync(
@@ -347,6 +584,24 @@ public sealed class MatriculasController(
         EstadoMatriculas.AlunoNaoEncontrado
             or EstadoMatriculas.AlunoNaoRelacionadoUnidade =>
             "O aluno selecionado não está disponível nesta unidade.",
+        EstadoMatriculas.DataInvalida =>
+            "A data final não pode ser anterior ao início da grade atual.",
         _ => "Não foi possível concluir a matrícula. Tente novamente."
+    };
+
+    private static string MensagemErroAlterarGrade(EstadoMatriculas estado) => estado switch
+    {
+        EstadoMatriculas.DataInvalida =>
+            "A nova Grade deve começar após o início da Grade atual.",
+        EstadoMatriculas.EstadoTerminal =>
+            "Esta matrícula não está mais ativa e não pode ter a Grade alterada.",
+        EstadoMatriculas.ConflitoConcorrencia =>
+            "A matrícula foi alterada por outra pessoa. Revise os dados e tente novamente.",
+        EstadoMatriculas.CapacidadeEsgotada
+            or EstadoMatriculas.ConflitoHorarioAluno
+            or EstadoMatriculas.FrequenciaExcedida
+            or EstadoMatriculas.HorarioDuplicado
+            or EstadoMatriculas.HorarioNaoElegivel => MensagemErro(estado),
+        _ => "Não foi possível alterar a Grade. Tente novamente."
     };
 }
