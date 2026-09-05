@@ -7,6 +7,7 @@ using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -26,19 +27,29 @@ public sealed class CobrancasController(
         [FromQuery] Guid? alunoId,
         [FromQuery] string? status,
         [FromQuery] string? tipo,
-        [FromQuery] DateOnly? dataVencimentoInicio,
-        [FromQuery] DateOnly? dataVencimentoFim,
+        [FromQuery] string? dataInicio,
+        [FromQuery] string? dataFim,
         [FromQuery] int? pagina,
+        [FromQuery] int? tamanhoPagina,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var culture = new CultureInfo("pt-BR");
+        var styles = DateTimeStyles.None;
+
+        var inicio = DateOnly.TryParseExact(dataInicio, "dd/MM/yyyy", culture, styles, out var d1)
+            ? d1 : hoje;
+        var fim = DateOnly.TryParseExact(dataFim, "dd/MM/yyyy", culture, styles, out var d2)
+            ? d2 : inicio;
 
         var filtro = new FiltroCobrancas(
             alunoId,
             ParseStatus(status),
             ParseTipo(tipo),
-            dataVencimentoInicio,
-            dataVencimentoFim);
+            inicio,
+            fim);
 
         var (estado, itens) = await cobrancasServico.ListarAsync(
             usuarioId, unidadeId, filtro);
@@ -51,21 +62,21 @@ public sealed class CobrancasController(
         var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
         if (contexto is null) return Forbid();
 
+        var tamanho = Math.Clamp(tamanhoPagina ?? 10, 5, 50);
         var totalItens = itens.Count;
-        const int tamanhoPagina = 10;
         var paginaAtual = Math.Max(1, pagina ?? 1);
-        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanho);
         if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
 
         var itensPagina = itens
-            .Skip((paginaAtual - 1) * tamanhoPagina)
-            .Take(tamanhoPagina)
+            .Skip((paginaAtual - 1) * tamanho)
+            .Take(tamanho)
             .ToList();
 
         return View(CobrancaViewModelMapper.MapearLista(
             contexto, itensPagina, alunoId, status, tipo,
-            dataVencimentoInicio, dataVencimentoFim,
-            paginaAtual, tamanhoPagina, totalItens));
+            inicio, fim,
+            paginaAtual, tamanho, totalItens));
     }
 
     [HttpGet("nova")]
