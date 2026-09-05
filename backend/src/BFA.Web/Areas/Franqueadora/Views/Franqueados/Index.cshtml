@@ -1,14 +1,13 @@
 @model FranqueadosIndexViewModel
-
 @{
     ViewData["Title"] = "Franqueados";
     Layout = "_FranqueadoraLayout";
 }
 
-<header class="bfa-admin-page-header">
+<header class="bfa-admin-page-header" aria-labelledby="titulo-franqueados">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Rede BFA</p>
-        <h1 class="bfa-admin-page-header__title">Franqueados</h1>
+        <h1 class="bfa-admin-page-header__title" id="titulo-franqueados">Franqueados</h1>
         <p class="bfa-admin-page-header__description">Consulte os dados comerciais, usuários e Unidades relacionados aos Franqueados.</p>
     </div>
 </header>
@@ -25,66 +24,83 @@
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table bfa-franqueados-table">
-            <thead>
-                <tr>
-                    <th scope="col">Nome / Razão social</th>
-                    <th scope="col">Nome fantasia</th>
-                    <th scope="col">CPF / CNPJ</th>
-                    <th scope="col">Tipo</th>
-                    <th scope="col">Unidades ativas</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome / Razão social</th>
+                        <th>Nome fantasia</th>
+                        <th>CPF / CNPJ</th>
+                        <th>Tipo</th>
+                        <th>Unidades ativas</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
                 @foreach (var franqueado in Model.Franqueados)
                 {
                     <tr>
-                        <td><strong>@franqueado.NomeRazaoSocial</strong></td>
+                        <td>
+                            <div class="bfa-data-primary">@franqueado.NomeRazaoSocial</div>
+                        </td>
                         <td>@(franqueado.NomeFantasia ?? "—")</td>
                         <td>@franqueado.DocumentoFormatado</td>
                         <td>@franqueado.TipoPessoa</td>
                         <td>@franqueado.QuantidadeUnidadesAtivas</td>
                         <td>
-                            <span class="bfa-admin-badge @(franqueado.Ativo ? "is-active" : "is-inactive")">
+                            <span class="bfa-data-badge @(franqueado.Ativo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
                                 @(franqueado.Ativo ? "Ativo" : "Inativo")
                             </span>
                         </td>
-                        <td><partial name="_FranqueadoAcoes" model="franqueado" /></td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <partial name="_FranqueadoAcoes" model="franqueado" />
+                            </div>
+                        </td>
                     </tr>
                 }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <section class="bfa-admin-mobile-list" aria-label="Franqueados cadastrados">
+    <section class="bfa-mobile-card-list" aria-label="Franqueados cadastrados">
         @foreach (var franqueado in Model.Franqueados)
         {
-            <article class="bfa-admin-card bfa-franqueado-card">
-                <header class="bfa-franqueado-card__header">
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
                     <div>
-                        <p class="bfa-franqueado-card__label">Franqueado</p>
-                        <h2>@franqueado.NomeRazaoSocial</h2>
+                        <div class="bfa-data-primary">@franqueado.NomeRazaoSocial</div>
                         @if (!string.IsNullOrWhiteSpace(franqueado.NomeFantasia))
                         {
-                            <p>@franqueado.NomeFantasia</p>
+                            <div class="bfa-data-secondary">@franqueado.NomeFantasia</div>
                         }
                     </div>
-                    <span class="bfa-admin-badge @(franqueado.Ativo ? "is-active" : "is-inactive")">
+                    <span class="bfa-data-badge @(franqueado.Ativo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                        <i class="bfa-data-badge__dot"></i>
                         @(franqueado.Ativo ? "Ativo" : "Inativo")
                     </span>
-                </header>
-                <dl class="bfa-franqueado-card__details">
-                    <div><dt>CPF / CNPJ</dt><dd>@franqueado.DocumentoFormatado</dd></div>
-                    <div><dt>Tipo</dt><dd>@franqueado.TipoPessoa</dd></div>
-                    <div><dt>Unidades ativas</dt><dd>@franqueado.QuantidadeUnidadesAtivas</dd></div>
-                </dl>
-                <footer class="bfa-franqueado-card__footer">
-                    <span>Ações</span>
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">CPF / CNPJ</span>
+                        <div>@franqueado.DocumentoFormatado</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Tipo</span>
+                        <div>@franqueado.TipoPessoa</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Unidades ativas</span>
+                        <div>@franqueado.QuantidadeUnidadesAtivas</div>
+                    </div>
+                </div>
+                <div class="bfa-mobile-card__actions">
                     <partial name="_FranqueadoAcoes" model="franqueado" />
-                </footer>
+                </div>
             </article>
         }
     </section>

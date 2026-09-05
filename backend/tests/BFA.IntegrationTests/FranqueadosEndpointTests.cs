@@ -49,7 +49,7 @@ public sealed partial class FranqueadosEndpointTests
         Assert.Contains("Melissa e Carlos Buffet Ltda", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Franqueado de outra rede", html, StringComparison.Ordinal);
         Assert.Contains("bfa-admin-desktop-list", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-mobile-list", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-mobile-card-list", html, StringComparison.Ordinal);
         Assert.Contains("CPF / CNPJ", html, StringComparison.Ordinal);
         Assert.Contains("Unidades ativas", html, StringComparison.Ordinal);
         Assert.Contains("href=\"/franqueadora/franqueados/", html, StringComparison.Ordinal);
