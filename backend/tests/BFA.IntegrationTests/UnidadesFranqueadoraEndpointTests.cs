@@ -71,12 +71,12 @@ public sealed partial class UnidadesFranqueadoraEndpointTests
         Assert.Contains("BFA Inativa", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Unidade Externa", html, StringComparison.Ordinal);
         Assert.Contains("Nova unidade", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-table-container", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-data-card", html, StringComparison.Ordinal);
         Assert.Contains("bfa-admin-desktop-list", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-mobile-list", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-badge is-active", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-badge is-inactive", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-actions", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-mobile-card-list", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-data-badge--active", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-data-badge--inactive", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-actions-cell", html, StringComparison.Ordinal);
         Assert.Contains("bfa-admin-icon-action", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Editar unidade BFA Tietê\"", html, StringComparison.Ordinal);
         Assert.Contains("title=\"Editar unidade BFA Tietê\"", html, StringComparison.Ordinal);

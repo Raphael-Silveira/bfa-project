@@ -1,27 +1,17 @@
 @model UnidadesFranqueadoraIndexViewModel
-
 @{
     ViewData["Title"] = "Unidades";
     Layout = "_FranqueadoraLayout";
 }
 
-<header class="bfa-admin-page-header">
+<header class="bfa-admin-page-header" aria-labelledby="titulo-unidades">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Rede BFA</p>
-        <h1 class="bfa-admin-page-header__title">Unidades</h1>
+        <h1 class="bfa-admin-page-header__title" id="titulo-unidades">Unidades</h1>
         <p class="bfa-admin-page-header__description">Gerencie as unidades vinculadas à sua Organização.</p>
     </div>
     <div class="bfa-admin-page-header__actions">
-        <a class="bfa-btn-primary bfa-admin-button"
-           href="/franqueadora/unidades/nova"
-           aria-label="Cadastrar nova unidade"
-           title="Cadastrar nova unidade">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M12 5v14"></path>
-                <path d="M5 12h14"></path>
-            </svg>
-            <span>Nova unidade</span>
-        </a>
+        <a class="bfa-btn-primary bfa-admin-button" href="/franqueadora/unidades/nova">Nova unidade</a>
     </div>
 </header>
 
@@ -31,80 +21,81 @@
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
             <h2>Nenhuma unidade cadastrada.</h2>
-            <p>Use o botão “Nova unidade” para iniciar o cadastro.</p>
+            <p>Use o botão "Nova unidade" para iniciar o cadastro.</p>
         </div>
     </section>
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead>
-                <tr>
-                    <th scope="col">Nome</th>
-                    <th scope="col">Slug</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Data de criação</th>
-                    <th scope="col">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Slug</th>
+                        <th>Status</th>
+                        <th>Data de criação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
                 @foreach (var unidade in Model.Unidades)
                 {
                     <tr>
-                        <td>@unidade.Nome</td>
+                        <td>
+                            <div class="bfa-data-primary">@unidade.Nome</div>
+                        </td>
                         <td><code>@unidade.Slug</code></td>
                         <td>
-                            <span class="bfa-admin-badge @(unidade.Ativa ? "is-active" : "is-inactive")">
+                            <span class="bfa-data-badge @(unidade.Ativa ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
                                 @(unidade.Ativa ? "Ativa" : "Inativa")
                             </span>
-                            <span class="bfa-admin-badge @(unidade.PossuiFranqueadoAtivo ? "is-active" : "is-inactive")">
+                            <span class="bfa-data-badge @(unidade.PossuiFranqueadoAtivo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
                                 @(unidade.PossuiFranqueadoAtivo ? "Franqueada" : "Rede")
                             </span>
                         </td>
                         <td>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</td>
                         <td>
-                            <partial name="_UnidadeAcoes" model="unidade" />
+                            <div class="bfa-actions-cell">
+                                <partial name="_UnidadeAcoes" model="unidade" />
+                            </div>
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <section class="bfa-admin-mobile-list" aria-label="Unidades cadastradas">
+    <section class="bfa-mobile-card-list" aria-label="Unidades cadastradas">
         @foreach (var unidade in Model.Unidades)
         {
-            <article class="bfa-admin-card bfa-unidade-card">
-                <header class="bfa-unidade-card__header">
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
                     <div>
-                        <p class="bfa-unidade-card__label">Unidade</p>
-                        <h2>@unidade.Nome</h2>
+                        <div class="bfa-data-primary">@unidade.Nome</div>
+                        <div class="bfa-data-secondary"><code>@unidade.Slug</code></div>
                     </div>
-                    <span class="bfa-admin-badge @(unidade.Ativa ? "is-active" : "is-inactive")">
+                    <span class="bfa-data-badge @(unidade.Ativa ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                        <i class="bfa-data-badge__dot"></i>
                         @(unidade.Ativa ? "Ativa" : "Inativa")
                     </span>
-                </header>
-
-                <dl class="bfa-unidade-card__details">
+                </div>
+                <div class="bfa-mobile-card__grid">
                     <div>
-                        <dt>Slug</dt>
-                        <dd><code>@unidade.Slug</code></dd>
+                        <span class="bfa-mobile-card__label">Criação</span>
+                        <div>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</div>
                     </div>
                     <div>
-                        <dt>Data de criação</dt>
-                        <dd>@unidade.CriadoEmUtc.ToString("dd/MM/yyyy")</dd>
+                        <span class="bfa-mobile-card__label">Situação</span>
+                        <div>@(unidade.PossuiFranqueadoAtivo ? "Franqueada" : "Rede")</div>
                     </div>
-                    <div>
-                        <dt>Situação da operação</dt>
-                        <dd>@(unidade.PossuiFranqueadoAtivo ? "Franqueada" : "Rede")</dd>
-                    </div>
-                </dl>
-
-                <footer class="bfa-unidade-card__footer">
-                    <span>Ações</span>
+                </div>
+                <div class="bfa-mobile-card__actions">
                     <partial name="_UnidadeAcoes" model="unidade" />
-                </footer>
+                </div>
             </article>
         }
     </section>
