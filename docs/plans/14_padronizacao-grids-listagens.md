@@ -218,12 +218,12 @@ Perguntas-guia:
 | 7 | Unidade | Aulas | Padronizado | Não | BAIXO | Concluído | `a6706f3` |
 | 8 | Unidade | Inadimplência | Padronizado | Não | BAIXO | Concluído | `c062a99` |
 | 9 | Unidade | Frequência | Padronizado | Não | BAIXO | Concluído | `7787962` |
-| 10 | Franqueadora | Franqueados | Divergente | Não | BAIXO | Planejado | — |
-| 11 | Franqueadora | Unidades | Divergente | Não | BAIXO | Planejado | — |
-| 12 | Franqueadora | Usuários | Divergente | Não | BAIXO | Planejado | — |
+| 10 | Franqueadora | Franqueados | Padronizado | Não | BAIXO | Concluído | `88f4137` |
+| 11 | Franqueadora | Unidades | Padronizado | Não | BAIXO | Concluído | `db3c5bd` |
+| 12 | Franqueadora | Usuários | Padronizado | Não | BAIXO | Concluído | `81dcf93` |
 | 13 | Franqueadora | Alunos da Rede | Parcial | Sim (diferente) | ALTO | Planejado | — |
-| 14 | Franqueadora | Acessos Unidade | Divergente | Não | BAIXO | Planejado | — |
-| 15 | Franqueadora | Planos da Rede | Parcial | Não | BAIXO | Planejado | — |
+| 14 | Franqueadora | Acessos Unidade | Padronizado | Não | BAIXO | Concluído | `8b8e67b` |
+| 15 | Franqueadora | Planos da Rede | Padronizado | Não | BAIXO | Concluído | `b99279c` (shared) |
 
 ## Commits planejados
 
