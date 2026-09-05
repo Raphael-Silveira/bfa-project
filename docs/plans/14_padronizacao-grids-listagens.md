@@ -213,7 +213,7 @@ Perguntas-guia:
 | 2 | Unidade | Alunos | Padronizado | Sim (client) | MÉDIO | Concluído | `944de87` |
 | 3 | Unidade | Matrículas | Padronizado | Sim (client) | MÉDIO | Concluído | `ad07a60` |
 | 4 | Unidade | Cobranças | Padronizado | Sim (client) | MÉDIO | Concluído | `c4a047e` |
-| 5 | Unidade | Turmas | Divergente | Não | BAIXO | Planejado | — |
+| 5 | Unidade | Turmas | Padronizado | Não | BAIXO | Concluído | `b334490` |
 | 6 | Unidade | Planos | Parcial | Não | BAIXO | Planejado | — |
 | 7 | Unidade | Aulas | Divergente | Não | BAIXO | Planejado | — |
 | 8 | Unidade | Inadimplência | Divergente | Não | BAIXO | Planejado | — |
