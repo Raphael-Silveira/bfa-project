@@ -100,98 +100,63 @@
             <a href="/unidade/@Model.UnidadeId/aulas">Ver todas as aulas <span>&rarr;</span></a>
         </div>
 
-        <div class="bfa-unidade-lesson-row">
-            <time>19:00</time>
-            <span class="bfa-unidade-lesson-dot bfa-unidade-lesson-dot--blue"></span>
-            <div class="bfa-unidade-lesson-main">
-                <strong>Intermediário</strong>
-                <span>Prof. Carlos Silva</span>
-            </div>
-            <div class="bfa-unidade-lesson-capacity">
-                <strong>12/16</strong>
-                <span>alunos</span>
-            </div>
-            <a class="bfa-btn-primary" href="/unidade/@Model.UnidadeId/aulas">Fazer chamada</a>
-        </div>
-
-        <div class="bfa-unidade-lesson-row">
-            <time>20:00</time>
-            <span class="bfa-unidade-lesson-dot bfa-unidade-lesson-dot--green"></span>
-            <div class="bfa-unidade-lesson-main">
-                <strong>Iniciante</strong>
-                <span>Prof. Ana Costa</span>
-            </div>
-            <div class="bfa-unidade-lesson-capacity">
-                <strong>8/14</strong>
-                <span>alunos</span>
-            </div>
-            <a class="bfa-btn-secondary" href="/unidade/@Model.UnidadeId/aulas">Ver detalhes</a>
-        </div>
-
-        <div class="bfa-unidade-lesson-row">
-            <time>21:00</time>
-            <span class="bfa-unidade-lesson-dot bfa-unidade-lesson-dot--gold"></span>
-            <div class="bfa-unidade-lesson-main">
-                <strong>Avançado</strong>
-                <span>Prof. João Pereira</span>
-            </div>
-            <div class="bfa-unidade-lesson-capacity">
-                <strong>10/12</strong>
-                <span>alunos</span>
-            </div>
-            <a class="bfa-btn-secondary" href="/unidade/@Model.UnidadeId/aulas">Ver detalhes</a>
-        </div>
+        @if (Model.AulasHoje.Count == 0)
+        {
+            <div class="bfa-unidade-empty-hint">Nenhuma aula programada para hoje.</div>
+        }
+        else
+        {
+            @foreach (var aula in Model.AulasHoje)
+            {
+                <div class="bfa-unidade-lesson-row">
+                    <time>@aula.Horario</time>
+                    <span class="bfa-unidade-lesson-dot @aula.DotClass"></span>
+                    <div class="bfa-unidade-lesson-main">
+                        <strong>@aula.TurmaNome</strong>
+                        <span>Prof. @aula.ProfessorNome</span>
+                    </div>
+                    <div class="bfa-unidade-lesson-capacity">
+                        <strong>@aula.Inscritos/@aula.Capacidade</strong>
+                        <span>alunos</span>
+                    </div>
+                    <a class="bfa-btn-secondary" href="/unidade/@Model.UnidadeId/aulas">Ver detalhes</a>
+                </div>
+            }
+        }
     </section>
 
     <section class="bfa-unidade-activity-panel" aria-label="Atividades recentes">
         <div class="bfa-unidade-activity-panel__header">
             <h2>Atividades recentes</h2>
-            <a href="#">Ver todas <span>&rarr;</span></a>
         </div>
 
-        <div class="bfa-unidade-activity-row">
-            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--success">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </div>
-            <div class="bfa-unidade-activity-copy">
-                <strong>Nova matrícula realizada</strong>
-                <span>Enzo Gabriel Santos</span>
-            </div>
-            <time>há 2 horas</time>
-        </div>
-
-        <div class="bfa-unidade-activity-row">
-            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--warning">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
-            <div class="bfa-unidade-activity-copy">
-                <strong>Turma atualizada</strong>
-                <span>Intermediário · Terça 19h</span>
-            </div>
-            <time>há 4 horas</time>
-        </div>
-
-        <div class="bfa-unidade-activity-row">
-            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--info">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            </div>
-            <div class="bfa-unidade-activity-copy">
-                <strong>Professor cadastrado</strong>
-                <span>Mariana Lopes</span>
-            </div>
-            <time>há 1 dia</time>
-        </div>
-
-        <div class="bfa-unidade-activity-row">
-            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--neutral">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h3"/></svg>
-            </div>
-            <div class="bfa-unidade-activity-copy">
-                <strong>Plano atualizado</strong>
-                <span>Plano Premium</span>
-            </div>
-            <time>há 1 dia</time>
-        </div>
+        @if (Model.AtividadesRecentes.Count == 0)
+        {
+            <div class="bfa-unidade-empty-hint">Nenhuma atividade registrada.</div>
+        }
+        else
+        {
+            @foreach (var atividade in Model.AtividadesRecentes)
+            {
+                var (iconSvg, iconClass) = atividade.IconeTipo switch
+                {
+                    "matricula" => ("<line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"/><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"/>", "bfa-unidade-activity-icon--success"),
+                    "turma" => ("<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/>", "bfa-unidade-activity-icon--warning"),
+                    "professor" => ("<path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"8.5\" cy=\"7\" r=\"4\"/><line x1=\"20\" y1=\"8\" x2=\"20\" y2=\"14\"/><line x1=\"23\" y1=\"11\" x2=\"17\" y2=\"11\"/>", "bfa-unidade-activity-icon--info"),
+                    _ => ("<path d=\"M4 5h16v14H4z\"/><path d=\"M8 9h8M8 13h5M8 17h3\"/>", "bfa-unidade-activity-icon--neutral")
+                };
+                <div class="bfa-unidade-activity-row">
+                    <div class="bfa-unidade-activity-icon @iconClass">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">@Html.Raw(iconSvg)</svg>
+                    </div>
+                    <div class="bfa-unidade-activity-copy">
+                        <strong>@atividade.Titulo</strong>
+                        <span>@atividade.Subtitulo</span>
+                    </div>
+                    <time>@atividade.TempoRelativo</time>
+                </div>
+            }
+        }
     </section>
 </div>
 

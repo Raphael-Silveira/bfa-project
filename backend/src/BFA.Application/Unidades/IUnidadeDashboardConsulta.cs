@@ -22,4 +22,24 @@ public sealed record UnidadeDashboardMetricas
     public decimal Pendente { get; init; }
 
     public decimal EmAtraso { get; init; }
+
+    public IReadOnlyList<AulaHojeResumo> AulasHoje { get; init; } = [];
+
+    public IReadOnlyList<AtividadeRecente> AtividadesRecentes { get; init; } = [];
 }
+
+public sealed record AulaHojeResumo(
+    Guid AulaId,
+    string Horario,
+    string TurmaNome,
+    string ProfessorNome,
+    int Inscritos,
+    int Capacidade,
+    string Status);
+
+public sealed record AtividadeRecente(
+    string IconeTipo,
+    string Titulo,
+    string Subtitulo,
+    string TempoRelativo,
+    DateTime CriadoEmUtc);

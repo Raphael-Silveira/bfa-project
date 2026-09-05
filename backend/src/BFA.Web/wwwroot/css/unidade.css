@@ -222,6 +222,13 @@
 
 /* ─── Activity Panel ─── */
 
+.bfa-unidade-empty-hint {
+  padding: 2rem 1.125rem;
+  text-align: center;
+  color: var(--bfa-text-secondary);
+  font-size: 0.8125rem;
+}
+
 .bfa-unidade-activity-panel {
   background: linear-gradient(145deg, #1B1E20, #151719);
   border: 1px solid var(--bfa-border);

@@ -39,7 +39,26 @@ public sealed class PainelUnidadeViewModel : IUnidadeContextoViewModel
     public string Pendente { get; init; } = "R$ 0,00";
 
     public string EmAtraso { get; init; } = "R$ 0,00";
+
+    public IReadOnlyList<AulaHojeViewModel> AulasHoje { get; init; } = [];
+
+    public IReadOnlyList<AtividadeRecenteViewModel> AtividadesRecentes { get; init; } = [];
 }
+
+public sealed record AulaHojeViewModel(
+    string Horario,
+    string TurmaNome,
+    string ProfessorNome,
+    int Inscritos,
+    int Capacidade,
+    string Status,
+    string DotClass);
+
+public sealed record AtividadeRecenteViewModel(
+    string IconeTipo,
+    string Titulo,
+    string Subtitulo,
+    string TempoRelativo);
 
 public sealed class ContratoUnidadeDetalheViewModel : IUnidadeContextoViewModel
 {

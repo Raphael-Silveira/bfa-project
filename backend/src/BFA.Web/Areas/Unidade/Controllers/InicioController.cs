@@ -90,9 +90,32 @@ public sealed class InicioController(
                 : "R$ 0,00",
             EmAtraso = metricas is { EmAtraso: var atraso }
                 ? atraso.ToString("C", CulturaPtBr)
-                : "R$ 0,00"
+                : "R$ 0,00",
+            AulasHoje = metricas?.AulasHoje
+                .Select(a => new AulaHojeViewModel(
+                    a.Horario,
+                    a.TurmaNome,
+                    a.ProfessorNome,
+                    a.Inscritos,
+                    a.Capacidade,
+                    a.Status,
+                    MapearDotClass(a.Inscritos, a.Capacidade)))
+                .ToList() ?? [],
+            AtividadesRecentes = metricas?.AtividadesRecentes
+                .Select(a => new AtividadeRecenteViewModel(
+                    a.IconeTipo,
+                    a.Titulo,
+                    a.Subtitulo,
+                    a.TempoRelativo))
+                .ToList() ?? []
         });
     }
+
+    private static string MapearDotClass(int inscritos, int capacidade) =>
+        capacidade == 0 ? "bfa-unidade-lesson-dot--gold"
+        : (double)inscritos / capacidade >= 0.9 ? "bfa-unidade-lesson-dot--gold"
+        : (double)inscritos / capacidade >= 0.5 ? "bfa-unidade-lesson-dot--blue"
+        : "bfa-unidade-lesson-dot--green";
 
     private static readonly System.Globalization.CultureInfo CulturaPtBr =
         System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
