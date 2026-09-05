@@ -31,7 +31,7 @@ Componentes aprovados:
 | # | Área | Tela | Rota | View | Controller | Possui busca | Possui filtros | Possui paginação | Qtd provável registros |
 |---|------|------|------|------|------------|-------------|----------------|-------------------|----------------------|
 | 1 | Unidade | Professores | `/unidade/{id}/professores` | Professores/Index | ProfessoresController | ✅ nome/CPF/contato | ✅ Ativos/Encerrados/Todos | ✅ client-side 10/pág | 5–50 |
-| 2 | Unidade | Alunos | `/unidade/{id}/alunos` | Alunos/Index | AlunosController | ✅ texto | ❌ | ❌ | 10–200 |
+| 2 | Unidade | Alunos | `/unidade/{id}/alunos` | Alunos/Index | AlunosController | ✅ texto | ❌ | ✅ client-side 10/pág | 10–200 |
 | 3 | Unidade | Matrículas | `/unidade/{id}/matriculas` | Matriculas/Index | MatriculasController | ✅ texto | ✅ status select | ❌ | 10–500 |
 | 4 | Unidade | Turmas | `/unidade/{id}/turmas` | Turmas/Index | TurmasController | ❌ | ❌ | ❌ | 3–20 |
 | 5 | Unidade | Aulas | `/unidade/{id}/aulas` | Aulas/Index | AulasController | ✅ data range | ✅ data range | ❌ | 5–100 |
@@ -210,7 +210,7 @@ Perguntas-guia:
 | Ordem | Área | Tela | Situação | Paginação | Esforço | Status | Commit |
 |------:|------|------|----------|-----------|---------|--------|--------|
 | 1 | Unidade | Professores | Referência | Sim (client) | — | Concluído | `e41d60f` |
-| 2 | Unidade | Alunos | Divergente | Não (precisa) | MÉDIO | Planejado | — |
+| 2 | Unidade | Alunos | Padronizado | Sim (client) | MÉDIO | Concluído | `944de87` |
 | 3 | Unidade | Matrículas | Divergente | Não (precisa) | MÉDIO | Planejado | — |
 | 4 | Unidade | Cobranças | Divergente | Não (precisa) | MÉDIO | Planejado | — |
 | 5 | Unidade | Turmas | Divergente | Não | BAIXO | Planejado | — |
