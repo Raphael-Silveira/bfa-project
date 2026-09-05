@@ -215,8 +215,8 @@ Perguntas-guia:
 | 4 | Unidade | Cobranças | Padronizado | Sim (client) | MÉDIO | Concluído | `c4a047e` |
 | 5 | Unidade | Turmas | Padronizado | Não | BAIXO | Concluído | `b334490` |
 | 6 | Unidade | Planos | Padronizado | Não | BAIXO | Concluído | `b99279c` |
-| 7 | Unidade | Aulas | Divergente | Não | BAIXO | Planejado | — |
-| 8 | Unidade | Inadimplência | Divergente | Não | BAIXO | Planejado | — |
+| 7 | Unidade | Aulas | Padronizado | Não | BAIXO | Concluído | `a6706f3` |
+| 8 | Unidade | Inadimplência | Padronizado | Não | BAIXO | Concluído | `c062a99` |
 | 9 | Unidade | Frequência | Divergente | Não | BAIXO | Planejado | — |
 | 10 | Franqueadora | Franqueados | Divergente | Não | BAIXO | Planejado | — |
 | 11 | Franqueadora | Unidades | Divergente | Não | BAIXO | Planejado | — |
