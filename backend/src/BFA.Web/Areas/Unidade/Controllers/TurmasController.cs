@@ -28,7 +28,7 @@ public sealed class TurmasController(
 {
     [HttpGet("")]
     public async Task<IActionResult> Index(
-        Guid unidadeId, CancellationToken cancellationToken)
+        Guid unidadeId, int? pagina, CancellationToken cancellationToken)
     {
         var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
         if (acesso.Resultado is not null) return acesso.Resultado;
@@ -36,13 +36,28 @@ public sealed class TurmasController(
             usuarioAtual.UsuarioId!.Value, unidadeId, cancellationToken);
         if (resultado.Estado == EstadoTurmasUnidade.SemAcesso) return Forbid();
 
+        var todos = resultado.Valor ?? [];
+        var totalItens = todos.Count;
+        const int tamanhoPagina = 10;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+
+        var itensPagina = todos
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToList();
+
         return View(new TurmasUnidadeIndexViewModel
         {
             OrganizacaoId = acesso.Contexto!.OrganizacaoId,
             UnidadeId = unidadeId,
             NomeUnidade = acesso.Contexto.Nome,
             PodeTrocarUnidade = acesso.PodeTrocar,
-            Turmas = resultado.Valor ?? []
+            Turmas = itensPagina,
+            PaginaAtual = paginaAtual,
+            TamanhoPagina = tamanhoPagina,
+            TotalItens = totalItens
         });
     }
 

@@ -1,3 +1,4 @@
+@using BFA.Web.ViewModels.Shared
 @model TurmasUnidadeIndexViewModel
 @{
     ViewData["Title"] = "Turmas";
@@ -68,7 +69,7 @@ else
                             </span>
                         </td>
                         <td>
-                            <div class="bfa-actions-cell">
+                            <div class="bfa-actions-cell bfa-actions-cell--spaced">
                                 @if (podeGerenciar)
                                 {
                                     <a class="bfa-admin-button bfa-btn-secondary" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/editar">Editar</a>
@@ -85,6 +86,26 @@ else
                 }
                 </tbody>
             </table>
+        </div>
+        <div class="bfa-table-footer">
+            @{
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
+            }
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> turmas</div>
+            @{
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var paginacao = new PaginacaoViewModel
+                {
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = string.Empty
+                };
+            }
+            <partial name="_Paginacao" model="paginacao" />
         </div>
     </div>
 

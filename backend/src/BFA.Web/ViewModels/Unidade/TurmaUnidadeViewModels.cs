@@ -12,6 +12,9 @@ public sealed class TurmasUnidadeIndexViewModel : IUnidadeContextoViewModel
     public required string NomeUnidade { get; init; }
     public required bool PodeTrocarUnidade { get; init; }
     public required IReadOnlyList<TurmaResumo> Turmas { get; init; }
+    public required int PaginaAtual { get; init; }
+    public required int TamanhoPagina { get; init; }
+    public required int TotalItens { get; init; }
 }
 
 public sealed class TurmaHorarioFormViewModel
