@@ -27,8 +27,10 @@
 
 @if (Model.PorFaixa.Count > 0)
 {
-    <div class="bfa-admin-card">
-        <h2 class="bfa-admin-card__title">Por Faixa de Atraso</h2>
+    <div class="bfa-data-card">
+        <div class="bfa-card-title-row">
+            <h2 class="bfa-card-title-row__title">Por Faixa de Atraso</h2>
+        </div>
         <div class="bfa-admin-card-grid">
             @foreach (var faixa in Model.PorFaixa)
             {
@@ -43,7 +45,7 @@
 
 @if (Model.Alunos.Count == 0)
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+    <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
             <h2>Nenhuma inadimplência encontrada.</h2>
@@ -53,70 +55,95 @@
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead>
-                <tr>
-                    <th>Aluno</th>
-                    <th>CPF</th>
-                    <th>Cobranças</th>
-                    <th>Valor Total</th>
-                    <th>Dias em Atraso</th>
-                    <th>Faixa</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>CPF</th>
+                        <th>Cobranças</th>
+                        <th>Valor Total</th>
+                        <th>Dias em Atraso</th>
+                        <th>Faixa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
                 @foreach (var aluno in Model.Alunos)
                 {
                     <tr>
-                        <td>@aluno.NomeCompleto</td>
+                        <td>
+                            <div class="bfa-data-primary">@aluno.NomeCompleto</div>
+                        </td>
                         <td>@(aluno.Cpf ?? "—")</td>
                         <td>@aluno.CobrancasAtrasadas</td>
-                        <td>@aluno.ValorTotalAtrasado</td>
+                        <td>
+                            <div class="bfa-data-primary">@aluno.ValorTotalAtrasado</div>
+                        </td>
                         <td>@aluno.DiasEmAtraso dias</td>
-                        <td><span class="bfa-admin-badge bfa-admin-badge--overdue">@aluno.FaixaAtraso</span></td>
-                        <td class="bfa-admin-actions">
-                            <a class="bfa-admin-icon-action"
-                               asp-area="Unidade"
-                               asp-controller="Relatorios"
-                               asp-action="InadimplenciaDetalhe"
-                               asp-route-unidadeId="@Model.UnidadeId"
-                               asp-route-alunoId="@aluno.AlunoId"
-                               title="Detalhes">
-                                <span class="bfa-admin-icon-action__symbol" aria-hidden="true">i</span>
-                            </a>
+                        <td>
+                            <span class="bfa-data-badge bfa-data-badge--overdue">
+                                <i class="bfa-data-badge__dot"></i>
+                                @aluno.FaixaAtraso
+                            </span>
+                        </td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <a class="bfa-admin-button bfa-btn-secondary"
+                                   asp-area="Unidade"
+                                   asp-controller="Relatorios"
+                                   asp-action="InadimplenciaDetalhe"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-alunoId="@aluno.AlunoId">Detalhes</a>
+                            </div>
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="bfa-admin-mobile-list">
+    <section class="bfa-mobile-card-list" aria-label="Alunos inadimplentes">
         @foreach (var aluno in Model.Alunos)
         {
-            <a class="bfa-admin-mobile-list__item"
-               asp-area="Unidade"
-               asp-controller="Relatorios"
-               asp-action="InadimplenciaDetalhe"
-               asp-route-unidadeId="@Model.UnidadeId"
-               asp-route-alunoId="@aluno.AlunoId">
-                <div class="bfa-admin-mobile-list__header">
-                    <span class="bfa-admin-mobile-list__name">@aluno.NomeCompleto</span>
-                    <span class="bfa-admin-badge bfa-admin-badge--overdue">@aluno.DiasEmAtraso dias</span>
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
+                    <div>
+                        <div class="bfa-data-primary">@aluno.NomeCompleto</div>
+                        <div class="bfa-data-secondary">CPF: @(aluno.Cpf ?? "—")</div>
+                    </div>
+                    <span class="bfa-data-badge bfa-data-badge--overdue">
+                        <i class="bfa-data-badge__dot"></i>
+                        @aluno.DiasEmAtraso dias
+                    </span>
                 </div>
-                <div class="bfa-admin-mobile-list__details">
-                    <span>CPF: @(aluno.Cpf ?? "—")</span>
-                    <span>@aluno.CobrancasAtrasadas cobranças</span>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Cobranças</span>
+                        <div>@aluno.CobrancasAtrasadas</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Valor Total</span>
+                        <div>@aluno.ValorTotalAtrasado</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Faixa</span>
+                        <div>@aluno.FaixaAtraso</div>
+                    </div>
                 </div>
-                <div class="bfa-admin-mobile-list__details">
-                    <span>@aluno.ValorTotalAtrasado</span>
-                    <span>@aluno.FaixaAtraso</span>
+                <div class="bfa-mobile-card__actions">
+                    <a class="bfa-admin-button bfa-btn-secondary"
+                       asp-area="Unidade"
+                       asp-controller="Relatorios"
+                       asp-action="InadimplenciaDetalhe"
+                       asp-route-unidadeId="@Model.UnidadeId"
+                       asp-route-alunoId="@aluno.AlunoId">Detalhes</a>
                 </div>
-            </a>
+            </article>
         }
-    </div>
+    </section>
 }
 
 <div class="bfa-admin-form-actions">
