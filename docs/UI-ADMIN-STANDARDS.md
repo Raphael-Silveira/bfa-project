@@ -675,7 +675,71 @@ Antes de alterar uma interface administrativa:
 
 Uma solicitação de nova tela não autoriza criar novas funcionalidades, rotas, permissões, consultas ou estruturas de banco além do escopo explicitamente pedido.
 
-## 19. Checklist obrigatório de revisão
+## 19. Filtros por período
+
+Listagens que dependem de intervalo de datas devem usar o padrão `.bfa-period-filter`.
+
+### Estrutura
+
+```html
+<section class="bfa-period-filter" aria-label="Filtro por período">
+  <div class="bfa-period-filter__quick-filters">
+    <a class="bfa-period-filter__quick-filter is-active" href="?dataInicio=...&dataFim=...">Hoje</a>
+    <a class="bfa-period-filter__quick-filter" href="?dataInicio=...&dataFim=...">Esta semana</a>
+    <a class="bfa-period-filter__quick-filter" href="?dataInicio=...&dataFim=...">Este mês</a>
+  </div>
+  <form class="bfa-period-filter__form" method="get">
+    <div class="bfa-period-filter__row">
+      <div class="bfa-period-filter__field">
+        <label class="bfa-form-label" for="filtro-data-inicio">Data inicial</label>
+        <input class="bfa-form-control" type="date" name="dataInicio" id="filtro-data-inicio" />
+      </div>
+      <span class="bfa-period-filter__separator">até</span>
+      <div class="bfa-period-filter__field">
+        <label class="bfa-form-label" for="filtro-data-fim">Data final</label>
+        <input class="bfa-form-control" type="date" name="dataFim" id="filtro-data-fim" />
+      </div>
+      <div class="bfa-period-filter__actions">
+        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+        <a class="bfa-btn-secondary bfa-admin-button" href="?">Limpar</a>
+      </div>
+    </div>
+  </form>
+</section>
+```
+
+### Regras
+
+- **Formato pt-BR**: Datas visíveis ao usuário usam `dd/MM/yyyy`. A UI nunca mostra `yyyy-MM-dd`.
+- **Formato técnico**: `<input type="date">` usa `yyyy-MM-dd` internamente para model binding ASP.NET. A conversão é feita na camada de apresentação.
+- **Filtros rápidos**: Links (`<a>`) que navegam com query string. Ao clicar, voltam para página 1 automaticamente (sem parâmetro `pagina` na URL).
+- **Preservação**: Filtros são preservados entre páginas via `BaseQueryString` no `PaginacaoViewModel`.
+- **Reset de página**: Ao alterar período (formulário ou filtro rápido), a paginação volta para página 1.
+- **Validação server-side**: `DataFim >= DataInicio` é validado no controller. Mensagem: "A data final deve ser igual ou posterior à data inicial."
+- **Layout desktop**: Horizontal — campos lado a lado com separador "até".
+- **Layout mobile** (`max-width: 44rem`): Vertical — campos empilhados, separador oculto, botões em coluna.
+- **Acessibilidade**: Labels reais associados, `aria-label` na seção, navegação por teclado.
+- **Date picker**: Usar `<input type="date">` nativo (dark-themed em páginas escuras) ou o componente `bfa-admin-date-field` com `bfa-date-field.js` quando formulário exigir calendário customizado.
+
+### Componentes CSS
+
+| Classe | Uso |
+|---|---|
+| `.bfa-period-filter` | Container do filtro de período |
+| `.bfa-period-filter__quick-filters` | Container dos filtros rápidos |
+| `.bfa-period-filter__quick-filter` | Botão/link de filtro rápido |
+| `.bfa-period-filter__quick-filter.is-active` | Filtro rápido ativo |
+| `.bfa-period-filter__form` | Formulário de período |
+| `.bfa-period-filter__row` | Linha horizontal dos campos |
+| `.bfa-period-filter__field` | Campo individual (label + input) |
+| `.bfa-period-filter__separator` | Separador "até" |
+| `.bfa-period-filter__actions` | Botões Filtrar/Limpar |
+
+### Reutilização
+
+Este padrão deve ser reutilizado em: Financeiro, Relatórios, Frequência, Presenças e qualquer tela com intervalo de datas.
+
+## 20. Checklist obrigatório de revisão
 
 Antes de considerar uma interface administrativa concluída, confirme:
 

@@ -1,3 +1,4 @@
+@using BFA.Web.ViewModels.Shared
 @model AulasListaViewModel
 @{
     ViewData["Title"] = "Aulas";
@@ -29,38 +30,45 @@
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
 }
 
-<section class="bfa-list-toolbar" aria-label="Filtros">
-    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/aulas">
-        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
-        <input type="hidden" name="dataInicio" value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
-        <input type="hidden" name="dataFim" value="@Model.DataFim.ToString("yyyy-MM-dd")" />
-        <input type="search" placeholder="Filtrar por período..." aria-label="Filtrar por período" disabled />
-    </form>
-    <form class="bfa-filter-form" method="get" action="/unidade/@Model.UnidadeId/aulas">
-        <div class="bfa-filter-fields">
-            <div class="bfa-filter-field">
-                <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
+<section class="bfa-period-filter" aria-label="Filtro por período">
+    <div class="bfa-period-filter__quick-filters">
+        @{
+            var hoje = DateOnly.FromDateTime(DateTime.Today);
+            var inicioSemana = hoje.AddDays(-(int)hoje.DayOfWeek + 1);
+            var fimSemana = inicioSemana.AddDays(6);
+            var inicioMes = new DateOnly(hoje.Year, hoje.Month, 1);
+            var fimMes = inicioMes.AddMonths(1).AddDays(-1);
+        }
+        <a class="bfa-period-filter__quick-filter @(Model.DataInicio == hoje && Model.DataFim == hoje ? "is-active" : "")"
+           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@hoje.ToString("yyyy-MM-dd")&dataFim=@hoje.ToString("yyyy-MM-dd")">Hoje</a>
+        <a class="bfa-period-filter__quick-filter @(Model.DataInicio == inicioSemana && Model.DataFim == fimSemana ? "is-active" : "")"
+           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@inicioSemana.ToString("yyyy-MM-dd")&dataFim=@fimSemana.ToString("yyyy-MM-dd")">Esta semana</a>
+        <a class="bfa-period-filter__quick-filter @(Model.DataInicio == inicioMes && Model.DataFim == fimMes ? "is-active" : "")"
+           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@inicioMes.ToString("yyyy-MM-dd")&dataFim=@fimMes.ToString("yyyy-MM-dd")">Este mês</a>
+    </div>
+    <form class="bfa-period-filter__form" method="get" action="/unidade/@Model.UnidadeId/aulas">
+        <div class="bfa-period-filter__row">
+            <div class="bfa-period-filter__field">
+                <label class="bfa-form-label" for="filtro-data-inicio">Data inicial</label>
                 <input class="bfa-form-control"
                        id="filtro-data-inicio"
                        name="dataInicio"
                        type="date"
                        value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
             </div>
-            <div class="bfa-filter-field">
-                <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
+            <span class="bfa-period-filter__separator">até</span>
+            <div class="bfa-period-filter__field">
+                <label class="bfa-form-label" for="filtro-data-fim">Data final</label>
                 <input class="bfa-form-control"
                        id="filtro-data-fim"
                        name="dataFim"
                        type="date"
                        value="@Model.DataFim.ToString("yyyy-MM-dd")" />
             </div>
-            <div class="bfa-filter-actions">
+            <div class="bfa-period-filter__actions">
                 <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
                 <a class="bfa-btn-secondary bfa-admin-button"
-                   asp-area="Unidade"
-                   asp-controller="Aulas"
-                   asp-action="Index"
-                   asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
+                   href="/unidade/@Model.UnidadeId/aulas">Limpar</a>
             </div>
         </div>
     </form>
@@ -133,6 +141,25 @@ else
                 }
                 </tbody>
             </table>
+        </div>
+        <div class="bfa-table-footer">
+            @{
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
+                var baseQueryString = $"dataInicio={Model.DataInicio:yyyy-MM-dd}&dataFim={Model.DataFim:yyyy-MM-dd}";
+                var paginacao = new PaginacaoViewModel
+                {
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = baseQueryString
+                };
+            }
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> aulas</div>
+            <partial name="_Paginacao" model="paginacao" />
         </div>
     </div>
 

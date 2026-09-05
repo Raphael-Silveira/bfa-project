@@ -90,6 +90,101 @@ public sealed class AulasRepositorio(BfaDbContext dbContext, ILogger<AulasReposi
         return resultado;
     }
 
+    public async Task<AulaResumoPaginado> ListarPaginadoAsync(
+        Guid organizacaoId, Guid unidadeId,
+        DateOnly dataInicio, DateOnly dataFim,
+        int skip, int take,
+        CancellationToken cancellationToken)
+    {
+        var total = await dbContext.Aulas.AsNoTracking()
+            .CountAsync(a => a.OrganizacaoId == organizacaoId
+                          && a.UnidadeId == unidadeId
+                          && a.Data >= dataInicio
+                          && a.Data <= dataFim,
+                cancellationToken);
+
+        if (total == 0)
+            return new AulaResumoPaginado([], 0);
+
+        var aulas = await dbContext.Aulas.AsNoTracking()
+            .Where(a => a.OrganizacaoId == organizacaoId
+                     && a.UnidadeId == unidadeId
+                     && a.Data >= dataInicio
+                     && a.Data <= dataFim)
+            .OrderBy(a => a.Data)
+            .ThenBy(a => a.HoraInicio)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        if (aulas.Count == 0)
+            return new AulaResumoPaginado([], total);
+
+        var turmaIds = aulas.Select(a => a.TurmaId).Distinct().ToList();
+
+        var turmas = await dbContext.Turmas.AsNoTracking()
+            .Where(t => turmaIds.Contains(t.Id) && t.OrganizacaoId == organizacaoId)
+            .ToDictionaryAsync(t => t.Id, cancellationToken);
+
+        var professorUnidadeIds = turmas.Values
+            .Select(t => t.ProfessorUnidadeId).Distinct().ToList();
+
+        var professoresVinculos = await dbContext.ProfessoresUnidades.AsNoTracking()
+            .Where(pu => professorUnidadeIds.Contains(pu.Id)
+                      && pu.OrganizacaoId == organizacaoId)
+            .ToDictionaryAsync(pu => pu.Id, cancellationToken);
+
+        var professorIds = professoresVinculos.Values
+            .Select(pv => pv.ProfessorId).Distinct().ToList();
+
+        var professores = await dbContext.Professores.AsNoTracking()
+            .Where(p => professorIds.Contains(p.Id) && p.OrganizacaoId == organizacaoId)
+            .ToDictionaryAsync(p => p.Id, cancellationToken);
+
+        var matriculasHorarios = await dbContext.MatriculasHorarios.AsNoTracking()
+            .Where(mh => mh.OrganizacaoId == organizacaoId
+                      && mh.UnidadeId == unidadeId
+                      && mh.VigenciaFim == null)
+            .ToListAsync(cancellationToken);
+
+        var turmaHorarioIds = aulas.Select(a => a.TurmaHorarioId).Distinct().ToList();
+        var inscritosPorHorario = matriculasHorarios
+            .Where(mh => turmaHorarioIds.Contains(mh.TurmaHorarioId))
+            .GroupBy(mh => mh.TurmaHorarioId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var resultado = new List<AulaResumo>(aulas.Count);
+
+        foreach (var aula in aulas)
+        {
+            turmas.TryGetValue(aula.TurmaId, out var turma);
+            var turmaNome = turma?.Nome ?? string.Empty;
+
+            string professorNome = string.Empty;
+            if (turma is not null
+                && professoresVinculos.TryGetValue(turma.ProfessorUnidadeId, out var vinculo)
+                && professores.TryGetValue(vinculo.ProfessorId, out var professor))
+            {
+                professorNome = professor.NomeCompleto;
+            }
+
+            inscritosPorHorario.TryGetValue(aula.TurmaHorarioId, out var inscritos);
+
+            resultado.Add(new AulaResumo(
+                aula.Id,
+                turmaNome,
+                professorNome,
+                aula.Data,
+                aula.HoraInicio,
+                aula.HoraFim,
+                aula.Status,
+                aula.Capacidade,
+                inscritos));
+        }
+
+        return new AulaResumoPaginado(resultado, total);
+    }
+
     public async Task<AulaDetalhe?> ObterAsync(
         Guid organizacaoId, Guid unidadeId, Guid aulaId,
         CancellationToken cancellationToken)

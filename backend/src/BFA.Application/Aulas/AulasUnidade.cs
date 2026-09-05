@@ -81,6 +81,10 @@ public sealed record RegistroPresencaLoteItem(
     TimeOnly? SaiuAs,
     string? Observacoes);
 
+public sealed record AulaResumoPaginado(
+    IReadOnlyList<AulaResumo> Itens,
+    int TotalItens);
+
 public sealed record FrequenciaAlunoResumo(
     Guid AlunoId,
     string NomeCompleto,
@@ -105,6 +109,12 @@ public interface IAulasRepositorio
     Task<IReadOnlyList<AulaResumo>> ListarAsync(
         Guid organizacaoId, Guid unidadeId,
         DateOnly dataInicio, DateOnly dataFim,
+        CancellationToken cancellationToken);
+
+    Task<AulaResumoPaginado> ListarPaginadoAsync(
+        Guid organizacaoId, Guid unidadeId,
+        DateOnly dataInicio, DateOnly dataFim,
+        int skip, int take,
         CancellationToken cancellationToken);
 
     Task<AulaDetalhe?> ObterAsync(
@@ -146,6 +156,12 @@ public interface IAulasServico
     Task<ResultadoAulasUnidade<IReadOnlyList<AulaResumo>>> ListarAsync(
         Guid usuarioId, Guid unidadeId,
         DateOnly dataInicio, DateOnly dataFim,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAulasUnidade<AulaResumoPaginado>> ListarPaginadoAsync(
+        Guid usuarioId, Guid unidadeId,
+        DateOnly dataInicio, DateOnly dataFim,
+        int pagina, int tamanhoPagina,
         CancellationToken cancellationToken);
 
     Task<ResultadoAulasUnidade<AulaDetalhe>> ObterAsync(
@@ -215,6 +231,32 @@ public sealed class AulasServico(
             cancellationToken);
 
         return new(EstadoAulasUnidade.Sucesso, itens, contexto.Valor);
+    }
+
+    public async Task<ResultadoAulasUnidade<AulaResumoPaginado>> ListarPaginadoAsync(
+        Guid usuarioId, Guid unidadeId,
+        DateOnly dataInicio, DateOnly dataFim,
+        int pagina, int tamanhoPagina,
+        CancellationToken cancellationToken)
+    {
+        var contexto = await ObterContextoAsync(
+            usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
+        if (contexto.Estado != EstadoAulasUnidade.Sucesso)
+            return new(contexto.Estado);
+
+        if (dataInicio > dataFim)
+            return new(EstadoAulasUnidade.DadosInvalidos);
+
+        var paginaSegura = Math.Max(1, pagina);
+        var tamanhoSeguro = Math.Clamp(tamanhoPagina, 1, 50);
+        var skip = (paginaSegura - 1) * tamanhoSeguro;
+
+        var resultado = await repositorio.ListarPaginadoAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId,
+            dataInicio, dataFim, skip, tamanhoSeguro,
+            cancellationToken);
+
+        return new(EstadoAulasUnidade.Sucesso, resultado, contexto.Valor);
     }
 
     public async Task<ResultadoAulasUnidade<AulaDetalhe>> ObterAsync(

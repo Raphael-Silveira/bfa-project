@@ -15,6 +15,9 @@ public sealed class AulasListaViewModel : IUnidadeContextoViewModel
     public required DateOnly DataInicio { get; init; }
     public required DateOnly DataFim { get; init; }
     public IReadOnlyList<AulaResumoViewModel> Aulas { get; init; } = [];
+    public required int PaginaAtual { get; init; }
+    public required int TamanhoPagina { get; init; }
+    public required int TotalItens { get; init; }
 }
 
 public sealed record AulaResumoViewModel(
@@ -180,7 +183,10 @@ internal static class AulasViewModelMapper
         ContextoAulasResumo contexto,
         IReadOnlyList<AulaResumo> itens,
         DateOnly dataInicio,
-        DateOnly dataFim) => new()
+        DateOnly dataFim,
+        int paginaAtual,
+        int tamanhoPagina,
+        int totalItens) => new()
     {
         OrganizacaoId = contexto.OrganizacaoId,
         UnidadeId = contexto.UnidadeId,
@@ -189,7 +195,10 @@ internal static class AulasViewModelMapper
         PodeGerenciar = contexto.PodeGerenciar,
         DataInicio = dataInicio,
         DataFim = dataFim,
-        Aulas = itens.Select(MapearResumo).ToArray()
+        Aulas = itens.Select(MapearResumo).ToArray(),
+        PaginaAtual = paginaAtual,
+        TamanhoPagina = tamanhoPagina,
+        TotalItens = totalItens
     };
 
     public static AulaDetalheViewModel MapearDetalhe(

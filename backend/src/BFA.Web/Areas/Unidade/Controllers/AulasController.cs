@@ -25,6 +25,7 @@ public sealed class AulasController(
         Guid unidadeId,
         DateOnly? dataInicio,
         DateOnly? dataFim,
+        int? pagina,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
@@ -33,8 +34,32 @@ public sealed class AulasController(
         var inicio = dataInicio ?? hoje.AddDays(-(int)hoje.DayOfWeek + 1);
         var fim = dataFim ?? inicio.AddDays(6);
 
-        var resultado = await aulasServico.ListarAsync(
-            usuarioId, unidadeId, inicio, fim, cancellationToken);
+        if (inicio > fim)
+        {
+            ModelState.AddModelError(string.Empty,
+                "A data final deve ser igual ou posterior à data inicial.");
+            return View(new AulasListaViewModel
+            {
+                OrganizacaoId = Guid.Empty,
+                UnidadeId = unidadeId,
+                NomeUnidade = string.Empty,
+                PodeTrocarUnidade = false,
+                PodeGerenciar = false,
+                DataInicio = inicio,
+                DataFim = fim,
+                Aulas = [],
+                PaginaAtual = 1,
+                TamanhoPagina = 10,
+                TotalItens = 0
+            });
+        }
+
+        var tamanhoPagina = 10;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+
+        var resultado = await aulasServico.ListarPaginadoAsync(
+            usuarioId, unidadeId, inicio, fim,
+            paginaAtual, tamanhoPagina, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -43,11 +68,19 @@ public sealed class AulasController(
             || resultado.Contexto is null)
             return Forbid();
 
+        var totalPaginas = (int)Math.Ceiling(
+            (double)resultado.Valor.TotalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0)
+            paginaAtual = totalPaginas;
+
         return View(AulasViewModelMapper.MapearLista(
             resultado.Contexto,
-            resultado.Valor,
+            resultado.Valor.Itens,
             inicio,
-            fim));
+            fim,
+            paginaAtual,
+            tamanhoPagina,
+            resultado.Valor.TotalItens));
     }
 
     [HttpGet("nova")]
