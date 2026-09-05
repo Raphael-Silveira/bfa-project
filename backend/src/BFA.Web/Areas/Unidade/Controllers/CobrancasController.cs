@@ -28,6 +28,7 @@ public sealed class CobrancasController(
         [FromQuery] string? tipo,
         [FromQuery] DateOnly? dataVencimentoInicio,
         [FromQuery] DateOnly? dataVencimentoFim,
+        [FromQuery] int? pagina,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
@@ -50,8 +51,21 @@ public sealed class CobrancasController(
         var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
         if (contexto is null) return Forbid();
 
+        var totalItens = itens.Count;
+        const int tamanhoPagina = 10;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+
+        var itensPagina = itens
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToList();
+
         return View(CobrancaViewModelMapper.MapearLista(
-            contexto, itens, alunoId, status, tipo, dataVencimentoInicio, dataVencimentoFim));
+            contexto, itensPagina, alunoId, status, tipo,
+            dataVencimentoInicio, dataVencimentoFim,
+            paginaAtual, tamanhoPagina, totalItens));
     }
 
     [HttpGet("nova")]

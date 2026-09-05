@@ -29,6 +29,12 @@ public sealed class CobrancasListaViewModel : IUnidadeContextoViewModel
 
     [BindProperty(SupportsGet = true)]
     public DateOnly? DataVencimentoFim { get; init; }
+
+    public required int PaginaAtual { get; init; }
+    public required int TamanhoPagina { get; init; }
+    public required int TotalItens { get; init; }
+    public bool PossuiFiltros => !string.IsNullOrEmpty(Status) || !string.IsNullOrEmpty(Tipo)
+        || DataVencimentoInicio.HasValue || DataVencimentoFim.HasValue;
 }
 
 public sealed record CobrancaResumoViewModel(
@@ -138,7 +144,10 @@ public static class CobrancaViewModelMapper
         string? status,
         string? tipo,
         DateOnly? dataVencimentoInicio,
-        DateOnly? dataVencimentoFim) => new()
+        DateOnly? dataVencimentoFim,
+        int paginaAtual,
+        int tamanhoPagina,
+        int totalItens) => new()
     {
         OrganizacaoId = contexto.OrganizacaoId,
         UnidadeId = contexto.UnidadeId,
@@ -150,7 +159,10 @@ public static class CobrancaViewModelMapper
         Status = status,
         Tipo = tipo,
         DataVencimentoInicio = dataVencimentoInicio,
-        DataVencimentoFim = dataVencimentoFim
+        DataVencimentoFim = dataVencimentoFim,
+        PaginaAtual = paginaAtual,
+        TamanhoPagina = tamanhoPagina,
+        TotalItens = totalItens
     };
 
     public static CobrancaDetalheViewModel MapearDetalhe(

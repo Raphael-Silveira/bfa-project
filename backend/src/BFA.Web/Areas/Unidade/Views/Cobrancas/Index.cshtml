@@ -1,3 +1,4 @@
+@using BFA.Web.ViewModels.Shared
 @model CobrancasListaViewModel
 @{
     ViewData["Title"] = "Financeiro";
@@ -29,153 +30,218 @@
     </div>
 </header>
 
-<form class="bfa-admin-card bfa-matricula-filters"
-      action="/unidade/@Model.UnidadeId/cobrancas"
-      method="get"
-      role="search">
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-status">Status</label>
-        <select class="form-control bfa-form-control"
-                id="filtro-status"
-                name="status">
-            <option value="">Todos</option>
-            <option value="Pendente" selected="@(Model.Status == "Pendente")">Pendente</option>
-            <option value="Paga" selected="@(Model.Status == "Paga")">Paga</option>
-            <option value="Atrasada" selected="@(Model.Status == "Atrasada")">Atrasada</option>
-            <option value="Cancelada" selected="@(Model.Status == "Cancelada")">Cancelada</option>
-        </select>
-    </div>
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-tipo">Tipo</label>
-        <select class="form-control bfa-form-control"
-                id="filtro-tipo"
-                name="tipo">
-            <option value="">Todos</option>
-            <option value="Matricula" selected="@(Model.Tipo == "Matricula")">Matrícula</option>
-            <option value="Mensalidade" selected="@(Model.Tipo == "Mensalidade")">Mensalidade</option>
-            <option value="Avulso" selected="@(Model.Tipo == "Avulso")">Avulso</option>
-        </select>
-    </div>
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-vencimento-inicio">Vencimento início</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-vencimento-inicio"
-               name="dataVencimentoInicio"
-               type="date"
-               value="@(Model.DataVencimentoInicio?.ToString("yyyy-MM-dd"))" />
-    </div>
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-vencimento-fim">Vencimento fim</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-vencimento-fim"
-               name="dataVencimentoFim"
-               type="date"
-               value="@(Model.DataVencimentoFim?.ToString("yyyy-MM-dd"))" />
-    </div>
-    <div class="bfa-matricula-filter-actions">
-        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-        <a class="bfa-btn-secondary bfa-admin-button"
-           asp-area="Unidade"
-           asp-controller="Cobrancas"
-           asp-action="Index"
-           asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
-    </div>
-</form>
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+<section class="bfa-list-toolbar" aria-label="Filtros">
+    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/cobrancas">
+        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input type="hidden" name="status" value="@Model.Status" />
+        <input type="hidden" name="tipo" value="@Model.Tipo" />
+        <input type="hidden" name="dataVencimentoInicio" value="@(Model.DataVencimentoInicio?.ToString("yyyy-MM-dd"))" />
+        <input type="hidden" name="dataVencimentoFim" value="@(Model.DataVencimentoFim?.ToString("yyyy-MM-dd"))" />
+        <input type="search" name="alunoId" value="@(Model.AlunoId?.ToString())" placeholder="Filtrar por aluno..." aria-label="Filtrar por aluno" />
+    </form>
+    <form class="bfa-filter-form" method="get" action="/unidade/@Model.UnidadeId/cobrancas">
+        <div class="bfa-filter-fields">
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-status">Status</label>
+                <select class="bfa-form-control" id="filtro-status" name="status">
+                    <option value="" selected="@(string.IsNullOrEmpty(Model.Status))">Todos</option>
+                    <option value="Pendente" selected="@(Model.Status == "Pendente")">Pendente</option>
+                    <option value="Paga" selected="@(Model.Status == "Paga")">Paga</option>
+                    <option value="Atrasada" selected="@(Model.Status == "Atrasada")">Atrasada</option>
+                    <option value="Cancelada" selected="@(Model.Status == "Cancelada")">Cancelada</option>
+                </select>
+            </div>
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-tipo">Tipo</label>
+                <select class="bfa-form-control" id="filtro-tipo" name="tipo">
+                    <option value="" selected="@(string.IsNullOrEmpty(Model.Tipo))">Todos</option>
+                    <option value="Matricula" selected="@(Model.Tipo == "Matricula")">Matrícula</option>
+                    <option value="Mensalidade" selected="@(Model.Tipo == "Mensalidade")">Mensalidade</option>
+                    <option value="Avulso" selected="@(Model.Tipo == "Avulso")">Avulso</option>
+                </select>
+            </div>
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-vencimento-inicio">Vencimento início</label>
+                <input class="bfa-form-control"
+                       id="filtro-vencimento-inicio"
+                       name="dataVencimentoInicio"
+                       type="date"
+                       value="@(Model.DataVencimentoInicio?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-vencimento-fim">Vencimento fim</label>
+                <input class="bfa-form-control"
+                       id="filtro-vencimento-fim"
+                       name="dataVencimentoFim"
+                       type="date"
+                       value="@(Model.DataVencimentoFim?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="bfa-filter-actions">
+                <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+                <a class="bfa-btn-secondary bfa-admin-button"
+                   asp-area="Unidade"
+                   asp-controller="Cobrancas"
+                   asp-action="Index"
+                   asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
+            </div>
+        </div>
+    </form>
+</section>
 
 @if (Model.Cobrancas.Count == 0)
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+    <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
-            <h2>Nenhuma cobrança encontrada.</h2>
-            <p>Ajuste os filtros ou crie uma nova cobrança.</p>
+            <h2>@(Model.PossuiFiltros ? "Nenhuma cobrança corresponde aos filtros informados." : "Nenhuma cobrança encontrada.")</h2>
+            <p>@(Model.PossuiFiltros ? "Ajuste os filtros para consultar outros resultados." : "As cobranças desta unidade aparecerão aqui quando forem geradas.")</p>
         </div>
     </section>
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead>
-                <tr>
-                    <th>Aluno</th>
-                    <th>Descrição</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Pago</th>
-                    <th>Vencimento</th>
-                    <th>Status</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Pago</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
                 @foreach (var cobranca in Model.Cobrancas)
                 {
-                    var statusClass = cobranca.Status switch
-                    {
-                        "Pendente" => "bfa-admin-badge--pending",
-                        "Paga" => "bfa-admin-badge--active",
-                        "Atrasada" => "bfa-admin-badge--overdue",
-                        "Cancelada" => "bfa-admin-badge--inactive",
-                        _ => ""
-                    };
                     <tr>
-                        <td>@cobranca.AlunoNome</td>
+                        <td>
+                            <div class="bfa-data-primary">@cobranca.AlunoNome</div>
+                        </td>
                         <td>@cobranca.Descricao</td>
                         <td>@cobranca.Tipo</td>
-                        <td>@cobranca.Valor</td>
-                        <td>@cobranca.ValorPago</td>
-                        <td>@cobranca.DataVencimento</td>
                         <td>
-                            <span class="bfa-admin-badge @statusClass">@cobranca.Status</span>
+                            <div class="bfa-data-primary">@cobranca.Valor</div>
                         </td>
-                        <td class="bfa-admin-actions">
-                            <a class="bfa-admin-icon-action"
-                               asp-area="Unidade"
-                               asp-controller="Cobrancas"
-                               asp-action="Detalhes"
-                               asp-route-unidadeId="@Model.UnidadeId"
-                               asp-route-cobrancaId="@cobranca.CobrancaId"
-                               title="Detalhes">
-                                <span class="bfa-admin-icon-action__symbol" aria-hidden="true">i</span>
-                            </a>
+                        <td>@cobranca.ValorPago</td>
+                        <td>
+                            <div class="bfa-data-primary">@cobranca.DataVencimento</div>
+                        </td>
+                        <td>
+                            @{
+                                var badgeClass = cobranca.Status switch
+                                {
+                                    "Pendente" => "bfa-data-badge--pending",
+                                    "Paga" => "bfa-data-badge--active",
+                                    "Atrasada" => "bfa-data-badge--overdue",
+                                    "Cancelada" => "bfa-data-badge--inactive",
+                                    _ => ""
+                                };
+                            }
+                            <span class="bfa-data-badge @badgeClass">
+                                <i class="bfa-data-badge__dot"></i>
+                                @cobranca.Status
+                            </span>
+                        </td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <a class="bfa-admin-button bfa-btn-secondary"
+                                   asp-area="Unidade"
+                                   asp-controller="Cobrancas"
+                                   asp-action="Detalhes"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-cobrancaId="@cobranca.CobrancaId">Detalhes</a>
+                            </div>
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
+        <div class="bfa-table-footer">
+            @{
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
+            }
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> cobranças</div>
+            @{
+                var qsParts = new List<string>();
+                if (Model.Status is not null) qsParts.Add($"status={Model.Status}");
+                if (Model.Tipo is not null) qsParts.Add($"tipo={Model.Tipo}");
+                if (Model.DataVencimentoInicio.HasValue) qsParts.Add($"dataVencimentoInicio={Model.DataVencimentoInicio:yyyy-MM-dd}");
+                if (Model.DataVencimentoFim.HasValue) qsParts.Add($"dataVencimentoFim={Model.DataVencimentoFim:yyyy-MM-dd}");
+                var baseQs = string.Join("&", qsParts);
+
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var paginacao = new PaginacaoViewModel
+                {
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = baseQs
+                };
+            }
+            <partial name="_Paginacao" model="paginacao" />
+        </div>
     </div>
 
-    <div class="bfa-admin-mobile-list">
+    <section class="bfa-mobile-card-list" aria-label="Cobranças da unidade">
         @foreach (var cobranca in Model.Cobrancas)
         {
-            var statusClass = cobranca.Status switch
+            var badgeClass = cobranca.Status switch
             {
-                "Pendente" => "bfa-admin-badge--pending",
-                "Paga" => "bfa-admin-badge--active",
-                "Atrasada" => "bfa-admin-badge--overdue",
-                "Cancelada" => "bfa-admin-badge--inactive",
+                "Pendente" => "bfa-data-badge--pending",
+                "Paga" => "bfa-data-badge--active",
+                "Atrasada" => "bfa-data-badge--overdue",
+                "Cancelada" => "bfa-data-badge--inactive",
                 _ => ""
             };
-            <a class="bfa-admin-mobile-list__item"
-               asp-area="Unidade"
-               asp-controller="Cobrancas"
-               asp-action="Detalhes"
-               asp-route-unidadeId="@Model.UnidadeId"
-               asp-route-cobrancaId="@cobranca.CobrancaId">
-                <div class="bfa-admin-mobile-list__header">
-                    <span class="bfa-admin-mobile-list__name">@cobranca.AlunoNome</span>
-                    <span class="bfa-admin-badge @statusClass">@cobranca.Status</span>
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
+                    <div>
+                        <div class="bfa-data-primary">@cobranca.AlunoNome</div>
+                        <div class="bfa-data-secondary">@cobranca.Descricao</div>
+                    </div>
+                    <span class="bfa-data-badge @badgeClass">
+                        <i class="bfa-data-badge__dot"></i>
+                        @cobranca.Status
+                    </span>
                 </div>
-                <div class="bfa-admin-mobile-list__details">
-                    <span>@cobranca.Descricao</span>
-                    <span>@cobranca.Tipo</span>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Tipo</span>
+                        <div>@cobranca.Tipo</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Valor</span>
+                        <div>@cobranca.Valor</div>
+                        <div class="bfa-data-secondary">Pago: @cobranca.ValorPago</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Vencimento</span>
+                        <div>@cobranca.DataVencimento</div>
+                    </div>
                 </div>
-                <div class="bfa-admin-mobile-list__details">
-                    <span>@cobranca.Valor</span>
-                    <span>Venc: @cobranca.DataVencimento</span>
+                <div class="bfa-mobile-card__actions">
+                    <a class="bfa-admin-button bfa-btn-secondary"
+                       asp-area="Unidade"
+                       asp-controller="Cobrancas"
+                       asp-action="Detalhes"
+                       asp-route-unidadeId="@Model.UnidadeId"
+                       asp-route-cobrancaId="@cobranca.CobrancaId">Detalhes</a>
                 </div>
-            </a>
+            </article>
         }
-    </div>
+    </section>
 }
