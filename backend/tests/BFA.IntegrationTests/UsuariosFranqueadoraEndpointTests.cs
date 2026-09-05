@@ -102,7 +102,7 @@ public sealed partial class UsuariosFranqueadoraEndpointTests
         var html = WebUtility.HtmlDecode(
             await client.GetStringAsync("/franqueadora/usuarios"));
         Assert.Contains("bfa-admin-desktop-list", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-mobile-list", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-mobile-card-list", html, StringComparison.Ordinal);
         Assert.Contains("Novo usuário", html, StringComparison.Ordinal);
         Assert.Contains("Acesso às unidades", html, StringComparison.Ordinal);
         Assert.Contains("Franqueado", html, StringComparison.Ordinal);
