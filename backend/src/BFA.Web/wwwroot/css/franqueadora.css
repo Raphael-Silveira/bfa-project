@@ -838,6 +838,152 @@
   }
 }
 
+/* ---------- Filters ---------- */
+
+.bfa-admin-filters {
+  margin-bottom: 1.5rem;
+}
+
+.bfa-admin-filters__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.6rem;
+  background: rgba(13, 13, 13, 0.42);
+}
+
+.bfa-admin-filters__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.bfa-admin-filters__label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-admin-filters__input,
+.bfa-admin-filters__select {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.45rem;
+  background: rgba(13, 13, 13, 0.55);
+  color: var(--bfa-text-primary);
+  font-size: 0.88rem;
+}
+
+.bfa-admin-filters__input::placeholder {
+  color: var(--bfa-text-muted);
+  opacity: 0.7;
+}
+
+.bfa-admin-filters__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ---------- Buttons ---------- */
+
+.bfa-admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--bfa-text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.bfa-admin-btn:hover {
+  color: var(--bfa-text-primary);
+  border-color: rgba(255, 193, 7, 0.4);
+}
+
+.bfa-admin-btn--primary {
+  background: var(--bfa-accent);
+  border-color: var(--bfa-accent);
+  color: var(--bfa-black);
+}
+
+.bfa-admin-btn--primary:hover {
+  background: #e6ac00;
+  border-color: #e6ac00;
+  color: var(--bfa-black);
+}
+
+.bfa-admin-btn--secondary {
+  background: transparent;
+}
+
+.bfa-admin-btn--sm {
+  min-height: 2rem;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+.bfa-admin-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---------- Section Title ---------- */
+
+.bfa-admin-section-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--bfa-text-primary);
+}
+
+/* ---------- Pagination ---------- */
+
+.bfa-admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding: 0.75rem 0;
+}
+
+.bfa-admin-pagination__info {
+  font-size: 0.82rem;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-admin-pagination__controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ---------- Link ---------- */
+
+.bfa-admin-link {
+  color: var(--bfa-text-primary);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.bfa-admin-link:hover {
+  color: var(--bfa-accent);
+}
+
 @media (min-width: 90rem) {
   .bfa-usuarios-table {
     min-width: 0;

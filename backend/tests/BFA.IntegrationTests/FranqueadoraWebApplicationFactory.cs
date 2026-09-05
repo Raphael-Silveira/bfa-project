@@ -14,6 +14,9 @@ public class FranqueadoraWebApplicationFactory : LoginWebApplicationFactory
     public TestPainelFranqueadoraConsulta Painel =>
         Services.GetRequiredService<TestPainelFranqueadoraConsulta>();
 
+    public TestFranqueadoraDashboardConsulta Dashboard =>
+        Services.GetRequiredService<TestFranqueadoraDashboardConsulta>();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
@@ -22,12 +25,16 @@ public class FranqueadoraWebApplicationFactory : LoginWebApplicationFactory
         {
             services.RemoveAll<IAcessoUsuarioConsulta>();
             services.RemoveAll<IPainelFranqueadoraConsulta>();
+            services.RemoveAll<IFranqueadoraDashboardConsulta>();
             services.AddSingleton<TestAcessoUsuarioConsulta>();
             services.AddSingleton<IAcessoUsuarioConsulta>(serviceProvider =>
                 serviceProvider.GetRequiredService<TestAcessoUsuarioConsulta>());
             services.AddSingleton<TestPainelFranqueadoraConsulta>();
             services.AddSingleton<IPainelFranqueadoraConsulta>(serviceProvider =>
                 serviceProvider.GetRequiredService<TestPainelFranqueadoraConsulta>());
+            services.AddSingleton<TestFranqueadoraDashboardConsulta>();
+            services.AddSingleton<IFranqueadoraDashboardConsulta>(serviceProvider =>
+                serviceProvider.GetRequiredService<TestFranqueadoraDashboardConsulta>());
         });
     }
 }
@@ -45,6 +52,20 @@ public sealed class TestPainelFranqueadoraConsulta : IPainelFranqueadoraConsulta
     {
         cancellationToken.ThrowIfCancellationRequested();
         UltimoUsuarioId = usuarioId;
+        return Task.FromResult(Resultado);
+    }
+}
+
+public sealed class TestFranqueadoraDashboardConsulta : IFranqueadoraDashboardConsulta
+{
+    public FranqueadoraDashboardResultado Resultado { get; set; } =
+        FranqueadoraDashboardResultado.SemAcesso();
+
+    public Task<FranqueadoraDashboardResultado> ObterAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(Resultado);
     }
 }

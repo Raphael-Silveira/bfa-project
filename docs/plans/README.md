@@ -53,4 +53,6 @@ Exemplo: `01_corrigir-salvamento-alterar-grade.md`
 | 07 | [financeiro-unidade-aluno](07_financeiro-unidade-aluno.md) | Concluído |
 | 08 | [relatorios](08_relatorios.md) | Concluído |
 | 09 | [area-do-aluno](09_area-do-aluno.md) | Concluído |
-| 10 | [melhoria-visual-monitores-grandes](10_melhoria-visual-monitores-grandes.md) | Em andamento |
+| 10 | [melhoria-visual-monitores-grandes](10_melhoria-visual-monitores-grandes.md) | Concluído |
+| 11 | [pagamento-online-split-pagarme](11_pagamento-online-split-pagarme.md) | Planejado |
+| 12 | [incremento-das-4-visoes](12_incremento-das-4-visoes.md) | Planejado |

@@ -1,0 +1,178 @@
+@model FranqueadoraAlunosViewModel
+
+@{
+    ViewData["Title"] = "Alunos da Rede";
+    Layout = "_FranqueadoraLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-alunos">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">@Model.NomeOrganizacao</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-alunos">Alunos da Rede</h1>
+        <p class="bfa-admin-page-header__description">
+            Total de <strong>@Model.TotalAlunos</strong> aluno(s) ativo(s) na rede.
+        </p>
+    </div>
+</header>
+
+<section class="bfa-admin-filters" aria-label="Filtros">
+    <form method="get" class="bfa-admin-filters__form">
+        <input type="hidden" name="pagina" value="1" />
+        <div class="bfa-admin-filters__group">
+            <label class="bfa-admin-filters__label" for="busca">Buscar</label>
+            <input class="bfa-admin-filters__input"
+                   type="text"
+                   id="busca"
+                   name="busca"
+                   value="@Model.Busca"
+                   placeholder="Nome, CPF ou email" />
+        </div>
+        <div class="bfa-admin-filters__group">
+            <label class="bfa-admin-filters__label" for="unidadeId">Unidade</label>
+            <select class="bfa-admin-filters__select"
+                    id="unidadeId"
+                    name="unidadeId">
+                <option value="">Todas as unidades</option>
+                @foreach (var unidade in Model.Unidades)
+                {
+                    <option value="@unidade.UnidadeId"
+                            selected="@(Model.UnidadeIdSelecionada == unidade.UnidadeId)">
+                        @unidade.Nome
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="bfa-admin-filters__actions">
+            <button type="submit" class="bfa-admin-btn bfa-admin-btn--primary">Filtrar</button>
+            <a href="/franqueadora/alunos" class="bfa-admin-btn bfa-admin-btn--secondary">Limpar</a>
+        </div>
+    </form>
+</section>
+
+@if (Model.Alunos.Count == 0)
+{
+    <section class="bfa-admin-empty-state" aria-labelledby="titulo-sem-alunos">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2 id="titulo-sem-alunos">Nenhum aluno encontrado.</h2>
+            <p>
+                @if (!string.IsNullOrWhiteSpace(Model.Busca) || Model.UnidadeIdSelecionada.HasValue)
+                {
+                    <span>Tente ajustar os filtros de busca.</span>
+                }
+                else
+                {
+                    <span>Nenhum aluno matriculado na rede ainda.</span>
+                }
+            </p>
+        </div>
+    </section>
+}
+else
+{
+    <section class="bfa-admin-table-container" aria-label="Lista de alunos">
+        <table class="bfa-admin-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Email</th>
+                    <th>Unidade</th>
+                    <th>Nascimento</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var aluno in Model.Alunos)
+                {
+                    <tr>
+                        <td>
+                            <a href="/unidade/@aluno.UnidadeId/alunos/@aluno.AlunoId"
+                               class="bfa-admin-link">
+                                @aluno.NomeCompleto
+                            </a>
+                        </td>
+                        <td>@(aluno.CpfFormatado ?? "--")</td>
+                        <td>@(aluno.Email ?? "--")</td>
+                        <td>
+                            <a href="/unidade/@aluno.UnidadeId" class="bfa-admin-link">
+                                @aluno.NomeUnidade
+                            </a>
+                        </td>
+                        <td>@aluno.DataNascimentoFormatada</td>
+                        <td>
+                            @if (aluno.Ativo)
+                            {
+                                <span class="bfa-admin-badge is-active">Ativo</span>
+                            }
+                            else
+                            {
+                                <span class="bfa-admin-badge is-inactive">Inativo</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+
+    @if (Model.TotalPaginas > 1)
+    {
+        <nav class="bfa-admin-pagination" aria-label="Paginacao">
+            <div class="bfa-admin-pagination__info">
+                Pagina @Model.PaginaAtual de @Model.TotalPaginas
+            </div>
+            <div class="bfa-admin-pagination__controls">
+                @if (Model.TemPaginaAnterior)
+                {
+                    <a class="bfa-admin-btn bfa-admin-btn--secondary bfa-admin-btn--sm"
+                       href="@BuildPageUrl(Model.PaginaAtual - 1)"
+                       aria-label="Pagina anterior">
+                        Anterior
+                    </a>
+                }
+                else
+                {
+                    <span class="bfa-admin-btn bfa-admin-btn--secondary bfa-admin-btn--sm bfa-admin-btn--disabled">
+                        Anterior
+                    </span>
+                }
+
+                @if (Model.TemProximaPagina)
+                {
+                    <a class="bfa-admin-btn bfa-admin-btn--secondary bfa-admin-btn--sm"
+                       href="@BuildPageUrl(Model.PaginaAtual + 1)"
+                       aria-label="Proxima pagina">
+                        Proximo
+                    </a>
+                }
+                else
+                {
+                    <span class="bfa-admin-btn bfa-admin-btn--secondary bfa-admin-btn--sm bfa-admin-btn--disabled">
+                        Proximo
+                    </span>
+                }
+            </div>
+        </nav>
+    }
+}
+
+@functions {
+    string BuildPageUrl(int pagina)
+    {
+        var parametros = new List<string>();
+        parametros.Add($"pagina={pagina}");
+
+        if (Model.UnidadeIdSelecionada.HasValue)
+        {
+            parametros.Add($"unidadeId={Model.UnidadeIdSelecionada}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Model.Busca))
+        {
+            parametros.Add($"busca={Uri.EscapeDataString(Model.Busca)}");
+        }
+
+        return $"/franqueadora/alunos?{string.Join("&", parametros)}";
+    }
+}

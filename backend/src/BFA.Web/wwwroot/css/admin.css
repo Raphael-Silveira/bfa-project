@@ -332,7 +332,7 @@
   padding: 2.25rem 1.5rem 2rem 2rem;
   align-self: start;
   overflow-y: auto;
-  border-right: 1px solid var(--bfa-border);
+  scrollbar-gutter: stable;
 }
 
 .bfa-admin-nav-label,

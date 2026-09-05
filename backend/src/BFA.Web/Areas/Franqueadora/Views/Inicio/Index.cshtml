@@ -1,14 +1,14 @@
-@model PainelFranqueadoraViewModel
+@model FranqueadoraDashboardViewModel
 
 @{
-    ViewData["Title"] = "Visão Geral";
+    ViewData["Title"] = "Visao Geral";
     Layout = "_FranqueadoraLayout";
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-painel">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Painel administrativo</p>
-        <h1 class="bfa-admin-page-header__title" id="titulo-painel">Visão Geral</h1>
+        <h1 class="bfa-admin-page-header__title" id="titulo-painel">Visao Geral</h1>
 
         @if (!Model.SelecaoOrganizacaoNecessaria)
         {
@@ -22,17 +22,17 @@
     <section class="bfa-admin-notice" role="status">
         <span class="bfa-admin-notice__marker" aria-hidden="true"></span>
         <div>
-            <h2>Seleção de Organização necessária</h2>
+            <h2>Selecao de Organizacao necessaria</h2>
             <p>
-                Seu usuário administra mais de uma Organização. A seleção do contexto será
-                disponibilizada em uma próxima etapa.
+                Seu usuario administra mais de uma Organizacao. A selecao do contexto sera
+                disponibilizada em uma proxima etapa.
             </p>
         </div>
     </section>
 }
 else
 {
-    <section class="bfa-admin-card-grid" aria-label="Resumo da Organização">
+    <section class="bfa-admin-card-grid" aria-label="Resumo da Rede">
         <article class="bfa-admin-card bfa-admin-metric-card">
             <p class="bfa-admin-metric-card__label">Total de Unidades</p>
             <strong class="bfa-admin-metric-card__value">@Model.TotalUnidades</strong>
@@ -42,14 +42,67 @@ else
             <strong class="bfa-admin-metric-card__value">@Model.UnidadesAtivas</strong>
         </article>
         <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Administradores da Rede</p>
-            <strong class="bfa-admin-metric-card__value">@Model.AdministradoresRedeAtivos</strong>
+            <p class="bfa-admin-metric-card__label">Alunos Ativos</p>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalAlunosAtivos</strong>
         </article>
         <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Administradores de Unidade</p>
-            <strong class="bfa-admin-metric-card__value">@Model.AdministradoresUnidadeAtivos</strong>
+            <p class="bfa-admin-metric-card__label">Matriculas Ativas</p>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalMatriculasAtivas</strong>
+        </article>
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Professores</p>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalProfessores</strong>
+        </article>
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Receita Total</p>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.TotalReceita</strong>
+        </article>
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Pendente</p>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalPendente</strong>
+        </article>
+        <article class="bfa-admin-card bfa-admin-metric-card">
+            <p class="bfa-admin-metric-card__label">Em Atraso</p>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalAtrasado</strong>
         </article>
     </section>
+
+    @if (Model.Unidades.Count > 0)
+    {
+        <section class="bfa-admin-table-container" aria-label="Unidades da Rede">
+            <h2 class="bfa-admin-section-title">Unidades da Rede</h2>
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Unidade</th>
+                        <th>Alunos</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var unidade in Model.Unidades)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/unidade/@unidade.UnidadeId" class="bfa-admin-link">@unidade.NomeUnidade</a>
+                            </td>
+                            <td>@unidade.TotalAlunos</td>
+                            <td>
+                                @if (unidade.Ativa)
+                                {
+                                    <span class="bfa-admin-badge is-active">Ativa</span>
+                                }
+                                else
+                                {
+                                    <span class="bfa-admin-badge is-inactive">Inativa</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
 
     @if (Model.TotalUnidades == 0)
     {
@@ -57,7 +110,7 @@ else
             <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
             <div>
                 <h2 id="titulo-sem-unidades">Nenhuma unidade cadastrada ainda.</h2>
-                <p><a href="/franqueadora/unidades/nova">Cadastre a primeira unidade da Organização.</a></p>
+                <p><a href="/franqueadora/unidades/nova">Cadastre a primeira unidade da Organizacao.</a></p>
             </div>
         </section>
     }

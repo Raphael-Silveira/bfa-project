@@ -202,8 +202,13 @@ O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
 6. ~~Relatórios~~ ✅
 7. ~~Inadimplência~~ ✅ (incluída no módulo Relatórios)
 8. ~~Área do Aluno~~ ✅
-9. Campeonatos
-10. Comércio
+9. Login do Aluno (Email/CPF) — Plano 12
+10. Área do Professor (Dashboard, Aulas, Frequência) — Plano 12
+11. Franqueadora — Alunos da Rede + Controle de Padrão — Plano 12
+12. Franqueadora — Relatórios + Financeiro consolidado — Plano 12
+13. Aluno — Pagamento Online (Pagar.me) — Plano 11
+14. Campeonatos (deferido)
+15. Comércio (deferido)
 
 ## Identidade Visual
 
@@ -232,6 +237,12 @@ Planos sequenciais em `docs/plans/`:
 | 04 | Módulo Alunos e Responsáveis | Concluído |
 | 05 | Logging Informativo para Produção | Concluído |
 | 06 | Módulo Aulas e Presenças | Concluído |
+| 07 | Financeiro Unidade x Aluno | Concluído |
+| 08 | Relatórios | Concluído |
+| 09 | Área do Aluno | Concluído |
+| 10 | Melhoria Visual Monitores Grandes | Concluído |
+| 11 | Pagamento Online Split Pagar.me | Planejado |
+| 12 | Incremento das 4 Visões | Planejado |
 
 ## Documentos de Referência
 

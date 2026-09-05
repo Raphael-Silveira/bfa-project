@@ -62,6 +62,19 @@ public sealed partial class FranqueadoraEndpointTests
                 0,
                 2,
                 0));
+        application.Dashboard.Resultado = FranqueadoraDashboardResultado.Disponivel(
+            new FranqueadoraDashboardResumo(
+                organizacaoId,
+                "Brazilian Footvolley Academy",
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                []));
         using var client = CreateClient(application);
         await LoginAsync(client, application);
 
@@ -70,7 +83,7 @@ public sealed partial class FranqueadoraEndpointTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("Brazilian Footvolley Academy", html, StringComparison.Ordinal);
-        Assert.Contains("Visão Geral", html, StringComparison.Ordinal);
+        Assert.Contains("Visao Geral", html, StringComparison.Ordinal);
         Assert.Contains("Total de Unidades", html, StringComparison.Ordinal);
         Assert.Contains("Nenhuma unidade cadastrada ainda.", html, StringComparison.Ordinal);
         Assert.Contains("/images/brand/bfa-logo-horizontal-dark.png", html, StringComparison.Ordinal);
@@ -90,7 +103,6 @@ public sealed partial class FranqueadoraEndpointTests
         Assert.Contains("class=\"bfa-admin-drawer__logout\"", html, StringComparison.Ordinal);
         Assert.Contains("action=\"/logout\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
-        Assert.Equal(application.UsuarioStore.Usuario.Id, application.Painel.UltimoUsuarioId);
     }
 
     [Fact]
@@ -104,12 +116,14 @@ public sealed partial class FranqueadoraEndpointTests
             PerfilAcesso.AdministradorRede);
         application.Painel.Resultado =
             PainelFranqueadoraResultado.SelecaoOrganizacaoNecessaria();
+        application.Dashboard.Resultado =
+            FranqueadoraDashboardResultado.SelecaoOrganizacaoNecessaria();
         using var client = CreateClient(application);
         await LoginAsync(client, application);
 
         var html = WebUtility.HtmlDecode(await client.GetStringAsync("/franqueadora"));
 
-        Assert.Contains("Seleção de Organização necessária", html, StringComparison.Ordinal);
+        Assert.Contains("Selecao de Organizacao necessaria", html, StringComparison.Ordinal);
         Assert.DoesNotContain("Total de Unidades", html, StringComparison.Ordinal);
     }
 

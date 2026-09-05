@@ -14,6 +14,7 @@ namespace BFA.Web.Areas.Franqueadora.Controllers;
 public sealed class InicioController(
     IUsuarioAtual usuarioAtual,
     IPainelFranqueadoraConsulta painelConsulta,
+    IFranqueadoraDashboardConsulta dashboardConsulta,
     ILogger<InicioController> logger) : Controller
 {
     [HttpGet("")]
@@ -24,16 +25,16 @@ public sealed class InicioController(
             return Forbid();
         }
 
-        var resultado = await painelConsulta.ObterAsync(usuarioId, cancellationToken);
+        var resultado = await dashboardConsulta.ObterAsync(usuarioId, cancellationToken);
 
-        if (resultado.Estado == EstadoPainelFranqueadora.SemAcesso)
+        if (resultado.Estado == EstadoFranqueadoraDashboard.SemAcesso)
         {
             return Forbid();
         }
 
-        if (resultado.Estado == EstadoPainelFranqueadora.SelecaoOrganizacaoNecessaria)
+        if (resultado.Estado == EstadoFranqueadoraDashboard.SelecaoOrganizacaoNecessaria)
         {
-            return View(new PainelFranqueadoraViewModel
+            return View(new FranqueadoraDashboardViewModel
             {
                 SelecaoOrganizacaoNecessaria = true
             });
@@ -44,13 +45,6 @@ public sealed class InicioController(
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        return View(new PainelFranqueadoraViewModel
-        {
-            NomeOrganizacao = resumo.NomeOrganizacao,
-            TotalUnidades = resumo.TotalUnidades,
-            UnidadesAtivas = resumo.UnidadesAtivas,
-            AdministradoresRedeAtivos = resumo.AdministradoresRedeAtivos,
-            AdministradoresUnidadeAtivos = resumo.AdministradoresUnidadeAtivos
-        });
+        return View(FranqueadoraDashboardMapper.Mapear(resumo));
     }
 }
