@@ -7,6 +7,7 @@ using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -23,16 +24,22 @@ public sealed class AulasController(
     [HttpGet("")]
     public async Task<IActionResult> Index(
         Guid unidadeId,
-        DateOnly? dataInicio,
-        DateOnly? dataFim,
+        string? dataInicio,
+        string? dataFim,
         int? pagina,
+        int? tamanhoPagina,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
 
         var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var inicio = dataInicio ?? hoje.AddDays(-(int)hoje.DayOfWeek + 1);
-        var fim = dataFim ?? inicio.AddDays(6);
+        var culture = new CultureInfo("pt-BR");
+        var styles = DateTimeStyles.None;
+
+        var inicio = DateOnly.TryParseExact(dataInicio, "dd/MM/yyyy", culture, styles, out var d1)
+            ? d1 : hoje.AddDays(-(int)hoje.DayOfWeek + 1);
+        var fim = DateOnly.TryParseExact(dataFim, "dd/MM/yyyy", culture, styles, out var d2)
+            ? d2 : inicio.AddDays(6);
 
         if (inicio > fim)
         {
@@ -49,17 +56,17 @@ public sealed class AulasController(
                 DataFim = fim,
                 Aulas = [],
                 PaginaAtual = 1,
-                TamanhoPagina = 10,
+                TamanhoPagina = tamanhoPagina ?? 10,
                 TotalItens = 0
             });
         }
 
-        var tamanhoPagina = 10;
+        var tamanho = Math.Clamp(tamanhoPagina ?? 10, 5, 50);
         var paginaAtual = Math.Max(1, pagina ?? 1);
 
         var resultado = await aulasServico.ListarPaginadoAsync(
             usuarioId, unidadeId, inicio, fim,
-            paginaAtual, tamanhoPagina, cancellationToken);
+            paginaAtual, tamanho, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -69,7 +76,7 @@ public sealed class AulasController(
             return Forbid();
 
         var totalPaginas = (int)Math.Ceiling(
-            (double)resultado.Valor.TotalItens / tamanhoPagina);
+            (double)resultado.Valor.TotalItens / tamanho);
         if (paginaAtual > totalPaginas && totalPaginas > 0)
             paginaAtual = totalPaginas;
 
@@ -79,7 +86,7 @@ public sealed class AulasController(
             inicio,
             fim,
             paginaAtual,
-            tamanhoPagina,
+            tamanho,
             resultado.Valor.TotalItens));
     }
 

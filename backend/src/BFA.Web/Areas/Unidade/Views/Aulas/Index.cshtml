@@ -1,8 +1,19 @@
+@using System.Globalization
 @using BFA.Web.ViewModels.Shared
 @model AulasListaViewModel
 @{
     ViewData["Title"] = "Aulas";
     Layout = "_UnidadeLayout";
+    var culture = new CultureInfo("pt-BR");
+    var hoje = DateOnly.FromDateTime(DateTime.Today);
+    var inicioSemana = hoje.AddDays(-(int)hoje.DayOfWeek + 1);
+    var fimSemana = inicioSemana.AddDays(6);
+    var inicioMes = new DateOnly(hoje.Year, hoje.Month, 1);
+    var fimMes = inicioMes.AddMonths(1).AddDays(-1);
+    var isHoje = Model.DataInicio == hoje && Model.DataFim == hoje;
+    var isSemana = Model.DataInicio == inicioSemana && Model.DataFim == fimSemana;
+    var isMes = Model.DataInicio == inicioMes && Model.DataFim == fimMes;
+    var isCustom = !isHoje && !isSemana && !isMes;
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-aulas">
@@ -10,7 +21,7 @@
         <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
         <h1 class="bfa-admin-page-header__title" id="titulo-aulas">Aulas</h1>
         <p class="bfa-admin-page-header__description">
-            Consulte as aulas programadas em @Model.NomeUnidade.
+            Consulte e gerencie as aulas programadas em @Model.NomeUnidade.
         </p>
     </div>
     <div class="bfa-admin-page-header__actions">
@@ -20,7 +31,7 @@
                asp-area="Unidade"
                asp-controller="Aulas"
                asp-action="Nova"
-               asp-route-unidadeId="@Model.UnidadeId">Nova aula</a>
+               asp-route-unidadeId="@Model.UnidadeId">+ Nova aula</a>
         }
     </div>
 </header>
@@ -30,46 +41,68 @@
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
 }
 
-<section class="bfa-period-filter" aria-label="Filtro por período">
-    <div class="bfa-period-filter__quick-filters">
-        @{
-            var hoje = DateOnly.FromDateTime(DateTime.Today);
-            var inicioSemana = hoje.AddDays(-(int)hoje.DayOfWeek + 1);
-            var fimSemana = inicioSemana.AddDays(6);
-            var inicioMes = new DateOnly(hoje.Year, hoje.Month, 1);
-            var fimMes = inicioMes.AddMonths(1).AddDays(-1);
-        }
-        <a class="bfa-period-filter__quick-filter @(Model.DataInicio == hoje && Model.DataFim == hoje ? "is-active" : "")"
-           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@hoje.ToString("yyyy-MM-dd")&dataFim=@hoje.ToString("yyyy-MM-dd")">Hoje</a>
-        <a class="bfa-period-filter__quick-filter @(Model.DataInicio == inicioSemana && Model.DataFim == fimSemana ? "is-active" : "")"
-           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@inicioSemana.ToString("yyyy-MM-dd")&dataFim=@fimSemana.ToString("yyyy-MM-dd")">Esta semana</a>
-        <a class="bfa-period-filter__quick-filter @(Model.DataInicio == inicioMes && Model.DataFim == fimMes ? "is-active" : "")"
-           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@inicioMes.ToString("yyyy-MM-dd")&dataFim=@fimMes.ToString("yyyy-MM-dd")">Este mês</a>
+<section class="bfa-filter-panel" aria-labelledby="filtros-aulas">
+    <div class="bfa-filter-panel__header">
+        <div class="bfa-filter-panel__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        <div>
+            <h2 id="filtros-aulas">Filtros</h2>
+            <p>Selecione um período para visualizar as aulas.</p>
+        </div>
     </div>
-    <form class="bfa-period-filter__form" method="get" action="/unidade/@Model.UnidadeId/aulas">
-        <div class="bfa-period-filter__row">
-            <div class="bfa-period-filter__field">
-                <label class="bfa-form-label" for="filtro-data-inicio">Data inicial</label>
-                <input class="bfa-form-control"
-                       id="filtro-data-inicio"
+
+    <div class="bfa-quick-filters" aria-label="Períodos rápidos">
+        <a class="bfa-chip @(isHoje ? "bfa-chip--active" : "")"
+           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@hoje.ToString("dd/MM/yyyy")&dataFim=@hoje.ToString("dd/MM/yyyy")">Hoje</a>
+        <a class="bfa-chip @(isSemana ? "bfa-chip--active" : "")"
+           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@inicioSemana.ToString("dd/MM/yyyy")&dataFim=@fimSemana.ToString("dd/MM/yyyy")">Esta semana</a>
+        <a class="bfa-chip @(isMes ? "bfa-chip--active" : "")"
+           href="/unidade/@Model.UnidadeId/aulas?dataInicio=@inicioMes.ToString("dd/MM/yyyy")&dataFim=@fimMes.ToString("dd/MM/yyyy")">Este mês</a>
+        <span class="bfa-chip @(isCustom ? "bfa-chip--active" : "")" @(isCustom ? "" : "style=\"pointer-events:none;opacity:.5\"")>Personalizado</span>
+    </div>
+
+    <div class="bfa-filter-divider"></div>
+
+    <form class="bfa-period-filter" method="get" action="/unidade/@Model.UnidadeId/aulas">
+        <div class="bfa-field">
+            <label for="filtro-data-inicio">Data inicial</label>
+            <div class="bfa-date-input">
+                <input id="filtro-data-inicio"
                        name="dataInicio"
-                       type="date"
-                       value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
+                       type="text"
+                       inputmode="numeric"
+                       value="@Model.DataInicio.ToString("dd/MM/yyyy")"
+                       placeholder="dd/mm/aaaa"
+                       maxlength="10" />
+                <button type="button" class="bfa-date-button" aria-label="Abrir calendário da data inicial" data-bfa-date-trigger>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </button>
             </div>
-            <span class="bfa-period-filter__separator">até</span>
-            <div class="bfa-period-filter__field">
-                <label class="bfa-form-label" for="filtro-data-fim">Data final</label>
-                <input class="bfa-form-control"
-                       id="filtro-data-fim"
+        </div>
+
+        <div class="bfa-period-separator" aria-hidden="true">até</div>
+
+        <div class="bfa-field">
+            <label for="filtro-data-fim">Data final</label>
+            <div class="bfa-date-input">
+                <input id="filtro-data-fim"
                        name="dataFim"
-                       type="date"
-                       value="@Model.DataFim.ToString("yyyy-MM-dd")" />
+                       type="text"
+                       inputmode="numeric"
+                       value="@Model.DataFim.ToString("dd/MM/yyyy")"
+                       placeholder="dd/mm/aaaa"
+                       maxlength="10" />
+                <button type="button" class="bfa-date-button" aria-label="Abrir calendário da data final" data-bfa-date-trigger>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </button>
             </div>
-            <div class="bfa-period-filter__actions">
-                <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-                <a class="bfa-btn-secondary bfa-admin-button"
-                   href="/unidade/@Model.UnidadeId/aulas">Limpar</a>
-            </div>
+        </div>
+
+        <div class="bfa-filter-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               href="/unidade/@Model.UnidadeId/aulas">Limpar</a>
         </div>
     </form>
 </section>
@@ -86,9 +119,16 @@
 }
 else
 {
-    <div class="bfa-data-card bfa-admin-desktop-list">
+    <section class="bfa-list-card">
+        <div class="bfa-list-card__head">
+            <div>
+                <h2>Aulas programadas</h2>
+                <p>Período de @Model.DataInicio.ToString("dd/MM/yyyy") a @Model.DataFim.ToString("dd/MM/yyyy")</p>
+            </div>
+        </div>
+
         <div class="bfa-table-wrap">
-            <table>
+            <table class="bfa-data-grid">
                 <thead>
                     <tr>
                         <th>Data</th>
@@ -97,20 +137,21 @@ else
                         <th>Professor</th>
                         <th>Inscritos</th>
                         <th>Status</th>
-                        <th>Ações</th>
+                        <th class="is-actions">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach (var item in Model.Aulas)
                 {
+                    var dataAula = DateOnly.Parse(item.Data, culture);
+                    var diaSemana = culture.DateTimeFormat.GetDayName(dataAula.DayOfWeek);
                     <tr>
                         <td>
-                            <div class="bfa-data-primary">@item.Data</div>
+                            <strong>@item.Data</strong>
+                            <small>@diaSemana</small>
                         </td>
                         <td>@item.HoraInicio – @item.HoraFim</td>
-                        <td>
-                            <div class="bfa-data-primary">@item.TurmaNome</div>
-                        </td>
+                        <td><strong>@item.TurmaNome</strong></td>
                         <td>@item.ProfessorNome</td>
                         <td>@item.Inscritos / @item.Capacidade</td>
                         <td>
@@ -127,81 +168,116 @@ else
                                 @item.Status
                             </span>
                         </td>
-                        <td>
-                            <div class="bfa-actions-cell">
-                                <a class="bfa-admin-button bfa-btn-secondary"
-                                   asp-area="Unidade"
-                                   asp-controller="Aulas"
-                                   asp-action="Detalhes"
-                                   asp-route-unidadeId="@Model.UnidadeId"
-                                   asp-route-aulaId="@item.AulaId">Detalhes</a>
-                            </div>
+                        <td class="is-actions">
+                            <a class="bfa-admin-button bfa-btn-secondary"
+                               asp-area="Unidade"
+                               asp-controller="Aulas"
+                               asp-action="Detalhes"
+                               asp-route-unidadeId="@Model.UnidadeId"
+                               asp-route-aulaId="@item.AulaId">Detalhes</a>
                         </td>
                     </tr>
                 }
                 </tbody>
             </table>
         </div>
-        <div class="bfa-table-footer">
-            @{
-                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
-                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
-                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
-                var baseQueryString = $"dataInicio={Model.DataInicio:yyyy-MM-dd}&dataFim={Model.DataFim:yyyy-MM-dd}";
-                var paginacao = new PaginacaoViewModel
-                {
-                    PaginaAtual = Model.PaginaAtual,
-                    TotalPaginas = totalPaginas,
-                    TotalItens = Model.TotalItens,
-                    PrimeiroIndice = primeiroIndice,
-                    UltimoIndice = ultimoIndice,
-                    BaseQueryString = baseQueryString
-                };
-            }
-            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> aulas</div>
-            <partial name="_Paginacao" model="paginacao" />
-        </div>
-    </div>
 
-    <section class="bfa-mobile-card-list" aria-label="Aulas da unidade">
-        @foreach (var item in Model.Aulas)
-        {
-            var badgeClass = item.Status switch
+        <div class="bfa-mobile-list">
+            @foreach (var item in Model.Aulas)
             {
-                "Programada" => "bfa-data-badge--active",
-                "Concluida" => "bfa-data-badge--completed",
-                _ => "bfa-data-badge--inactive"
-            };
-            <article class="bfa-mobile-card">
-                <div class="bfa-mobile-card__head">
-                    <div>
-                        <div class="bfa-data-primary">@item.TurmaNome</div>
-                        <div class="bfa-data-secondary">@item.Data · @item.HoraInicio – @item.HoraFim</div>
+                var dataAula = DateOnly.Parse(item.Data, culture);
+                var diaSemana = culture.DateTimeFormat.GetDayName(dataAula.DayOfWeek);
+                var badgeClass = item.Status switch
+                {
+                    "Programada" => "bfa-data-badge--active",
+                    "Concluida" => "bfa-data-badge--completed",
+                    _ => "bfa-data-badge--inactive"
+                };
+                <article class="bfa-mobile-card">
+                    <div class="bfa-mobile-card__top">
+                        <div>
+                            <strong>@item.Data</strong>
+                            <small>@diaSemana</small>
+                        </div>
+                        <span class="bfa-data-badge @badgeClass">
+                            <i class="bfa-data-badge__dot"></i>
+                            @item.Status
+                        </span>
                     </div>
-                    <span class="bfa-data-badge @badgeClass">
-                        <i class="bfa-data-badge__dot"></i>
-                        @item.Status
-                    </span>
-                </div>
-                <div class="bfa-mobile-card__grid">
-                    <div>
-                        <span class="bfa-mobile-card__label">Professor</span>
-                        <div>@item.ProfessorNome</div>
+                    <div class="bfa-mobile-card__body">
+                        <div>
+                            <span>Horário</span>
+                            <strong>@item.HoraInicio – @item.HoraFim</strong>
+                        </div>
+                        <div>
+                            <span>Turma</span>
+                            <strong>@item.TurmaNome</strong>
+                        </div>
+                        <div>
+                            <span>Professor</span>
+                            <strong>@item.ProfessorNome</strong>
+                        </div>
+                        <div>
+                            <span>Inscritos</span>
+                            <strong>@item.Inscritos / @item.Capacidade</strong>
+                        </div>
                     </div>
-                    <div>
-                        <span class="bfa-mobile-card__label">Inscritos</span>
-                        <div>@item.Inscritos / @item.Capacidade</div>
-                    </div>
-                </div>
-                <div class="bfa-mobile-card__actions">
-                    <a class="bfa-admin-button bfa-btn-secondary"
+                    <a class="bfa-admin-button bfa-btn-secondary bfa-mobile-card__action"
                        asp-area="Unidade"
                        asp-controller="Aulas"
                        asp-action="Detalhes"
                        asp-route-unidadeId="@Model.UnidadeId"
-                       asp-route-aulaId="@item.AulaId">Detalhes</a>
-                </div>
-            </article>
+                       asp-route-aulaId="@item.AulaId">Ver detalhes</a>
+                </article>
+            }
+        </div>
+
+        @{
+            var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+            var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+            var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
+            var baseQueryString = $"dataInicio={Model.DataInicio:dd/MM/yyyy}&dataFim={Model.DataFim:dd/MM/yyyy}";
+            var paginacao = new PaginacaoViewModel
+            {
+                PaginaAtual = Model.PaginaAtual,
+                TotalPaginas = totalPaginas,
+                TotalItens = Model.TotalItens,
+                PrimeiroIndice = primeiroIndice,
+                UltimoIndice = ultimoIndice,
+                BaseQueryString = baseQueryString
+            };
         }
+        <footer class="bfa-list-footer">
+            <span>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> aulas</span>
+            <partial name="_Paginacao" model="paginacao" />
+            <label class="bfa-page-size">
+                <span>Itens por página</span>
+                <select onchange="window.location.href=this.value">
+                    @foreach (var tamanho in new[] { 5, 10, 25, 50 })
+                    {
+                        var qs = $"dataInicio={Model.DataInicio:dd/MM/yyyy}&dataFim={Model.DataFim:dd/MM/yyyy}&tamanhoPagina={tamanho}";
+                        <option value="?@qs" selected="@(Model.TamanhoPagina == tamanho)">@tamanho</option>
+                    }
+                </select>
+            </label>
+        </footer>
     </section>
+}
+
+@section Scripts {
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+    <script>
+        document.querySelectorAll('.bfa-date-input').forEach(function (wrapper) {
+            var input = wrapper.querySelector('input[data-bfa-date-input], input[type="text"]');
+            var trigger = wrapper.querySelector('[data-bfa-date-trigger]');
+            if (input && trigger && window.BfaDateField) {
+                input.setAttribute('data-bfa-date-input', '');
+                trigger.setAttribute('data-bfa-date-trigger', '');
+                if (!wrapper.hasAttribute('data-bfa-date-field')) {
+                    wrapper.setAttribute('data-bfa-date-field', '');
+                }
+            }
+        });
+        if (window.BfaDateField) window.BfaDateField.iniciar(document);
+    </script>
 }

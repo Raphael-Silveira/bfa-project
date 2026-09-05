@@ -675,34 +675,61 @@ Antes de alterar uma interface administrativa:
 
 Uma solicitação de nova tela não autoriza criar novas funcionalidades, rotas, permissões, consultas ou estruturas de banco além do escopo explicitamente pedido.
 
-## 19. Filtros por período
+## 19. Filtros e consultas por período
 
-Listagens que dependem de intervalo de datas devem usar o padrão `.bfa-period-filter`.
+Listagens que dependem de intervalo de datas devem usar o padrão `.bfa-filter-panel`.
 
 ### Estrutura
 
 ```html
-<section class="bfa-period-filter" aria-label="Filtro por período">
-  <div class="bfa-period-filter__quick-filters">
-    <a class="bfa-period-filter__quick-filter is-active" href="?dataInicio=...&dataFim=...">Hoje</a>
-    <a class="bfa-period-filter__quick-filter" href="?dataInicio=...&dataFim=...">Esta semana</a>
-    <a class="bfa-period-filter__quick-filter" href="?dataInicio=...&dataFim=...">Este mês</a>
+<section class="bfa-filter-panel" aria-labelledby="filtros-aulas">
+  <div class="bfa-filter-panel__header">
+    <div class="bfa-filter-panel__icon" aria-hidden="true"><!-- SVG calendar --></div>
+    <div>
+      <h2 id="filtros-aulas">Filtros</h2>
+      <p>Selecione um período para visualizar os dados.</p>
+    </div>
   </div>
-  <form class="bfa-period-filter__form" method="get">
-    <div class="bfa-period-filter__row">
-      <div class="bfa-period-filter__field">
-        <label class="bfa-form-label" for="filtro-data-inicio">Data inicial</label>
-        <input class="bfa-form-control" type="date" name="dataInicio" id="filtro-data-inicio" />
+
+  <div class="bfa-quick-filters" aria-label="Períodos rápidos">
+    <a class="bfa-chip bfa-chip--active" href="?dataInicio=...&dataFim=...">Hoje</a>
+    <a class="bfa-chip" href="?dataInicio=...&dataFim=...">Esta semana</a>
+    <a class="bfa-chip" href="?dataInicio=...&dataFim=...">Este mês</a>
+    <span class="bfa-chip" style="pointer-events:none;opacity:.5">Personalizado</span>
+  </div>
+
+  <div class="bfa-filter-divider"></div>
+
+  <form class="bfa-period-filter" method="get">
+    <div class="bfa-field">
+      <label for="dataInicio">Data inicial</label>
+      <div class="bfa-date-input">
+        <input id="dataInicio" name="dataInicio" type="text"
+               inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10"
+               value="dd/MM/yyyy" />
+        <button type="button" class="bfa-date-button"
+                aria-label="Abrir calendário da data inicial"
+                data-bfa-date-trigger><!-- SVG calendar --></button>
       </div>
-      <span class="bfa-period-filter__separator">até</span>
-      <div class="bfa-period-filter__field">
-        <label class="bfa-form-label" for="filtro-data-fim">Data final</label>
-        <input class="bfa-form-control" type="date" name="dataFim" id="filtro-data-fim" />
+    </div>
+
+    <div class="bfa-period-separator" aria-hidden="true">até</div>
+
+    <div class="bfa-field">
+      <label for="dataFim">Data final</label>
+      <div class="bfa-date-input">
+        <input id="dataFim" name="dataFim" type="text"
+               inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10"
+               value="dd/MM/yyyy" />
+        <button type="button" class="bfa-date-button"
+                aria-label="Abrir calendário da data final"
+                data-bfa-date-trigger><!-- SVG calendar --></button>
       </div>
-      <div class="bfa-period-filter__actions">
-        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-        <a class="bfa-btn-secondary bfa-admin-button" href="?">Limpar</a>
-      </div>
+    </div>
+
+    <div class="bfa-filter-actions">
+      <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+      <a class="bfa-btn-secondary bfa-admin-button" href="?">Limpar</a>
     </div>
   </form>
 </section>
@@ -711,29 +738,43 @@ Listagens que dependem de intervalo de datas devem usar o padrão `.bfa-period-f
 ### Regras
 
 - **Formato pt-BR**: Datas visíveis ao usuário usam `dd/MM/yyyy`. A UI nunca mostra `yyyy-MM-dd`.
-- **Formato técnico**: `<input type="date">` usa `yyyy-MM-dd` internamente para model binding ASP.NET. A conversão é feita na camada de apresentação.
-- **Filtros rápidos**: Links (`<a>`) que navegam com query string. Ao clicar, voltam para página 1 automaticamente (sem parâmetro `pagina` na URL).
+- **Formato técnico**: Querystring e model binding usam `dd/MM/yyyy` com parsing no controller via `DateOnly.TryParseExact` com cultura `pt-BR`.
+- **Filtros rápidos**: Links (`<a>`) que navegam com query string. "Hoje", "Esta semana", "Este mês" são links. "Personalizado" é um `<span>` inativo quando nenhum filtro rápido corresponde.
 - **Preservação**: Filtros são preservados entre páginas via `BaseQueryString` no `PaginacaoViewModel`.
 - **Reset de página**: Ao alterar período (formulário ou filtro rápido), a paginação volta para página 1.
 - **Validação server-side**: `DataFim >= DataInicio` é validado no controller. Mensagem: "A data final deve ser igual ou posterior à data inicial."
-- **Layout desktop**: Horizontal — campos lado a lado com separador "até".
-- **Layout mobile** (`max-width: 44rem`): Vertical — campos empilhados, separador oculto, botões em coluna.
-- **Acessibilidade**: Labels reais associados, `aria-label` na seção, navegação por teclado.
-- **Date picker**: Usar `<input type="date">` nativo (dark-themed em páginas escuras) ou o componente `bfa-admin-date-field` com `bfa-date-field.js` quando formulário exigir calendário customizado.
+- **Layout desktop**: Grid com 4 colunas — campo data inicial, separador "até", campo data final, ações.
+- **Layout tablet** (`max-width: 56rem`): Grid com 3 colunas, ações em linha separada.
+- **Layout mobile** (`max-width: 42.5rem`): Campos empilhados, separador oculto, ações em 2 colunas.
+- **Layout compacto** (`max-width: 24.375rem`): Filtros rápidos em grid 2x2, ações em coluna.
+- **Acessibilidade**: Labels reais associados, `aria-label` na seção e nos botões de calendário, navegação por teclado.
+- **Date picker**: Usar `bfa-date-field.js` com a estrutura `bfa-date-input` + `data-bfa-date-field`. Calendário dark, pt-BR, com navegação mês anterior/próximo, dia selecionado em amarelo BFA, "Hoje" e "Limpar" no rodapé.
 
 ### Componentes CSS
 
 | Classe | Uso |
 |---|---|
-| `.bfa-period-filter` | Container do filtro de período |
-| `.bfa-period-filter__quick-filters` | Container dos filtros rápidos |
-| `.bfa-period-filter__quick-filter` | Botão/link de filtro rápido |
-| `.bfa-period-filter__quick-filter.is-active` | Filtro rápido ativo |
-| `.bfa-period-filter__form` | Formulário de período |
-| `.bfa-period-filter__row` | Linha horizontal dos campos |
-| `.bfa-period-filter__field` | Campo individual (label + input) |
-| `.bfa-period-filter__separator` | Separador "até" |
-| `.bfa-period-filter__actions` | Botões Filtrar/Limpar |
+| `.bfa-filter-panel` | Container do painel de filtros |
+| `.bfa-filter-panel__header` | Cabeçalho com ícone + título + descrição |
+| `.bfa-filter-panel__icon` | Ícone do cabeçalho (accent subtle) |
+| `.bfa-quick-filters` | Container dos filtros rápidos (chips) |
+| `.bfa-chip` | Botão/link de filtro rápido |
+| `.bfa-chip--active` / `.bfa-chip.is-active` | Filtro rápido ativo |
+| `.bfa-filter-divider` | Divisor horizontal |
+| `.bfa-period-filter` | Grid do formulário de período |
+| `.bfa-field` | Campo individual (label + input) |
+| `.bfa-date-input` | Wrapper do input de data + botão calendário |
+| `.bfa-date-button` | Botão do calendário |
+| `.bfa-period-separator` | Separador "até" |
+| `.bfa-filter-actions` | Botões Filtrar/Limpar |
+| `.bfa-list-card` | Card da listagem (cabeçalho + tabela + footer) |
+| `.bfa-list-card__head` | Cabeçalho da listagem |
+| `.bfa-list-footer` | Footer com contagem + paginação + itens por página |
+| `.bfa-page-size` | Seletor de itens por página |
+
+### Calendários
+
+Campos de data em formulários e filtros administrativos devem reutilizar o componente `bfa-date-field.js` com a estrutura `bfa-date-input`. O calendário é dark, pt-BR, com navegação por teclado, "Hoje" e "Limpar" no rodapé. Não criar calendários customizados para cada tela.
 
 ### Reutilização
 

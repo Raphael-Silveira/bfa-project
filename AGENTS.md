@@ -871,6 +871,10 @@ A `RequestLoggingMiddleware` logs every incoming request with method, path, quer
 
 Any new controller, service, repository, handler, or middleware created without `ILogger<T>` and appropriate log calls is considered incomplete.
 
+### Date filters and date inputs
+
+Date filters and date inputs in administrative screens must follow the shared pt-BR filter/calendar patterns documented in `docs/UI-ADMIN-STANDARDS.md` (section 19). Reuse `bfa-date-field.js` and the `.bfa-date-input` / `.bfa-filter-panel` components. Do not create custom calendars for each screen.
+
 ---
 
 ## 22. Dependencies
