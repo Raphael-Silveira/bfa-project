@@ -1,4 +1,5 @@
 @using BFA.Domain.Matriculas
+@using BFA.Web.ViewModels.Shared
 @model MatriculasListaViewModel
 @{
     ViewData["Title"] = "Matrículas";
@@ -30,43 +31,40 @@
     </div>
 </header>
 
-<form class="bfa-admin-card bfa-matricula-filters"
-      action="/unidade/@Model.UnidadeId/matriculas"
-      method="get"
-      role="search">
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-matricula-texto">Buscar por aluno</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-matricula-texto"
-               name="texto"
-               type="search"
-               value="@Model.Texto"
-               maxlength="150"
-               autocomplete="off"
-               placeholder="Nome do aluno" />
-    </div>
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-matricula-status">Status</label>
-        <select class="form-select bfa-form-control" id="filtro-matricula-status" name="status">
-            <option value="" selected="@(!Model.Status.HasValue)">Todos</option>
-            <option value="Ativa" selected="@(Model.Status == StatusMatricula.Ativa)">Ativa</option>
-            <option value="Encerrada" selected="@(Model.Status == StatusMatricula.Encerrada)">Encerrada</option>
-            <option value="Cancelada" selected="@(Model.Status == StatusMatricula.Cancelada)">Cancelada</option>
-        </select>
-    </div>
-    <div class="bfa-matricula-filter-actions">
-        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-        @if (Model.PossuiFiltros)
-        {
-            <a class="bfa-btn-secondary bfa-admin-button"
-               href="/unidade/@Model.UnidadeId/matriculas">Limpar filtros</a>
-        }
-    </div>
-</form>
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+<section class="bfa-list-toolbar" aria-label="Busca e filtros">
+    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/matriculas">
+        <input type="hidden" name="status" value="@statusAtual" />
+        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input type="search" name="texto" value="@Model.Texto" placeholder="Buscar por nome do aluno..." aria-label="Buscar matrícula" />
+    </form>
+    <nav class="bfa-filter-tabs" aria-label="Filtrar matrículas por status">
+        @{
+            var baseSemStatus = $"/unidade/{Model.UnidadeId}/matriculas";
+        var qsTexto = string.IsNullOrWhiteSpace(Model.Texto) ? "" : $"&texto={Uri.EscapeDataString(Model.Texto)}";
+    }
+    <a class="bfa-filter-tab @(!Model.Status.HasValue ? "is-active" : null)" href="@baseSemStatus@(Model.Texto is not null ? $"?texto={Uri.EscapeDataString(Model.Texto)}" : "")">
+        Todas <span class="bfa-filter-count">@Model.TotalItens</span>
+    </a>
+    <a class="bfa-filter-tab @(Model.Status == StatusMatricula.Ativa ? "is-active" : null)" href="@baseSemStatus?status=Ativa@(string.IsNullOrWhiteSpace(Model.Texto) ? "" : $"&texto={Uri.EscapeDataString(Model.Texto)}")">
+        Ativas <span class="bfa-filter-count">@Model.TotalAtivas</span>
+    </a>
+    <a class="bfa-filter-tab @(Model.Status == StatusMatricula.Encerrada ? "is-active" : null)" href="@baseSemStatus?status=Encerrada@(string.IsNullOrWhiteSpace(Model.Texto) ? "" : $"&texto={Uri.EscapeDataString(Model.Texto)}")">
+        Encerradas <span class="bfa-filter-count">@Model.TotalEncerradas</span>
+    </a>
+    <a class="bfa-filter-tab @(Model.Status == StatusMatricula.Cancelada ? "is-active" : null)" href="@baseSemStatus?status=Cancelada@(string.IsNullOrWhiteSpace(Model.Texto) ? "" : $"&texto={Uri.EscapeDataString(Model.Texto)}")">
+        Canceladas <span class="bfa-filter-count">@Model.TotalCanceladas</span>
+    </a>
+    </nav>
+</section>
 
 @if (Model.Matriculas.Count == 0)
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+    <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
             <h2>@(Model.PossuiFiltros
@@ -80,87 +78,128 @@
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list bfa-matricula-lista">
-        <table class="bfa-admin-table bfa-matricula-table">
-            <thead>
-                <tr>
-                    <th>Aluno e plano</th>
-                    <th>Status</th>
-                    <th>Período</th>
-                    <th>Condições</th>
-                    <th>Grade atual</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model.Matriculas)
-            {
-                <tr>
-                    <td>
-                        <span class="bfa-matricula-primary">
-                            <strong>@item.NomeAluno</strong>
-                            <small>@item.Plano</small>
-                        </span>
-                    </td>
-                    <td><span class="bfa-admin-badge @(item.Ativa ? "is-active" : "is-inactive")">@item.Status</span></td>
-                    <td>
-                        <span class="bfa-matricula-primary">
-                            <strong>@item.DataInicio</strong>
-                            <small>Fim previsto · @item.DataFimPrevista</small>
-                        </span>
-                    </td>
-                    <td>
-                        <span class="bfa-matricula-primary">
-                            <strong>@item.ValorMensalContratado</strong>
-                            <small>@item.FrequenciaSemanal</small>
-                        </span>
-                    </td>
-                    <td>@item.GradeAtual</td>
-                    <td>
-                        <a class="bfa-btn-secondary bfa-admin-button bfa-matricula-detail-action"
-                           asp-area="Unidade"
-                           asp-controller="Matriculas"
-                           asp-action="Detalhes"
-                           asp-route-unidadeId="@Model.UnidadeId"
-                           asp-route-matriculaId="@item.MatriculaId"
-                           asp-route-texto="@Model.Texto"
-                           asp-route-status="@statusAtual">Ver detalhes <span aria-hidden="true">→</span></a>
-                    </td>
-                </tr>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aluno e plano</th>
+                        <th>Status</th>
+                        <th>Período</th>
+                        <th>Condições</th>
+                        <th>Grade atual</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Matriculas)
+                {
+                    <tr>
+                        <td>
+                            <div class="bfa-data-primary">@item.NomeAluno</div>
+                            <div class="bfa-data-secondary">@item.Plano</div>
+                        </td>
+                        <td>
+                            <span class="bfa-data-badge @(item.Ativa ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
+                                @item.Status
+                            </span>
+                        </td>
+                        <td>
+                            <div class="bfa-data-primary">@item.DataInicio</div>
+                            <div class="bfa-data-secondary">Fim previsto · @item.DataFimPrevista</div>
+                        </td>
+                        <td>
+                            <div class="bfa-data-primary">@item.ValorMensalContratado</div>
+                            <div class="bfa-data-secondary">@item.FrequenciaSemanal</div>
+                        </td>
+                        <td>@item.GradeAtual</td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <a class="bfa-admin-button bfa-btn-secondary"
+                                   asp-area="Unidade"
+                                   asp-controller="Matriculas"
+                                   asp-action="Detalhes"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-matriculaId="@item.MatriculaId"
+                                   asp-route-texto="@Model.Texto"
+                                   asp-route-status="@statusAtual">Detalhes</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="bfa-table-footer">
+            @{
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
             }
-            </tbody>
-        </table>
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> matrículas</div>
+            @{
+                var qsParts = new List<string>();
+                if (Model.Status.HasValue)
+                    qsParts.Add($"status={Model.Status.Value}");
+                if (!string.IsNullOrWhiteSpace(Model.Texto))
+                    qsParts.Add($"texto={Uri.EscapeDataString(Model.Texto)}");
+                var baseQs = string.Join("&", qsParts);
+
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var paginacao = new PaginacaoViewModel
+                {
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = baseQs
+                };
+            }
+            <partial name="_Paginacao" model="paginacao" />
+        </div>
     </div>
 
-    <section class="bfa-admin-mobile-list" aria-label="Matrículas da unidade">
+    <section class="bfa-mobile-card-list" aria-label="Matrículas da unidade">
         @foreach (var item in Model.Matriculas)
         {
-            <article class="bfa-admin-card bfa-matricula-card">
-                <header>
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
                     <div>
-                        <p>Aluno</p>
-                        <h2>@item.NomeAluno</h2>
-                        <span>@item.Plano</span>
+                        <div class="bfa-data-primary">@item.NomeAluno</div>
+                        <div class="bfa-data-secondary">@item.Plano</div>
                     </div>
-                    <span class="bfa-admin-badge @(item.Ativa ? "is-active" : "is-inactive")">@item.Status</span>
-                </header>
-                <dl>
-                    <div><dt>Início</dt><dd>@item.DataInicio</dd></div>
-                    <div><dt>Fim previsto</dt><dd>@item.DataFimPrevista</dd></div>
-                    <div><dt>Mensalidade</dt><dd>@item.ValorMensalContratado</dd></div>
-                    <div><dt>Frequência</dt><dd>@item.FrequenciaSemanal</dd></div>
-                    <div><dt>Grade atual</dt><dd>@item.GradeAtual</dd></div>
-                </dl>
-                <footer>
-                    <a class="bfa-btn-secondary bfa-admin-button bfa-matricula-detail-action"
+                    <span class="bfa-data-badge @(item.Ativa ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                        <i class="bfa-data-badge__dot"></i>
+                        @item.Status
+                    </span>
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Período</span>
+                        <div>@item.DataInicio</div>
+                        <div class="bfa-data-secondary">Fim previsto · @item.DataFimPrevista</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Condições</span>
+                        <div>@item.ValorMensalContratado</div>
+                        <div class="bfa-data-secondary">@item.FrequenciaSemanal</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Grade atual</span>
+                        <div>@item.GradeAtual</div>
+                    </div>
+                </div>
+                <div class="bfa-mobile-card__actions">
+                    <a class="bfa-admin-button bfa-btn-secondary"
                        asp-area="Unidade"
                        asp-controller="Matriculas"
                        asp-action="Detalhes"
                        asp-route-unidadeId="@Model.UnidadeId"
                        asp-route-matriculaId="@item.MatriculaId"
                        asp-route-texto="@Model.Texto"
-                       asp-route-status="@statusAtual">Ver detalhes <span aria-hidden="true">→</span></a>
-                </footer>
+                       asp-route-status="@statusAtual">Detalhes</a>
+                </div>
             </article>
         }
     </section>

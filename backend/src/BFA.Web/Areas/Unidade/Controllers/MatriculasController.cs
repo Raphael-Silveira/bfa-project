@@ -26,6 +26,7 @@ public sealed class MatriculasController(
         Guid unidadeId,
         string? texto,
         string? status,
+        int? pagina,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
@@ -45,12 +46,34 @@ public sealed class MatriculasController(
             || resultado.Contexto is null)
             return Forbid();
 
+        var todos = resultado.Valor;
+        var totalAtivas = todos.Count(m => m.Status == StatusMatricula.Ativa);
+        var totalEncerradas = todos.Count(m => m.Status == StatusMatricula.Encerrada);
+        var totalCanceladas = todos.Count(m => m.Status == StatusMatricula.Cancelada);
+
+        var totalItens = todos.Count;
+        const int tamanhoPagina = 10;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+
+        var itensPagina = todos
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToList();
+
         return View(MatriculasViewModelMapper.Lista(
             resultado.Contexto,
-            resultado.Valor,
+            itensPagina,
             await PodeTrocarAsync(usuarioId, cancellationToken),
             textoNormalizado,
-            statusNormalizado));
+            statusNormalizado,
+            paginaAtual,
+            tamanhoPagina,
+            totalItens,
+            totalAtivas,
+            totalEncerradas,
+            totalCanceladas));
     }
 
     [HttpGet("nova")]

@@ -19,6 +19,12 @@ public sealed class MatriculasListaViewModel : IUnidadeContextoViewModel
     public StatusMatricula? Status { get; init; }
     public IReadOnlyList<MatriculaListaItemViewModel> Matriculas { get; init; } = [];
     public bool PossuiFiltros => Texto is not null || Status.HasValue;
+    public required int PaginaAtual { get; init; }
+    public required int TamanhoPagina { get; init; }
+    public required int TotalItens { get; init; }
+    public required int TotalAtivas { get; init; }
+    public required int TotalEncerradas { get; init; }
+    public required int TotalCanceladas { get; init; }
 }
 
 public sealed record MatriculaListaItemViewModel(
@@ -151,7 +157,13 @@ internal static class MatriculasViewModelMapper
         IReadOnlyList<MatriculaListaItem> matriculas,
         bool podeTrocarUnidade,
         string? texto,
-        StatusMatricula? status) => new()
+        StatusMatricula? status,
+        int paginaAtual,
+        int tamanhoPagina,
+        int totalItens,
+        int totalAtivas,
+        int totalEncerradas,
+        int totalCanceladas) => new()
     {
         OrganizacaoId = contexto.OrganizacaoId,
         UnidadeId = contexto.UnidadeId,
@@ -173,7 +185,13 @@ internal static class MatriculasViewModelMapper
             item.QuantidadeHorariosAtuais == 1
                 ? "1 horário"
                 : $"{item.QuantidadeHorariosAtuais} horários"))
-            .ToArray()
+            .ToArray(),
+        PaginaAtual = paginaAtual,
+        TamanhoPagina = tamanhoPagina,
+        TotalItens = totalItens,
+        TotalAtivas = totalAtivas,
+        TotalEncerradas = totalEncerradas,
+        TotalCanceladas = totalCanceladas
     };
 
     public static MatriculaDetalheViewModel Detalhe(
