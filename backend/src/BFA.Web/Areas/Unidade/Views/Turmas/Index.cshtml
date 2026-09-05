@@ -7,34 +7,120 @@
     var podeGerenciar = governanca?.PodeGerenciarTurmas ?? true;
 }
 
-<header class="bfa-admin-page-header">
-    <div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Operação da unidade</p><h1 class="bfa-admin-page-header__title">Turmas</h1><p class="bfa-admin-page-header__description">Turmas e horários recorrentes de @Model.NomeUnidade.</p></div>
-    @if (podeGerenciar)
-    {
-        <div class="bfa-admin-page-header__actions"><a class="bfa-btn-primary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/nova">Nova turma</a></div>
-    }
+<header class="bfa-admin-page-header" aria-labelledby="titulo-turmas">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-turmas">Turmas</h1>
+        <p class="bfa-admin-page-header__description">Turmas e horários recorrentes de @Model.NomeUnidade.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        @if (podeGerenciar)
+        {
+            <a class="bfa-btn-primary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/nova">Nova turma</a>
+        }
+    </div>
 </header>
 
-@if (TempData["Sucesso"] is string sucesso) { <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div> }
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
 
 @if (Model.Turmas.Count == 0)
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status"><div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div><div><h2>Nenhuma turma cadastrada nesta unidade.</h2><p>@(podeGerenciar ? "Use “Nova turma” para cadastrar a primeira turma e seus horários recorrentes." : "A operação da unidade ainda não possui turmas cadastradas.")</p></div></section>
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhuma turma cadastrada nesta unidade.</h2>
+            <p>@(podeGerenciar ? "Use \u201cNova turma\u201d para cadastrar a primeira turma e seus hor\u00E1rios recorrentes." : "A opera\u00E7\u00E3o da unidade ainda n\u00E3o possui turmas cadastradas.")</p>
+        </div>
+    </section>
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table"><thead><tr><th>Turma</th><th>Professor</th><th>Capacidade</th><th>Horários vigentes</th><th>Status</th><th>Ações</th></tr></thead><tbody>
-        @foreach (var turma in Model.Turmas)
-        {
-            <tr><td><strong>@turma.Nome</strong></td><td>@turma.NomeProfessor</td><td>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</td><td><partial name="_HorariosResumo" model="turma.Horarios" /></td><td><span class="bfa-admin-badge @(turma.Ativo ? "is-active" : "is-inactive")">@(turma.Ativo ? "Ativa" : "Inativa")</span></td><td>@if (podeGerenciar) { <div class="bfa-admin-actions"><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/editar">Editar</a><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/horarios">Ajustar horários</a><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/professor">Trocar professor</a></div> } else { <span class="bfa-admin-form-help">Somente leitura</span> }</td></tr>
-        }
-        </tbody></table>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Turma</th>
+                        <th>Professor</th>
+                        <th>Capacidade</th>
+                        <th>Horários vigentes</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var turma in Model.Turmas)
+                {
+                    <tr>
+                        <td>
+                            <div class="bfa-data-primary">@turma.Nome</div>
+                        </td>
+                        <td>@turma.NomeProfessor</td>
+                        <td>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</td>
+                        <td><partial name="_HorariosResumo" model="turma.Horarios" /></td>
+                        <td>
+                            <span class="bfa-data-badge @(turma.Ativo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
+                                @(turma.Ativo ? "Ativa" : "Inativa")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                @if (podeGerenciar)
+                                {
+                                    <a class="bfa-admin-button bfa-btn-secondary" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/editar">Editar</a>
+                                    <a class="bfa-admin-button bfa-btn-secondary" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/horarios">Horários</a>
+                                    <a class="bfa-admin-button bfa-btn-secondary" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/professor">Professor</a>
+                                }
+                                else
+                                {
+                                    <span class="bfa-data-secondary">Somente leitura</span>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
-    <section class="bfa-admin-mobile-list" aria-label="Turmas da unidade">
+
+    <section class="bfa-mobile-card-list" aria-label="Turmas da unidade">
         @foreach (var turma in Model.Turmas)
         {
-            <article class="bfa-admin-card bfa-turma-card"><header><div><p>Turma</p><h2>@turma.Nome</h2></div><span class="bfa-admin-badge @(turma.Ativo ? "is-active" : "is-inactive")">@(turma.Ativo ? "Ativa" : "Inativa")</span></header><dl><div><dt>Professor</dt><dd>@turma.NomeProfessor</dd></div><div><dt>Capacidade</dt><dd>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</dd></div><div><dt>Horários vigentes</dt><dd><partial name="_HorariosResumo" model="turma.Horarios" /></dd></div></dl>@if (podeGerenciar) { <footer class="bfa-turma-card__actions"><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/editar">Editar</a><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/horarios">Ajustar horários</a><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/professor">Trocar professor</a></footer> } else { <footer class="bfa-turma-card__actions"><span class="bfa-admin-form-help">Somente leitura</span></footer> }</article>
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
+                    <div>
+                        <div class="bfa-data-primary">@turma.Nome</div>
+                        <div class="bfa-data-secondary">@turma.NomeProfessor</div>
+                    </div>
+                    <span class="bfa-data-badge @(turma.Ativo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                        <i class="bfa-data-badge__dot"></i>
+                        @(turma.Ativo ? "Ativa" : "Inativa")
+                    </span>
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Capacidade</span>
+                        <div>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Horários vigentes</span>
+                        <div><partial name="_HorariosResumo" model="turma.Horarios" /></div>
+                    </div>
+                </div>
+                @if (podeGerenciar)
+                {
+                    <div class="bfa-mobile-card__actions">
+                        <a class="bfa-admin-button bfa-btn-secondary" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/editar">Editar</a>
+                        <a class="bfa-admin-button bfa-btn-secondary" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/horarios">Horários</a>
+                        <a class="bfa-admin-button bfa-btn-secondary" href="/unidade/@Model.UnidadeId/turmas/@turma.Id/professor">Professor</a>
+                    </div>
+                }
+            </article>
         }
     </section>
 }
