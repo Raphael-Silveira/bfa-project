@@ -6,32 +6,71 @@
 }
 
 <header class="bfa-admin-page-header">
-    <div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Equipe da unidade</p><h1 class="bfa-admin-page-header__title">Novo professor</h1><p class="bfa-admin-page-header__description">Cadastre o professor, o vínculo com a unidade e sua remuneração inicial.</p></div>
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Equipe da unidade</p>
+        <h1 class="bfa-admin-page-header__title">Novo professor</h1>
+        <p class="bfa-admin-page-header__description">Cadastre o professor, o vínculo com a unidade e sua remuneração inicial.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">
+            <span>Voltar</span>
+        </a>
+    </div>
 </header>
 
-<form class="bfa-admin-form bfa-professor-form" method="post" action="/unidade/@Model.UnidadeId/professores/novo">
+<form class="bfa-admin-form" method="post" action="/unidade/@Model.UnidadeId/professores/novo">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
     @if (Model.CpfJaCadastradoNaRede)
     {
         <div class="bfa-admin-notice" role="status">
-            <div><strong>Este professor já está cadastrado na rede.</strong><p>Utilize a opção de vínculo para associá-lo a esta unidade sem duplicar o cadastro.</p><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores/vincular?termo=@Uri.EscapeDataString(Model.Cpf ?? string.Empty)">Vincular professor existente</a></div>
+            <div>
+                <strong>Este professor já está cadastrado na rede.</strong>
+                <p>Utilize a opção de vínculo para associá-lo a esta unidade sem duplicar o cadastro.</p>
+                <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores/vincular?termo=@Uri.EscapeDataString(Model.Cpf ?? string.Empty)">Vincular professor existente</a>
+            </div>
         </div>
     }
-    <div class="bfa-admin-form-sections">
-      <section class="bfa-admin-card bfa-admin-form-card">
-        <header class="bfa-professor-form__heading"><p>Dados cadastrais</p><h2>Professor</h2></header>
-        <div class="bfa-professor-form-grid">
-            <div class="bfa-form-field bfa-professor-form-wide"><label asp-for="NomeCompleto" class="bfa-form-label"></label><input asp-for="NomeCompleto" class="form-control bfa-form-control" autocomplete="name" /><span asp-validation-for="NomeCompleto" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="Cpf" class="bfa-form-label"></label><input asp-for="Cpf" class="form-control bfa-form-control" inputmode="numeric" maxlength="14" data-bfa-mask="document" /><span asp-validation-for="Cpf" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="Telefone" class="bfa-form-label"></label><input asp-for="Telefone" class="form-control bfa-form-control" inputmode="numeric" data-bfa-mask="phone" /><span asp-validation-for="Telefone" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field bfa-professor-form-wide"><label asp-for="Email" class="bfa-form-label"></label><input asp-for="Email" class="form-control bfa-form-control" type="email" autocomplete="email" /><span asp-validation-for="Email" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field bfa-professor-form-wide"><label class="bfa-form-label">Unidade</label><input class="form-control bfa-form-control" value="@Model.NomeUnidade" readonly /></div>
-        </div>
-      </section>
-      <partial name="_RemuneracaoInicial" model="Model" />
+
+    <div class="bfa-form-grid">
+        <section class="bfa-form-card">
+            <div class="bfa-card-title-row">
+                <div class="bfa-card-icon">♟</div>
+                <h2>Dados do professor</h2>
+            </div>
+            <div class="bfa-fields">
+                <div class="bfa-field">
+                    <label asp-for="NomeCompleto" class="bfa-form-label"></label>
+                    <input asp-for="NomeCompleto" class="form-control bfa-form-control" autocomplete="name" placeholder="Digite o nome completo do professor" />
+                    <span asp-validation-for="NomeCompleto" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-field-grid-2">
+                    <div class="bfa-field">
+                        <label asp-for="Cpf" class="bfa-form-label"></label>
+                        <input asp-for="Cpf" class="form-control bfa-form-control" inputmode="numeric" maxlength="14" data-bfa-mask="document" placeholder="000.000.000-00" />
+                        <span asp-validation-for="Cpf" class="bfa-validation-message"></span>
+                    </div>
+                    <div class="bfa-field">
+                        <label asp-for="Telefone" class="bfa-form-label"></label>
+                        <input asp-for="Telefone" class="form-control bfa-form-control" inputmode="numeric" data-bfa-mask="phone" placeholder="(11) 91234-5678" />
+                        <span asp-validation-for="Telefone" class="bfa-validation-message"></span>
+                    </div>
+                </div>
+                <div class="bfa-field">
+                    <label asp-for="Email" class="bfa-form-label"></label>
+                    <input asp-for="Email" class="form-control bfa-form-control" type="email" autocomplete="email" placeholder="exemplo@bfa.com" />
+                    <span asp-validation-for="Email" class="bfa-validation-message"></span>
+                </div>
+            </div>
+        </section>
+
+        <partial name="_RemuneracaoInicial" model="Model" />
     </div>
-    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Cadastrar professor</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Cancelar</a></div>
+
+    <div class="bfa-form-actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/professores">Cancelar</a>
+        <button class="bfa-btn-primary bfa-admin-button" type="submit">Cadastrar professor</button>
+    </div>
 </form>
 
 @section Scripts {

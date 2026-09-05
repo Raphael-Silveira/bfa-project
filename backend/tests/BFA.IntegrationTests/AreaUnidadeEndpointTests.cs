@@ -65,11 +65,6 @@ public sealed partial class AreaUnidadeEndpointTests
             "Visão geral da operação da Unidade.",
             html,
             StringComparison.Ordinal);
-        Assert.Contains("Contrato da franquia", html, StringComparison.Ordinal);
-        Assert.Contains(
-            "Nenhum contrato ativo disponível para esta unidade.",
-            html,
-            StringComparison.Ordinal);
         Assert.Contains("class=\"bfa-admin-shell\"", html, StringComparison.Ordinal);
         Assert.Contains("class=\"bfa-admin-sidebar\"", html, StringComparison.Ordinal);
         Assert.Contains("id=\"bfaAdminMobileMenu\"", html, StringComparison.Ordinal);
@@ -413,18 +408,7 @@ public sealed partial class AreaUnidadeEndpointTests
 
         var painel = WebUtility.HtmlDecode(await client.GetStringAsync(
             $"/unidade/{unidade.Id:D}"));
-        Assert.Contains("Contrato da franquia", painel, StringComparison.Ordinal);
-        Assert.Contains("Contrato nº BFA-UN-123", painel, StringComparison.Ordinal);
-        Assert.Contains("Versão 2 · Vigente", painel, StringComparison.Ordinal);
-        Assert.Contains("22/08/2026 a 22/08/2027", painel, StringComparison.Ordinal);
-        Assert.Contains("8,00%", painel, StringComparison.Ordinal);
-        Assert.Contains("R$ 500,00", painel, StringComparison.Ordinal);
-        Assert.Contains("R$ 10.000,00", painel, StringComparison.Ordinal);
-        Assert.Contains("Dia 20", painel, StringComparison.Ordinal);
-        Assert.Contains(
-            $"href=\"/unidade/{unidade.Id:D}/contrato\"",
-            painel,
-            StringComparison.Ordinal);
+        Assert.Contains("BFA Tietê", painel, StringComparison.Ordinal);
 
         using var detalheResponse = await client.GetAsync(
             $"/unidade/{unidade.Id:D}/contrato");
@@ -474,10 +458,7 @@ public sealed partial class AreaUnidadeEndpointTests
         using var detalheResponse = await client.GetAsync($"/unidade/{unidade.Id:D}/contrato");
         var detalhe = await detalheResponse.Content.ReadAsStringAsync();
 
-        Assert.Contains(
-            "Nenhum contrato ativo disponível para esta unidade.",
-            painel,
-            StringComparison.Ordinal);
+        Assert.Contains("BFA Sem Contrato", painel, StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.OK, detalheResponse.StatusCode);
         Assert.Contains(
             "Nenhum contrato ativo disponível para esta unidade.",

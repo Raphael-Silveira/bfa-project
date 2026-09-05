@@ -1,20 +1,51 @@
 @using BFA.Domain.Professores
 @model ProfessorRemuneracaoInicialViewModel
 
-<section class="bfa-admin-card bfa-admin-form-card">
-    <header class="bfa-professor-form__heading"><p>Condição inicial</p><h2>Remuneração</h2></header>
-    <div class="bfa-professor-form-grid">
-        <div class="bfa-form-field"><label asp-for="Modalidade" class="bfa-form-label"></label><select asp-for="Modalidade" class="form-select bfa-form-control"><option value="@ModalidadeRemuneracaoProfessor.Mensal">Mensal</option><option value="@ModalidadeRemuneracaoProfessor.PorAula">Por aula</option><option value="@ModalidadeRemuneracaoProfessor.PorHora">Por hora</option></select><span asp-validation-for="Modalidade" class="bfa-validation-message"></span></div>
-        <div class="bfa-form-field"><label asp-for="ValorTexto" class="bfa-form-label"></label><div class="bfa-professor-money"><span>R$</span><input asp-for="ValorTexto" class="form-control bfa-form-control" type="text" inputmode="decimal" placeholder="0,00" data-bfa-number="money" data-bfa-number-min="0" /></div><span asp-validation-for="ValorTexto" class="bfa-validation-message"></span></div>
-        <div class="bfa-form-field">
-            <label asp-for="VigenciaInicioTexto" class="bfa-form-label"></label>
-            <div class="bfa-admin-date-field" data-bfa-date-field><input asp-for="VigenciaInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" data-bfa-date-min="@(Model.VigenciaInicioMinima?.ToString("yyyy-MM-dd"))" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da vigência" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div>
-            <span asp-validation-for="VigenciaInicioTexto" class="bfa-validation-message"></span>
-            @if (Model.VigenciaInicioMinima is { } dataMinima)
-            {
-                <span class="bfa-admin-form-help">A remuneração anterior terminou em @dataMinima.AddDays(-1).ToString("dd/MM/yyyy"). A nova vigência deve começar em @dataMinima.ToString("dd/MM/yyyy") ou depois.</span>
-            }
+<section class="bfa-form-card">
+    <div class="bfa-card-title-row">
+        <div class="bfa-card-icon">$</div>
+        <h2>Remuneração inicial</h2>
+    </div>
+    <div class="bfa-fields">
+        <div class="bfa-field-grid-2">
+            <div class="bfa-field">
+                <label asp-for="Modalidade" class="bfa-form-label"></label>
+                <select asp-for="Modalidade" class="form-select bfa-form-control">
+                    <option value="@ModalidadeRemuneracaoProfessor.Mensal">Mensal</option>
+                    <option value="@ModalidadeRemuneracaoProfessor.PorAula">Por aula</option>
+                    <option value="@ModalidadeRemuneracaoProfessor.PorHora">Por hora</option>
+                </select>
+                <span asp-validation-for="Modalidade" class="bfa-validation-message"></span>
+            </div>
+            <div class="bfa-field">
+                <label asp-for="ValorTexto" class="bfa-form-label"></label>
+                <div class="bfa-money-input">
+                    <span class="bfa-money-input__prefix">R$</span>
+                    <input asp-for="ValorTexto" class="form-control bfa-form-control" type="text" inputmode="decimal" placeholder="0,00" data-bfa-number="money" data-bfa-number-min="0" />
+                </div>
+                <span asp-validation-for="ValorTexto" class="bfa-validation-message"></span>
+            </div>
         </div>
-        <div class="bfa-form-field bfa-professor-form-wide"><label asp-for="Observacao" class="bfa-form-label"></label><textarea asp-for="Observacao" class="form-control bfa-form-control" rows="4"></textarea><span asp-validation-for="Observacao" class="bfa-validation-message"></span></div>
+        <div class="bfa-field-grid-2">
+            <div class="bfa-field">
+                <label asp-for="VigenciaInicioTexto" class="bfa-form-label"></label>
+                <div class="bfa-admin-date-field" data-bfa-date-field>
+                    <input asp-for="VigenciaInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" data-bfa-date-min="@(Model.VigenciaInicioMinima?.ToString("yyyy-MM-dd"))" />
+                    <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da vigência" data-bfa-date-trigger>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                    </button>
+                </div>
+                <span asp-validation-for="VigenciaInicioTexto" class="bfa-validation-message"></span>
+                @if (Model.VigenciaInicioMinima is { } dataMinima)
+                {
+                    <span class="bfa-admin-form-help">A remuneração anterior terminou em @dataMinima.AddDays(-1).ToString("dd/MM/yyyy"). A nova vigência deve começar em @dataMinima.ToString("dd/MM/yyyy") ou depois.</span>
+                }
+            </div>
+            <div class="bfa-field">
+                <label asp-for="Observacao" class="bfa-form-label"></label>
+                <textarea asp-for="Observacao" class="form-control bfa-form-control" rows="4" placeholder="Informações adicionais sobre a remuneração..."></textarea>
+                <span asp-validation-for="Observacao" class="bfa-validation-message"></span>
+            </div>
+        </div>
     </div>
 </section>

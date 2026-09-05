@@ -1,11 +1,13 @@
 @using System.Globalization
 @using BFA.Domain.Professores
 @using BFA.Application.Unidades.Professores
+@using BFA.Web.ViewModels.Shared
 @model ProfessoresUnidadeIndexViewModel
 @{
     ViewData["Title"] = "Professores";
     Layout = "_UnidadeLayout";
     var cultura = CultureInfo.GetCultureInfo("pt-BR");
+    var totalExibindo = Model.Professores.Count;
 }
 
 <header class="bfa-admin-page-header">
@@ -24,52 +26,155 @@
     </div>
 </header>
 
-<nav class="bfa-professor-filters" aria-label="Filtrar professores por vínculo">
-    <a class="@(Model.Filtro == FiltroProfessoresUnidade.Ativos ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores">Ativos</a>
-    <a class="@(Model.Filtro == FiltroProfessoresUnidade.Encerrados ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores?filtro=encerrados">Encerrados</a>
-    <a class="@(Model.Filtro == FiltroProfessoresUnidade.Todos ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores?filtro=todos">Todos</a>
-</nav>
-
 @if (TempData["Sucesso"] is string sucesso)
 {
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
 }
 
+<section class="bfa-list-toolbar" aria-label="Busca e filtros">
+    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/professores">
+        <input type="hidden" name="filtro" value="@Model.Filtro.ToString().ToLowerInvariant()" />
+        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input type="search" name="termo" value="@Model.TermoBusca" placeholder="Buscar por nome, CPF ou contato..." aria-label="Buscar professor" />
+    </form>
+    <nav class="bfa-filter-tabs" aria-label="Filtrar professores por vínculo">
+        <a class="bfa-filter-tab @(Model.Filtro == FiltroProfessoresUnidade.Ativos ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores?termo=@Model.TermoBusca">
+            Ativos <span class="bfa-filter-count">@Model.TotalAtivos</span>
+        </a>
+        <a class="bfa-filter-tab @(Model.Filtro == FiltroProfessoresUnidade.Encerrados ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores?filtro=encerrados&termo=@Model.TermoBusca">
+            Encerrados <span class="bfa-filter-count">@Model.TotalEncerrados</span>
+        </a>
+        <a class="bfa-filter-tab @(Model.Filtro == FiltroProfessoresUnidade.Todos ? "is-active" : null)" href="/unidade/@Model.UnidadeId/professores?filtro=todos&termo=@Model.TermoBusca">
+            Todos <span class="bfa-filter-count">@Model.TotalItens</span>
+        </a>
+    </nav>
+</section>
+
 @if (Model.Professores.Count == 0)
 {
     <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
-        <div><h2>Nenhum professor cadastrado.</h2><p>Use “Novo professor” para iniciar o cadastro nesta unidade.</p></div>
+        <div>
+            <h2>Nenhum professor encontrado.</h2>
+            <p>@(string.IsNullOrWhiteSpace(Model.TermoBusca) ? "Use \"Novo professor\" para iniciar o cadastro nesta unidade." : "Tente outros termos de busca ou limpe o filtro.")</p>
+        </div>
     </section>
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead><tr><th>Professor</th><th>CPF</th><th>Contato</th><th>Vínculo</th><th>Acesso</th><th>Remuneração atual</th><th>Ações</th></tr></thead>
-            <tbody>
-            @foreach (var item in Model.Professores)
-            {
-                <tr>
-                    <td><strong>@item.NomeCompleto</strong></td>
-                    <td>@FormatarCpf(item.Cpf)</td>
-                    <td><span class="bfa-professor-contact">@(item.Telefone ?? "Não informado")<small>@(item.Email ?? "E-mail não informado")</small></span></td>
-                    <td><span class="bfa-admin-badge @(item.VinculoAtivo ? "is-active" : "is-inactive")">@(item.VinculoAtivo ? "Ativo" : "Inativo")</span></td>
-                    <td><span class="bfa-professor-contact"><strong>@(item.AcessoProfessorAtivo ? "Ativo" : item.UsuarioId.HasValue ? "Revogado" : "Não concedido")</strong><small>@(item.NomeUsuario ?? "Sem usuário")</small></span></td>
-                    <td>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</td>
-                    <td><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo, item.UsuarioId, item.NomeUsuario, item.AcessoProfessorAtivo))" /></td>
-                </tr>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Professor</th>
+                        <th>Contato</th>
+                        <th>Vínculo</th>
+                        <th>Acesso</th>
+                        <th>Remuneração</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Professores)
+                {
+                    <tr>
+                        <td>
+                            <div class="bfa-data-primary">@item.NomeCompleto</div>
+                            <div class="bfa-data-secondary">@FormatarCpf(item.Cpf)</div>
+                        </td>
+                        <td>
+                            <div class="bfa-data-stack">
+                                <div>@(item.Email ?? "E-mail não informado")</div>
+                                <div class="bfa-data-secondary">@(item.Telefone ?? "Telefone não informado")</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="bfa-data-badge @(item.VinculoAtivo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
+                                @(item.VinculoAtivo ? "Ativo" : "Encerrado")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="bfa-data-primary">@(item.AcessoProfessorAtivo ? "Ativo" : item.UsuarioId.HasValue ? "Revogado" : "Não concedido")</div>
+                            <div class="bfa-data-secondary">@(item.NomeUsuario ?? "Sem usuário")</div>
+                        </td>
+                        <td>
+                            <div class="bfa-data-primary">@FormatarModalidade(item.Modalidade)</div>
+                            <div>@FormatarValor(item.Valor, cultura)</div>
+                        </td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo, item.UsuarioId, item.NomeUsuario, item.AcessoProfessorAtivo))" />
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="bfa-table-footer">
+            @{
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
             }
-            </tbody>
-        </table>
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> professores</div>
+            @{
+                var qsParts = new List<string>();
+                if (Model.Filtro != FiltroProfessoresUnidade.Ativos)
+                    qsParts.Add($"filtro={Model.Filtro.ToString().ToLowerInvariant()}");
+                if (!string.IsNullOrWhiteSpace(Model.TermoBusca))
+                    qsParts.Add($"termo={Uri.EscapeDataString(Model.TermoBusca)}");
+                var baseQs = string.Join("&", qsParts);
+
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var paginacao = new PaginacaoViewModel
+                {
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = baseQs
+                };
+            }
+            <partial name="_Paginacao" model="paginacao" />
+        </div>
     </div>
-    <section class="bfa-admin-mobile-list" aria-label="Professores vinculados">
+
+    <section class="bfa-mobile-card-list" aria-label="Professores vinculados">
         @foreach (var item in Model.Professores)
         {
-            <article class="bfa-admin-card bfa-professor-card">
-                <header><div><p>Professor</p><h2>@item.NomeCompleto</h2></div><span class="bfa-admin-badge @(item.VinculoAtivo ? "is-active" : "is-inactive")">@(item.VinculoAtivo ? "Ativo" : "Inativo")</span></header>
-                <dl><div><dt>CPF</dt><dd>@FormatarCpf(item.Cpf)</dd></div><div><dt>Telefone</dt><dd>@(item.Telefone ?? "Não informado")</dd></div><div><dt>E-mail</dt><dd>@(item.Email ?? "Não informado")</dd></div><div><dt>Acesso</dt><dd>@(item.AcessoProfessorAtivo ? $"Ativo · {item.NomeUsuario}" : item.UsuarioId.HasValue ? "Revogado" : "Não concedido")</dd></div><div><dt>Remuneração atual</dt><dd>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</dd></div></dl>
-                <footer class="bfa-professor-card__actions"><partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo, item.UsuarioId, item.NomeUsuario, item.AcessoProfessorAtivo))" /></footer>
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
+                    <div>
+                        <div class="bfa-data-primary">@item.NomeCompleto</div>
+                        <div class="bfa-data-secondary">@FormatarCpf(item.Cpf)</div>
+                    </div>
+                    <span class="bfa-data-badge @(item.VinculoAtivo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                        <i class="bfa-data-badge__dot"></i>
+                        @(item.VinculoAtivo ? "Ativo" : "Encerrado")
+                    </span>
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Contato</span>
+                        <div>@(item.Email ?? "Não informado")</div>
+                        <div class="bfa-data-secondary">@(item.Telefone ?? "Telefone não informado")</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Remuneração</span>
+                        <div>@FormatarRemuneracao(item.Modalidade, item.Valor, cultura)</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Acesso</span>
+                        <div>@(item.AcessoProfessorAtivo ? "Ativo" : item.UsuarioId.HasValue ? "Revogado" : "Não concedido")</div>
+                        <div class="bfa-data-secondary">@(item.NomeUsuario ?? "Sem usuário")</div>
+                    </div>
+                </div>
+                <div class="bfa-mobile-card__actions">
+                    <partial name="_ProfessorAcoes" model="@(new ProfessorUnidadeAcoesViewModel(Model.UnidadeId, item.ProfessorId, item.VinculoAtivo, item.UsuarioId, item.NomeUsuario, item.AcessoProfessorAtivo))" />
+                </div>
             </article>
         }
     </section>
@@ -77,8 +182,19 @@ else
 
 @functions {
     private static string FormatarCpf(string? cpf) => cpf is { Length: 11 }
-        ? $"{cpf[..3]}.{cpf[3..6]}.{cpf[6..9]}-{cpf[9..]}" : "Não informado";
+        ? $"{cpf[..3]}.{cpf[3..6]}.{cpf[6..9]}-{cpf[9..]}" : "CPF não informado";
+
+    private static string FormatarModalidade(ModalidadeRemuneracaoProfessor? modalidade) => modalidade switch
+    {
+        ModalidadeRemuneracaoProfessor.Mensal => "Mensal",
+        ModalidadeRemuneracaoProfessor.PorAula => "Por aula",
+        ModalidadeRemuneracaoProfessor.PorHora => "Por hora",
+        _ => "Não informada"
+    };
+
+    private static string FormatarValor(decimal? valor, CultureInfo cultura) =>
+        valor is null ? "—" : valor.Value.ToString("C", cultura);
+
     private static string FormatarRemuneracao(ModalidadeRemuneracaoProfessor? modalidade, decimal? valor, CultureInfo cultura) =>
-        modalidade is null || valor is null ? "Não informada" : $"{NomeModalidade(modalidade.Value)} · {valor.Value.ToString("C", cultura)}";
-    private static string NomeModalidade(ModalidadeRemuneracaoProfessor modalidade) => modalidade switch { ModalidadeRemuneracaoProfessor.Mensal => "Mensal", ModalidadeRemuneracaoProfessor.PorAula => "Por aula", ModalidadeRemuneracaoProfessor.PorHora => "Por hora", _ => modalidade.ToString() };
+        modalidade is null || valor is null ? "Não informada" : $"{FormatarModalidade(modalidade)} · {FormatarValor(valor, cultura)}";
 }

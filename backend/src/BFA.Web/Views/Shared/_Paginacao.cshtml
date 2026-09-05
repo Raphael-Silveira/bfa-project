@@ -1,0 +1,38 @@
+@model BFA.Web.ViewModels.Shared.PaginacaoViewModel
+
+@if (Model.TotalPaginas <= 1)
+{
+    return;
+}
+
+<nav class="bfa-pagination" aria-label="Paginação">
+    @if (Model.TemPaginaAnterior)
+    {
+        <a class="bfa-page-btn" href="@Model.UrlPagina(Model.PaginaAtual - 1)" aria-label="Página anterior">‹</a>
+    }
+    else
+    {
+        <span class="bfa-page-btn is-disabled" aria-hidden="true">‹</span>
+    }
+
+    @foreach (var pagina in Model.PaginasVisiveis)
+    {
+        if (pagina == Model.PaginaAtual)
+        {
+            <span class="bfa-page-btn is-current" aria-current="page">@pagina</span>
+        }
+        else
+        {
+            <a class="bfa-page-btn" href="@Model.UrlPagina(pagina)">@pagina</a>
+        }
+    }
+
+    @if (Model.TemProximaPagina)
+    {
+        <a class="bfa-page-btn" href="@Model.UrlPagina(Model.PaginaAtual + 1)" aria-label="Próxima página">›</a>
+    }
+    else
+    {
+        <span class="bfa-page-btn is-disabled" aria-hidden="true">›</span>
+    }
+</nav>

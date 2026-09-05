@@ -24,7 +24,7 @@ public sealed partial class AreaUnidadeEndpointTests
         var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Nenhum professor cadastrado", html, StringComparison.Ordinal);
+        Assert.Contains("Nenhum professor encontrado", html, StringComparison.Ordinal);
         Assert.Contains("Novo professor", html, StringComparison.Ordinal);
         Assert.Contains("Professores", html, StringComparison.Ordinal);
     }

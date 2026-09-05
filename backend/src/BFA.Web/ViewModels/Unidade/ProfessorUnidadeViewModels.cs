@@ -14,6 +14,12 @@ public sealed class ProfessoresUnidadeIndexViewModel : IUnidadeContextoViewModel
     public required bool PodeTrocarUnidade { get; init; }
     public required IReadOnlyList<ProfessorUnidadeResumo> Professores { get; init; }
     public required FiltroProfessoresUnidade Filtro { get; init; }
+    public string? TermoBusca { get; init; }
+    public int PaginaAtual { get; init; } = 1;
+    public int TamanhoPagina { get; init; } = 10;
+    public int TotalItens { get; init; }
+    public int TotalAtivos { get; init; }
+    public int TotalEncerrados { get; init; }
 }
 
 public sealed record ProfessorUnidadeAcoesViewModel(

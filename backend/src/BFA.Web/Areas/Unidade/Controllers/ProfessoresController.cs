@@ -151,6 +151,8 @@ public sealed class ProfessoresController(
     public async Task<IActionResult> Index(
         Guid unidadeId,
         string? filtro,
+        string? termo,
+        int? pagina,
         CancellationToken cancellationToken)
     {
         var acesso = await ValidarAcessoAsync(unidadeId, cancellationToken);
@@ -162,9 +164,43 @@ public sealed class ProfessoresController(
             "todos" => FiltroProfessoresUnidade.Todos,
             _ => FiltroProfessoresUnidade.Ativos
         };
-        var resultado = await consulta.ListarAsync(
-            usuarioAtual.UsuarioId!.Value, unidadeId, filtroAplicado, cancellationToken);
-        if (resultado.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+
+        var resultadoTodos = await consulta.ListarAsync(
+            usuarioAtual.UsuarioId!.Value, unidadeId, FiltroProfessoresUnidade.Todos, cancellationToken);
+        if (resultadoTodos.Estado == EstadoProfessoresUnidade.SemAcesso) return Forbid();
+
+        var todos = resultadoTodos.Valor ?? [];
+        var totalAtivos = todos.Count(p => p.VinculoAtivo);
+        var totalEncerrados = todos.Count(p => !p.VinculoAtivo);
+
+        IEnumerable<ProfessorUnidadeResumo> filtrados = filtroAplicado switch
+        {
+            FiltroProfessoresUnidade.Ativos => todos.Where(p => p.VinculoAtivo),
+            FiltroProfessoresUnidade.Encerrados => todos.Where(p => !p.VinculoAtivo),
+            _ => todos
+        };
+
+        if (!string.IsNullOrWhiteSpace(termo))
+        {
+            var termoNormalizado = termo.Trim().ToLowerInvariant();
+            filtrados = filtrados.Where(p =>
+                (p.NomeCompleto?.ToLowerInvariant().Contains(termoNormalizado) == true) ||
+                (p.Cpf?.Contains(termoNormalizado) == true) ||
+                (p.Email?.ToLowerInvariant().Contains(termoNormalizado) == true) ||
+                (p.Telefone?.Contains(termoNormalizado) == true));
+        }
+
+        var listaFiltrada = filtrados.ToList();
+        var totalItens = listaFiltrada.Count;
+        const int tamanhoPagina = 10;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+
+        var itensPagina = listaFiltrada
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToList();
 
         return View(new ProfessoresUnidadeIndexViewModel
         {
@@ -172,8 +208,14 @@ public sealed class ProfessoresController(
             UnidadeId = unidadeId,
             NomeUnidade = acesso.Contexto.Nome,
             PodeTrocarUnidade = acesso.PodeTrocar,
-            Professores = resultado.Valor ?? [],
-            Filtro = filtroAplicado
+            Professores = itensPagina,
+            Filtro = filtroAplicado,
+            TermoBusca = termo,
+            PaginaAtual = paginaAtual,
+            TamanhoPagina = tamanhoPagina,
+            TotalItens = totalItens,
+            TotalAtivos = totalAtivos,
+            TotalEncerrados = totalEncerrados
         });
     }
 

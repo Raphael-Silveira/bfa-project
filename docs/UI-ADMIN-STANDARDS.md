@@ -427,6 +427,20 @@ Antes de criar markup ou CSS, procure uma composição existente. As principais 
 | Estado vazio | `.bfa-admin-empty-state` |
 | Aviso | `.bfa-admin-notice` |
 | Botões | `.bfa-btn-primary`, `.bfa-btn-secondary`, `.bfa-admin-button` |
+| **Toolbar de listagem** | `.bfa-list-toolbar` |
+| **Busca** | `.bfa-list-search`, `.bfa-list-search__icon` |
+| **Filtros por aba** | `.bfa-filter-tabs`, `.bfa-filter-tab`, `.bfa-filter-count` |
+| **Card de dados (tabela)** | `.bfa-data-card`, `.bfa-table-wrap` |
+| **Texto de célula** | `.bfa-data-primary`, `.bfa-data-secondary`, `.bfa-data-stack` |
+| **Badge de estado** | `.bfa-data-badge`, `.bfa-data-badge--active`, `.bfa-data-badge--inactive`, `.bfa-data-badge__dot` |
+| **Menu de ações (kebab)** | `.bfa-kebab`, `.bfa-actions-cell` |
+| **Rodapé de tabela** | `.bfa-table-footer` |
+| **Paginação** | `.bfa-pagination`, `.bfa-page-btn`, `.bfa-page-btn.is-current`, `.bfa-page-btn.is-disabled` |
+| **Cards mobile** | `.bfa-mobile-card-list`, `.bfa-mobile-card`, `.bfa-mobile-card__head`, `.bfa-mobile-card__grid`, `.bfa-mobile-card__label`, `.bfa-mobile-card__actions` |
+| **Grid de formulário** | `.bfa-form-grid` (2 colunas: 1.12fr / 0.88fr) |
+| **Card de formulário** | `.bfa-form-card`, `.bfa-card-title-row`, `.bfa-card-icon` |
+| **Campos** | `.bfa-fields`, `.bfa-field`, `.bfa-field-grid-2` |
+| **Input monetário** | `.bfa-money-input`, `.bfa-money-input__prefix` |
 
 Se uma composição de markup se repetir ou contiver ações sensíveis, extraia uma Partial View apropriada. Use View Component quando a composição reutilizável exigir trabalho ou dados no servidor. Não crie abstrações genéricas antecipadamente para uma única ocorrência.
 
@@ -453,6 +467,177 @@ Regras:
 - remova regras obsoletas apenas quando a tarefa autorizar e houver verificação de todas as telas consumidoras.
 
 Uma exceção visual deve ser pequena, motivada pelo domínio e documentada. Não crie um segundo sistema visual dentro de uma área.
+
+### 16.1 Padrão de listagem com toolbar
+
+Toda listagem administrativa deve seguir o padrão de toolbar com busca e filtros:
+
+```html
+<section class="bfa-list-toolbar" aria-label="Busca e filtros">
+  <form class="bfa-list-search" method="get">
+    <svg class="bfa-list-search__icon">...</svg>
+    <input type="search" name="termo" placeholder="Buscar..." />
+  </form>
+  <nav class="bfa-filter-tabs" aria-label="Filtrar por...">
+    <a class="bfa-filter-tab is-active" href="?filtro=ativos">Ativos <span class="bfa-filter-count">10</span></a>
+    <a class="bfa-filter-tab" href="?filtro=encerrados">Encerrados <span class="bfa-filter-count">2</span></a>
+  </nav>
+</section>
+```
+
+Regras:
+
+- a toolbar usa grid com `grid-template-columns: minmax(280px, 1fr) auto`;
+- busca usa `type="search"` com ícone SVG decorativo;
+- filtros usam `<a>` (não `<button>`) para navegação por URL;
+- o filtro ativo recebe `.is-active`;
+- contadores de filtro usam `.bfa-filter-count`;
+- no mobile, toolbar vira coluna e filtros ocupam toda a largura.
+
+### 16.2 Padrão de tabela com dados agrupados
+
+A tabela de dados usa `.bfa-data-card` como contêiner:
+
+```html
+<div class="bfa-data-card bfa-admin-desktop-list">
+  <div class="bfa-table-wrap">
+    <table>
+      <thead><tr><th>Nome</th><th>Contato</th><th>Ações</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="bfa-data-primary">Nome Principal</div>
+            <div class="bfa-data-secondary">Informação secundária</div>
+          </td>
+          <td>
+            <div class="bfa-data-stack">
+              <div>Valor principal</div>
+              <div class="bfa-data-secondary">Valor secundário</div>
+            </div>
+          </td>
+          <td><div class="bfa-actions-cell">...</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="bfa-table-footer">
+    <div>Mostrando <strong>1–10</strong> de <strong>137</strong> registros</div>
+    <nav class="bfa-pagination">...</nav>
+  </div>
+</div>
+```
+
+Regras:
+
+- coluna de identidade usa `.bfa-data-primary` + `.bfa-data-secondary`;
+- colunas com múltiplos valores usam `.bfa-data-stack`;
+- badges de estado usam `.bfa-data-badge` com modificador `--active` ou `--inactive`;
+- rodapé de tabela mostra contagem e paginação;
+- ações usam `.bfa-actions-cell` para centralizar.
+
+### 16.3 Paginação
+
+A paginação usa `_Paginacao.cshtml` com `PaginacaoViewModel`:
+
+```csharp
+var paginacao = new PaginacaoViewModel
+{
+    PaginaAtual = paginaAtual,
+    TotalPaginas = totalPaginas,
+    TotalItens = totalItens,
+    PrimeiroIndice = primeiroIndice,
+    UltimoIndice = ultimoIndice,
+    BaseQueryString = "filtro=ativos&termo=joao"
+};
+```
+
+Regras:
+
+- `_Paginacao.cshtml` é reutilizável e não contém conhecimento específico de domínio;
+- `BaseQueryString` preserva parâmetros de busca e filtro na navegação entre páginas;
+- apenas 1 página: partial não renderiza nada;
+- estados: `.is-current` para página atual, `.is-disabled` para前后 indisponível;
+- acessibilidade: `aria-label` nas setas, `aria-current="page"` na página atual.
+
+### 16.4 Padrão de cards mobile
+
+No mobile (`max-width: 44rem`), a tabela é substituída por cards:
+
+```html
+<section class="bfa-mobile-card-list">
+  <article class="bfa-mobile-card">
+    <div class="bfa-mobile-card__head">
+      <div>
+        <div class="bfa-data-primary">Nome</div>
+        <div class="bfa-data-secondary">Detalhe</div>
+      </div>
+      <span class="bfa-data-badge bfa-data-badge--active">Ativo</span>
+    </div>
+    <div class="bfa-mobile-card__grid">
+      <div>
+        <span class="bfa-mobile-card__label">Contato</span>
+        <div>email@example.com</div>
+      </div>
+    </div>
+    <div class="bfa-mobile-card__actions">...</div>
+  </article>
+</section>
+```
+
+Regras:
+
+- `.bfa-mobile-card-list` tem `display: none` em desktop, `display: flex` no mobile;
+- head mostra identidade + badge;
+- grid usa 2 colunas em desktop mobile, 1 coluna em mobile compacto;
+- ações ficam alinhadas à direita no rodapé do card.
+
+### 16.5 Padrão de formulário em duas colunas
+
+Formulários complexos usam `.bfa-form-grid` com dois cards lado a lado:
+
+```html
+<form class="bfa-admin-form">
+  <div class="bfa-form-grid">
+    <section class="bfa-form-card">
+      <div class="bfa-card-title-row">
+        <div class="bfa-card-icon">♟</div>
+        <h2>Dados do registro</h2>
+      </div>
+      <div class="bfa-fields">
+        <div class="bfa-field">
+          <label>Nome *</label>
+          <input />
+        </div>
+        <div class="bfa-field-grid-2">
+          <div class="bfa-field"><label>CPF</label><input /></div>
+          <div class="bfa-field"><label>Telefone</label><input /></div>
+        </div>
+      </div>
+    </section>
+    <section class="bfa-form-card">
+      <div class="bfa-card-title-row">
+        <div class="bfa-card-icon">$</div>
+        <h2>Condições</h2>
+      </div>
+      <div class="bfa-fields">...</div>
+    </section>
+  </div>
+  <div class="bfa-form-actions">
+    <a class="bfa-btn-secondary">Cancelar</a>
+    <button class="bfa-btn-primary">Salvar</button>
+  </div>
+</form>
+```
+
+Regras:
+
+- grid: `grid-template-columns: minmax(0, 1.12fr) minmax(22rem, 0.88fr)`;
+- no mobile (`max-width: 44rem`): coluna única;
+- cada card tem `.bfa-card-title-row` com ícone + título;
+- `.bfa-fields` organiza campos com gap consistente;
+- `.bfa-field-grid-2` cria sub-grid de 2 colunas dentro de um card;
+- `.bfa-money-input` para campos monetários com prefixo R$;
+- ações ficam abaixo do grid com `justify-content: flex-end`;
 
 ## 17. Acessibilidade
 

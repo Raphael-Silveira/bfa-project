@@ -1335,7 +1335,465 @@
   width: 100%;
 }
 
-.bfa-admin-brand:focus-visible,
+/* ═══════════════════════════════════════════════════
+   LISTAGEM — Toolbar, Filtros, Tabela, Paginação
+   ═══════════════════════════════════════════════════ */
+
+.bfa-list-toolbar {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.125rem;
+}
+
+.bfa-list-search {
+  position: relative;
+}
+
+.bfa-list-search__icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--bfa-text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bfa-list-search input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 1rem 0 2.75rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-sm);
+  background: var(--bfa-surface);
+  color: var(--bfa-text);
+  font-size: 0.875rem;
+}
+
+.bfa-list-search input::placeholder {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-list-search input:focus {
+  outline: none;
+  border-color: var(--bfa-accent);
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.08);
+}
+
+.bfa-filter-tabs {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-sm);
+  background: var(--bfa-surface);
+  padding: 3px;
+  gap: 2px;
+}
+
+.bfa-filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--bfa-text-muted);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  text-decoration: none;
+}
+
+.bfa-filter-tab:hover {
+  color: var(--bfa-text);
+}
+
+.bfa-filter-tab.is-active {
+  background: var(--bfa-accent-subtle);
+  color: var(--bfa-accent);
+  box-shadow: inset 0 0 0 1px rgba(255, 193, 7, 0.18);
+}
+
+.bfa-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.375rem;
+  height: 1.375rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--bfa-surface-overlay);
+  color: var(--bfa-text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.bfa-filter-tab.is-active .bfa-filter-count {
+  background: rgba(255, 193, 7, 0.18);
+  color: var(--bfa-accent);
+}
+
+.bfa-data-card {
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.004)), var(--bfa-surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.bfa-table-wrap {
+  overflow-x: auto;
+}
+
+.bfa-data-card table {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+}
+
+.bfa-data-card thead th {
+  padding: 0.875rem 1.125rem;
+  border-bottom: 1px solid var(--bfa-border);
+  background: rgba(255, 255, 255, 0.018);
+  color: var(--bfa-text-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.bfa-data-card tbody td {
+  padding: 1rem 1.125rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+  color: var(--bfa-text-secondary);
+  font-size: 0.875rem;
+}
+
+.bfa-data-card tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.bfa-data-card tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.bfa-data-card tbody tr:hover {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.bfa-data-primary {
+  color: var(--bfa-text);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.bfa-data-secondary {
+  color: var(--bfa-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.bfa-data-stack {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.bfa-data-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-height: 1.625rem;
+  padding: 0 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.bfa-data-badge--active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #75d7a4;
+}
+
+.bfa-data-badge--inactive {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ff8a87;
+}
+
+.bfa-data-badge__dot {
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.bfa-kebab {
+  display: inline-grid;
+  width: 2.375rem;
+  height: 2.375rem;
+  place-items: center;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-sm);
+  background: var(--bfa-surface-elevated);
+  color: var(--bfa-text);
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.bfa-kebab:hover {
+  border-color: var(--bfa-border-strong);
+  background: var(--bfa-surface-overlay);
+}
+
+.bfa-actions-cell {
+  display: flex;
+  justify-content: center;
+}
+
+.bfa-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.125rem;
+  padding: 0.875rem 1.125rem;
+  border-top: 1px solid var(--bfa-border);
+  color: var(--bfa-text-muted);
+  font-size: 0.8125rem;
+}
+
+.bfa-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.bfa-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: var(--bfa-surface);
+  color: var(--bfa-text-secondary);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.bfa-page-btn:hover {
+  background: var(--bfa-surface-elevated);
+  color: var(--bfa-text);
+}
+
+.bfa-page-btn.is-current {
+  background: var(--bfa-accent);
+  border-color: var(--bfa-accent);
+  color: #111;
+}
+
+.bfa-page-btn:disabled,
+.bfa-page-btn.is-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   MOBILE CARDS — Listagem responsiva
+   ═══════════════════════════════════════════════════ */
+
+.bfa-mobile-card-list {
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bfa-mobile-card {
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-md);
+  background: var(--bfa-surface);
+  padding: 1rem;
+}
+
+.bfa-mobile-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-bottom: 0.875rem;
+}
+
+.bfa-mobile-card__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem 1.125rem;
+}
+
+.bfa-mobile-card__label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--bfa-text-muted);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bfa-mobile-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.875rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   FORMULÁRIO — Grid two-column + cards
+   ═══════════════════════════════════════════════════ */
+
+.bfa-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(22rem, 0.88fr);
+  gap: 1.125rem;
+  align-items: start;
+}
+
+.bfa-form-card {
+  background: var(--bfa-surface);
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+.bfa-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.375rem;
+}
+
+.bfa-card-icon {
+  display: grid;
+  place-items: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 0.625rem;
+  background: var(--bfa-accent-subtle);
+  color: var(--bfa-accent);
+  font-weight: 900;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.bfa-card-title-row h2 {
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+
+.bfa-fields {
+  display: grid;
+  gap: 1.125rem;
+}
+
+.bfa-field-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.bfa-field label {
+  display: block;
+  margin-bottom: 0.4375rem;
+  color: var(--bfa-text);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.bfa-field input,
+.bfa-field select,
+.bfa-field textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.8125rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: calc(var(--radius-sm) - 1px);
+  background: var(--bfa-bg-primary);
+  color: var(--bfa-text);
+  font-size: 0.875rem;
+}
+
+.bfa-field textarea {
+  min-height: 6.75rem;
+  padding-top: 0.75rem;
+  resize: vertical;
+}
+
+.bfa-field input:focus,
+.bfa-field select:focus,
+.bfa-field textarea:focus {
+  outline: none;
+  border-color: var(--bfa-accent);
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.07);
+}
+
+.bfa-field input::placeholder,
+.bfa-field textarea::placeholder {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-money-input {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr;
+}
+
+.bfa-money-input__prefix {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bfa-border);
+  border-right: 0;
+  border-radius: calc(var(--radius-sm) - 1px) 0 0 calc(var(--radius-sm) - 1px);
+  background: var(--bfa-accent-subtle);
+  color: var(--bfa-accent);
+  font-weight: 800;
+  font-size: 0.8125rem;
+}
+
+.bfa-money-input input {
+  border-radius: 0 calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px) 0;
+}
+
+.bfa-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  margin-top: 1.125rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — Listagem e Formulário
+   ═══════════════════════════════════════════════════ */
+
+@media (max-width: 72rem) {
+  .bfa-admin-brand:focus-visible,
 .bfa-admin-nav-link:focus-visible,
 .bfa-admin-logout__button:focus-visible,
 .bfa-admin-menu-toggle:focus-visible,
@@ -1445,6 +1903,55 @@
   .bfa-admin-localidades__feedback {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  /* Listagem: toolbar responsivo */
+  .bfa-list-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-filter-tabs {
+    width: 100%;
+  }
+
+  .bfa-filter-tab {
+    flex: 1;
+  }
+
+  /* Listagem: mobile cards */
+  .bfa-admin-desktop-list {
+    display: none;
+  }
+
+  .bfa-mobile-card-list {
+    display: flex;
+  }
+
+  /* Listagem: paginação */
+  .bfa-table-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  /* Formulário: coluna única */
+  .bfa-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-field-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-form-card {
+    padding: 1.125rem;
+  }
+
+  .bfa-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .bfa-form-actions .bfa-admin-button {
+    width: 100%;
   }
 }
 
@@ -1580,5 +2087,9 @@
 
   .bfa-admin-card--narrow {
     max-width: 64rem;
+  }
+
+  .bfa-data-card table {
+    min-width: 0;
   }
 }
