@@ -214,7 +214,7 @@ Perguntas-guia:
 | 3 | Unidade | Matrículas | Padronizado | Sim (client) | MÉDIO | Concluído | `ad07a60` |
 | 4 | Unidade | Cobranças | Padronizado | Sim (client) | MÉDIO | Concluído | `c4a047e` |
 | 5 | Unidade | Turmas | Padronizado | Não | BAIXO | Concluído | `b334490` |
-| 6 | Unidade | Planos | Parcial | Não | BAIXO | Planejado | — |
+| 6 | Unidade | Planos | Padronizado | Não | BAIXO | Concluído | `b99279c` |
 | 7 | Unidade | Aulas | Divergente | Não | BAIXO | Planejado | — |
 | 8 | Unidade | Inadimplência | Divergente | Não | BAIXO | Planejado | — |
 | 9 | Unidade | Frequência | Divergente | Não | BAIXO | Planejado | — |
