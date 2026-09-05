@@ -12,49 +12,63 @@
             Consulte as aulas programadas em @Model.NomeUnidade.
         </p>
     </div>
-    @if (Model.PodeGerenciar)
-    {
-        <a class="bfa-btn-primary bfa-admin-button"
-           asp-area="Unidade"
-           asp-controller="Aulas"
-           asp-action="Nova"
-           asp-route-unidadeId="@Model.UnidadeId">Nova aula</a>
-    }
+    <div class="bfa-admin-page-header__actions">
+        @if (Model.PodeGerenciar)
+        {
+            <a class="bfa-btn-primary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Aulas"
+               asp-action="Nova"
+               asp-route-unidadeId="@Model.UnidadeId">Nova aula</a>
+        }
+    </div>
 </header>
 
-<form class="bfa-admin-card bfa-matricula-filters"
-      action="/unidade/@Model.UnidadeId/aulas"
-      method="get"
-      role="search">
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-data-inicio"
-               name="dataInicio"
-               type="date"
-               value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
-    </div>
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-data-fim"
-               name="dataFim"
-               type="date"
-               value="@Model.DataFim.ToString("yyyy-MM-dd")" />
-    </div>
-    <div class="bfa-matricula-filter-actions">
-        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-        <a class="bfa-btn-secondary bfa-admin-button"
-           asp-area="Unidade"
-           asp-controller="Aulas"
-           asp-action="Index"
-           asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
-    </div>
-</form>
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+<section class="bfa-list-toolbar" aria-label="Filtros">
+    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/aulas">
+        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input type="hidden" name="dataInicio" value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="dataFim" value="@Model.DataFim.ToString("yyyy-MM-dd")" />
+        <input type="search" placeholder="Filtrar por período..." aria-label="Filtrar por período" disabled />
+    </form>
+    <form class="bfa-filter-form" method="get" action="/unidade/@Model.UnidadeId/aulas">
+        <div class="bfa-filter-fields">
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
+                <input class="bfa-form-control"
+                       id="filtro-data-inicio"
+                       name="dataInicio"
+                       type="date"
+                       value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
+                <input class="bfa-form-control"
+                       id="filtro-data-fim"
+                       name="dataFim"
+                       type="date"
+                       value="@Model.DataFim.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="bfa-filter-actions">
+                <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+                <a class="bfa-btn-secondary bfa-admin-button"
+                   asp-area="Unidade"
+                   asp-controller="Aulas"
+                   asp-action="Index"
+                   asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
+            </div>
+        </div>
+    </form>
+</section>
 
 @if (Model.Aulas.Count == 0)
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+    <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
             <h2>Nenhuma aula encontrada neste período.</h2>
@@ -64,73 +78,102 @@
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Horário</th>
-                    <th>Turma</th>
-                    <th>Professor</th>
-                    <th>Inscritos</th>
-                    <th>Status</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model.Aulas)
-            {
-                <tr>
-                    <td>@item.Data</td>
-                    <td>@item.HoraInicio – @item.HoraFim</td>
-                    <td><strong>@item.TurmaNome</strong></td>
-                    <td>@item.ProfessorNome</td>
-                    <td>@item.Inscritos / @item.Capacidade</td>
-                    <td>
-                        <span class="bfa-admin-badge @(item.Status == "Programada" ? "is-active" : item.Status == "Concluida" ? "is-completed" : "is-inactive")">
-                            @item.Status
-                        </span>
-                    </td>
-                    <td>
-                        <a class="bfa-btn-secondary bfa-admin-button"
-                           asp-area="Unidade"
-                           asp-controller="Aulas"
-                           asp-action="Detalhes"
-                           asp-route-unidadeId="@Model.UnidadeId"
-                           asp-route-aulaId="@item.AulaId">Ver detalhes <span aria-hidden="true">→</span></a>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Turma</th>
+                        <th>Professor</th>
+                        <th>Inscritos</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Aulas)
+                {
+                    <tr>
+                        <td>
+                            <div class="bfa-data-primary">@item.Data</div>
+                        </td>
+                        <td>@item.HoraInicio – @item.HoraFim</td>
+                        <td>
+                            <div class="bfa-data-primary">@item.TurmaNome</div>
+                        </td>
+                        <td>@item.ProfessorNome</td>
+                        <td>@item.Inscritos / @item.Capacidade</td>
+                        <td>
+                            @{
+                                var badgeClass = item.Status switch
+                                {
+                                    "Programada" => "bfa-data-badge--active",
+                                    "Concluida" => "bfa-data-badge--completed",
+                                    _ => "bfa-data-badge--inactive"
+                                };
+                            }
+                            <span class="bfa-data-badge @badgeClass">
+                                <i class="bfa-data-badge__dot"></i>
+                                @item.Status
+                            </span>
+                        </td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <a class="bfa-admin-button bfa-btn-secondary"
+                                   asp-area="Unidade"
+                                   asp-controller="Aulas"
+                                   asp-action="Detalhes"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-aulaId="@item.AulaId">Detalhes</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <section class="bfa-admin-mobile-list" aria-label="Aulas da unidade">
+    <section class="bfa-mobile-card-list" aria-label="Aulas da unidade">
         @foreach (var item in Model.Aulas)
         {
-            <article class="bfa-admin-card">
-                <header>
+            var badgeClass = item.Status switch
+            {
+                "Programada" => "bfa-data-badge--active",
+                "Concluida" => "bfa-data-badge--completed",
+                _ => "bfa-data-badge--inactive"
+            };
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
                     <div>
-                        <p>@item.Data</p>
-                        <h2>@item.TurmaNome</h2>
-                        <span>@item.HoraInicio – @item.HoraFim</span>
+                        <div class="bfa-data-primary">@item.TurmaNome</div>
+                        <div class="bfa-data-secondary">@item.Data · @item.HoraInicio – @item.HoraFim</div>
                     </div>
-                    <span class="bfa-admin-badge @(item.Status == "Programada" ? "is-active" : item.Status == "Concluida" ? "is-completed" : "is-inactive")">
+                    <span class="bfa-data-badge @badgeClass">
+                        <i class="bfa-data-badge__dot"></i>
                         @item.Status
                     </span>
-                </header>
-                <dl>
-                    <div><dt>Professor</dt><dd>@item.ProfessorNome</dd></div>
-                    <div><dt>Inscritos</dt><dd>@item.Inscritos / @item.Capacidade</dd></div>
-                </dl>
-                <footer>
-                    <a class="bfa-btn-secondary bfa-admin-button"
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Professor</span>
+                        <div>@item.ProfessorNome</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Inscritos</span>
+                        <div>@item.Inscritos / @item.Capacidade</div>
+                    </div>
+                </div>
+                <div class="bfa-mobile-card__actions">
+                    <a class="bfa-admin-button bfa-btn-secondary"
                        asp-area="Unidade"
                        asp-controller="Aulas"
                        asp-action="Detalhes"
                        asp-route-unidadeId="@Model.UnidadeId"
-                       asp-route-aulaId="@item.AulaId">Ver detalhes <span aria-hidden="true">→</span></a>
-                </footer>
+                       asp-route-aulaId="@item.AulaId">Detalhes</a>
+                </div>
             </article>
         }
     </section>
