@@ -119,16 +119,9 @@
 }
 else
 {
-    <section class="bfa-list-card">
-        <div class="bfa-list-card__head">
-            <div>
-                <h2>Aulas programadas</h2>
-                <p>Período de @Model.DataInicio.ToString("dd/MM/yyyy") a @Model.DataFim.ToString("dd/MM/yyyy")</p>
-            </div>
-        </div>
-
+    <div class="bfa-data-card bfa-admin-desktop-list">
         <div class="bfa-table-wrap">
-            <table class="bfa-data-grid">
+            <table>
                 <thead>
                     <tr>
                         <th>Data</th>
@@ -137,7 +130,7 @@ else
                         <th>Professor</th>
                         <th>Inscritos</th>
                         <th>Status</th>
-                        <th class="is-actions">Ações</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,11 +140,13 @@ else
                     var diaSemana = culture.DateTimeFormat.GetDayName(dataAula.DayOfWeek);
                     <tr>
                         <td>
-                            <strong>@item.Data</strong>
-                            <small>@diaSemana</small>
+                            <div class="bfa-data-primary">@item.Data</div>
+                            <div class="bfa-data-secondary">@diaSemana</div>
                         </td>
                         <td>@item.HoraInicio – @item.HoraFim</td>
-                        <td><strong>@item.TurmaNome</strong></td>
+                        <td>
+                            <div class="bfa-data-primary">@item.TurmaNome</div>
+                        </td>
                         <td>@item.ProfessorNome</td>
                         <td>@item.Inscritos / @item.Capacidade</td>
                         <td>
@@ -168,99 +163,84 @@ else
                                 @item.Status
                             </span>
                         </td>
-                        <td class="is-actions">
-                            <a class="bfa-admin-button bfa-btn-secondary"
-                               asp-area="Unidade"
-                               asp-controller="Aulas"
-                               asp-action="Detalhes"
-                               asp-route-unidadeId="@Model.UnidadeId"
-                               asp-route-aulaId="@item.AulaId">Detalhes</a>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <a class="bfa-admin-button bfa-btn-secondary"
+                                   asp-area="Unidade"
+                                   asp-controller="Aulas"
+                                   asp-action="Detalhes"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-aulaId="@item.AulaId">Detalhes</a>
+                            </div>
                         </td>
                     </tr>
                 }
                 </tbody>
             </table>
         </div>
-
-        <div class="bfa-mobile-list">
-            @foreach (var item in Model.Aulas)
-            {
-                var dataAula = DateOnly.Parse(item.Data, culture);
-                var diaSemana = culture.DateTimeFormat.GetDayName(dataAula.DayOfWeek);
-                var badgeClass = item.Status switch
+        <div class="bfa-table-footer">
+            @{
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
+                var baseQueryString = $"dataInicio={Model.DataInicio:dd/MM/yyyy}&dataFim={Model.DataFim:dd/MM/yyyy}";
+                var paginacao = new PaginacaoViewModel
                 {
-                    "Programada" => "bfa-data-badge--active",
-                    "Concluida" => "bfa-data-badge--completed",
-                    _ => "bfa-data-badge--inactive"
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = baseQueryString
                 };
-                <article class="bfa-mobile-card">
-                    <div class="bfa-mobile-card__top">
-                        <div>
-                            <strong>@item.Data</strong>
-                            <small>@diaSemana</small>
-                        </div>
-                        <span class="bfa-data-badge @badgeClass">
-                            <i class="bfa-data-badge__dot"></i>
-                            @item.Status
-                        </span>
+            }
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> aulas</div>
+            <partial name="_Paginacao" model="paginacao" />
+        </div>
+    </div>
+
+    <section class="bfa-mobile-card-list" aria-label="Aulas da unidade">
+        @foreach (var item in Model.Aulas)
+        {
+            var dataAula = DateOnly.Parse(item.Data, culture);
+            var diaSemana = culture.DateTimeFormat.GetDayName(dataAula.DayOfWeek);
+            var badgeClass = item.Status switch
+            {
+                "Programada" => "bfa-data-badge--active",
+                "Concluida" => "bfa-data-badge--completed",
+                _ => "bfa-data-badge--inactive"
+            };
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
+                    <div>
+                        <div class="bfa-data-primary">@item.TurmaNome</div>
+                        <div class="bfa-data-secondary">@item.Data · @diaSemana · @item.HoraInicio – @item.HoraFim</div>
                     </div>
-                    <div class="bfa-mobile-card__body">
-                        <div>
-                            <span>Horário</span>
-                            <strong>@item.HoraInicio – @item.HoraFim</strong>
-                        </div>
-                        <div>
-                            <span>Turma</span>
-                            <strong>@item.TurmaNome</strong>
-                        </div>
-                        <div>
-                            <span>Professor</span>
-                            <strong>@item.ProfessorNome</strong>
-                        </div>
-                        <div>
-                            <span>Inscritos</span>
-                            <strong>@item.Inscritos / @item.Capacidade</strong>
-                        </div>
+                    <span class="bfa-data-badge @badgeClass">
+                        <i class="bfa-data-badge__dot"></i>
+                        @item.Status
+                    </span>
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Professor</span>
+                        <div>@item.ProfessorNome</div>
                     </div>
-                    <a class="bfa-admin-button bfa-btn-secondary bfa-mobile-card__action"
+                    <div>
+                        <span class="bfa-mobile-card__label">Inscritos</span>
+                        <div>@item.Inscritos / @item.Capacidade</div>
+                    </div>
+                </div>
+                <div class="bfa-mobile-card__actions">
+                    <a class="bfa-admin-button bfa-btn-secondary"
                        asp-area="Unidade"
                        asp-controller="Aulas"
                        asp-action="Detalhes"
                        asp-route-unidadeId="@Model.UnidadeId"
-                       asp-route-aulaId="@item.AulaId">Ver detalhes</a>
-                </article>
-            }
-        </div>
-
-        @{
-            var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
-            var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
-            var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
-            var baseQueryString = $"dataInicio={Model.DataInicio:dd/MM/yyyy}&dataFim={Model.DataFim:dd/MM/yyyy}";
-            var paginacao = new PaginacaoViewModel
-            {
-                PaginaAtual = Model.PaginaAtual,
-                TotalPaginas = totalPaginas,
-                TotalItens = Model.TotalItens,
-                PrimeiroIndice = primeiroIndice,
-                UltimoIndice = ultimoIndice,
-                BaseQueryString = baseQueryString
-            };
+                       asp-route-aulaId="@item.AulaId">Detalhes</a>
+                </div>
+            </article>
         }
-        <footer class="bfa-list-footer">
-            <span>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> aulas</span>
-            <partial name="_Paginacao" model="paginacao" />
-            <label class="bfa-page-size">
-                <span>Itens por página</span>
-                <select onchange="window.location.href=this.value">
-                    @foreach (var tamanho in new[] { 5, 10, 25, 50 })
-                    {
-                        var qs = $"dataInicio={Model.DataInicio:dd/MM/yyyy}&dataFim={Model.DataFim:dd/MM/yyyy}&tamanhoPagina={tamanho}";
-                        <option value="?@qs" selected="@(Model.TamanhoPagina == tamanho)">@tamanho</option>
-                    }
-                </select>
-            </label>
-        </footer>
     </section>
 }
 
@@ -268,7 +248,7 @@ else
     <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
     <script>
         document.querySelectorAll('.bfa-date-input').forEach(function (wrapper) {
-            var input = wrapper.querySelector('input[data-bfa-date-input], input[type="text"]');
+            var input = wrapper.querySelector('input');
             var trigger = wrapper.querySelector('[data-bfa-date-trigger]');
             if (input && trigger && window.BfaDateField) {
                 input.setAttribute('data-bfa-date-input', '');
