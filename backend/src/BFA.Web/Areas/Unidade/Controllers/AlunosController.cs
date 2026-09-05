@@ -23,12 +23,13 @@ public sealed class AlunosController(
     [HttpGet("")]
     public async Task<IActionResult> Index(
         Guid unidadeId,
-        string? texto,
+        string? termo,
+        int? pagina,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
 
-        var textoNormalizado = NormalizarTexto(texto);
+        var textoNormalizado = NormalizarTexto(termo);
         var resultado = await alunosServico.ListarAsync(
             usuarioId, unidadeId, textoNormalizado, cancellationToken);
 
@@ -39,11 +40,26 @@ public sealed class AlunosController(
             || resultado.Contexto is null)
             return Forbid();
 
+        var todos = resultado.Valor;
+        var totalItens = todos.Count;
+        const int tamanhoPagina = 10;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+
+        var itensPagina = todos
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToList();
+
         return View(AlunosViewModelMapper.MapearLista(
             resultado.Contexto,
-            resultado.Valor,
+            itensPagina,
             textoNormalizado,
-            await PodeTrocarAsync(usuarioId, cancellationToken)));
+            await PodeTrocarAsync(usuarioId, cancellationToken),
+            paginaAtual,
+            tamanhoPagina,
+            totalItens));
     }
 
     [HttpGet("{alunoId:guid}")]

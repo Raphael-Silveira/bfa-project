@@ -1,7 +1,9 @@
+@using BFA.Web.ViewModels.Shared
 @model AlunosListaViewModel
 @{
     ViewData["Title"] = "Alunos";
     Layout = "_UnidadeLayout";
+    var totalExibindo = Model.Alunos.Count;
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-alunos">
@@ -14,131 +16,150 @@
     </div>
 </header>
 
-<form class="bfa-admin-card bfa-matricula-filters"
-      action="/unidade/@Model.UnidadeId/alunos"
-      method="get"
-      role="search">
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-aluno-texto">Buscar por nome</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-aluno-texto"
-               name="texto"
-               type="search"
-               value="@Model.Texto"
-               maxlength="150"
-               autocomplete="off"
-               placeholder="Nome do aluno" />
-    </div>
-    <div class="bfa-matricula-filter-actions">
-        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-        @if (Model.PossuiFiltros)
-        {
-            <a class="bfa-btn-secondary bfa-admin-button"
-               href="/unidade/@Model.UnidadeId/alunos">Limpar filtros</a>
-        }
-    </div>
-</form>
+@if (TempData["Sucesso"] is string sucesso)
+{
+    <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+
+<section class="bfa-list-toolbar" aria-label="Busca e filtros">
+    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/alunos">
+        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input type="search" name="termo" value="@Model.TermoBusca" placeholder="Buscar por nome, CPF ou contato..." aria-label="Buscar aluno" />
+    </form>
+</section>
 
 @if (Model.Alunos.Count == 0)
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+    <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
-            <h2>@(Model.PossuiFiltros
-                    ? "Nenhum aluno corresponde à busca."
-                    : "Nenhum aluno encontrado nesta unidade.")</h2>
-            <p>@(Model.PossuiFiltros
-                    ? "Ajuste o termo de busca para consultar outros resultados."
-                    : "Os alunos aparecem aqui após possuírem uma matrícula nesta unidade.")</p>
+            <h2>@(Model.PossuiFiltros ? "Nenhum aluno corresponde à busca." : "Nenhum aluno encontrado nesta unidade.")</h2>
+            <p>@(Model.PossuiFiltros ? "Ajuste o termo de busca para consultar outros resultados." : "Os alunos aparecem aqui após possuírem uma matrícula nesta unidade.")</p>
         </div>
     </section>
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead>
-                <tr>
-                    <th>Aluno</th>
-                    <th>Contato</th>
-                    <th>Matrícula atual</th>
-                    <th>Status</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model.Alunos)
-            {
-                <tr>
-                    <td>
-                        <span class="bfa-matricula-primary">
-                            <strong>@item.NomeCompleto</strong>
-                            <small>@item.DataNascimento · @item.Idade anos</small>
-                        </span>
-                    </td>
-                    <td>@item.Contato</td>
-                    <td>
-                        @if (item.PossuiMatriculaAtiva)
-                        {
-                            <span class="bfa-matricula-primary">
-                                <strong>@item.PlanoAtual</strong>
-                                <small>@item.MatriculaAtual</small>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Contato</th>
+                        <th>Matrícula atual</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Alunos)
+                {
+                    <tr>
+                        <td>
+                            <div class="bfa-data-primary">@item.NomeCompleto</div>
+                            <div class="bfa-data-secondary">@item.DataNascimento · @item.Idade anos</div>
+                        </td>
+                        <td>
+                            <div class="bfa-data-stack">
+                                <div>@(item.Contato ?? "Não informado")</div>
+                            </div>
+                        </td>
+                        <td>
+                            @if (item.PossuiMatriculaAtiva)
+                            {
+                                <div class="bfa-data-primary">@item.PlanoAtual</div>
+                                <div class="bfa-data-secondary">@item.MatriculaAtual</div>
+                            }
+                            else
+                            {
+                                <span class="bfa-data-muted">Sem matrícula ativa</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="bfa-data-badge @(item.PossuiMatriculaAtiva ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
+                                @(item.PossuiMatriculaAtiva ? "Ativa" : "Sem matrícula")
                             </span>
-                        }
-                        else
-                        {
-                            <span class="bfa-matricula-muted">Sem matrícula ativa</span>
-                        }
-                    </td>
-                    <td>
-                        <span class="bfa-admin-badge @(item.PossuiMatriculaAtiva ? "is-active" : "is-inactive")">
-                            @(item.PossuiMatriculaAtiva ? "Ativa" : "Sem matrícula")
-                        </span>
-                    </td>
-                    <td>
-                        <a class="bfa-btn-secondary bfa-admin-button"
-                           asp-area="Unidade"
-                           asp-controller="Alunos"
-                           asp-action="Detalhes"
-                           asp-route-unidadeId="@Model.UnidadeId"
-                           asp-route-alunoId="@item.AlunoId">Ver detalhes <span aria-hidden="true">→</span></a>
-                    </td>
-                </tr>
+                        </td>
+                        <td>
+                            <div class="bfa-actions-cell">
+                                <a class="bfa-admin-button bfa-btn-secondary"
+                                   asp-area="Unidade"
+                                   asp-controller="Alunos"
+                                   asp-action="Detalhes"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-alunoId="@item.AlunoId">Detalhes</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="bfa-table-footer">
+            @{
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
             }
-            </tbody>
-        </table>
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> alunos</div>
+            @{
+                var qsParts = new List<string>();
+                if (!string.IsNullOrWhiteSpace(Model.TermoBusca))
+                    qsParts.Add($"termo={Uri.EscapeDataString(Model.TermoBusca)}");
+                var baseQs = string.Join("&", qsParts);
+
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var paginacao = new PaginacaoViewModel
+                {
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = baseQs
+                };
+            }
+            <partial name="_Paginacao" model="paginacao" />
+        </div>
     </div>
 
-    <section class="bfa-admin-mobile-list" aria-label="Alunos da unidade">
+    <section class="bfa-mobile-card-list" aria-label="Alunos da unidade">
         @foreach (var item in Model.Alunos)
         {
-            <article class="bfa-admin-card">
-                <header>
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
                     <div>
-                        <p>Aluno</p>
-                        <h2>@item.NomeCompleto</h2>
-                        <span>@item.DataNascimento · @item.Idade anos</span>
+                        <div class="bfa-data-primary">@item.NomeCompleto</div>
+                        <div class="bfa-data-secondary">@item.DataNascimento · @item.Idade anos</div>
                     </div>
-                    <span class="bfa-admin-badge @(item.PossuiMatriculaAtiva ? "is-active" : "is-inactive")">
+                    <span class="bfa-data-badge @(item.PossuiMatriculaAtiva ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                        <i class="bfa-data-badge__dot"></i>
                         @(item.PossuiMatriculaAtiva ? "Ativa" : "Sem matrícula")
                     </span>
-                </header>
-                <dl>
-                    <div><dt>Contato</dt><dd>@item.Contato</dd></div>
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Contato</span>
+                        <div>@(item.Contato ?? "Não informado")</div>
+                    </div>
                     @if (item.PossuiMatriculaAtiva)
                     {
-                        <div><dt>Plano</dt><dd>@item.PlanoAtual</dd></div>
-                        <div><dt>Matrícula</dt><dd>@item.MatriculaAtual</dd></div>
+                        <div>
+                            <span class="bfa-mobile-card__label">Matrícula</span>
+                            <div>@item.PlanoAtual</div>
+                            <div class="bfa-data-secondary">@item.MatriculaAtual</div>
+                        </div>
                     }
-                </dl>
-                <footer>
-                    <a class="bfa-btn-secondary bfa-admin-button"
+                </div>
+                <div class="bfa-mobile-card__actions">
+                    <a class="bfa-admin-button bfa-btn-secondary"
                        asp-area="Unidade"
                        asp-controller="Alunos"
                        asp-action="Detalhes"
                        asp-route-unidadeId="@Model.UnidadeId"
-                       asp-route-alunoId="@item.AlunoId">Ver detalhes <span aria-hidden="true">→</span></a>
-                </footer>
+                       asp-route-alunoId="@item.AlunoId">Detalhes</a>
+                </div>
             </article>
         }
     </section>

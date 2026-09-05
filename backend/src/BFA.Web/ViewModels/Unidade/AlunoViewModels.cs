@@ -15,9 +15,12 @@ public sealed class AlunosListaViewModel : IUnidadeContextoViewModel
     public required string NomeUnidade { get; init; }
     public required bool PodeTrocarUnidade { get; init; }
     public required bool PodeGerenciar { get; init; }
-    public string? Texto { get; init; }
+    public string? TermoBusca { get; init; }
     public IReadOnlyList<AlunoListaItemViewModel> Alunos { get; init; } = [];
-    public bool PossuiFiltros => Texto is not null;
+    public bool PossuiFiltros => TermoBusca is not null;
+    public required int PaginaAtual { get; init; }
+    public required int TamanhoPagina { get; init; }
+    public required int TotalItens { get; init; }
 }
 
 public sealed record AlunoListaItemViewModel(
@@ -94,16 +97,22 @@ internal static class AlunosViewModelMapper
     public static AlunosListaViewModel MapearLista(
         ContextoAlunosResumo contexto,
         IReadOnlyList<AlunoListaItem> itens,
-        string? texto,
-        bool podeTrocar) => new()
+        string? termoBusca,
+        bool podeTrocar,
+        int paginaAtual,
+        int tamanhoPagina,
+        int totalItens) => new()
     {
         OrganizacaoId = contexto.OrganizacaoId,
         UnidadeId = contexto.UnidadeId,
         NomeUnidade = contexto.NomeUnidade,
         PodeTrocarUnidade = podeTrocar,
         PodeGerenciar = contexto.PodeGerenciar,
-        Texto = texto,
-        Alunos = itens.Select(MapearListaItem).ToArray()
+        TermoBusca = termoBusca,
+        Alunos = itens.Select(MapearListaItem).ToArray(),
+        PaginaAtual = paginaAtual,
+        TamanhoPagina = tamanhoPagina,
+        TotalItens = totalItens
     };
 
     public static AlunoDetalheViewModel MapearDetalhe(
