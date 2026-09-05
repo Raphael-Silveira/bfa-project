@@ -679,6 +679,8 @@ Uma solicitação de nova tela não autoriza criar novas funcionalidades, rotas,
 
 Listagens que dependem de intervalo de datas devem usar o padrão `.bfa-filter-panel`.
 
+**Referência oficial:** Tela Aulas (`/unidade/{unidadeId}/aulas`) — `Views/Aulas/Index.cshtml`. Esta tela é o exemplo canônico de grid com filtros por período, paginação server-side, mobile cards e date picker. Novas telas com filtro de data devem seguir este modelo.
+
 ### Estrutura
 
 ```html
