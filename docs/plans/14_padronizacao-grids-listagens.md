@@ -36,7 +36,7 @@ Componentes aprovados:
 | 4 | Unidade | Turmas | `/unidade/{id}/turmas` | Turmas/Index | TurmasController | ❌ | ❌ | ❌ | 3–20 |
 | 5 | Unidade | Aulas | `/unidade/{id}/aulas` | Aulas/Index | AulasController | ✅ data range | ✅ data range | ❌ | 5–100 |
 | 6 | Unidade | Planos | `/unidade/{id}/planos` | Planos/Index | PlanosController | ❌ | ✅ Ativos/Inativos/Todos | ❌ | 2–10 |
-| 7 | Unidade | Cobranças | `/unidade/{id}/cobrancas` | Cobrancas/Index | CobrancasController | ❌ | ✅ status+tipo+data | ❌ | 10–500 |
+| 7 | Unidade | Cobranças | `/unidade/{id}/cobrancas` | Cobrancas/Index | CobrancasController | ❌ | ✅ status+tipo+data | ✅ client-side 10/pág | 10–500 |
 | 8 | Unidade | Inadimplência | `/unidade/{id}/relatorios/inadimplencia` | Relatorios/Inadimplencia | RelatoriosController | ❌ | ❌ | ❌ | 0–50 |
 | 9 | Unidade | Frequência | `/unidade/{id}/aulas/frequencia` | Aulas/Frequencia | AulasController | ✅ data range | ✅ data range | ❌ | 5–50 |
 | 10 | Franqueadora | Franqueados | `/franqueadora/franqueados` | Franqueados/Index | FranqueadosController | ❌ | ❌ | ❌ | 2–20 |
@@ -212,7 +212,7 @@ Perguntas-guia:
 | 1 | Unidade | Professores | Referência | Sim (client) | — | Concluído | `e41d60f` |
 | 2 | Unidade | Alunos | Padronizado | Sim (client) | MÉDIO | Concluído | `944de87` |
 | 3 | Unidade | Matrículas | Padronizado | Sim (client) | MÉDIO | Concluído | `ad07a60` |
-| 4 | Unidade | Cobranças | Divergente | Não (precisa) | MÉDIO | Planejado | — |
+| 4 | Unidade | Cobranças | Padronizado | Sim (client) | MÉDIO | Concluído | `c4a047e` |
 | 5 | Unidade | Turmas | Divergente | Não | BAIXO | Planejado | — |
 | 6 | Unidade | Planos | Parcial | Não | BAIXO | Planejado | — |
 | 7 | Unidade | Aulas | Divergente | Não | BAIXO | Planejado | — |
