@@ -134,12 +134,12 @@ public sealed partial class AcessosUnidadeEndpointTests
         Assert.DoesNotContain("externo@bfa.test", html, StringComparison.Ordinal);
         Assert.DoesNotContain("professor@bfa.test", html, StringComparison.Ordinal);
         Assert.DoesNotContain("aluno@bfa.test", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-table-container", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-data-card", html, StringComparison.Ordinal);
         Assert.Contains("bfa-admin-desktop-list", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-mobile-list", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-acesso-card", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-badge is-active", html, StringComparison.Ordinal);
-        Assert.Contains("bfa-admin-badge is-inactive", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-mobile-card-list", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-mobile-card", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-data-badge--active", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-data-badge--inactive", html, StringComparison.Ordinal);
         Assert.Contains("Adicionar administrador", html, StringComparison.Ordinal);
         Assert.Contains("name=\"Email\"", html, StringComparison.Ordinal);
         Assert.Contains("type=\"email\"", html, StringComparison.Ordinal);
