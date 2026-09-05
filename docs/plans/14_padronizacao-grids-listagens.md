@@ -32,7 +32,7 @@ Componentes aprovados:
 |---|------|------|------|------|------------|-------------|----------------|-------------------|----------------------|
 | 1 | Unidade | Professores | `/unidade/{id}/professores` | Professores/Index | ProfessoresController | ✅ nome/CPF/contato | ✅ Ativos/Encerrados/Todos | ✅ client-side 10/pág | 5–50 |
 | 2 | Unidade | Alunos | `/unidade/{id}/alunos` | Alunos/Index | AlunosController | ✅ texto | ❌ | ✅ client-side 10/pág | 10–200 |
-| 3 | Unidade | Matrículas | `/unidade/{id}/matriculas` | Matriculas/Index | MatriculasController | ✅ texto | ✅ status select | ❌ | 10–500 |
+| 3 | Unidade | Matrículas | `/unidade/{id}/matriculas` | Matriculas/Index | MatriculasController | ✅ texto | ✅ status select | ✅ client-side 10/pág | 10–500 |
 | 4 | Unidade | Turmas | `/unidade/{id}/turmas` | Turmas/Index | TurmasController | ❌ | ❌ | ❌ | 3–20 |
 | 5 | Unidade | Aulas | `/unidade/{id}/aulas` | Aulas/Index | AulasController | ✅ data range | ✅ data range | ❌ | 5–100 |
 | 6 | Unidade | Planos | `/unidade/{id}/planos` | Planos/Index | PlanosController | ❌ | ✅ Ativos/Inativos/Todos | ❌ | 2–10 |
@@ -211,7 +211,7 @@ Perguntas-guia:
 |------:|------|------|----------|-----------|---------|--------|--------|
 | 1 | Unidade | Professores | Referência | Sim (client) | — | Concluído | `e41d60f` |
 | 2 | Unidade | Alunos | Padronizado | Sim (client) | MÉDIO | Concluído | `944de87` |
-| 3 | Unidade | Matrículas | Divergente | Não (precisa) | MÉDIO | Planejado | — |
+| 3 | Unidade | Matrículas | Padronizado | Sim (client) | MÉDIO | Concluído | `ad07a60` |
 | 4 | Unidade | Cobranças | Divergente | Não (precisa) | MÉDIO | Planejado | — |
 | 5 | Unidade | Turmas | Divergente | Não | BAIXO | Planejado | — |
 | 6 | Unidade | Planos | Parcial | Não | BAIXO | Planejado | — |
