@@ -217,7 +217,7 @@ Perguntas-guia:
 | 6 | Unidade | Planos | Padronizado | Não | BAIXO | Concluído | `b99279c` |
 | 7 | Unidade | Aulas | Padronizado | Não | BAIXO | Concluído | `a6706f3` |
 | 8 | Unidade | Inadimplência | Padronizado | Não | BAIXO | Concluído | `c062a99` |
-| 9 | Unidade | Frequência | Divergente | Não | BAIXO | Planejado | — |
+| 9 | Unidade | Frequência | Padronizado | Não | BAIXO | Concluído | `7787962` |
 | 10 | Franqueadora | Franqueados | Divergente | Não | BAIXO | Planejado | — |
 | 11 | Franqueadora | Unidades | Divergente | Não | BAIXO | Planejado | — |
 | 12 | Franqueadora | Usuários | Divergente | Não | BAIXO | Planejado | — |
