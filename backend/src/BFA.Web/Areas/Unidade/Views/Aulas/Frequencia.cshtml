@@ -14,39 +14,46 @@
     </div>
 </header>
 
-<form class="bfa-admin-card bfa-matricula-filters"
-      action="/unidade/@Model.UnidadeId/aulas/frequencia"
-      method="get"
-      role="search">
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-data-inicio"
-               name="dataInicio"
-               type="date"
-               value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
-    </div>
-    <div class="bfa-form-field">
-        <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
-        <input class="form-control bfa-form-control"
-               id="filtro-data-fim"
-               name="dataFim"
-               type="date"
-               value="@Model.DataFim.ToString("yyyy-MM-dd")" />
-    </div>
-    <div class="bfa-matricula-filter-actions">
-        <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-        <a class="bfa-btn-secondary bfa-admin-button"
-           asp-area="Unidade"
-           asp-controller="Aulas"
-           asp-action="Frequencia"
-           asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
-    </div>
-</form>
+<section class="bfa-list-toolbar" aria-label="Filtros">
+    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/aulas/frequencia">
+        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+        <input type="hidden" name="dataInicio" value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="dataFim" value="@Model.DataFim.ToString("yyyy-MM-dd")" />
+        <input type="search" placeholder="Filtrar por período..." aria-label="Filtrar por período" disabled />
+    </form>
+    <form class="bfa-filter-form" method="get" action="/unidade/@Model.UnidadeId/aulas/frequencia">
+        <div class="bfa-filter-fields">
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
+                <input class="bfa-form-control"
+                       id="filtro-data-inicio"
+                       name="dataInicio"
+                       type="date"
+                       value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="bfa-filter-field">
+                <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
+                <input class="bfa-form-control"
+                       id="filtro-data-fim"
+                       name="dataFim"
+                       type="date"
+                       value="@Model.DataFim.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="bfa-filter-actions">
+                <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+                <a class="bfa-btn-secondary bfa-admin-button"
+                   asp-area="Unidade"
+                   asp-controller="Aulas"
+                   asp-action="Frequencia"
+                   asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
+            </div>
+        </div>
+    </form>
+</section>
 
 @if (Model.Alunos.Count == 0)
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
+    <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
             <h2>Nenhum dado de frequência encontrado.</h2>
@@ -56,59 +63,82 @@
 }
 else
 {
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead>
-                <tr>
-                    <th>Aluno</th>
-                    <th>Total Aulas</th>
-                    <th>Presentes</th>
-                    <th>Ausentes</th>
-                    <th>Justificados</th>
-                    <th>Isentos</th>
-                    <th>Frequência</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model.Alunos)
-            {
-                <tr>
-                    <td><strong>@item.NomeCompleto</strong></td>
-                    <td>@item.TotalAulas</td>
-                    <td>@item.Presentes</td>
-                    <td>@item.Ausentes</td>
-                    <td>@item.Justificados</td>
-                    <td>@item.Isentos</td>
-                    <td>
-                        <span class="bfa-admin-badge @(decimal.Parse(item.PercentualFrequencia.Replace("%","")) >= 75 ? "is-active" : "is-inactive")">
-                            @item.PercentualFrequencia
-                        </span>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+    <div class="bfa-data-card bfa-admin-desktop-list">
+        <div class="bfa-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Total Aulas</th>
+                        <th>Presentes</th>
+                        <th>Ausentes</th>
+                        <th>Justificados</th>
+                        <th>Isentos</th>
+                        <th>Frequência</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Alunos)
+                {
+                    var percentual = decimal.Parse(item.PercentualFrequencia.Replace("%", ""));
+                    <tr>
+                        <td>
+                            <div class="bfa-data-primary">@item.NomeCompleto</div>
+                        </td>
+                        <td>@item.TotalAulas</td>
+                        <td>@item.Presentes</td>
+                        <td>@item.Ausentes</td>
+                        <td>@item.Justificados</td>
+                        <td>@item.Isentos</td>
+                        <td>
+                            <span class="bfa-data-badge @(percentual >= 75 ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
+                                @item.PercentualFrequencia
+                            </span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <section class="bfa-admin-mobile-list" aria-label="Frequência dos alunos">
+    <section class="bfa-mobile-card-list" aria-label="Frequência dos alunos">
         @foreach (var item in Model.Alunos)
         {
-            <article class="bfa-admin-card">
-                <header>
+            var percentual = decimal.Parse(item.PercentualFrequencia.Replace("%", ""));
+            <article class="bfa-mobile-card">
+                <div class="bfa-mobile-card__head">
                     <div>
-                        <h2>@item.NomeCompleto</h2>
+                        <div class="bfa-data-primary">@item.NomeCompleto</div>
                     </div>
-                    <span class="bfa-admin-badge @(decimal.Parse(item.PercentualFrequencia.Replace("%","")) >= 75 ? "is-active" : "is-inactive")">
+                    <span class="bfa-data-badge @(percentual >= 75 ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                        <i class="bfa-data-badge__dot"></i>
                         @item.PercentualFrequencia
                     </span>
-                </header>
-                <dl>
-                    <div><dt>Total</dt><dd>@item.TotalAulas aulas</dd></div>
-                    <div><dt>Presentes</dt><dd>@item.Presentes</dd></div>
-                    <div><dt>Ausentes</dt><dd>@item.Ausentes</dd></div>
-                    <div><dt>Justificados</dt><dd>@item.Justificados</dd></div>
-                    <div><dt>Isentos</dt><dd>@item.Isentos</dd></div>
-                </dl>
+                </div>
+                <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Total</span>
+                        <div>@item.TotalAulas aulas</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Presentes</span>
+                        <div>@item.Presentes</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Ausentes</span>
+                        <div>@item.Ausentes</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Justificados</span>
+                        <div>@item.Justificados</div>
+                    </div>
+                    <div>
+                        <span class="bfa-mobile-card__label">Isentos</span>
+                        <div>@item.Isentos</div>
+                    </div>
+                </div>
             </article>
         }
     </section>
