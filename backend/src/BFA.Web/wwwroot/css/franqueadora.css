@@ -16,7 +16,7 @@
   margin: 0 0 0.3rem;
   color: var(--bfa-text-muted);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -24,7 +24,7 @@
 .bfa-unidade-card h2 {
   margin: 0;
   font-size: 1.18rem;
-  font-weight: 800;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -44,7 +44,7 @@
   margin-bottom: 0.35rem;
   color: var(--bfa-text-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -87,7 +87,7 @@
   margin: 0 0 0.3rem;
   color: var(--bfa-text-muted);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -95,7 +95,7 @@
 .bfa-acesso-card h2 {
   margin: 0;
   font-size: 1.05rem;
-  font-weight: 800;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -108,7 +108,7 @@
   margin-bottom: 0.35rem;
   color: var(--bfa-text-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -144,9 +144,9 @@
 .bfa-usuario-tag {
   display: inline-flex;
   padding: 0.28rem 0.55rem;
-  border: 1px solid rgba(255, 193, 7, 0.25);
+  border: 1px solid var(--bfa-border-accent);
   border-radius: 999px;
-  background: rgba(255, 193, 7, 0.08);
+  background: var(--bfa-accent-subtle);
   color: var(--bfa-text-primary);
   font-size: 0.76rem;
   font-weight: 700;
@@ -168,7 +168,7 @@
   margin: 0 0 0.3rem;
   color: var(--bfa-text-muted);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -196,7 +196,7 @@
   margin-bottom: 0.4rem;
   color: var(--bfa-text-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -219,7 +219,7 @@
 .bfa-usuario-card__actions > span {
   color: var(--bfa-text-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -239,7 +239,7 @@
   margin: 0 0 0.35rem;
   color: var(--bfa-accent);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -295,13 +295,13 @@
   gap: 0.7rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.5rem;
-  background: rgba(13, 13, 13, 0.45);
+  background: var(--bfa-surface);
   cursor: pointer;
 }
 
 .bfa-unidade-selection__item:has(input:checked) {
-  border-color: rgba(255, 193, 7, 0.55);
-  background: rgba(255, 193, 7, 0.08);
+  border-color: var(--bfa-accent-muted);
+  background: var(--bfa-accent-subtle);
 }
 
 .bfa-unidade-selection__item input {
@@ -437,7 +437,7 @@
   margin: 0 0 0.35rem;
   color: var(--bfa-accent);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -471,7 +471,7 @@
 .bfa-contrato-summary-grid dt {
   color: var(--bfa-text-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -528,7 +528,7 @@
   padding: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.55rem;
-  background: rgba(13, 13, 13, 0.42);
+  background: var(--bfa-surface);
 }
 
 .bfa-contrato-version-card {
@@ -559,7 +559,7 @@
 .bfa-contrato-version-summary dt {
   color: var(--bfa-text-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -617,7 +617,7 @@
   margin: 0 0 0.35rem;
   color: var(--bfa-accent);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -655,7 +655,7 @@
 .bfa-franqueado-data-grid dt {
   color: var(--bfa-text-muted);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -682,7 +682,7 @@
 .bfa-franqueado-card__footer > span {
   color: var(--bfa-text-muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -707,7 +707,7 @@
   padding: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.55rem;
-  background: rgba(13, 13, 13, 0.42);
+  background: var(--bfa-surface);
 }
 
 .bfa-franqueado-related-card form {
@@ -852,7 +852,7 @@
   padding: 1rem 1.25rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.6rem;
-  background: rgba(13, 13, 13, 0.42);
+  background: var(--bfa-surface);
 }
 
 .bfa-admin-filters__group {
@@ -864,7 +864,7 @@
 
 .bfa-admin-filters__label {
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--bfa-text-muted);
@@ -876,7 +876,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.45rem;
-  background: rgba(13, 13, 13, 0.55);
+  background: var(--bfa-surface);
   color: var(--bfa-text-primary);
   font-size: 0.88rem;
 }
@@ -902,7 +902,7 @@
   border: 1px solid var(--bfa-border);
   border-radius: 0.45rem;
   background: transparent;
-  color: var(--bfa-text-muted);
+  color: var(--bfa-text-secondary);
   font-size: 0.85rem;
   font-weight: 700;
   text-decoration: none;
@@ -911,8 +911,8 @@
 }
 
 .bfa-admin-btn:hover {
-  color: var(--bfa-text-primary);
-  border-color: rgba(255, 193, 7, 0.4);
+  color: var(--bfa-text);
+  border-color: var(--bfa-border-strong);
 }
 
 .bfa-admin-btn--primary {

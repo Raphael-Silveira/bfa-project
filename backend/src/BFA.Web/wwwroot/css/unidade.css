@@ -3,6 +3,349 @@
   margin-top: 0;
 }
 
+/* ─── Welcome Header (Hero) ─── */
+
+.bfa-unidade-welcome {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.25fr 0.7fr;
+  align-items: center;
+  gap: 2rem;
+  min-height: 11rem;
+  padding: 0 0 0.5rem;
+  overflow: hidden;
+}
+
+.bfa-unidade-welcome__copy {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 0;
+}
+
+.bfa-unidade-welcome__eyebrow {
+  margin: 0 0 0.4rem;
+  color: var(--bfa-accent);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.bfa-unidade-welcome__title {
+  margin: 0;
+  color: var(--bfa-text);
+  font-size: clamp(2.25rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.bfa-unidade-welcome__subtitle {
+  margin: 0.5rem 0 0;
+  color: var(--bfa-text-secondary);
+  font-size: 0.875rem;
+}
+
+.bfa-unidade-welcome__quote {
+  position: relative;
+  z-index: 2;
+  justify-self: end;
+  max-width: 16rem;
+  padding: 0;
+}
+
+.bfa-unidade-welcome__quote blockquote {
+  margin: 0;
+  padding: 0;
+}
+
+.bfa-unidade-welcome__quote p {
+  margin: 0;
+  color: var(--bfa-text);
+  font-size: 1.1rem;
+  line-height: 1.3;
+  font-style: normal;
+}
+
+.bfa-unidade-welcome__quote footer {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+  color: var(--bfa-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.bfa-unidade-welcome__quote footer::before {
+  content: "";
+  display: inline-block;
+  width: 1.35rem;
+  height: 3px;
+  background: var(--bfa-accent);
+}
+
+@media (max-width: 73.75rem) {
+  .bfa-unidade-welcome {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-unidade-welcome__quote {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 35rem) {
+  .bfa-unidade-welcome {
+    min-height: auto;
+  }
+}
+
+/* ─── Schedule Panel (Aulas) ─── */
+
+.bfa-unidade-schedule-panel {
+  background: linear-gradient(145deg, #1B1E20, #151719);
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.bfa-unidade-schedule-panel__header {
+  min-height: 3.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.125rem;
+  border-bottom: 1px solid var(--bfa-border-soft);
+}
+
+.bfa-unidade-schedule-panel__header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.bfa-unidade-schedule-panel__header a {
+  color: var(--bfa-accent);
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.bfa-unidade-schedule-panel__header a:hover {
+  text-decoration: underline;
+}
+
+.bfa-unidade-lesson-row {
+  display: grid;
+  grid-template-columns: 3.5rem 8px minmax(10rem, 1fr) 5.75rem 8.75rem;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 4.5rem;
+  padding: 0 1.125rem;
+  border-bottom: 1px solid var(--bfa-border-soft);
+}
+
+.bfa-unidade-lesson-row:last-child {
+  border-bottom: 0;
+}
+
+.bfa-unidade-lesson-row time {
+  color: var(--bfa-text-secondary);
+  font-size: 0.875rem;
+}
+
+.bfa-unidade-lesson-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.bfa-unidade-lesson-dot--blue { background: var(--bfa-info); }
+.bfa-unidade-lesson-dot--green { background: var(--bfa-success); }
+.bfa-unidade-lesson-dot--gold { background: var(--bfa-accent); }
+
+.bfa-unidade-lesson-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bfa-unidade-lesson-main strong {
+  font-size: 0.875rem;
+}
+
+.bfa-unidade-lesson-main span {
+  color: var(--bfa-text-secondary);
+  font-size: 0.75rem;
+}
+
+.bfa-unidade-lesson-capacity {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.45rem;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.bfa-unidade-lesson-capacity span {
+  grid-column: 2;
+  color: var(--bfa-text-secondary);
+  font-size: 0.68rem;
+}
+
+@media (max-width: 73.75rem) {
+  .bfa-unidade-lesson-row {
+    grid-template-columns: 3rem 6px 1fr 5rem;
+    gap: 0.65rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .bfa-unidade-lesson-row .bfa-btn-primary,
+  .bfa-unidade-lesson-row .bfa-btn-secondary {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 35rem) {
+  .bfa-unidade-lesson-row {
+    grid-template-columns: 2.75rem 6px 1fr;
+    gap: 0.5rem;
+  }
+
+  .bfa-unidade-lesson-capacity {
+    grid-column: 3;
+    margin-top: 0.25rem;
+  }
+}
+
+/* ─── Activity Panel ─── */
+
+.bfa-unidade-activity-panel {
+  background: linear-gradient(145deg, #1B1E20, #151719);
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.bfa-unidade-activity-panel__header {
+  min-height: 3.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.125rem;
+  border-bottom: 1px solid var(--bfa-border-soft);
+}
+
+.bfa-unidade-activity-panel__header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.bfa-unidade-activity-panel__header a {
+  color: var(--bfa-accent);
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.bfa-unidade-activity-panel__header a:hover {
+  text-decoration: underline;
+}
+
+.bfa-unidade-activity-row {
+  min-height: 4rem;
+  display: grid;
+  grid-template-columns: 2.125rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1.125rem;
+  border-bottom: 1px solid var(--bfa-border-soft);
+}
+
+.bfa-unidade-activity-row:last-child {
+  border-bottom: 0;
+}
+
+.bfa-unidade-activity-icon {
+  width: 2.125rem;
+  height: 2.125rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.55rem;
+}
+
+.bfa-unidade-activity-icon--success {
+  color: var(--bfa-success);
+  background: rgba(34, 197, 94, 0.11);
+}
+
+.bfa-unidade-activity-icon--warning {
+  color: var(--bfa-accent);
+  background: rgba(255, 193, 7, 0.11);
+}
+
+.bfa-unidade-activity-icon--info {
+  color: var(--bfa-info);
+  background: rgba(59, 130, 246, 0.11);
+}
+
+.bfa-unidade-activity-icon--neutral {
+  color: var(--bfa-text);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.bfa-unidade-activity-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bfa-unidade-activity-copy strong {
+  font-size: 0.75rem;
+}
+
+.bfa-unidade-activity-copy span {
+  color: var(--bfa-text-secondary);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bfa-unidade-activity-row time {
+  color: var(--bfa-text-secondary);
+  font-size: 0.625rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 35rem) {
+  .bfa-unidade-activity-row {
+    grid-template-columns: 2rem 1fr;
+    padding-block: 0.625rem;
+  }
+
+  .bfa-unidade-activity-row time {
+    grid-column: 2;
+  }
+}
+
+/* ─── Dashboard Grid ─── */
+
+.bfa-unidade-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 73.75rem) {
+  .bfa-unidade-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .bfa-professor-contact {
   display: grid;
   gap: 0.2rem;
@@ -24,7 +367,7 @@
   margin: 0 0 0.3rem;
   color: var(--bfa-accent);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -40,11 +383,11 @@
   gap: 1rem;
 }
 
-.bfa-professor-card dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+.bfa-professor-card dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
 .bfa-professor-card dd { margin: 0.25rem 0 0; overflow-wrap: anywhere; }
 .bfa-professor-card__actions { display: flex; margin-top: 1.25rem; padding-top: 1rem; justify-content: flex-end; border-top: 1px solid var(--bfa-border); }
 .bfa-professor-filters { display: flex; width: fit-content; max-width: 100%; margin-bottom: 1.25rem; padding: 0.25rem; gap: 0.25rem; overflow-x: auto; border: 1px solid var(--bfa-border); border-radius: 0.6rem; background: rgba(13, 13, 13, 0.55); }
-.bfa-professor-filters a { min-height: 2.5rem; padding: 0.55rem 0.9rem; border-left: 0.15rem solid transparent; border-radius: 0.4rem; color: var(--bfa-text-muted); font-weight: 800; text-decoration: none; white-space: nowrap; }
+.bfa-professor-filters a { min-height: 2.5rem; padding: 0.55rem 0.9rem; border-left: 0.15rem solid transparent; border-radius: 0.4rem; color: var(--bfa-text-muted); font-weight: 600; text-decoration: none; white-space: nowrap; }
 .bfa-professor-filters a:hover { color: var(--bfa-text-primary); }
 .bfa-professor-filters a.is-active { border-left-color: var(--bfa-accent); background: rgba(255, 193, 7, 0.1); color: var(--bfa-accent); }
 .bfa-professor-form { width: 100%; max-width: 68rem; }
@@ -55,7 +398,7 @@
 .bfa-professor-form-wide { grid-column: 1 / -1; }
 .bfa-professor-form__heading { margin-bottom: 1.5rem; }
 .bfa-professor-money { display: flex; align-items: stretch; }
-.bfa-professor-money > span { display: grid; padding: 0 0.85rem; place-items: center; border: 1px solid var(--bfa-border); border-right: 0; border-radius: 0.5rem 0 0 0.5rem; color: var(--bfa-accent); font-weight: 800; }
+.bfa-professor-money > span { display: grid; padding: 0 0.85rem; place-items: center; border: 1px solid var(--bfa-border); border-right: 0; border-radius: 0.5rem 0 0 0.5rem; color: var(--bfa-accent); font-weight: 600; }
 .bfa-professor-money .bfa-form-control { border-radius: 0 0.5rem 0.5rem 0; }
 
 .bfa-turma-form { width: 100%; max-width: 76rem; }
@@ -63,13 +406,13 @@
 .bfa-turma-form-wide { grid-column: 1 / -1; }
 .bfa-turma-form__heading { margin-bottom: 1.5rem; }
 .bfa-turma-form__heading p,
-.bfa-turma-card header p { margin: 0 0 0.3rem; color: var(--bfa-accent); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.bfa-turma-card header p { margin: 0 0 0.3rem; color: var(--bfa-accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .bfa-turma-form__heading h2,
 .bfa-turma-card h2 { margin: 0; }
 .bfa-turma-form__heading > span { display: block; margin-top: 0.5rem; color: var(--bfa-text-muted); }
 .bfa-turma-schedule-list { display: grid; gap: 1rem; }
-.bfa-turma-schedule-row { display: grid; padding: 1rem; grid-template-columns: 1.2fr repeat(3, minmax(8.5rem, 1fr)) auto; align-items: end; gap: 1rem; border: 1px solid var(--bfa-border); border-radius: 0.6rem; background: rgba(13, 13, 13, 0.42); }
-.bfa-turma-schedule-remove { min-height: 2.75rem; padding: 0.65rem 0.85rem; border: 1px solid var(--bfa-border); border-radius: 0.5rem; background: transparent; color: var(--bfa-text-muted); font-weight: 800; }
+.bfa-turma-schedule-row { display: grid; padding: 1rem; grid-template-columns: 1.2fr repeat(3, minmax(8.5rem, 1fr)) auto; align-items: end; gap: 1rem; border: 1px solid var(--bfa-border); border-radius: 0.6rem; background: var(--bfa-surface); }
+.bfa-turma-schedule-remove { min-height: 2.75rem; padding: 0.65rem 0.85rem; border: 1px solid var(--bfa-border); border-radius: 0.5rem; background: transparent; color: var(--bfa-text-muted); font-weight: 600; }
 .bfa-turma-schedule-remove:hover:not(:disabled),
 .bfa-turma-schedule-remove:focus-visible { border-color: var(--bfa-accent); color: var(--bfa-accent); }
 .bfa-turma-schedule-remove:disabled { opacity: 0.42; cursor: not-allowed; }
@@ -80,7 +423,7 @@
 .bfa-turma-card header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .bfa-turma-card dl { display: grid; margin: 1.25rem 0 0; gap: 1rem; }
 .bfa-turma-card dt,
-.bfa-turma-readonly-grid dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+.bfa-turma-readonly-grid dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
 .bfa-turma-card dd,
 .bfa-turma-readonly-grid dd { margin: 0.25rem 0 0; overflow-wrap: anywhere; }
 .bfa-turma-card__actions { display: flex; margin-top: 1.25rem; padding-top: 1rem; justify-content: flex-end; border-top: 1px solid var(--bfa-border); }
@@ -94,30 +437,29 @@
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  border-top: 0.2rem solid var(--bfa-accent);
 }
 .bfa-professor-turmas-summary p,
 .bfa-minhas-turmas-card header p,
-.bfa-minhas-turmas-detail header p { margin: 0 0 0.3rem; color: var(--bfa-accent); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.bfa-minhas-turmas-detail header p { margin: 0 0 0.3rem; color: var(--bfa-accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .bfa-professor-turmas-summary h2,
 .bfa-minhas-turmas-card h2,
 .bfa-minhas-turmas-detail h2 { margin: 0; }
 .bfa-professor-turmas-summary strong { display: block; margin-top: 0.65rem; color: var(--bfa-text-muted); }
 .bfa-minhas-turmas-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
 .bfa-minhas-turmas-card,
-.bfa-minhas-turmas-detail { padding: clamp(1.25rem, 3vw, 1.75rem); border-top: 0.2rem solid var(--bfa-accent); }
+.bfa-minhas-turmas-detail { padding: clamp(1.25rem, 3vw, 1.75rem);  }
 .bfa-minhas-turmas-card > header,
 .bfa-minhas-turmas-detail > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .bfa-minhas-turmas-card dl,
 .bfa-minhas-turmas-detail dl { display: grid; margin: 1.25rem 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .bfa-minhas-turmas-card dt,
-.bfa-minhas-turmas-detail dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+.bfa-minhas-turmas-detail dt { color: var(--bfa-text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
 .bfa-minhas-turmas-card dd,
 .bfa-minhas-turmas-detail dd { margin: 0.25rem 0 0; }
 .bfa-minhas-turmas-card h3 { margin: 0 0 0.75rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .bfa-minhas-turmas-card footer { display: flex; margin-top: 1.25rem; padding-top: 1rem; justify-content: flex-end; border-top: 1px solid var(--bfa-border); }
 .bfa-minhas-turmas-horarios { display: grid; gap: 0.75rem; }
-.bfa-minhas-turmas-horario { display: grid; padding: 0.9rem 1rem; gap: 0.2rem; border: 1px solid var(--bfa-border); border-radius: 0.55rem; background: rgba(13, 13, 13, 0.42); }
+.bfa-minhas-turmas-horario { display: grid; padding: 0.9rem 1rem; gap: 0.2rem; border: 1px solid var(--bfa-border); border-radius: 0.55rem; background: var(--bfa-surface); }
 .bfa-minhas-turmas-horario strong { color: var(--bfa-text-primary); }
 .bfa-minhas-turmas-horario span { color: var(--bfa-text-primary); }
 .bfa-minhas-turmas-horario small,
@@ -171,7 +513,6 @@
 .bfa-professor-remuneracao-atual,
 .bfa-professor-remuneracao-historico {
   padding: clamp(1.25rem, 3vw, 1.75rem);
-  border-top: 0.2rem solid var(--bfa-accent);
 }
 
 .bfa-professor-remuneracao-grid {
@@ -185,7 +526,7 @@
 .bfa-professor-remuneracao-item span {
   color: var(--bfa-text-muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -209,7 +550,7 @@
   gap: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.55rem;
-  background: rgba(13, 13, 13, 0.42);
+  background: var(--bfa-surface);
 }
 
 .bfa-professor-remuneracao-item > div {
@@ -269,7 +610,6 @@
 .bfa-professor-selected {
   max-width: 68rem;
   margin-bottom: 1.5rem;
-  border-top: 0.2rem solid var(--bfa-accent);
 }
 
 .bfa-unidade-contract-card,
@@ -278,7 +618,6 @@
   width: 100%;
   max-width: 72rem;
   padding: clamp(1.25rem, 3vw, 2rem);
-  border-top: 0.2rem solid var(--bfa-accent);
 }
 
 .bfa-unidade-contract-card__header,
@@ -303,7 +642,7 @@
   margin: 0 0 0.35rem;
   color: var(--bfa-accent);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -340,7 +679,7 @@
   margin-bottom: 0.35rem;
   color: var(--bfa-text-muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -365,7 +704,7 @@
   padding: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.55rem;
-  background: rgba(13, 13, 13, 0.45);
+  background: var(--bfa-surface);
 }
 
 .bfa-unidade-contract-empty p {
@@ -429,7 +768,7 @@
   gap: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.55rem;
-  background: rgba(13, 13, 13, 0.42);
+  background: var(--bfa-surface);
 }
 
 .bfa-unidade-document-item__copy {
@@ -452,7 +791,6 @@
   width: 100%;
   padding: clamp(1.25rem, 5vw, 2.5rem);
   border: 1px solid var(--bfa-border);
-  border-top: 0.2rem solid var(--bfa-accent);
   border-radius: 0.75rem;
   background: linear-gradient(145deg, rgba(30, 30, 30, 0.98), rgba(13, 13, 13, 0.98));
   box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.35);
@@ -482,7 +820,7 @@
   margin: 0;
   color: var(--bfa-text-primary);
   font-size: clamp(1.7rem, 6vw, 2.5rem);
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.035em;
 }
 
@@ -518,9 +856,9 @@
 }
 
 .bfa-unidade-selection__item:hover {
-  border-color: rgba(255, 193, 7, 0.45);
+  border-color: var(--bfa-accent-muted);
   border-top-color: var(--bfa-accent);
-  background: rgba(255, 193, 7, 0.07);
+  background: var(--bfa-accent-subtle);
   box-shadow: 0 0.85rem 1.75rem rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
 }
@@ -597,7 +935,7 @@
   border-radius: 50%;
   color: var(--bfa-accent);
   font-size: 0.7rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .bfa-unidade-selection__empty h2 {
@@ -738,7 +1076,7 @@
   z-index: 5;
   top: 0.75rem;
   padding: 0.75rem;
-  background: rgba(13, 13, 13, 0.97);
+  background: var(--bfa-bg);
 }
 
 .bfa-matricula-stepper ol {
@@ -793,13 +1131,13 @@
   border: 1px solid var(--bfa-border);
   border-radius: 999px;
   color: var(--bfa-text-primary);
-  background: #141414;
-  font-weight: 900;
+  background: var(--bfa-surface);
+  font-weight: 700;
 }
 
 .bfa-matricula-stepper .is-current .bfa-matricula-stepper__number {
   border-color: var(--bfa-accent);
-  outline: 2px solid rgba(251, 201, 0, 0.2);
+  outline: 2px solid var(--bfa-accent-subtle);
 }
 
 .bfa-matricula-stepper .is-complete .bfa-matricula-stepper__number {
@@ -813,7 +1151,7 @@
   width: 100%;
   color: var(--bfa-text-primary);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -845,7 +1183,7 @@
 .bfa-matricula-schedule-day > h3 {
   color: var(--bfa-accent);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -894,7 +1232,7 @@
   gap: 0.35rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.65rem;
-  background: rgba(10, 10, 10, 0.45);
+  background: var(--bfa-surface);
   cursor: pointer;
   transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
 }
@@ -903,8 +1241,8 @@
 .bfa-matricula-student-card:not(.is-disabled):hover,
 .bfa-matricula-plan-card:hover,
 .bfa-matricula-schedule-card:not(.is-full):not(.is-conflict):not(.is-limit):hover {
-  border-color: rgba(251, 201, 0, 0.65);
-  background: rgba(251, 201, 0, 0.05);
+  border-color: var(--bfa-accent-muted);
+  background: var(--bfa-accent-subtle);
 }
 
 .bfa-matricula-mode-card:has(input:focus-visible),
@@ -920,7 +1258,7 @@
 .bfa-matricula-plan-card.is-selected,
 .bfa-matricula-schedule-card.is-selected {
   border-color: var(--bfa-accent);
-  background: rgba(251, 201, 0, 0.08);
+  background: var(--bfa-accent-subtle);
 }
 
 .bfa-matricula-mode-card input,
@@ -960,7 +1298,7 @@
   color: var(--bfa-accent);
   font-size: 0.78rem;
   font-style: normal;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .bfa-matricula-student-card.is-disabled,
@@ -1001,7 +1339,7 @@
   padding: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.65rem;
-  background: rgba(251, 201, 0, 0.04);
+  background: var(--bfa-accent-subtle);
 }
 
 .bfa-matricula-existing-guardian {
@@ -1039,7 +1377,7 @@
   padding: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.65rem;
-  background: rgba(10, 10, 10, 0.35);
+  background: var(--bfa-surface);
 }
 
 .bfa-matricula-guardian-card > header {
@@ -1102,7 +1440,7 @@
   color: var(--bfa-accent) !important;
   background: rgba(251, 201, 0, 0.1);
   font-size: 0.65rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -1139,8 +1477,8 @@
   border-right: 0;
   border-radius: 0.5rem 0 0 0.5rem;
   color: var(--bfa-text-muted);
-  background: rgba(255, 255, 255, 0.035);
-  font-weight: 800;
+  background: var(--bfa-surface-elevated);
+  font-weight: 600;
 }
 
 .bfa-matricula-money .bfa-form-control {
@@ -1208,7 +1546,7 @@
 .bfa-matricula-schedule-card > small {
   margin-top: 0.25rem;
   color: var(--bfa-text-primary);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .bfa-matricula-inline-empty,
@@ -1232,7 +1570,7 @@
   padding: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.65rem;
-  background: rgba(10, 10, 10, 0.35);
+  background: var(--bfa-surface);
 }
 
 .bfa-matricula-review > section > header {
@@ -1247,7 +1585,7 @@
   margin: 0;
   color: var(--bfa-accent);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1257,7 +1595,7 @@
   border: 0;
   color: var(--bfa-accent);
   background: transparent;
-  font-weight: 800;
+  font-weight: 600;
   text-decoration: underline;
 }
 
@@ -1378,10 +1716,10 @@
     width: fit-content;
     margin: 0 0 1rem;
     padding: 0.35rem 0.65rem;
-    border: 1px solid rgb(255 193 7 / 24%);
+    border: 1px solid var(--bfa-border-accent);
     border-radius: 999px;
     color: var(--bfa-text-muted);
-    background: rgb(255 193 7 / 5%);
+    background: var(--bfa-accent-subtle);
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -1456,7 +1794,7 @@
   margin: 0 0 0.3rem;
   color: var(--bfa-accent);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1489,7 +1827,7 @@
 .bfa-matricula-history-item span {
   color: var(--bfa-text-muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -1613,7 +1951,7 @@
   padding: 1rem;
   border: 1px solid var(--bfa-border);
   border-radius: 0.6rem;
-  background: rgba(13, 13, 13, 0.42);
+  background: var(--bfa-surface);
 }
 
 .bfa-matricula-responsavel > header span {
@@ -1641,7 +1979,7 @@
 
 .bfa-matricula-grade-item > header span {
   color: var(--bfa-accent);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .bfa-matricula-grade-item dl {

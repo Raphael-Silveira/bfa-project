@@ -31,7 +31,7 @@
 .bfa-plan-section-heading p {
   color: var(--bfa-gold);
   font-size: .75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: .08em;
   margin: 0 0 .35rem;
   text-transform: uppercase;
@@ -58,9 +58,8 @@
 .bfa-plan-history dt {
   color: var(--bfa-gray);
   font-size: .75rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: .05em;
-  text-transform: uppercase;
 }
 
 .bfa-plan-card dd,
@@ -71,7 +70,7 @@
 
 .bfa-plan-card footer,
 .bfa-plan-state-action {
-  border-top: 1px solid var(--bfa-admin-border, rgba(255, 255, 255, .16));
+  border-top: 1px solid var(--bfa-border);
   padding-top: 1rem;
 }
 
@@ -104,7 +103,7 @@
 
 .bfa-admin-money-field > span {
   align-items: center;
-  border: 1px solid var(--bfa-admin-border, rgba(255, 255, 255, .24));
+  border: 1px solid var(--bfa-border-strong);
   border-right: 0;
   border-radius: .5rem 0 0 .5rem;
   color: var(--bfa-gray);
@@ -123,7 +122,7 @@
 }
 
 .bfa-plan-history article {
-  border: 1px solid var(--bfa-admin-border, rgba(255, 255, 255, .16));
+  border: 1px solid var(--bfa-border);
   border-radius: .75rem;
   padding: 1rem;
 }
@@ -148,9 +147,7 @@
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 85% 5%, rgba(255, 193, 7, 0.1), transparent 25rem),
-    var(--bfa-bg-primary);
+  background: var(--bfa-bg-primary);
   color: var(--bfa-text-primary);
 }
 
@@ -163,7 +160,7 @@
   border-radius: 0.4rem;
   background: var(--bfa-accent);
   color: var(--bfa-black);
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
   transform: translateY(-200%);
   transition: transform 150ms ease;
@@ -178,17 +175,16 @@
   position: sticky;
   top: 0;
   z-index: 1030;
-  border-bottom: 1px solid var(--bfa-border);
-  background: rgba(13, 13, 13, 0.96);
-  box-shadow: 0 0.75rem 2.5rem rgba(0, 0, 0, 0.24);
-  backdrop-filter: blur(0.8rem);
+  border-bottom: 1px solid var(--bfa-border-soft);
+  background: rgba(18, 19, 21, 0.92);
+  backdrop-filter: blur(16px);
 }
 
 .bfa-admin-header__content {
   display: flex;
   width: 100%;
-  min-height: 5rem;
-  padding: 0.85rem 2rem;
+  min-height: var(--topbar-height);
+  padding: 0 2rem;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
@@ -198,7 +194,7 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
   color: var(--bfa-text-primary);
   text-decoration: none;
 }
@@ -209,10 +205,10 @@
 
 .bfa-admin-brand__logo {
   display: block;
-  width: clamp(9.5rem, 18vw, 13rem);
+  width: clamp(8rem, 14vw, 11rem);
   max-width: 100%;
-  height: clamp(2.2rem, 5vw, 3rem);
-  object-fit: cover;
+  height: clamp(2rem, 4vw, 2.75rem);
+  object-fit: contain;
   object-position: center;
 }
 
@@ -227,7 +223,7 @@
 .bfa-admin-brand__area {
   color: var(--bfa-text-muted);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -254,51 +250,52 @@
 }
 
 .bfa-admin-logout__button {
-  min-height: 2.7rem;
-  padding: 0.55rem 1.1rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
   border: 1px solid var(--bfa-border);
-  border-radius: 0.4rem;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--bfa-text-primary);
-  font-weight: 700;
+  color: var(--bfa-text-secondary);
+  font-weight: 600;
+  font-size: 0.82rem;
   transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
 }
 
 .bfa-admin-context-switch {
   display: inline-flex;
-  min-height: 2.7rem;
-  padding: 0.55rem 1rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.85rem;
   align-items: center;
-  border: 1px solid transparent;
-  border-radius: 0.4rem;
-  color: var(--bfa-text-muted);
-  font-size: 0.9rem;
-  font-weight: 700;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-sm);
+  color: var(--bfa-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .bfa-admin-context-switch:hover {
-  border-color: rgba(255, 193, 7, 0.28);
-  background: rgba(255, 193, 7, 0.06);
-  color: var(--bfa-accent);
+  border-color: var(--bfa-border-strong);
+  background: var(--bfa-surface-elevated);
+  color: var(--bfa-text);
 }
 
 .bfa-admin-logout__button:hover {
-  border-color: var(--bfa-accent);
-  background: rgba(255, 193, 7, 0.08);
-  color: var(--bfa-accent);
+  border-color: var(--bfa-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--bfa-text);
 }
 
 .bfa-admin-menu-toggle,
 .bfa-admin-drawer__close {
   display: none;
-  width: 2.85rem;
-  height: 2.85rem;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 0;
   place-items: center;
   border: 1px solid var(--bfa-border);
-  border-radius: 0.55rem;
-  background: rgba(30, 30, 30, 0.9);
+  border-radius: var(--radius-sm);
+  background: var(--bfa-surface);
   color: var(--bfa-text-primary);
 }
 
@@ -321,61 +318,79 @@
   display: grid;
   width: 100%;
   min-width: 0;
-  min-height: calc(100vh - 9rem);
-  grid-template-columns: 14rem minmax(0, 1fr);
+  min-height: calc(100vh - var(--topbar-height));
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 }
 
 .bfa-admin-sidebar {
   position: sticky;
-  top: 5rem;
-  height: calc(100vh - 5rem);
-  padding: 2.25rem 1.5rem 2rem 2rem;
+  top: var(--topbar-height);
+  height: calc(100vh - var(--topbar-height));
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 0.875rem 1.5rem;
   align-self: start;
   overflow-y: auto;
   scrollbar-gutter: stable;
+  background: linear-gradient(180deg, #111214 0%, #0D0E0F 100%);
+  border-right: 1px solid var(--bfa-border-soft);
 }
 
 .bfa-admin-nav-label,
 .bfa-admin-drawer__eyebrow {
-  margin: 0 0 0.9rem;
+  margin: 0 0 0.75rem;
+  padding: 0 0.75rem;
   color: var(--bfa-text-muted);
-  font-size: 0.7rem;
-  font-weight: 800;
+  font-size: 0.68rem;
+  font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
 .bfa-admin-nav {
-  display: grid;
-  gap: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .bfa-admin-nav-link {
+  position: relative;
   display: flex;
   width: 100%;
-  min-height: 2.85rem;
-  padding: 0.7rem 0.85rem;
+  min-height: 2.6875rem;
+  padding: 0.65rem 0.75rem;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
   border: 1px solid transparent;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--bfa-text-muted);
-  font-weight: 700;
+  color: #D2D4D7;
+  font-weight: 500;
   text-align: left;
   text-decoration: none;
-  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+  transition: background .16s ease, color .16s ease;
 }
 
-.bfa-admin-nav-link:hover,
-.bfa-admin-nav-link.is-active {
-  border-color: rgba(255, 193, 7, 0.28);
-  background: linear-gradient(90deg, rgba(255, 193, 7, 0.14), rgba(255, 193, 7, 0.02));
-  color: var(--bfa-text-primary);
+.bfa-admin-nav-link:hover {
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
 }
 
 .bfa-admin-nav-link.is-active {
-  box-shadow: inset 0.18rem 0 var(--bfa-accent);
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.13), rgba(255, 193, 7, 0.03));
+  color: #fff;
+  font-weight: 650;
+}
+
+.bfa-admin-nav-link.is-active::before {
+  content: "";
+  position: absolute;
+  left: -0.875rem;
+  width: 3px;
+  height: 1.75rem;
+  background: var(--bfa-accent);
+  border-radius: 0 3px 3px 0;
 }
 
 .bfa-admin-nav-link.is-active svg {
@@ -384,23 +399,28 @@
 
 .bfa-admin-main {
   min-width: 0;
-  padding: clamp(2rem, 4vw, 4rem);
+  width: min(1440px, calc(100% - 4rem));
+  margin: 0 auto;
+  padding: 2.5rem 0 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .bfa-admin-footer {
   display: flex;
-  min-height: 4rem;
-  padding: 1rem 2rem;
+  min-height: 3.5rem;
+  padding: 0.75rem 2rem;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  border-top: 1px solid var(--bfa-border);
+  gap: 0.5rem;
+  border-top: 1px solid var(--bfa-border-soft);
   color: var(--bfa-text-muted);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
 }
 
 .bfa-admin-footer span + span::before {
-  margin-right: 0.75rem;
+  margin-right: 0.5rem;
   color: var(--bfa-accent);
   content: "•";
 }
@@ -416,9 +436,7 @@
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--bfa-border);
-  background:
-    radial-gradient(circle at 15% 0, rgba(255, 193, 7, 0.12), transparent 15rem),
-    var(--bfa-bg-secondary);
+  background: var(--bfa-surface-overlay);
   color: var(--bfa-text-primary);
   box-shadow: 1.5rem 0 4rem rgba(0, 0, 0, 0.45);
 }
@@ -450,7 +468,7 @@
 .bfa-admin-drawer__header h2 {
   margin: 0;
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .bfa-admin-drawer__context {
@@ -501,20 +519,20 @@
   border-radius: 0.3rem;
   background: transparent;
   box-shadow: none;
-  color: var(--bfa-text-muted);
+  color: var(--bfa-text-secondary);
 }
 
 .bfa-admin-drawer .bfa-admin-nav-link:hover {
-  border-left-color: rgba(255, 193, 7, 0.5);
-  background: rgba(255, 193, 7, 0.055);
-  color: var(--bfa-text-primary);
+  border-left-color: var(--bfa-border-strong);
+  background: var(--bfa-surface-elevated);
+  color: var(--bfa-text);
 }
 
 .bfa-admin-drawer .bfa-admin-nav-link.is-active {
   border-left-color: var(--bfa-accent);
-  background: rgba(255, 193, 7, 0.09);
+  background: var(--bfa-accent-subtle);
   box-shadow: none;
-  color: var(--bfa-text-primary);
+  color: var(--bfa-text);
 }
 
 .bfa-admin-drawer .bfa-admin-nav-link svg {
@@ -560,22 +578,22 @@
   margin: 0 0 0.65rem;
   color: var(--bfa-accent);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .bfa-admin-page-header__title {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  font-weight: 800;
-  letter-spacing: -0.035em;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .bfa-admin-page-header__description {
   max-width: 48rem;
   margin: 0.65rem 0 0;
-  color: var(--bfa-text-muted);
+  color: var(--bfa-text-secondary);
   overflow-wrap: anywhere;
 }
 
@@ -588,48 +606,93 @@
 
 .bfa-admin-card {
   min-width: 0;
-  padding: clamp(1.25rem, 3vw, 2rem);
+  padding: 1.125rem;
   border: 1px solid var(--bfa-border);
-  border-top: 0.2rem solid var(--bfa-accent);
-  border-radius: 0.7rem;
-  background: linear-gradient(145deg, rgba(30, 30, 30, 0.98), rgba(13, 13, 13, 0.96));
-  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, #1C1F21, #16181A);
+  box-shadow: var(--shadow-card);
 }
 
 .bfa-admin-card-grid {
   display: grid;
   min-width: 0;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
 }
 
 .bfa-admin-metric-card {
-  min-height: 10rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  min-height: 10.5rem;
+  padding: 1.25rem;
+}
+
+.bfa-admin-metric-card__icon {
+  display: grid;
+  place-items: center;
+  width: 2.875rem;
+  height: 2.875rem;
+  flex-shrink: 0;
+  border-radius: 0.625rem;
+  background: var(--bfa-accent-subtle);
+  color: var(--bfa-accent);
+  font-size: 1.25rem;
+}
+
+.bfa-admin-metric-card__icon--accent {
+  background: var(--bfa-accent-subtle);
+  color: var(--bfa-accent);
+}
+
+.bfa-admin-metric-card__icon--danger {
+  background: rgba(239, 68, 68, 0.11);
+  color: var(--bfa-danger);
+}
+
+.bfa-admin-metric-card__body {
+  min-width: 0;
 }
 
 .bfa-admin-metric-card__label {
-  min-height: 2.8rem;
-  margin: 0;
-  color: var(--bfa-text-muted);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  display: block;
+  min-height: auto;
+  margin: 0.45rem 0 0.25rem;
+  color: var(--bfa-text);
+  font-size: 0.875rem;
+  font-weight: 650;
+  letter-spacing: 0;
 }
 
 .bfa-admin-metric-card__value {
   display: block;
-  margin-top: 1rem;
+  margin-top: 0;
   color: var(--bfa-text-primary);
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1;
+  font-size: clamp(2rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.bfa-admin-metric-card__link {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-top: 1.1rem;
+  color: var(--bfa-text-primary);
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.bfa-admin-metric-card__link:hover {
+  color: var(--bfa-accent);
 }
 
 .bfa-admin-table-container {
   overflow-x: auto;
   border: 1px solid var(--bfa-border);
-  border-radius: 0.7rem;
-  background: rgba(30, 30, 30, 0.82);
+  border-radius: var(--radius-lg);
+  background: var(--bfa-surface);
 }
 
 .bfa-admin-table {
@@ -640,15 +703,16 @@
 
 .bfa-admin-table th,
 .bfa-admin-table td {
-  padding: 1rem;
+  padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--bfa-border);
   text-align: left;
   vertical-align: middle;
 }
 
 .bfa-admin-table th {
-  color: var(--bfa-text-muted);
+  color: var(--bfa-text-secondary);
   font-size: 0.74rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -658,7 +722,7 @@
 }
 
 .bfa-admin-table tbody tr:hover {
-  background: rgba(255, 193, 7, 0.04);
+  background: var(--bfa-surface-elevated);
 }
 
 .bfa-admin-table tbody tr:last-child td {
@@ -678,8 +742,8 @@
   padding: 0.3rem 0.6rem;
   align-items: center;
   border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .bfa-admin-badge.is-active {
@@ -710,7 +774,7 @@
   place-items: center;
   border: 1px solid var(--bfa-border);
   border-radius: 0.55rem;
-  background: rgba(13, 13, 13, 0.7);
+  background: var(--bfa-surface);
   color: var(--bfa-text-primary);
   text-decoration: none;
   transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease,
@@ -718,8 +782,8 @@
 }
 
 .bfa-admin-icon-action:hover {
-  border-color: var(--bfa-accent);
-  background: rgba(255, 193, 7, 0.1);
+  border-color: var(--bfa-accent-muted);
+  background: var(--bfa-accent-subtle);
   color: var(--bfa-accent);
   transform: translateY(-1px);
 }
@@ -734,7 +798,7 @@
 
 .bfa-admin-button {
   gap: 0.55rem;
-  min-height: 3rem;
+  min-height: 2.75rem;
 }
 
 .bfa-admin-form-card {
@@ -749,7 +813,7 @@
 
 .bfa-admin-form .form-control {
   width: 100%;
-  min-height: 3rem;
+  min-height: 2.75rem;
 }
 
 .bfa-admin-date-field {
@@ -778,7 +842,7 @@
 }
 
 .bfa-admin-date-field__trigger:hover {
-  background: rgba(255, 193, 7, 0.12);
+  background: var(--bfa-accent-subtle);
   color: var(--bfa-white);
 }
 
@@ -804,9 +868,9 @@
   z-index: 1080;
   width: min(20rem, calc(100vw - 2rem));
   padding: 0.85rem;
-  border: 1px solid rgba(255, 193, 7, 0.42);
-  border-radius: 0.7rem;
-  background: #171717;
+  border: 1px solid var(--bfa-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bfa-surface-overlay);
   box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.48);
   color: var(--bfa-text-primary);
   transform: translate(var(--bfa-calendar-offset-x, 0), var(--bfa-calendar-offset-y, 0));
@@ -837,7 +901,7 @@
   margin: 0;
   color: var(--bfa-white);
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   text-align: center;
 }
 
@@ -879,7 +943,7 @@
   margin-top: 0.7rem;
   color: var(--bfa-text-muted);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -902,15 +966,15 @@
 .bfa-admin-calendar__nav:hover,
 .bfa-admin-calendar__day:hover,
 .bfa-admin-calendar__today:hover {
-  border-color: rgba(255, 193, 7, 0.55);
-  background: rgba(255, 193, 7, 0.1);
+  border-color: var(--bfa-border-strong);
+  background: var(--bfa-surface-elevated);
   color: var(--bfa-white);
 }
 
 .bfa-admin-calendar__day.is-today {
   border-color: var(--bfa-accent);
   color: var(--bfa-accent);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .bfa-admin-calendar__day.is-selected {
@@ -933,7 +997,7 @@
   padding: 0.35rem 0.75rem;
   border-radius: 0.45rem;
   color: var(--bfa-accent);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .bfa-admin-calendar__nav:focus-visible,
@@ -981,9 +1045,9 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 1rem;
-  border: 1px dashed rgba(189, 189, 189, 0.45);
-  border-radius: 0.7rem;
-  background: rgba(13, 13, 13, 0.48);
+  border: 1px dashed var(--bfa-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bfa-surface);
   color: var(--bfa-text-primary);
   cursor: pointer;
   transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
@@ -991,8 +1055,8 @@
 
 .bfa-admin-file-upload__surface:hover,
 .bfa-admin-file-upload.is-dragging .bfa-admin-file-upload__surface {
-  border-color: var(--bfa-accent);
-  background: rgba(255, 193, 7, 0.07);
+  border-color: var(--bfa-accent-muted);
+  background: var(--bfa-accent-subtle);
 }
 
 .bfa-admin-file-upload__input:focus-visible + .bfa-admin-file-upload__surface {
@@ -1051,12 +1115,12 @@
   border-radius: 0.4rem;
   color: var(--bfa-accent);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .bfa-admin-file-upload.is-selected .bfa-admin-file-upload__surface {
   border-style: solid;
-  border-color: rgba(255, 193, 7, 0.48);
+  border-color: var(--bfa-accent-muted);
 }
 
 .bfa-admin-file-upload.is-selected .bfa-admin-file-upload__icon {
@@ -1091,9 +1155,9 @@
 
 .bfa-admin-localidades__notice {
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(255, 193, 7, 0.4);
+  border: 1px solid var(--bfa-border);
   border-radius: 0.5rem;
-  background: rgba(255, 193, 7, 0.08);
+  background: var(--bfa-surface);
   color: var(--bfa-text-primary);
 }
 
@@ -1165,9 +1229,9 @@
   padding: 0.35rem;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid rgba(255, 193, 7, 0.35);
+  border: 1px solid var(--bfa-border-strong);
   border-radius: 0.55rem;
-  background: var(--bfa-bg-secondary);
+  background: var(--bfa-surface-overlay);
   box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
 }
 
@@ -1194,7 +1258,7 @@
 .bfa-admin-combobox__option.is-active,
 .bfa-admin-combobox__option[aria-selected="true"] {
   border-left-color: var(--bfa-accent);
-  background: rgba(255, 193, 7, 0.1);
+  background: var(--bfa-surface-elevated);
 }
 
 .bfa-admin-combobox__empty {
@@ -1222,8 +1286,8 @@
   align-items: center;
   gap: 1.25rem;
   border: 1px solid var(--bfa-border);
-  border-radius: 0.7rem;
-  background: rgba(30, 30, 30, 0.72);
+  border-radius: var(--radius-lg);
+  background: var(--bfa-surface);
 }
 
 .bfa-admin-empty-state__symbol {
@@ -1289,6 +1353,10 @@
   .bfa-admin-sidebar {
     padding-inline: 1.25rem;
   }
+
+  .bfa-admin-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 64rem) {
@@ -1312,11 +1380,16 @@
   }
 
   .bfa-admin-main {
+    width: 100%;
     padding: 2rem 1.5rem 3rem;
   }
 }
 
 @media (max-width: 44rem) {
+  .bfa-admin-card-grid {
+    grid-template-columns: 1fr;
+  }
+
   .bfa-admin-form-sections {
     gap: 1rem;
   }
@@ -1439,7 +1512,12 @@
   }
 
   .bfa-admin-metric-card {
-    min-height: 8.5rem;
+    min-height: 6.5rem;
+  }
+
+  .bfa-admin-metric-card__icon {
+    width: 2.25rem;
+    height: 2.25rem;
   }
 
   .bfa-admin-empty-state,
@@ -1485,19 +1563,15 @@
   }
 }
 
-/* ─── Large-screen: limita largura do conteúdo ─── */
+/* ─── Large-screen: conteúdo otimizado ─── */
 @media (min-width: 90rem) {
   .bfa-admin-main {
-    max-width: 80rem;
+    max-width: 90rem;
     margin-inline: auto;
   }
 
   .bfa-admin-page-header {
-    max-width: 80rem;
-  }
-
-  .bfa-admin-card-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    max-width: 90rem;
   }
 
   .bfa-admin-table {

@@ -1,17 +1,54 @@
 :root {
+  /* ─── Brand Palette (imutável) ─── */
   --bfa-black: #0D0D0D;
   --bfa-dark: #1E1E1E;
   --bfa-gold: #FFC107;
   --bfa-gray: #BDBDBD;
   --bfa-white: #FFFFFF;
-  --bfa-bg-primary: var(--bfa-black);
-  --bfa-bg-secondary: var(--bfa-dark);
-  --bfa-text-primary: var(--bfa-white);
-  --bfa-text-muted: var(--bfa-gray);
-  --bfa-accent: var(--bfa-gold);
-  --bfa-border: rgba(189, 189, 189, 0.35);
-  --bfa-danger: #DC3545;
-  --bfa-success: #198754;
+
+  /* ─── Surfaces ( charcoal scale ) ─── */
+  --bfa-bg: #0D0D0D;
+  --bfa-surface: #16181A;
+  --bfa-surface-elevated: #1C1F22;
+  --bfa-surface-overlay: #22262A;
+
+  /* ─── Semantic ─── */
+  --bfa-bg-primary: #0D0D0D;
+  --bfa-bg-secondary: #111214;
+  --bfa-text: #F7F7F7;
+  --bfa-text-secondary: #C3C5C8;
+  --bfa-text-muted: #8C9197;
+  --bfa-text-primary: #F7F7F7;
+
+  /* ─── Accent ─── */
+  --bfa-accent: #FFC107;
+  --bfa-accent-hover: #FFCA28;
+  --bfa-accent-subtle: rgba(255, 193, 7, 0.10);
+  --bfa-accent-muted: rgba(255, 193, 7, 0.55);
+
+  /* ─── Borders ─── */
+  --bfa-border: #2B2F33;
+  --bfa-border-soft: #23272B;
+  --bfa-border-strong: #3A3F44;
+  --bfa-border-accent: rgba(255, 193, 7, 0.35);
+
+  /* ─── Status ─── */
+  --bfa-danger: #EF4444;
+  --bfa-success: #22C55E;
+  --bfa-info: #3B82F6;
+
+  /* ─── Radius ─── */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1rem;
+
+  /* ─── Shadows ─── */
+  --shadow-card: 0 10px 28px rgba(0, 0, 0, 0.18);
+
+  /* ─── Layout ─── */
+  --sidebar-width: 14.75rem;
+  --topbar-height: 4.125rem;
 }
 
 .bfa-brand-logo,
@@ -35,71 +72,86 @@
   width: 6rem;
 }
 
+/* ─── Buttons ─── */
+
 .bfa-btn-primary,
 .bfa-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.65rem 1.25rem;
-  border: 1px solid var(--bfa-accent);
-  border-radius: 0.25rem;
+  min-height: 2.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
   font-weight: 700;
+  font-size: 0.8rem;
   line-height: 1.25;
   text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
 .bfa-btn-primary {
   background-color: var(--bfa-accent);
-  color: var(--bfa-black);
+  border: 1px solid var(--bfa-accent);
+  color: #111;
 }
 
 .bfa-btn-primary:hover {
-  background-color: var(--bfa-white);
-  border-color: var(--bfa-white);
-  color: var(--bfa-black);
+  background-color: var(--bfa-accent-hover);
+  border-color: var(--bfa-accent-hover);
+  color: #111;
 }
 
 .bfa-btn-secondary {
   background-color: transparent;
-  color: var(--bfa-accent);
+  border: 1px solid #555B61;
+  color: var(--bfa-text);
 }
 
 .bfa-btn-secondary:hover {
-  background-color: var(--bfa-accent);
-  color: var(--bfa-black);
+  border-color: #6B7280;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--bfa-text);
 }
 
 .bfa-btn-primary:focus-visible,
 .bfa-btn-secondary:focus-visible {
-  outline: 3px solid var(--bfa-white);
+  outline: 2px solid var(--bfa-accent);
   outline-offset: 2px;
 }
 
+/* ─── Card ─── */
+
 .bfa-card {
-  padding: 1.5rem;
-  background-color: var(--bfa-bg-secondary);
+  padding: 1.25rem;
+  background: linear-gradient(145deg, #1C1F21, #16181A);
   border: 1px solid var(--bfa-border);
-  border-radius: 0.5rem;
-  color: var(--bfa-text-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  color: var(--bfa-text);
 }
+
+/* ─── Page ─── */
 
 .bfa-page-dark {
   min-height: 100%;
   background-color: var(--bfa-bg-primary);
-  color: var(--bfa-text-primary);
+  color: var(--bfa-text);
 }
 
 .bfa-text-accent {
   color: var(--bfa-accent);
 }
 
+/* ─── Auth ─── */
+
 .bfa-auth-page {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(circle at top, rgba(255, 193, 7, 0.12), transparent 34rem),
+    radial-gradient(circle at top, rgba(255, 193, 7, 0.08), transparent 34rem),
     linear-gradient(145deg, var(--bfa-black), var(--bfa-dark));
-  color: var(--bfa-text-primary);
+  color: var(--bfa-text);
 }
 
 .bfa-auth-container {
@@ -113,11 +165,11 @@
 .bfa-auth-card {
   width: min(100%, 28rem);
   padding: clamp(1.5rem, 5vw, 2.5rem);
-  background-color: rgba(30, 30, 30, 0.96);
+  background-color: var(--bfa-surface);
   border: 1px solid var(--bfa-border);
-  border-top: 0.25rem solid var(--bfa-accent);
-  border-radius: 0.75rem;
-  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.45);
+  border-top: 2px solid var(--bfa-accent);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.35);
 }
 
 .bfa-auth-logo {
@@ -135,10 +187,10 @@
 
 .bfa-auth-title {
   margin-bottom: 0.5rem;
-  color: var(--bfa-text-primary);
+  color: var(--bfa-text);
   font-size: clamp(1.75rem, 5vw, 2.25rem);
-  font-weight: 800;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .bfa-auth-subtitle {
@@ -148,22 +200,23 @@
 
 .bfa-form-label {
   margin-bottom: 0.5rem;
-  color: var(--bfa-text-primary);
+  color: var(--bfa-text);
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .bfa-form-control {
-  min-height: 3rem;
-  background-color: var(--bfa-black);
+  min-height: 2.75rem;
+  background-color: var(--bfa-surface);
   border-color: var(--bfa-border);
-  color: var(--bfa-text-primary);
+  color: var(--bfa-text);
 }
 
 .bfa-form-control:focus {
-  background-color: var(--bfa-black);
+  background-color: var(--bfa-surface);
   border-color: var(--bfa-accent);
-  box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.2);
-  color: var(--bfa-text-primary);
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.15);
+  color: var(--bfa-text);
 }
 
 .bfa-form-control::placeholder {
@@ -182,15 +235,15 @@
 
 .bfa-auth-submit {
   width: 100%;
-  min-height: 3rem;
+  min-height: 2.75rem;
 }
 
 .bfa-auth-success {
   margin: 0 0 1.25rem;
   padding: 0.8rem 1rem;
-  border: 1px solid rgba(117, 215, 164, 0.45);
-  border-radius: 0.45rem;
-  background: rgba(25, 135, 84, 0.16);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(34, 197, 94, 0.1);
   color: #9be3bc;
 }
 
@@ -198,7 +251,7 @@
   display: block;
   margin-top: 0.4rem;
   color: var(--bfa-danger);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 }
 
 .bfa-validation-message:empty,

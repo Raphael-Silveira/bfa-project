@@ -65,6 +65,27 @@ Os valores de referência da marca são:
 | Texto secundário | Gray | `#BDBDBD` |
 | Texto de alto contraste | White | `#FFFFFF` |
 
+### 3.2 Design Tokens
+
+O refresh visual introduziu tokens de superfície, borda e acento em `bfa-theme.css`:
+
+| Token | Uso | Valor |
+|---|---|---|
+| `--bfa-surface` | Fundo de cards e componentes | `#161616` |
+| `--bfa-surface-elevated` | Hover, sobreposições leves | `#1C1C1C` |
+| `--bfa-surface-overlay` | Drawers, modais | `#222222` |
+| `--bfa-border` | Bordas neutras sutis | `rgba(255,255,255,0.08)` |
+| `--bfa-border-strong` | Bordas mais visíveis | `rgba(255,255,255,0.14)` |
+| `--bfa-border-accent` | Bordas com acento (uso pontual) | `rgba(255,193,7,0.35)` |
+| `--bfa-accent-subtle` | Fundo accent sutil | `rgba(255,193,7,0.08)` |
+| `--bfa-accent-muted` | Accent para borders/hover | `rgba(255,193,7,0.55)` |
+| `--bfa-text-secondary` | Texto secundário | `#A0A0A0` |
+| `--bfa-text-muted` | Texto terciário | `#737373` |
+| `--radius-sm` | Bordas pequenas | `0.35rem` |
+| `--radius-md` | Bordas médias | `0.5rem` |
+| `--radius-lg` | Bordas grandes (cards) | `0.7rem` |
+| `--radius-xl` | Bordas extra grandes | `0.85rem` |
+
 Utilize os tokens existentes em `bfa-theme.css` e `admin.css`. Não espalhe valores hexadecimais duplicados pelas Views ou por novos arquivos CSS quando já houver uma variável apropriada.
 
 O amarelo deve identificar principalmente:
@@ -74,6 +95,15 @@ O amarelo deve identificar principalmente:
 - foco e estados interativos relevantes;
 - pequenos acentos de hierarquia;
 - informações de destaque coerentes com a semântica da tela.
+
+### 3.3 Tipografia
+
+Regras de tipografia do refresh visual:
+
+- Labels e `dt` devem usar `font-weight: 600` (não 800);
+- Uppercase é permitido apenas em labels muito pequenos e badges;
+- Títulos devem usar `font-weight: 700`;
+- Texto secundário usa `var(--bfa-text-secondary)` e texto terciário usa `var(--bfa-text-muted)`.
 
 Estado nunca deve ser comunicado somente por cor. Texto, ícone, forma ou rótulo devem complementar a cor.
 
@@ -111,10 +141,15 @@ Regras compartilhadas para todos os shells internos:
 
 ### 4.1 Desktop
 
+O cabeçalho utiliza fundo mais opaco (`rgba(13, 13, 13, 0.98)`) e borda inferior neutra (`var(--bfa-border)`), sem acentos amarelos na estrutura.
+
 Em desktop:
 
 - o cabeçalho permanece consistente entre todas as páginas da área;
 - a barra lateral permanece fixa/lateral no shell e apresenta somente destinos implementados e autorizados;
+- o fundo da sidebar é `var(--bfa-surface)`;
+- o item ativo usa `background: var(--bfa-accent-subtle)` (sem box-shadow inset);
+- o hover usa `background: var(--bfa-surface-elevated)` (sem gradiente amarelo);
 - o conteúdo utiliza a largura e os recuos definidos pelo shell;
 - o item atual da navegação usa `aria-current="page"` e o estado visual existente;
 - a ação de sair permanece separada da navegação funcional.
@@ -174,6 +209,8 @@ No mobile, ela pode ocupar toda a largura disponível quando isso tornar a açã
 
 Ações secundárias usam `.bfa-btn-secondary` e não devem competir visualmente com a ação primária.
 
+Hierarquia de botões: primary (amarelo sólido, mantido) > secondary (border neutra, cor texto secundária) > tertiary/ghost (sem border, cor texto). A hierarquia deve ser clara e consistente.
+
 ## 7. Listagens responsivas
 
 Uma mesma fonte de dados pode ter apresentações distintas para desktop e mobile, desde que sem duplicar regras de negócio.
@@ -192,7 +229,9 @@ Regras:
 - alinhe números, estados e ações de forma previsível;
 - mantenha a coluna de ações compacta;
 - não reduza a fonte ou comprima a tabela a ponto de prejudicar leitura;
-- não dependa apenas de scroll horizontal quando uma representação em cartões for mais adequada no mobile.
+- não dependa apenas de scroll horizontal quando uma representação em cartões for mais adequada no mobile;
+- row hover: `background: var(--bfa-surface-elevated)` (sem amarelo);
+- header: `color: var(--bfa-text-secondary)`, `font-weight: 600`.
 
 ### 7.2 Mobile
 
@@ -243,9 +282,9 @@ Use `.bfa-admin-badge` e os modificadores existentes, como `.is-active` e `.is-i
 
 Badges devem:
 
-- conter texto explícito, como “Ativa” ou “Inativa”;
+- conter texto explícito, como "Ativa" ou "Inativa";
 - usar cores com contraste adequado;
-- manter tamanho compacto;
+- manter tamanho compacto (`font-size: 0.72rem`, `font-weight: 700`);
 - representar estado, não funcionar como botão sem affordance de botão;
 - preservar a mesma terminologia em todas as telas.
 
@@ -254,6 +293,8 @@ Não introduza uma nova cor de estado sem necessidade semântica e sem verificar
 ## 10. Cards, métricas e avisos
 
 Use `.bfa-admin-card` como superfície base e `.bfa-admin-card-grid` para coleções responsivas. Métricas usam `.bfa-admin-metric-card`; avisos operacionais usam `.bfa-admin-notice`.
+
+Cards não possuem `border-top` amarelo. Background é `var(--bfa-surface)` (sólido, não gradiente). Border é `1px solid var(--bfa-border)` (neutra). Shadow reduzido: `0 0.25rem 0.75rem rgba(0, 0, 0, 0.15)`.
 
 Regras:
 

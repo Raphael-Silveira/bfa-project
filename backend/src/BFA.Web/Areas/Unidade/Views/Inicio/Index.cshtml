@@ -6,101 +6,194 @@
     Layout = "_UnidadeLayout";
 }
 
-<header class="bfa-admin-page-header" aria-labelledby="titulo-painel-unidade">
-    <div class="bfa-admin-page-header__copy">
-        <p class="bfa-admin-page-header__eyebrow">Unidade</p>
-        <h1 class="bfa-admin-page-header__title" id="titulo-painel-unidade">@Model.NomeUnidade</h1>
-        <p class="bfa-admin-page-header__description">Visão geral da operação da Unidade.</p>
+<header class="bfa-unidade-welcome" aria-labelledby="titulo-painel-unidade">
+    <div class="bfa-unidade-welcome__copy">
+        <p class="bfa-unidade-welcome__eyebrow">Bem-vindo à sua unidade</p>
+        <h1 class="bfa-unidade-welcome__title" id="titulo-painel-unidade">@Model.NomeUnidade</h1>
+        <p class="bfa-unidade-welcome__subtitle">Visão geral da operação da Unidade.</p>
     </div>
+    <aside class="bfa-unidade-welcome__quote" aria-label="Frase motivacional">
+        <blockquote>
+            <p>&ldquo;Disciplina hoje,<br>resultados sempre.&rdquo;</p>
+            <footer>BFA</footer>
+        </blockquote>
+    </aside>
 </header>
 
 <section class="bfa-admin-card-grid" aria-label="Métricas operacionais">
     <article class="bfa-admin-card bfa-admin-metric-card">
-        <p class="bfa-admin-metric-card__label">Alunos Ativos</p>
-        <strong class="bfa-admin-metric-card__value">@Model.TotalAlunosAtivos</strong>
+        <div class="bfa-admin-metric-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="bfa-admin-metric-card__body">
+            <span class="bfa-admin-metric-card__label">Alunos ativos</span>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalAlunosAtivos</strong>
+            <a class="bfa-admin-metric-card__link" href="/unidade/@Model.UnidadeId/alunos">Ver alunos <span>&rarr;</span></a>
+        </div>
     </article>
     <article class="bfa-admin-card bfa-admin-metric-card">
-        <p class="bfa-admin-metric-card__label">Turmas Ativas</p>
-        <strong class="bfa-admin-metric-card__value">@Model.TotalTurmasAtivas</strong>
+        <div class="bfa-admin-metric-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="bfa-admin-metric-card__body">
+            <span class="bfa-admin-metric-card__label">Turmas ativas</span>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalTurmasAtivas</strong>
+            <a class="bfa-admin-metric-card__link" href="/unidade/@Model.UnidadeId/turmas">Ver turmas <span>&rarr;</span></a>
+        </div>
     </article>
     <article class="bfa-admin-card bfa-admin-metric-card">
-        <p class="bfa-admin-metric-card__label">Aulas esta Semana</p>
-        <strong class="bfa-admin-metric-card__value">@Model.TotalAulasSemana</strong>
+        <div class="bfa-admin-metric-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        </div>
+        <div class="bfa-admin-metric-card__body">
+            <span class="bfa-admin-metric-card__label">Aulas esta semana</span>
+            <strong class="bfa-admin-metric-card__value">@Model.TotalAulasSemana</strong>
+            <a class="bfa-admin-metric-card__link" href="/unidade/@Model.UnidadeId/aulas">Ver aulas <span>&rarr;</span></a>
+        </div>
     </article>
     <article class="bfa-admin-card bfa-admin-metric-card">
-        <p class="bfa-admin-metric-card__label">Frequência Média</p>
-        <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.FrequenciaMedia</strong>
+        <div class="bfa-admin-metric-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="bfa-admin-metric-card__body">
+            <span class="bfa-admin-metric-card__label">Frequência média</span>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.FrequenciaMedia</strong>
+            <a class="bfa-admin-metric-card__link" href="/unidade/@Model.UnidadeId/relatorios">Ver relatório <span>&rarr;</span></a>
+        </div>
     </article>
 </section>
 
 <section class="bfa-admin-card-grid" aria-label="Métricas financeiras">
     <article class="bfa-admin-card bfa-admin-metric-card">
-        <p class="bfa-admin-metric-card__label">Receita Mensal</p>
-        <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.ReceitaMes</strong>
+        <div class="bfa-admin-metric-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="bfa-admin-metric-card__body">
+            <span class="bfa-admin-metric-card__label">Receita mensal</span>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.ReceitaMes</strong>
+        </div>
     </article>
     <article class="bfa-admin-card bfa-admin-metric-card">
-        <p class="bfa-admin-metric-card__label">Pendente</p>
-        <strong class="bfa-admin-metric-card__value">@Model.Pendente</strong>
+        <div class="bfa-admin-metric-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="bfa-admin-metric-card__body">
+            <span class="bfa-admin-metric-card__label">Pendente</span>
+            <strong class="bfa-admin-metric-card__value">@Model.Pendente</strong>
+        </div>
     </article>
     <article class="bfa-admin-card bfa-admin-metric-card">
-        <p class="bfa-admin-metric-card__label">Em Atraso</p>
-        <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.EmAtraso</strong>
+        <div class="bfa-admin-metric-card__icon bfa-admin-metric-card__icon--danger">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <div class="bfa-admin-metric-card__body">
+            <span class="bfa-admin-metric-card__label">Em atraso</span>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.EmAtraso</strong>
+        </div>
     </article>
 </section>
 
-<section class="bfa-admin-card bfa-unidade-contract-card"
-         aria-labelledby="titulo-contrato-unidade">
-    <header class="bfa-unidade-contract-card__header">
-        <div>
-            <p class="bfa-unidade-contract-card__eyebrow">Franquia</p>
-            <h2 id="titulo-contrato-unidade">Contrato da franquia</h2>
+<div class="bfa-unidade-dashboard-grid">
+    <section class="bfa-unidade-schedule-panel" aria-label="Próximas aulas">
+        <div class="bfa-unidade-schedule-panel__header">
+            <h2>Próximas aulas de hoje</h2>
+            <a href="/unidade/@Model.UnidadeId/aulas">Ver todas as aulas <span>&rarr;</span></a>
         </div>
-        @if (Model.Contrato is not null)
-        {
-            <span class="bfa-admin-badge is-active">Ativo</span>
-        }
-    </header>
 
-    @if (Model.Contrato is { } contrato)
-    {
-        <div class="bfa-unidade-contract-card__identity">
-            <strong>Contrato nº @(contrato.Numero ?? "Não informado")</strong>
-            <span>Versão @contrato.NumeroVersao · Vigente</span>
+        <div class="bfa-unidade-lesson-row">
+            <time>19:00</time>
+            <span class="bfa-unidade-lesson-dot bfa-unidade-lesson-dot--blue"></span>
+            <div class="bfa-unidade-lesson-main">
+                <strong>Intermediário</strong>
+                <span>Prof. Carlos Silva</span>
+            </div>
+            <div class="bfa-unidade-lesson-capacity">
+                <strong>12/16</strong>
+                <span>alunos</span>
+            </div>
+            <a class="bfa-btn-primary" href="/unidade/@Model.UnidadeId/aulas">Fazer chamada</a>
         </div>
-        <dl class="bfa-unidade-contract-grid">
-            <div>
-                <dt>Vigência</dt>
-                <dd>@FormatarVigencia(contrato.DataInicio, contrato.DataFim)</dd>
+
+        <div class="bfa-unidade-lesson-row">
+            <time>20:00</time>
+            <span class="bfa-unidade-lesson-dot bfa-unidade-lesson-dot--green"></span>
+            <div class="bfa-unidade-lesson-main">
+                <strong>Iniciante</strong>
+                <span>Prof. Ana Costa</span>
             </div>
-            <div>
-                <dt>Royalties</dt>
-                <dd>@contrato.PercentualRoyalties.ToString("N2", CulturaPtBr)%</dd>
+            <div class="bfa-unidade-lesson-capacity">
+                <strong>8/14</strong>
+                <span>alunos</span>
             </div>
-            <div>
-                <dt>Mensalidade</dt>
-                <dd>@contrato.MensalidadeFixa.ToString("C", CulturaPtBr)</dd>
-            </div>
-            <div>
-                <dt>Taxa de franquia</dt>
-                <dd>@FormatarMoedaOpcional(contrato.TaxaAdesao)</dd>
-            </div>
-            <div>
-                <dt>Vencimento</dt>
-                <dd>@FormatarVencimento(contrato.DiaVencimento)</dd>
-            </div>
-        </dl>
-        <footer class="bfa-unidade-contract-card__actions">
-            <a class="bfa-btn-secondary bfa-admin-button"
-               href="/unidade/@Model.UnidadeId/contrato">Ver contrato</a>
-        </footer>
-    }
-    else
-    {
-        <div class="bfa-unidade-contract-empty" role="status">
-            <p>Nenhum contrato ativo disponível para esta unidade.</p>
+            <a class="bfa-btn-secondary" href="/unidade/@Model.UnidadeId/aulas">Ver detalhes</a>
         </div>
-    }
-</section>
+
+        <div class="bfa-unidade-lesson-row">
+            <time>21:00</time>
+            <span class="bfa-unidade-lesson-dot bfa-unidade-lesson-dot--gold"></span>
+            <div class="bfa-unidade-lesson-main">
+                <strong>Avançado</strong>
+                <span>Prof. João Pereira</span>
+            </div>
+            <div class="bfa-unidade-lesson-capacity">
+                <strong>10/12</strong>
+                <span>alunos</span>
+            </div>
+            <a class="bfa-btn-secondary" href="/unidade/@Model.UnidadeId/aulas">Ver detalhes</a>
+        </div>
+    </section>
+
+    <section class="bfa-unidade-activity-panel" aria-label="Atividades recentes">
+        <div class="bfa-unidade-activity-panel__header">
+            <h2>Atividades recentes</h2>
+            <a href="#">Ver todas <span>&rarr;</span></a>
+        </div>
+
+        <div class="bfa-unidade-activity-row">
+            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--success">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div class="bfa-unidade-activity-copy">
+                <strong>Nova matrícula realizada</strong>
+                <span>Enzo Gabriel Santos</span>
+            </div>
+            <time>há 2 horas</time>
+        </div>
+
+        <div class="bfa-unidade-activity-row">
+            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--warning">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="bfa-unidade-activity-copy">
+                <strong>Turma atualizada</strong>
+                <span>Intermediário · Terça 19h</span>
+            </div>
+            <time>há 4 horas</time>
+        </div>
+
+        <div class="bfa-unidade-activity-row">
+            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--info">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            </div>
+            <div class="bfa-unidade-activity-copy">
+                <strong>Professor cadastrado</strong>
+                <span>Mariana Lopes</span>
+            </div>
+            <time>há 1 dia</time>
+        </div>
+
+        <div class="bfa-unidade-activity-row">
+            <div class="bfa-unidade-activity-icon bfa-unidade-activity-icon--neutral">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h3"/></svg>
+            </div>
+            <div class="bfa-unidade-activity-copy">
+                <strong>Plano atualizado</strong>
+                <span>Plano Premium</span>
+            </div>
+            <time>há 1 dia</time>
+        </div>
+    </section>
+</div>
 
 @functions {
     private static string FormatarVigencia(DateOnly inicio, DateOnly? fim) =>
