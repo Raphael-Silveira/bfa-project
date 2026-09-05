@@ -25,6 +25,20 @@ public sealed class PainelUnidadeViewModel : IUnidadeContextoViewModel
     public required bool PodeTrocarUnidade { get; init; }
 
     public ContratoUnidadeViewModel? Contrato { get; init; }
+
+    public int TotalAlunosAtivos { get; init; }
+
+    public int TotalTurmasAtivas { get; init; }
+
+    public int TotalAulasSemana { get; init; }
+
+    public string FrequenciaMedia { get; init; } = "-";
+
+    public string ReceitaMes { get; init; } = "R$ 0,00";
+
+    public string Pendente { get; init; } = "R$ 0,00";
+
+    public string EmAtraso { get; init; } = "R$ 0,00";
 }
 
 public sealed class ContratoUnidadeDetalheViewModel : IUnidadeContextoViewModel

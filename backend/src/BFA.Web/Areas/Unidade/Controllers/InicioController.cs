@@ -19,6 +19,7 @@ public sealed class InicioController(
     IUnidadeContextoConsulta unidadeContextoConsulta,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     IContratoUnidadeConsulta contratoUnidadeConsulta,
+    IUnidadeDashboardConsulta unidadeDashboardConsulta,
     IAuthorizationService authorizationService,
     ILogger<InicioController> logger) : Controller
 {
@@ -64,13 +65,35 @@ public sealed class InicioController(
             return Forbid();
         }
 
+        var metricas = await unidadeDashboardConsulta.ObterMetricasAsync(
+            unidadeId,
+            cancellationToken);
+
         return View(new PainelUnidadeViewModel
         {
             OrganizacaoId = unidade.OrganizacaoId,
             UnidadeId = unidade.UnidadeId,
             NomeUnidade = unidade.Nome,
             PodeTrocarUnidade = unidadesAdministradas.Count > 1,
-            Contrato = ContratoUnidadeViewModelMapper.Mapear(contrato.Valor?.Contrato)
+            Contrato = ContratoUnidadeViewModelMapper.Mapear(contrato.Valor?.Contrato),
+            TotalAlunosAtivos = metricas?.TotalAlunosAtivos ?? 0,
+            TotalTurmasAtivas = metricas?.TotalTurmasAtivas ?? 0,
+            TotalAulasSemana = metricas?.TotalAulasSemana ?? 0,
+            FrequenciaMedia = metricas is { PercentualFrequencia: var freq }
+                ? $"{freq:N1}%"
+                : "-",
+            ReceitaMes = metricas is { ReceitaMes: var receita }
+                ? receita.ToString("C", CulturaPtBr)
+                : "R$ 0,00",
+            Pendente = metricas is { Pendente: var pendente }
+                ? pendente.ToString("C", CulturaPtBr)
+                : "R$ 0,00",
+            EmAtraso = metricas is { EmAtraso: var atraso }
+                ? atraso.ToString("C", CulturaPtBr)
+                : "R$ 0,00"
         });
     }
+
+    private static readonly System.Globalization.CultureInfo CulturaPtBr =
+        System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
 }

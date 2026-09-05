@@ -14,6 +14,40 @@
     </div>
 </header>
 
+<section class="bfa-admin-card-grid" aria-label="Métricas operacionais">
+    <article class="bfa-admin-card bfa-admin-metric-card">
+        <p class="bfa-admin-metric-card__label">Alunos Ativos</p>
+        <strong class="bfa-admin-metric-card__value">@Model.TotalAlunosAtivos</strong>
+    </article>
+    <article class="bfa-admin-card bfa-admin-metric-card">
+        <p class="bfa-admin-metric-card__label">Turmas Ativas</p>
+        <strong class="bfa-admin-metric-card__value">@Model.TotalTurmasAtivas</strong>
+    </article>
+    <article class="bfa-admin-card bfa-admin-metric-card">
+        <p class="bfa-admin-metric-card__label">Aulas esta Semana</p>
+        <strong class="bfa-admin-metric-card__value">@Model.TotalAulasSemana</strong>
+    </article>
+    <article class="bfa-admin-card bfa-admin-metric-card">
+        <p class="bfa-admin-metric-card__label">Frequência Média</p>
+        <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.FrequenciaMedia</strong>
+    </article>
+</section>
+
+<section class="bfa-admin-card-grid" aria-label="Métricas financeiras">
+    <article class="bfa-admin-card bfa-admin-metric-card">
+        <p class="bfa-admin-metric-card__label">Receita Mensal</p>
+        <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.ReceitaMes</strong>
+    </article>
+    <article class="bfa-admin-card bfa-admin-metric-card">
+        <p class="bfa-admin-metric-card__label">Pendente</p>
+        <strong class="bfa-admin-metric-card__value">@Model.Pendente</strong>
+    </article>
+    <article class="bfa-admin-card bfa-admin-metric-card">
+        <p class="bfa-admin-metric-card__label">Em Atraso</p>
+        <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.EmAtraso</strong>
+    </article>
+</section>
+
 <section class="bfa-admin-card bfa-unidade-contract-card"
          aria-labelledby="titulo-contrato-unidade">
     <header class="bfa-unidade-contract-card__header">

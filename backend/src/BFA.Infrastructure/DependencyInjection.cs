@@ -112,6 +112,7 @@ public static class DependencyInjection
         services.AddScoped<IGovernancaOperacionalUnidade,
             GovernancaOperacionalUnidadeServico>();
         services.AddScoped<IContratoUnidadeConsulta, ContratoUnidadeConsulta>();
+        services.AddScoped<IUnidadeDashboardConsulta, UnidadeDashboardConsulta>();
         services.AddScoped<IProfessoresUnidadeRepositorio, ProfessoresUnidadeRepositorio>();
         services.AddScoped<IAcessoProfessorRepositorio, AcessoProfessorRepositorio>();
         services.AddScoped<IAcessoProfessorServico, AcessoProfessorServico>();
@@ -143,6 +144,8 @@ public static class DependencyInjection
         services.AddScoped<IPrimeiroAcessoServico, PrimeiroAcessoServico>();
         services.AddScoped<IBootstrapInicial, BootstrapInicial>();
         services.AddScoped<IPainelFranqueadoraConsulta, PainelFranqueadoraConsulta>();
+        services.AddScoped<IFranqueadoraDashboardConsulta, FranqueadoraDashboardConsulta>();
+        services.AddScoped<IFranqueadoraAlunosConsulta, FranqueadoraAlunosConsulta>();
         services.AddScoped<IAcessosUnidadeRepositorio, AcessosUnidadeRepositorio>();
         services.AddScoped<AcessosUnidadeServico>();
         services.AddScoped<IAcessosUnidadeConsulta>(serviceProvider =>
