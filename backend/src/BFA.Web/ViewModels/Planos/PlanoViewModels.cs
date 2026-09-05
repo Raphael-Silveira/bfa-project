@@ -18,6 +18,9 @@ public sealed class PlanosListaViewModel : IUnidadeContextoViewModel
     public FiltroPlanos Filtro { get; init; }
     public required string RotaBase { get; init; }
     public IReadOnlyList<PlanoResumo> Planos { get; init; } = [];
+    public int PaginaAtual { get; init; }
+    public int TamanhoPagina { get; init; }
+    public int TotalItens { get; init; }
 }
 
 public sealed class PlanoDetalheViewModel : IUnidadeContextoViewModel

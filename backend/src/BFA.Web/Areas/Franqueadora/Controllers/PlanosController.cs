@@ -20,7 +20,7 @@ public sealed class PlanosController(
 
     [HttpGet("")]
     public async Task<IActionResult> Index(
-        string? status, CancellationToken cancellationToken)
+        string? status, int? pagina, CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
         var filtro = ParseFiltro(status);
@@ -28,6 +28,19 @@ public sealed class PlanosController(
             usuarioId, filtro, cancellationToken);
         if (resultado.Estado != EstadoPlanos.Sucesso || resultado.Valor is null)
             return Forbid();
+
+        var todos = resultado.Valor.Planos;
+        var totalItens = todos.Count;
+        const int tamanhoPagina = 10;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+
+        var itensPagina = todos
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToList();
+
         return View(new PlanosListaViewModel
         {
             OrganizacaoId = resultado.Valor.Contexto.OrganizacaoId,
@@ -35,7 +48,10 @@ public sealed class PlanosController(
             PodeGerenciar = true,
             Filtro = filtro,
             RotaBase = RotaBase,
-            Planos = resultado.Valor.Planos
+            Planos = itensPagina,
+            PaginaAtual = paginaAtual,
+            TamanhoPagina = tamanhoPagina,
+            TotalItens = totalItens
         });
     }
 

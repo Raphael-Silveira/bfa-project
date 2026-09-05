@@ -1,5 +1,6 @@
 @using System.Globalization
 @using BFA.Application.Planos
+@using BFA.Web.ViewModels.Shared
 @model BFA.Web.ViewModels.Planos.PlanosListaViewModel
 @{
     var cultura = CultureInfo.GetCultureInfo("pt-BR");
@@ -113,6 +114,31 @@ else
                 }
                 </tbody>
             </table>
+        </div>
+        <div class="bfa-table-footer">
+            @{
+                var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
+                var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
+                var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
+                var filtroValor = Model.Filtro switch
+                {
+                    FiltroPlanos.Inativos => "inativos",
+                    FiltroPlanos.Todos => "todos",
+                    _ => "ativos"
+                };
+                var baseQueryString = $"status={filtroValor}";
+                var paginacao = new PaginacaoViewModel
+                {
+                    PaginaAtual = Model.PaginaAtual,
+                    TotalPaginas = totalPaginas,
+                    TotalItens = Model.TotalItens,
+                    PrimeiroIndice = primeiroIndice,
+                    UltimoIndice = ultimoIndice,
+                    BaseQueryString = baseQueryString
+                };
+            }
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> planos</div>
+            <partial name="_Paginacao" model="paginacao" />
         </div>
     </div>
 
