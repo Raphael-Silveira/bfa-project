@@ -1,15 +1,114 @@
 @using BFA.Domain.Turmas
 @model TrocarProfessorTurmaViewModel
 @{ ViewData["Title"] = "Trocar professor"; Layout = "_UnidadeLayout"; }
-<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Gestão da turma</p><h1 class="bfa-admin-page-header__title">Trocar professor</h1><p class="bfa-admin-page-header__description">@Model.NomeTurma</p></div></header>
-<form class="bfa-admin-form bfa-turma-form" method="post" action="/unidade/@Model.UnidadeId/turmas/@Model.TurmaId/professor">
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Gestão da turma</p>
+        <h1 class="bfa-admin-page-header__title">Trocar professor</h1>
+        <p class="bfa-admin-page-header__description">@Model.NomeTurma</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-secondary bfa-admin-button"
+           href="/unidade/@Model.UnidadeId/turmas">Voltar</a>
+    </div>
+</header>
+
+<form class="bfa-admin-form bfa-turma-form"
+      method="post"
+      action="/unidade/@Model.UnidadeId/turmas/@Model.TurmaId/professor">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+
     <div class="bfa-admin-form-sections">
-        <section class="bfa-admin-card bfa-admin-form-card"><header class="bfa-turma-form__heading"><p>Responsabilidade</p><h2>Professor da turma</h2></header><div class="bfa-turma-form-grid"><div class="bfa-form-field"><label class="bfa-form-label">Professor atual</label><input class="form-control bfa-form-control" value="@Model.NomeProfessorAtual" readonly /></div><div class="bfa-form-field"><label asp-for="NovoProfessorUnidadeId" class="bfa-form-label"></label><select asp-for="NovoProfessorUnidadeId" class="form-select bfa-form-control"><option value="">Selecione</option>@foreach (var professor in Model.ProfessoresDisponiveis) { <option value="@professor.ProfessorUnidadeId">@professor.NomeCompleto</option> }</select><span asp-validation-for="NovoProfessorUnidadeId" class="bfa-validation-message"></span></div><div class="bfa-form-field"><label asp-for="DataTrocaTexto" class="bfa-form-label"></label><div class="bfa-admin-date-field" data-bfa-date-field><input asp-for="DataTrocaTexto" class="form-control bfa-form-control" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data da troca" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div><span asp-validation-for="DataTrocaTexto" class="bfa-validation-message"></span></div></div></section>
-        <section class="bfa-admin-card bfa-admin-form-card"><header class="bfa-turma-form__heading"><p>Programação que será transferida</p><h2>Horários atuais</h2><span>Os horários atuais serão encerrados no dia anterior à troca. Uma nova programação será criada para o novo professor e as alocações abertas dos alunos serão migradas para os horários equivalentes.</span></header>@if (Model.HorariosAtuais.Count == 0) { <p class="bfa-admin-form-help">A turma não possui horários abertos. Nenhum horário será criado.</p> } else { <div class="bfa-turma-current-schedules">@foreach (var horario in Model.HorariosAtuais) { <div><strong>@NomeDia(horario.DiaSemana)</strong><span>@horario.HoraInicio.ToString("HH:mm") às @horario.HoraFim.ToString("HH:mm")</span><small>Desde @horario.VigenciaInicio.ToString("dd/MM/yyyy")</small></div> }</div> }</section>
+        <section class="bfa-form-card">
+            <div class="bfa-card-title-row">
+                <div class="bfa-card-icon">&#128100;</div>
+                <h2>Responsabilidade</h2>
+            </div>
+            <div class="bfa-fields">
+                <div class="bfa-field">
+                    <label class="bfa-form-label">Professor atual</label>
+                    <input class="form-control bfa-form-control" value="@Model.NomeProfessorAtual" readonly />
+                </div>
+                <div class="bfa-field">
+                    <label asp-for="NovoProfessorUnidadeId" class="bfa-form-label"></label>
+                    <select asp-for="NovoProfessorUnidadeId" class="form-select bfa-form-control">
+                        <option value="">Selecione</option>
+                        @foreach (var professor in Model.ProfessoresDisponiveis)
+                        {
+                            <option value="@professor.ProfessorUnidadeId">@professor.NomeCompleto</option>
+                        }
+                    </select>
+                    <span asp-validation-for="NovoProfessorUnidadeId" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-field">
+                    <label asp-for="DataTrocaTexto" class="bfa-form-label"></label>
+                    <div class="bfa-admin-date-field" data-bfa-date-field>
+                        <input asp-for="DataTrocaTexto" class="form-control bfa-form-control" placeholder="dd/mm/aaaa" maxlength="10" data-bfa-date-input data-bfa-date-required="true" />
+                        <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data da troca" data-bfa-date-trigger>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                        </button>
+                    </div>
+                    <span asp-validation-for="DataTrocaTexto" class="bfa-validation-message"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bfa-form-card">
+            <div class="bfa-card-title-row">
+                <div class="bfa-card-icon">&#128197;</div>
+                <h2>Horários atuais</h2>
+            </div>
+            <p class="bfa-admin-form-help">Os horários atuais serão encerrados no dia anterior à troca. Uma nova programação será criada para o novo professor e as alocações abertas dos alunos serão migradas para os horários equivalentes.</p>
+
+            @if (Model.HorariosAtuais.Count == 0)
+            {
+                <p class="bfa-admin-form-help">A turma não possui horários abertos. Nenhum horário será criado.</p>
+            }
+            else
+            {
+                <div class="bfa-aula-detail-grid">
+                    @foreach (var horario in Model.HorariosAtuais)
+                    {
+                        <div class="bfa-aula-detail-item">
+                            <div class="bfa-aula-detail-item__icon" aria-hidden="true">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                            <div>
+                                <span class="bfa-aula-detail-item__label">@NomeDia(horario.DiaSemana)</span>
+                                <div class="bfa-aula-detail-item__value">@horario.HoraInicio.ToString("HH:mm") às @horario.HoraFim.ToString("HH:mm")</div>
+                                <small style="font-size:0.75rem;color:var(--bfa-text-muted);">Desde @horario.VigenciaInicio.ToString("dd/MM/yyyy")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
     </div>
-    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit" disabled="@(Model.ProfessoresDisponiveis.Count == 0 ? "disabled" : null)">Confirmar troca</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/turmas">Cancelar</a></div>
+
+    <div class="bfa-form-actions">
+        <button class="bfa-btn-primary bfa-admin-button" type="submit"
+                disabled="@(Model.ProfessoresDisponiveis.Count == 0 ? "disabled" : null)">Confirmar troca</button>
+        <a class="bfa-btn-secondary bfa-admin-button"
+           href="/unidade/@Model.UnidadeId/turmas">Cancelar</a>
+    </div>
 </form>
-@functions { private static string NomeDia(DiaSemana dia) => dia switch { DiaSemana.Segunda => "Segunda-feira", DiaSemana.Terca => "Terça-feira", DiaSemana.Quarta => "Quarta-feira", DiaSemana.Quinta => "Quinta-feira", DiaSemana.Sexta => "Sexta-feira", DiaSemana.Sabado => "Sábado", _ => "Domingo" }; }
-@section Scripts { <partial name="_ValidationScriptsPartial" /><script src="~/js/bfa-date-field.js" asp-append-version="true"></script> }
+
+@functions {
+    private static string NomeDia(DiaSemana dia) => dia switch
+    {
+        DiaSemana.Segunda => "Segunda-feira",
+        DiaSemana.Terca => "Terça-feira",
+        DiaSemana.Quarta => "Quarta-feira",
+        DiaSemana.Quinta => "Quinta-feira",
+        DiaSemana.Sexta => "Sexta-feira",
+        DiaSemana.Sabado => "Sábado",
+        _ => "Domingo"
+    };
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+}
