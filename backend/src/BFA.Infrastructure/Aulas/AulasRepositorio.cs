@@ -320,6 +320,35 @@ public sealed class AulasRepositorio(BfaDbContext dbContext, ILogger<AulasReposi
         }
     }
 
+    public async Task<bool> AtualizarObservacoesAsync(
+        Guid organizacaoId, Guid unidadeId, Guid aulaId,
+        string? observacoes, Guid usuarioId, DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var existente = await dbContext.Aulas
+                .FirstOrDefaultAsync(
+                    a => a.Id == aulaId
+                      && a.OrganizacaoId == organizacaoId
+                      && a.UnidadeId == unidadeId,
+                    cancellationToken);
+
+            if (existente is null)
+                return false;
+
+            existente.AtualizarObservacoes(observacoes, usuarioId, atualizadoEmUtc);
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateException ex)
+        {
+            logger.LogError(ex, "Erro ao atualizar observações da aula {AulaId}", aulaId);
+            return false;
+        }
+    }
+
     public async Task<IReadOnlyList<AlunoPresencaResumo>> ListarAlunosParaChamadaAsync(
         Guid organizacaoId, Guid unidadeId, Guid aulaId,
         CancellationToken cancellationToken)

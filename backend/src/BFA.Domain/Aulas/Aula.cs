@@ -8,6 +8,55 @@ public sealed class Aula
     {
     }
 
+    public static Aula Reconstituir(
+        Guid id,
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid turmaId,
+        Guid turmaHorarioId,
+        DateOnly data,
+        TimeOnly horaInicio,
+        TimeOnly horaFim,
+        StatusAula status,
+        int capacidade,
+        string? observacoes,
+        Guid criadoPorUsuarioId,
+        DateTime criadoEmUtc,
+        Guid atualizadoPorUsuarioId,
+        DateTime atualizadoEmUtc)
+    {
+        ValidarIdentificador(id, nameof(id));
+        ValidarIdentificador(organizacaoId, nameof(organizacaoId));
+        ValidarIdentificador(unidadeId, nameof(unidadeId));
+        ValidarIdentificador(turmaId, nameof(turmaId));
+        ValidarIdentificador(turmaHorarioId, nameof(turmaHorarioId));
+        ValidarIdentificador(criadoPorUsuarioId, nameof(criadoPorUsuarioId));
+        ValidarIdentificador(atualizadoPorUsuarioId, nameof(atualizadoPorUsuarioId));
+        ValidarDataUtc(criadoEmUtc, nameof(criadoEmUtc));
+        ValidarDataUtc(atualizadoEmUtc, nameof(atualizadoEmUtc));
+        ValidarIntervalo(horaInicio, horaFim);
+        ValidarCapacidade(capacidade);
+
+        return new Aula
+        {
+            Id = id,
+            OrganizacaoId = organizacaoId,
+            UnidadeId = unidadeId,
+            TurmaId = turmaId,
+            TurmaHorarioId = turmaHorarioId,
+            Data = data,
+            HoraInicio = horaInicio,
+            HoraFim = horaFim,
+            Status = status,
+            Capacidade = capacidade,
+            Observacoes = NormalizarObservacoes(observacoes),
+            CriadoPorUsuarioId = criadoPorUsuarioId,
+            CriadoEmUtc = criadoEmUtc,
+            AtualizadoPorUsuarioId = atualizadoPorUsuarioId,
+            AtualizadoEmUtc = atualizadoEmUtc
+        };
+    }
+
     public Aula(
         Guid id,
         Guid organizacaoId,

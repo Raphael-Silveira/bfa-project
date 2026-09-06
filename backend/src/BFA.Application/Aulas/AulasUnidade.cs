@@ -131,6 +131,11 @@ public interface IAulasRepositorio
 
     Task<bool> AtualizarAsync(Aula aula, CancellationToken cancellationToken);
 
+    Task<bool> AtualizarObservacoesAsync(
+        Guid organizacaoId, Guid unidadeId, Guid aulaId,
+        string? observacoes, Guid usuarioId, DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<AlunoPresencaResumo>> ListarAlunosParaChamadaAsync(
         Guid organizacaoId, Guid unidadeId, Guid aulaId,
         CancellationToken cancellationToken);
@@ -381,24 +386,9 @@ public sealed class AulasServico(
         if (solicitacao.Observacoes is not null)
         {
             var agora = timeProvider.GetUtcNow().UtcDateTime;
-            var aulaAtualizada = new Aula(
-                aulaId,
-                contexto.Valor.OrganizacaoId,
-                unidadeId,
-                existente.TurmaId,
-                Guid.Empty, // turma_horario_id nao necessario para update
-                existente.Data,
-                existente.HoraInicio,
-                existente.HoraFim,
-                existente.Capacidade,
-                existente.AulaId, // criado_por placeholder
-                existente.Data.ToDateTime(TimeOnly.MinValue).ToUniversalTime(), // criado_em placeholder
-                existente.Observacoes);
-
-            aulaAtualizada.AtualizarObservacoes(
-                solicitacao.Observacoes, usuarioId, agora);
-
-            var sucesso = await repositorio.AtualizarAsync(aulaAtualizada, cancellationToken);
+            var sucesso = await repositorio.AtualizarObservacoesAsync(
+                contexto.Valor.OrganizacaoId, unidadeId, aulaId,
+                solicitacao.Observacoes, usuarioId, agora, cancellationToken);
 
             if (sucesso)
             {

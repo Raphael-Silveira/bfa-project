@@ -90,25 +90,25 @@ public sealed class AulaFormViewModel : IUnidadeContextoViewModel
     [Display(Name = "Hora Fim")]
     public TimeOnly? HoraFim { get; set; }
 
-    [Display(Name = "Observacoes")]
+    [Display(Name = "Observações")]
     [StringLength(500)]
     public string? Observacoes { get; set; }
 }
 
 public sealed class AulaEdicaoFormViewModel : IUnidadeContextoViewModel
 {
-    public required Guid OrganizacaoId { get; init; }
-    public required Guid UnidadeId { get; init; }
-    public required string NomeUnidade { get; init; }
-    public required bool PodeTrocarUnidade { get; init; }
-    public required bool PodeGerenciar { get; init; }
-    public required Guid AulaId { get; init; }
-    public required string StatusAtual { get; init; }
+    public Guid OrganizacaoId { get; init; }
+    public Guid UnidadeId { get; init; }
+    public string NomeUnidade { get; init; } = "";
+    public bool PodeTrocarUnidade { get; init; }
+    public bool PodeGerenciar { get; init; }
+    public Guid AulaId { get; init; }
+    public string StatusAtual { get; init; } = "";
 
     [Display(Name = "Status")]
     public StatusAula? Status { get; set; }
 
-    [Display(Name = "Observacoes")]
+    [Display(Name = "Observações")]
     [StringLength(500)]
     public string? Observacoes { get; set; }
 }
@@ -263,6 +263,7 @@ internal static class AulasViewModelMapper
         PodeGerenciar = contexto.PodeGerenciar,
         AulaId = detalhe.AulaId,
         StatusAtual = MapearStatus(detalhe.Status),
+        Status = detalhe.Status,
         Observacoes = detalhe.Observacoes
     };
 
