@@ -96,6 +96,12 @@
   gap: .5rem;
 }
 
+.bfa-plan-choice input[type="radio"] {
+  width: auto;
+  min-height: auto;
+  accent-color: var(--bfa-accent);
+}
+
 .bfa-admin-money-field {
   align-items: stretch;
   display: flex;
