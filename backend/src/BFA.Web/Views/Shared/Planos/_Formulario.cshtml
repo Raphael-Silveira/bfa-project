@@ -6,29 +6,107 @@
         : $"{Model.RotaBase}/novo";
     var cancelar = Model.NovaVersao ? $"{Model.RotaBase}/{Model.PlanoId}" : Model.RotaBase;
 }
+
 <header class="bfa-admin-page-header">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">@(Model.EhLocal ? "Plano da Unidade" : "Catálogo da Rede")</p>
         <h1 class="bfa-admin-page-header__title">@titulo</h1>
         <p class="bfa-admin-page-header__description">@(Model.NovaVersao ? Model.NomePlanoAtual : "Defina a identidade e a primeira condição comercial do plano.")</p>
     </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="@cancelar">Voltar</a>
+    </div>
 </header>
-<form class="bfa-admin-form bfa-plan-form" action="@action" method="post" data-bfa-plan-form>
+
+<form class="bfa-admin-form bfa-plan-form"
+      action="@action"
+      method="post"
+      data-bfa-plan-form>
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
-    <section class="bfa-admin-card bfa-admin-form-card">
-        <div class="bfa-plan-form-grid">
-            @if (!Model.NovaVersao)
-            {
-                <div class="bfa-form-field bfa-plan-form-wide"><label asp-for="Nome" class="bfa-form-label"></label><input asp-for="Nome" class="form-control bfa-form-control" maxlength="150" required /><span asp-validation-for="Nome" class="bfa-validation-message"></span></div>
-            }
-            <div class="bfa-form-field"><label asp-for="DuracaoMeses" class="bfa-form-label"></label><input asp-for="DuracaoMeses" class="form-control bfa-form-control" type="number" min="1" max="32767" required data-bfa-plan-duration /><span class="bfa-admin-form-help" data-bfa-plan-duration-label></span><span asp-validation-for="DuracaoMeses" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="FrequenciaSemanal" class="bfa-form-label"></label><select asp-for="FrequenciaSemanal" class="form-control bfa-form-control" required>@for (var i = 1; i <= 7; i++) { <option value="@i">@i× por semana</option> }</select><span asp-validation-for="FrequenciaSemanal" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="ValorMensal" class="bfa-form-label"></label><div class="bfa-admin-money-field"><span>R$</span><input asp-for="ValorMensal" class="form-control bfa-form-control" type="text" inputmode="decimal" autocomplete="off" placeholder="280,00" maxlength="18" required data-bfa-number="money" data-bfa-number-min="0.01" /></div><span asp-validation-for="ValorMensal" class="bfa-validation-message"></span></div>
-            <fieldset class="bfa-form-field bfa-plan-form-wide"><legend class="bfa-form-label">Cobrar taxa de matrícula?</legend><div class="bfa-plan-choice"><label><input type="radio" name="CobraMatricula" value="true" checked="@Model.CobraMatricula" data-bfa-plan-fee-choice /> Sim</label><label><input type="radio" name="CobraMatricula" value="false" checked="@(!Model.CobraMatricula)" data-bfa-plan-fee-choice /> Não</label></div></fieldset>
-            <div class="bfa-form-field bfa-plan-fee" data-bfa-plan-fee><label asp-for="ValorMatricula" class="bfa-form-label"></label><div class="bfa-admin-money-field"><span>R$</span><input asp-for="ValorMatricula" class="form-control bfa-form-control" type="text" inputmode="decimal" autocomplete="off" placeholder="100,00" maxlength="18" data-bfa-number="money" data-bfa-number-min="0.01" /></div><span asp-validation-for="ValorMatricula" class="bfa-validation-message"></span></div>
-            <div class="bfa-form-field"><label asp-for="VigenciaInicioTexto" class="bfa-form-label"></label><div class="bfa-admin-date-field" data-bfa-date-field><input asp-for="VigenciaInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/aaaa" maxlength="10" required data-bfa-date-input data-bfa-date-required="true" /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário do início da vigência" title="Abrir calendário" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div><span asp-validation-for="VigenciaInicioTexto" class="bfa-validation-message"></span></div>
-        </div>
-    </section>
-    <div class="bfa-admin-form-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">@(Model.NovaVersao ? "Criar nova versão" : "Criar plano")</button><a class="bfa-btn-secondary bfa-admin-button" href="@cancelar">Cancelar</a></div>
+
+    <div class="bfa-admin-form-sections">
+        <section class="bfa-form-card">
+            <div class="bfa-card-title-row">
+                <div class="bfa-card-icon">&#128196;</div>
+                <h2>Condições do plano</h2>
+            </div>
+            <div class="bfa-fields">
+                @if (!Model.NovaVersao)
+                {
+                    <div class="bfa-field bfa-plan-form-wide">
+                        <label asp-for="Nome" class="bfa-form-label"></label>
+                        <input asp-for="Nome" class="form-control bfa-form-control" maxlength="150" required />
+                        <span asp-validation-for="Nome" class="bfa-validation-message"></span>
+                    </div>
+                }
+                <div class="bfa-field">
+                    <label asp-for="DuracaoMeses" class="bfa-form-label"></label>
+                    <input asp-for="DuracaoMeses" class="form-control bfa-form-control" type="number" min="1" max="32767" required data-bfa-plan-duration />
+                    <span class="bfa-admin-form-help" data-bfa-plan-duration-label></span>
+                    <span asp-validation-for="DuracaoMeses" class="bfa-validation-message"></span>
+                </div>
+                <div class="bfa-field">
+                    <label asp-for="FrequenciaSemanal" class="bfa-form-label"></label>
+                    <select asp-for="FrequenciaSemanal" class="form-control bfa-form-control" required>
+                        @for (var i = 1; i <= 7; i++)
+                        {
+                            <option value="@i">@i× por semana</option>
+                        }
+                    </select>
+                    <span asp-validation-for="FrequenciaSemanal" class="bfa-validation-message"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bfa-form-card">
+            <div class="bfa-card-title-row">
+                <div class="bfa-card-icon">&#128176;</div>
+                <h2>Valores</h2>
+            </div>
+            <div class="bfa-fields">
+                <div class="bfa-field">
+                    <label asp-for="ValorMensal" class="bfa-form-label"></label>
+                    <div class="bfa-admin-money-field">
+                        <span>R$</span>
+                        <input asp-for="ValorMensal" class="form-control bfa-form-control" type="text" inputmode="decimal" autocomplete="off" placeholder="280,00" maxlength="18" required data-bfa-number="money" data-bfa-number-min="0.01" />
+                    </div>
+                    <span asp-validation-for="ValorMensal" class="bfa-validation-message"></span>
+                </div>
+
+                <fieldset class="bfa-field">
+                    <legend class="bfa-form-label">Cobrar taxa de matrícula?</legend>
+                    <div class="bfa-plan-choice">
+                        <label><input type="radio" name="CobraMatricula" value="true" checked="@Model.CobraMatricula" data-bfa-plan-fee-choice /> Sim</label>
+                        <label><input type="radio" name="CobraMatricula" value="false" checked="@(!Model.CobraMatricula)" data-bfa-plan-fee-choice /> Não</label>
+                    </div>
+                </fieldset>
+
+                <div class="bfa-field bfa-plan-fee" data-bfa-plan-fee>
+                    <label asp-for="ValorMatricula" class="bfa-form-label"></label>
+                    <div class="bfa-admin-money-field">
+                        <span>R$</span>
+                        <input asp-for="ValorMatricula" class="form-control bfa-form-control" type="text" inputmode="decimal" autocomplete="off" placeholder="100,00" maxlength="18" data-bfa-number="money" data-bfa-number-min="0.01" />
+                    </div>
+                    <span asp-validation-for="ValorMatricula" class="bfa-validation-message"></span>
+                </div>
+
+                <div class="bfa-field">
+                    <label asp-for="VigenciaInicioTexto" class="bfa-form-label"></label>
+                    <div class="bfa-admin-date-field" data-bfa-date-field>
+                        <input asp-for="VigenciaInicioTexto" class="form-control bfa-form-control" type="text" inputmode="numeric" autocomplete="off" placeholder="dd/mm/aaaa" maxlength="10" required data-bfa-date-input data-bfa-date-required="true" />
+                        <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário do início da vigência" title="Abrir calendário" data-bfa-date-trigger>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                        </button>
+                    </div>
+                    <span asp-validation-for="VigenciaInicioTexto" class="bfa-validation-message"></span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="bfa-form-actions">
+        <button class="bfa-btn-primary bfa-admin-button" type="submit">@(Model.NovaVersao ? "Criar nova versão" : "Criar plano")</button>
+        <a class="bfa-btn-secondary bfa-admin-button" href="@cancelar">Cancelar</a>
+    </div>
 </form>
