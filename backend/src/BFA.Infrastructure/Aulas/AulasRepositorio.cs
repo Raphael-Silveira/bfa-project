@@ -1,5 +1,6 @@
 using BFA.Application.Aulas;
 using BFA.Domain.Aulas;
+using BFA.Domain.Matriculas;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -529,5 +530,24 @@ public sealed class AulasRepositorio(BfaDbContext dbContext, ILogger<AulasReposi
         }
 
         return resultado.OrderBy(f => f.NomeCompleto).ToList();
+    }
+
+    public async Task<IReadOnlyList<MatriculaAlunoResumo>> ResolverMatriculasAtivasAsync(
+        Guid organizacaoId, Guid unidadeId,
+        IReadOnlyList<Guid> alunoIds,
+        CancellationToken cancellationToken)
+    {
+        if (alunoIds.Count == 0)
+            return [];
+
+        var matriculas = await dbContext.Matriculas.AsNoTracking()
+            .Where(m => m.OrganizacaoId == organizacaoId
+                     && m.UnidadeId == unidadeId
+                     && alunoIds.Contains(m.AlunoId)
+                     && m.Status == Domain.Matriculas.StatusMatricula.Ativa)
+            .Select(m => new MatriculaAlunoResumo(m.AlunoId, m.Id))
+            .ToListAsync(cancellationToken);
+
+        return matriculas;
     }
 }

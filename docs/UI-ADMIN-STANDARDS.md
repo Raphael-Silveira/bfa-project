@@ -441,6 +441,7 @@ Antes de criar markup ou CSS, procure uma composição existente. As principais 
 | **Card de formulário** | `.bfa-form-card`, `.bfa-card-title-row`, `.bfa-card-icon` |
 | **Campos** | `.bfa-fields`, `.bfa-field`, `.bfa-field-grid-2` |
 | **Input monetário** | `.bfa-money-input`, `.bfa-money-input__prefix` |
+| **Modal de confirmação** | `.bfa-modal-dialog`, `.bfa-modal`, `.bfa-modal__header`, `.bfa-modal__icon`, `.bfa-modal__body`, `.bfa-modal__footer` |
 
 Se uma composição de markup se repetir ou contiver ações sensíveis, extraia uma Partial View apropriada. Use View Component quando a composição reutilizável exigir trabalho ou dados no servidor. Não crie abstrações genéricas antecipadamente para uma única ocorrência.
 
@@ -802,7 +803,135 @@ Campos de data em formulários e filtros administrativos devem reutilizar o comp
 
 Este padrão deve ser reutilizado em: Financeiro, Relatórios, Frequência, Presenças e qualquer tela com intervalo de datas.
 
-## 20. Checklist obrigatório de revisão
+## 20. Modais e confirmações
+
+Todas as confirmações administrativas (concluir, cancelar, inativar, excluir, etc.) devem usar o componente compartilhado `bfa-confirm-modal.js`. O componente utiliza o elemento nativo `<dialog>` do HTML, que fornece posicionamento correto no viewport, backdrop nativo, trap de foco e acesso por teclado sem hacks CSS.
+
+### Estrutura
+
+```html
+<button
+  data-bfa-confirm="Mensagem principal"
+  data-bfa-confirm-title="Título do modal"
+  data-bfa-confirm-desc="Descrição secundária (opcional)"
+  data-bfa-confirm-text="Texto do botão primário"
+  data-bfa-confirm-variant="danger|default">
+  Ação
+</button>
+```
+
+O JavaScript interno cria um `<dialog>` com a seguinte estrutura interna:
+
+```html
+<dialog class="bfa-modal-dialog">
+  <div class="bfa-modal">
+    <div class="bfa-modal__header">
+      <div class="bfa-modal__icon"><!-- SVG --></div>
+      <h3 class="bfa-modal__title" id="bfa-modal-title">Título</h3>
+    </div>
+    <div class="bfa-modal__body">
+      <p>Mensagem principal</p>
+      <p id="bfa-modal-desc">Descrição secundária</p>
+    </div>
+    <div class="bfa-modal__footer">
+      <button class="bfa-btn-secondary bfa-admin-button bfa-modal__cancel">Cancelar</button>
+      <button class="bfa-btn-primary bfa-admin-button bfa-modal__confirm">Confirmar</button>
+    </div>
+  </div>
+</dialog>
+```
+
+### Backdrop
+
+O backdrop usa `::backdrop` do `<dialog>` nativo:
+
+- fundo: `rgba(0, 0, 0, 0.68)`;
+- blur: `backdrop-filter: blur(2px)` (discreto, sem prejudicar performance);
+- cobre 100% da viewport;
+- header, sidebar e drawer ficam atrás do backdrop;
+- `z-index: 1060` no `<dialog>` garante acima de header (`1030`), offcanvas (`1045`) e drawer.
+
+### Surface do modal
+
+- background: `#1B1D20` (superfície escura elevada);
+- border: `1px solid rgba(255, 255, 255, 0.08)` (neutra e discreta);
+- box-shadow em camadas para profundidade: `0 0 0 1px rgba(0,0,0,0.3), 0 0.5rem 1rem rgba(0,0,0,0.25), 0 1.5rem 3rem rgba(0,0,0,0.35)`;
+- border-radius: `var(--radius-lg)`.
+
+### Centralização
+
+O `<dialog>` com `showModal()` centraliza automaticamente no viewport. CSS adicional usa `position: fixed; inset: 0; margin: auto` para sobrescrever regras Bootstrap no bare `dialog`. O elemento opera no "top layer" do navegador.
+
+### Largura
+
+- Desktop: `width: min(460px, calc(100vw - 2rem))`;
+- Mobile compacto (`max-width: 24.375rem`): `width: calc(100vw - 1.5rem)`;
+- `max-height: calc(100vh - 2rem)` com scroll interno quando necessário.
+
+### Header
+
+- Ícone em circle com fundo `rgba(255, 193, 7, 0.1)` e cor `var(--bfa-gold)`;
+- Variante danger: fundo `rgba(239, 68, 68, 0.1)` e cor `#ef4444`;
+- Título: `font-size: 0.95rem`, `font-weight: 600`, `color: #fff`.
+
+### Corpo
+
+- Mensagem principal: `rgba(255, 255, 255, 0.85)`, `font-weight: 500`;
+- Descrição secundária (quando existe): `rgba(255, 255, 255, 0.6)`, `font-size: 0.85rem`, `line-height: 1.6`;
+- Se não houver `data-bfa-confirm-desc`, mostra apenas a mensagem principal.
+
+### Footer
+
+- Alinhado à direita (`justify-content: flex-end`);
+- Fundo: `rgba(0, 0, 0, 0.15)` (sutilmente mais escuro que o body);
+- Cancelar: `.bfa-btn-secondary` com `border: rgba(255,255,255,0.15)` e `color: rgba(255,255,255,0.7)`;
+- Confirmar: `.bfa-btn-primary` (amarelo BFA `var(--bfa-accent)`, `color: #111`);
+- Mobile compacto (`max-width: 24.375rem`): botões empilham em coluna, largura total.
+
+### Scroll
+
+Enquanto o modal estiver aberto, o scroll da página é bloqueado via `position: fixed` no `<body>` com preservação da posição de scroll. Ao fechar, a posição é restaurada.
+
+### Acessibilidade
+
+- `role="dialog"` e `aria-modal="true"` fornecidos nativamente pelo `<dialog>`;
+- `aria-labelledby` aponta para o título;
+- `aria-describedby` aponta para a descrição, quando existe;
+- Foco vai para o botão primário ao abrir;
+- `ESC` fecha o modal sem executar a ação (via evento `cancel`);
+- Ao fechar, o foco retorna ao elemento que abriu o modal.
+
+### API JavaScript
+
+```javascript
+BfaConfirm.confirm({
+    titulo: "Concluir aula",
+    mensagem: "Deseja concluir esta aula?",
+    descricao: "A aula será marcada como realizada.", // opcional
+    textoConfirmar: "Confirmar",
+    textoCancelar: "Cancelar",
+    variante: "danger" // ou "default"
+}).then(function (ok) {
+    if (ok) { /* executar ação */ }
+});
+```
+
+### Ações destrutivas
+
+Use `variante: "danger"` para ações como cancelar, inativar, excluir. A variante danger troca a cor do ícone para vermelho. A variante `default` usa amarelo BFA.
+
+### Reutilização
+
+Este padrão é compartilhado entre Franqueadora, Unidade e Aluno. Não crie modais exclusivos por página. O CSS está em `admin.css` e o JS em `bfa-confirm-modal.js`.
+
+Exemplos de uso futuro:
+- Encerrar matrícula
+- Cancelar matrícula
+- Inativar vínculo
+- Cancelar aula
+- Excluir registro
+
+## 21. Checklist obrigatório de revisão
 
 Antes de considerar uma interface administrativa concluída, confirme:
 
@@ -821,6 +950,7 @@ Antes de considerar uma interface administrativa concluída, confirme:
 - [ ] Forms usam padrão BFA.
 - [ ] Status usam badges padrão.
 - [ ] Empty state implementado.
+- [ ] Modais usam `bfa-confirm-modal.js` com `<dialog>` nativo.
 - [ ] Não duplica CSS/componente existente.
 - [ ] Build sem warnings.
 - [ ] Testes passando.

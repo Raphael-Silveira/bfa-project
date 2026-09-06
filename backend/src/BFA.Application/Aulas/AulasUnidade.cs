@@ -149,7 +149,14 @@ public interface IAulasRepositorio
         Guid organizacaoId, Guid unidadeId, Guid? turmaId,
         DateOnly dataInicio, DateOnly dataFim,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<MatriculaAlunoResumo>> ResolverMatriculasAtivasAsync(
+        Guid organizacaoId, Guid unidadeId,
+        IReadOnlyList<Guid> alunoIds,
+        CancellationToken cancellationToken);
 }
+
+public sealed record MatriculaAlunoResumo(Guid AlunoId, Guid MatriculaId);
 
 public interface IAulasServico
 {
@@ -547,13 +554,18 @@ public sealed class AulasServico(
         var agora = timeProvider.GetUtcNow().UtcDateTime;
         var presencaId = Guid.NewGuid();
 
+        var matriculas = await repositorio.ResolverMatriculasAtivasAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId,
+            [alunoId], cancellationToken);
+        var matriculaId = matriculas.FirstOrDefault().MatriculaId;
+
         var presenca = new Presenca(
             presencaId,
             contexto.Valor!.OrganizacaoId,
             unidadeId,
             aulaId,
             alunoId,
-            Guid.Empty, // matricula_id — resolvido pelo repositorio/trigger
+            matriculaId,
             solicitacao.Status,
             usuarioId,
             agora,
@@ -592,11 +604,26 @@ public sealed class AulasServico(
             return new(EstadoAulasUnidade.DadosInvalidos);
 
         var agora = timeProvider.GetUtcNow().UtcDateTime;
+
+        var alunoIds = registros
+            .Where(r => r.AlunoId != Guid.Empty)
+            .Select(r => r.AlunoId)
+            .Distinct()
+            .ToList();
+
+        var matriculas = await repositorio.ResolverMatriculasAtivasAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId,
+            alunoIds, cancellationToken);
+        var matriculasMap = matriculas.ToDictionary(m => m.AlunoId, m => m.MatriculaId);
+
         var presencas = new List<Presenca>(registros.Count);
 
         foreach (var registro in registros)
         {
             if (registro.AlunoId == Guid.Empty)
+                continue;
+
+            if (!matriculasMap.TryGetValue(registro.AlunoId, out var matriculaId))
                 continue;
 
             var presenca = new Presenca(
@@ -605,7 +632,7 @@ public sealed class AulasServico(
                 unidadeId,
                 aulaId,
                 registro.AlunoId,
-                Guid.Empty, // matricula_id — resolvido pelo repositorio/trigger
+                matriculaId,
                 registro.Status,
                 usuarioId,
                 agora,

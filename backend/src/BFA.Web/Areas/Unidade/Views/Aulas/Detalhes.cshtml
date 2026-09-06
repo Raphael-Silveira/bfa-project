@@ -5,20 +5,29 @@
     var aula = Model.Aula;
 }
 
+<a class="bfa-back-link" href="/unidade/@Model.UnidadeId/aulas">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    Voltar para aulas
+</a>
+
 <header class="bfa-admin-page-header" aria-labelledby="titulo-detalhe-aula">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
         <h1 class="bfa-admin-page-header__title" id="titulo-detalhe-aula">
             @aula.TurmaNome — @aula.Data
+            <span class="bfa-admin-badge @(aula.Status == "Programada" ? "is-active" : aula.Status == "Concluida" ? "is-completed" : "is-inactive")">
+                @if (aula.Status == "Programada")
+                {
+                    <i class="bfa-data-badge__dot"></i>
+                }
+                @aula.Status
+            </span>
         </h1>
         <p class="bfa-admin-page-header__description">
             @aula.HoraInicio – @aula.HoraFim · @aula.ProfessorNome
         </p>
     </div>
-    <div class="bfa-admin-page-header__actions">
-        <span class="bfa-admin-badge @(aula.Status == "Programada" ? "is-active" : aula.Status == "Concluida" ? "is-completed" : "is-inactive")">
-            @aula.Status
-        </span>
+    <div class="bfa-admin-page-header__actions bfa-aula-actions">
         @if (Model.PodeGerenciar && aula.PodeChamada)
         {
             <a class="bfa-btn-primary bfa-admin-button"
@@ -26,7 +35,10 @@
                asp-controller="Aulas"
                asp-action="Chamada"
                asp-route-unidadeId="@Model.UnidadeId"
-               asp-route-aulaId="@aula.AulaId">Chamada</a>
+               asp-route-aulaId="@aula.AulaId">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Chamada
+            </a>
         }
         @if (Model.PodeGerenciar && aula.PodeConcluir)
         {
@@ -39,7 +51,11 @@
                   class="bfa-inline-form">
                 @Html.AntiForgeryToken()
                 <button class="bfa-btn-primary bfa-admin-button" type="submit"
-                        onclick="return confirm('Deseja concluir esta aula?')">
+                        data-bfa-confirm="Deseja concluir esta aula?"
+                        data-bfa-confirm-variant="danger"
+                        data-bfa-confirm-title="Concluir aula"
+                        data-bfa-confirm-desc="A aula será marcada como realizada e as presenças registradas serão preservadas.">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     Concluir
                 </button>
             </form>
@@ -55,7 +71,11 @@
                   class="bfa-inline-form">
                 @Html.AntiForgeryToken()
                 <button class="bfa-btn-secondary bfa-admin-button" type="submit"
-                        onclick="return confirm('Deseja cancelar esta aula?')">
+                        data-bfa-confirm="Deseja cancelar esta aula? Esta ação não pode ser desfeita."
+                        data-bfa-confirm-variant="danger"
+                        data-bfa-confirm-title="Cancelar aula"
+                        data-bfa-confirm-text="Cancelar aula">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     Cancelar aula
                 </button>
             </form>
@@ -67,63 +87,200 @@
                asp-controller="Aulas"
                asp-action="Editar"
                asp-route-unidadeId="@Model.UnidadeId"
-               asp-route-aulaId="@aula.AulaId">Editar</a>
+               asp-route-aulaId="@aula.AulaId">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Editar
+            </a>
         }
     </div>
 </header>
 
-<div class="bfa-admin-card">
-    <dl class="bfa-detail-list">
-        <div><dt>Turma</dt><dd>@aula.TurmaNome</dd></div>
-        <div><dt>Professor</dt><dd>@aula.ProfessorNome</dd></div>
-        <div><dt>Data</dt><dd>@aula.Data</dd></div>
-        <div><dt>Horário</dt><dd>@aula.HoraInicio – @aula.HoraFim</dd></div>
-        <div><dt>Capacidade</dt><dd>@aula.Capacidade</dd></div>
-        @if (aula.Observacoes is not null)
-        {
-            <div><dt>Observações</dt><dd>@aula.Observacoes</dd></div>
-        }
-    </dl>
-</div>
+<section class="bfa-aula-detail-card">
+    <div class="bfa-aula-detail-card__header">
+        <h2>Detalhes da aula</h2>
+    </div>
+    <div class="bfa-aula-detail-grid">
+        <div class="bfa-aula-detail-item">
+            <div class="bfa-aula-detail-item__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+                <span class="bfa-aula-detail-item__label">Turma</span>
+                <div class="bfa-aula-detail-item__value">@aula.TurmaNome</div>
+            </div>
+        </div>
+        <div class="bfa-aula-detail-item">
+            <div class="bfa-aula-detail-item__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div>
+                <span class="bfa-aula-detail-item__label">Data</span>
+                <div class="bfa-aula-detail-item__value">@aula.Data</div>
+            </div>
+        </div>
+        <div class="bfa-aula-detail-item">
+            <div class="bfa-aula-detail-item__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+                <span class="bfa-aula-detail-item__label">Capacidade</span>
+                <div class="bfa-aula-detail-item__value">@aula.Capacidade</div>
+            </div>
+        </div>
+        <div class="bfa-aula-detail-item">
+            <div class="bfa-aula-detail-item__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+                <span class="bfa-aula-detail-item__label">Professor</span>
+                <div class="bfa-aula-detail-item__value">@aula.ProfessorNome</div>
+            </div>
+        </div>
+        <div class="bfa-aula-detail-item">
+            <div class="bfa-aula-detail-item__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+                <span class="bfa-aula-detail-item__label">Horário</span>
+                <div class="bfa-aula-detail-item__value">@aula.HoraInicio – @aula.HoraFim</div>
+            </div>
+        </div>
+        <div class="bfa-aula-detail-item">
+            <div class="bfa-aula-detail-item__icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+                <span class="bfa-aula-detail-item__label">Inscritos</span>
+                <div class="bfa-aula-detail-item__value">@aula.Alunos.Count <span class="bfa-aula-detail-item__suffix">de @aula.Capacidade</span></div>
+            </div>
+        </div>
+    </div>
+    @if (aula.Observacoes is not null)
+    {
+        <div class="bfa-aula-detail-obs">
+            <span class="bfa-aula-detail-item__label">Observações</span>
+            <p>@aula.Observacoes</p>
+        </div>
+    }
+</section>
 
 @if (aula.Alunos.Count > 0)
 {
-    <h2 class="bfa-admin-section-title">Alunos presentes</h2>
-    <div class="bfa-admin-table-container bfa-admin-desktop-list">
-        <table class="bfa-admin-table">
-            <thead>
-                <tr>
-                    <th>Aluno</th>
-                    <th>Status</th>
-                    <th>Chegou</th>
-                    <th>Saiu</th>
-                </tr>
-            </thead>
-            <tbody>
+    <section class="bfa-aula-presence-card">
+        <div class="bfa-aula-presence-card__header">
+            <h2>Presenças</h2>
+        </div>
+        <div class="bfa-admin-table-container bfa-admin-desktop-list">
+            <table class="bfa-admin-table">
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Status</th>
+                        <th>Chegou</th>
+                        <th>Saiu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var aluno in aula.Alunos)
+                {
+                    var statusClass = aluno.Status switch
+                    {
+                        "Presente" => "is-active",
+                        "Ausente" => "is-inactive",
+                        "Justificado" => "is-completed",
+                        _ => ""
+                    };
+                    <tr>
+                        <td><strong>@aluno.NomeCompleto</strong></td>
+                        <td>
+                            <span class="bfa-admin-badge @statusClass">
+                                @(aluno.Status ?? "Não registrado")
+                            </span>
+                        </td>
+                        <td>@(aluno.ChegouAs ?? "—")</td>
+                        <td>@(aluno.SaiuAs ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="bfa-mobile-card-list" aria-label="Presenças">
             @foreach (var aluno in aula.Alunos)
             {
-                <tr>
-                    <td><strong>@aluno.NomeCompleto</strong></td>
-                    <td>
-                        <span class="bfa-admin-badge @(aluno.Status == "Presente" ? "is-active" : "is-inactive")">
+                var statusClass = aluno.Status switch
+                {
+                    "Presente" => "is-active",
+                    "Ausente" => "is-inactive",
+                    "Justificado" => "is-completed",
+                    _ => ""
+                };
+                <article class="bfa-mobile-card">
+                    <div class="bfa-mobile-card__head">
+                        <div>
+                            <div class="bfa-data-primary">@aluno.NomeCompleto</div>
+                        </div>
+                        <span class="bfa-admin-badge @statusClass">
                             @(aluno.Status ?? "Não registrado")
                         </span>
-                    </td>
-                    <td>@(aluno.ChegouAs ?? "—")</td>
-                    <td>@(aluno.SaiuAs ?? "—")</td>
-                </tr>
+                    </div>
+                    <div class="bfa-mobile-card__grid">
+                        <div>
+                            <span class="bfa-mobile-card__label">Chegou</span>
+                            <div>@(aluno.ChegouAs ?? "—")</div>
+                        </div>
+                        <div>
+                            <span class="bfa-mobile-card__label">Saiu</span>
+                            <div>@(aluno.SaiuAs ?? "—")</div>
+                        </div>
+                    </div>
+                </article>
             }
-            </tbody>
-        </table>
-    </div>
+        </div>
+    </section>
 }
 else if (aula.Status == "Programada")
 {
-    <section class="bfa-admin-empty-state bfa-unidade-empty-state" role="status">
-        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
-        <div>
+    <section class="bfa-aula-empty-presence" role="status">
+        <div class="bfa-aula-empty-presence__icon" aria-hidden="true">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="bfa-aula-empty-presence__copy">
             <h2>Nenhuma presença registrada.</h2>
             <p>Registre a presença dos alunos utilizando a chamada.</p>
         </div>
+        @if (Model.PodeGerenciar && aula.PodeChamada)
+        {
+            <a class="bfa-btn-primary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Aulas"
+               asp-action="Chamada"
+               asp-route-unidadeId="@Model.UnidadeId"
+               asp-route-aulaId="@aula.AulaId">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Abrir chamada
+            </a>
+        }
     </section>
+}
+
+@section Scripts {
+    <script src="~/js/bfa-confirm-modal.js" asp-append-version="true"></script>
+    <script>
+        document.querySelectorAll('[data-bfa-confirm]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                var form = btn.closest('form');
+                BfaConfirm.confirm({
+                    titulo: btn.dataset.bfaConfirmTitle || 'Confirmar',
+                    mensagem: btn.dataset.bfaConfirm,
+                    descricao: btn.dataset.bfaConfirmDesc || null,
+                    textoConfirmar: btn.dataset.bfaConfirmText || 'Confirmar',
+                    textoCancelar: 'Cancelar',
+                    variante: btn.dataset.bfaConfirmVariant || 'default'
+                }).then(function (ok) {
+                    if (ok && form) form.submit();
+                });
+            });
+        });
+    </script>
 }
