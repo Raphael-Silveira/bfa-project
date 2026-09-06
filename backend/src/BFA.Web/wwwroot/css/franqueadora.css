@@ -727,13 +727,6 @@
   gap: 1rem;
 }
 
-.bfa-franqueado-status-readonly {
-  display: flex;
-  margin-bottom: 1.25rem;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--bfa-text-muted);
-}
 
 .bfa-usuario-franqueado {
   margin-bottom: 1.25rem;

@@ -1,4 +1,4 @@
-﻿.bfa-admin,
+.bfa-admin,
 .bfa-admin * {
   box-sizing: border-box;
 }
@@ -1991,6 +1991,20 @@
 /* ═══════════════════════════════════════════════════
    FORMULÁRIO — Grid two-column + cards
    ═══════════════════════════════════════════════════ */
+
+.bfa-form-status-readonly {
+  display: flex;
+  margin-bottom: 1.25rem;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--bfa-text-muted);
+}
+
+.bfa-form-status-readonly span:first-child {
+  font-weight: 600;
+  color: var(--bfa-text-secondary);
+  font-size: 0.72rem;
+}
 
 .bfa-form-grid {
   display: grid;

@@ -26,9 +26,15 @@
 
         <div asp-validation-summary="ModelOnly" class="bfa-validation-summary"></div>
 
-        <div class="bfa-form-field">
-            <label class="bfa-form-label">Status atual</label>
-            <input class="form-control bfa-form-control" value="@Model.StatusAtual" disabled />
+        <div class="bfa-form-status-readonly">
+            <span>Status atual</span>
+            <span class="bfa-admin-badge @(Model.StatusAtual == "Programada" ? "is-active" : Model.StatusAtual == "Concluida" ? "is-completed" : "is-inactive")">
+                @if (Model.StatusAtual == "Programada")
+                {
+                    <i class="bfa-data-badge__dot"></i>
+                }
+                @Model.StatusAtual
+            </span>
         </div>
 
         <div class="bfa-form-field">
