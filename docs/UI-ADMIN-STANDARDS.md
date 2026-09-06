@@ -437,7 +437,7 @@ Antes de criar markup ou CSS, procure uma composição existente. As principais 
 | **Rodapé de tabela** | `.bfa-table-footer` |
 | **Paginação** | `.bfa-pagination`, `.bfa-page-btn`, `.bfa-page-btn.is-current`, `.bfa-page-btn.is-disabled` |
 | **Cards mobile** | `.bfa-mobile-card-list`, `.bfa-mobile-card`, `.bfa-mobile-card__head`, `.bfa-mobile-card__grid`, `.bfa-mobile-card__label`, `.bfa-mobile-card__actions` |
-| **Grid de formulário** | `.bfa-form-grid` (2 colunas: 1.12fr / 0.88fr) |
+| **Grid de formulário** | `.bfa-admin-form-sections` (painéis empilhados verticais) |
 | **Card de formulário** | `.bfa-form-card`, `.bfa-card-title-row`, `.bfa-card-icon` |
 | **Campos** | `.bfa-fields`, `.bfa-field`, `.bfa-field-grid-2` |
 | **Input monetário** | `.bfa-money-input`, `.bfa-money-input__prefix` |
@@ -591,13 +591,18 @@ Regras:
 - grid usa 2 colunas em desktop mobile, 1 coluna em mobile compacto;
 - ações ficam alinhadas à direita no rodapé do card.
 
-### 16.5 Padrão de formulário em duas colunas
+### 16.5 Padrão de formulário (painéis empilhados)
 
-Formulários complexos usam `.bfa-form-grid` com dois cards lado a lado:
+**Referência oficial:** Tela Turma Nova (`/unidade/{unidadeId}/turmas/nova`) — `Views/Turmas/Nova.cshtml`. Esta tela é o exemplo canônico de formulário administrativo. Novos formulários devem seguir este padrão.
+
+Formulários usam `.bfa-admin-form-sections` com cards empilhados verticalmente:
 
 ```html
-<form class="bfa-admin-form">
-  <div class="bfa-form-grid">
+<form class="bfa-admin-form" method="post">
+  @Html.AntiForgeryToken()
+  <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+
+  <div class="bfa-admin-form-sections">
     <section class="bfa-form-card">
       <div class="bfa-card-title-row">
         <div class="bfa-card-icon">♟</div>
@@ -605,15 +610,23 @@ Formulários complexos usam `.bfa-form-grid` com dois cards lado a lado:
       </div>
       <div class="bfa-fields">
         <div class="bfa-field">
-          <label>Nome *</label>
-          <input />
+          <label asp-for="Nome" class="bfa-form-label"></label>
+          <input asp-for="Nome" class="form-control bfa-form-control" />
+          <span asp-validation-for="Nome" class="bfa-validation-message"></span>
         </div>
         <div class="bfa-field-grid-2">
-          <div class="bfa-field"><label>CPF</label><input /></div>
-          <div class="bfa-field"><label>Telefone</label><input /></div>
+          <div class="bfa-field">
+            <label asp-for="Campo1" class="bfa-form-label"></label>
+            <input asp-for="Campo1" class="form-control bfa-form-control" />
+          </div>
+          <div class="bfa-field">
+            <label asp-for="Campo2" class="bfa-form-label"></label>
+            <input asp-for="Campo2" class="form-control bfa-form-control" />
+          </div>
         </div>
       </div>
     </section>
+
     <section class="bfa-form-card">
       <div class="bfa-card-title-row">
         <div class="bfa-card-icon">$</div>
@@ -622,22 +635,29 @@ Formulários complexos usam `.bfa-form-grid` com dois cards lado a lado:
       <div class="bfa-fields">...</div>
     </section>
   </div>
+
   <div class="bfa-form-actions">
-    <a class="bfa-btn-secondary">Cancelar</a>
-    <button class="bfa-btn-primary">Salvar</button>
+    <a class="bfa-btn-secondary bfa-admin-button" href="...">Cancelar</a>
+    <button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar</button>
   </div>
 </form>
 ```
 
 Regras:
 
-- grid: `grid-template-columns: minmax(0, 1.12fr) minmax(22rem, 0.88fr)`;
-- no mobile (`max-width: 44rem`): coluna única;
-- cada card tem `.bfa-card-title-row` com ícone + título;
-- `.bfa-fields` organiza campos com gap consistente;
-- `.bfa-field-grid-2` cria sub-grid de 2 colunas dentro de um card;
-- `.bfa-money-input` para campos monetários com prefixo R$;
-- ações ficam abaixo do grid com `justify-content: flex-end`;
+- **Container:** `.bfa-admin-form-sections` centraliza o espaçamento vertical entre cards;
+- **Card:** `.bfa-form-card` com `.bfa-card-title-row` (ícone + título) e `.bfa-fields`;
+- **Campos:** `.bfa-fields` organiza campos com gap consistente; `.bfa-field-grid-2` cria sub-grid de 2 colunas dentro de um card;
+- **Labels:** `class="bfa-form-label"` associado ao controle;
+- **Controles:** `class="form-control bfa-form-control"` ou `form-select bfa-form-control`;
+- **Validação:** `<span asp-validation-for="..." class="bfa-validation-message"></span>` junto ao campo;
+- **Resumo:** `bfa-admin-notice bfa-admin-form-summary` no topo do formulário;
+- **Ações:** `.bfa-form-actions` abaixo das seções, com `justify-content: flex-end`;
+- **Antiforgery:** `@Html.AntiForgeryToken()` obrigatório em forms POST;
+- **Mostrar/Ocultar botão:** Use `disabled` no botão primário quando o formulário não puder ser submetido (ex: sem professores disponíveis);
+- **Layout:** Cards empilhados verticalmente; `.bfa-field-grid-2` para campos lado a lado dentro de um card;
+- **Mobile:** Mantém o mesmo padrão; campos em `.bfa-field-grid-2` empilham naturalmente;
+- **Partial Views:** Use partials para seções reutilizáveis (ex: `_RemuneracaoInicial`); o partial deve conter apenas o `<section class="bfa-form-card">` e ser incluído dentro de `.bfa-admin-form-sections`;
 
 ## 17. Acessibilidade
 
