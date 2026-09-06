@@ -1,3 +1,7 @@
+html {
+  color-scheme: dark;
+}
+
 :root {
   /* ─── Brand Palette (imutável) ─── */
   --bfa-black: #0D0D0D;

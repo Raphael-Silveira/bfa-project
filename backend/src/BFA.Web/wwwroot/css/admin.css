@@ -1,4 +1,4 @@
-.bfa-admin,
+﻿.bfa-admin,
 .bfa-admin * {
   box-sizing: border-box;
 }
@@ -2426,181 +2426,215 @@
   }
 }
 
-/* ── Confirm Modal (native <dialog>) ─────────────────────── */
 
-dialog.bfa-modal-dialog {
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--bfa-text-primary);
-  max-width: unset;
-  max-height: calc(100vh - 2rem);
-  width: min(460px, calc(100vw - 2rem));
-  overflow: visible;
+/* ══════════════════════════════════════════════════════════
+   BFA Confirm Modal - custom overlay DOM (sem dialog nativo)
+   Reutilizavel como padrao de modal do projeto.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Overlay / Backdrop ──────────────────────────────── */
+
+.bfa-modal-overlay {
   position: fixed;
   inset: 0;
-  margin: auto;
-  pointer-events: auto;
-  transform: none;
-  z-index: 1060;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(5, 6, 8, 0.82);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  backdrop-filter: blur(6px) saturate(120%);
+  animation: bfa-overlay-in 0.18s ease-out both;
 }
 
-dialog.bfa-modal-dialog::backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.68);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-  animation: bfa-modal-backdrop-in 0.15s ease;
-}
-
-@keyframes bfa-modal-backdrop-in {
+@keyframes bfa-overlay-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-dialog.bfa-modal-dialog .bfa-modal {
-  width: 100%;
-  background: #1B1D20;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-lg);
+/* ── Panel (card escuro) ─────────────────────────────── */
+
+.bfa-modal-panel {
+  position: relative;
+  width: min(480px, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  background: #1A1D1F;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top: 2px solid #FFC107;
+  border-radius: 1rem;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.3),
-    0 0.5rem 1rem rgba(0, 0, 0, 0.25),
-    0 1.5rem 3rem rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-  animation: bfa-modal-content-in 0.2s ease;
+    0 0 0 1px rgba(255, 193, 7, 0.07),
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    0 24px 64px rgba(0, 0, 0, 0.45);
+  color: #F7F7F7;
+  animation: bfa-panel-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes bfa-modal-content-in {
-  from { opacity: 0; transform: translateY(6px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes bfa-panel-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-/* ── Modal Header ── */
+/* ── Header ─────────────────────────────────────────── */
 
-.bfa-modal__header {
+.bfa-modal-panel__header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.875rem;
+  padding: 1.375rem 1.5rem 1rem;
 }
 
-.bfa-modal__icon {
-  width: 2.25rem;
-  height: 2.25rem;
+.bfa-modal-panel__icon {
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
-  background: rgba(255, 193, 7, 0.1);
-  color: var(--bfa-gold);
+  border: 1px solid rgba(255, 193, 7, 0.22);
+  background: rgba(255, 193, 7, 0.10);
+  color: #FFC107;
 }
 
-.bfa-modal__icon svg {
-  width: 18px;
-  height: 18px;
+.bfa-modal-panel__icon svg {
+  width: 20px;
+  height: 20px;
 }
 
-.bfa-modal__icon--danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+.bfa-modal-panel__icon--success {
+  border-color: rgba(34, 197, 94, 0.22);
+  background: rgba(34, 197, 94, 0.10);
+  color: #22C55E;
 }
 
-.bfa-modal__title {
+.bfa-modal-panel__icon--danger {
+  border-color: rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.10);
+  color: #EF4444;
+}
+
+.bfa-modal-panel__title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+/* ── Divider ─────────────────────────────────────────── */
+
+.bfa-modal-panel__divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 0 1.5rem;
+}
+
+/* ── Body ────────────────────────────────────────────── */
+
+.bfa-modal-panel__body {
+  padding: 1.125rem 1.5rem 1.25rem;
+}
+
+.bfa-modal-panel__question {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  color: #fff;
-  letter-spacing: -0.01em;
+  color: #F0F0F0;
+  line-height: 1.4;
 }
 
-/* ── Modal Body ── */
-
-.bfa-modal__body {
-  padding: 1.25rem 1.5rem;
+.bfa-modal-panel__question:only-child {
+  margin-bottom: 0;
 }
 
-.bfa-modal__body p {
+.bfa-modal-panel__desc {
   margin: 0;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.85rem;
+  font-size: 0.84375rem;
+  color: #A0A4A8;
   line-height: 1.6;
 }
 
-.bfa-modal__body p + p {
-  margin-top: 0.5rem;
-}
+/* ── Footer ──────────────────────────────────────────── */
 
-.bfa-modal__message {
-  color: rgba(255, 255, 255, 0.85) !important;
-  font-weight: 500;
-}
-
-/* ── Modal Footer ── */
-
-.bfa-modal__footer {
+.bfa-modal-panel__footer {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 0.625rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.20);
+  border-radius: 0 0 1rem 1rem;
 }
 
-/* ── Modal Buttons ── */
+/* ── Botoes ──────────────────────────────────────────── */
 
-dialog.bfa-modal-dialog .bfa-modal__footer .bfa-btn-secondary {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.7);
+.bfa-modal-panel__footer .bfa-btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #B0B4B8;
+  font-weight: 600;
 }
 
-dialog.bfa-modal-dialog .bfa-modal__footer .bfa-btn-secondary:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+.bfa-modal-panel__footer .bfa-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #FFFFFF;
 }
 
-dialog.bfa-modal-dialog .bfa-modal__footer .bfa-btn-primary {
-  background: var(--bfa-accent);
-  border: 1px solid var(--bfa-accent);
-  color: #111;
+.bfa-modal-panel__footer .bfa-btn-primary {
+  background: #FFC107;
+  border: 1px solid #FFC107;
+  color: #0D0D0D;
   font-weight: 700;
 }
 
-dialog.bfa-modal-dialog .bfa-modal__footer .bfa-btn-primary:hover {
-  background: var(--bfa-accent-hover, #e6ac00);
-  border-color: var(--bfa-accent-hover, #e6ac00);
+.bfa-modal-panel__footer .bfa-btn-primary:hover {
+  background: #FFCA28;
+  border-color: #FFCA28;
+  box-shadow: 0 0 18px rgba(255, 193, 7, 0.38);
 }
 
-/* ── Modal Mobile ── */
+.bfa-modal-panel__footer .bfa-modal-panel__confirm--danger {
+  background: #EF4444;
+  border: 1px solid #EF4444;
+  color: #FFFFFF;
+  font-weight: 700;
+}
 
-@media (max-width: 24.375rem) {
-  dialog.bfa-modal-dialog {
-    width: calc(100vw - 1.5rem);
-    max-height: calc(100vh - 1rem);
+.bfa-modal-panel__footer .bfa-modal-panel__confirm--danger:hover {
+  background: #DC2626;
+  border-color: #DC2626;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.38);
+}
+
+/* ── Mobile ──────────────────────────────────────────── */
+
+@media (max-width: 30rem) {
+  .bfa-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
   }
 
-  dialog.bfa-modal-dialog .bfa-modal {
-    border-radius: var(--radius-md);
-  }
-
-  .bfa-modal__header {
-    padding: 1rem 1.25rem;
-  }
-
-  .bfa-modal__body {
-    padding: 1rem 1.25rem;
-  }
-
-  .bfa-modal__footer {
-    flex-direction: column;
-    padding: 0.875rem 1.25rem;
-  }
-
-  .bfa-modal__footer .bfa-admin-button {
+  .bfa-modal-panel {
     width: 100%;
+    border-radius: 1rem 1rem 0 0;
+    border-top-width: 3px;
+    max-height: 92svh;
+  }
+
+  .bfa-modal-panel__footer {
+    flex-direction: column-reverse;
+    border-radius: 0;
+  }
+
+  .bfa-modal-panel__footer .bfa-btn-primary,
+  .bfa-modal-panel__footer .bfa-btn-secondary,
+  .bfa-modal-panel__footer .bfa-modal-panel__confirm--danger {
+    width: 100%;
+    min-height: 2.75rem;
   }
 }

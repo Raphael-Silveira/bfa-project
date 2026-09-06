@@ -253,6 +253,7 @@ public sealed class AulasRepositorio(BfaDbContext dbContext, ILogger<AulasReposi
         return new AulaDetalhe(
             aula.Id,
             aula.TurmaId,
+            aula.TurmaHorarioId,
             turma?.Nome ?? string.Empty,
             professorNome,
             aula.Data,
