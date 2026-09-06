@@ -350,7 +350,8 @@ public sealed class EditarAlunoViewModel : IUnidadeContextoViewModel
     public string? Email { get; set; }
 
     [Display(Name = "CPF")]
-    public string? CpfMascarado { get; init; }
+    [StringLength(Aluno.CpfTamanho, ErrorMessage = "O CPF deve possuir exatamente {1} dígitos.")]
+    public string? Cpf { get; set; }
 }
 
 // Responsáveis do Aluno — Lista
@@ -466,8 +467,6 @@ internal static class EditarAlunoMapper
         DataNascimento = dados.DataNascimento,
         Telefone = dados.Telefone,
         Email = dados.Email,
-        CpfMascarado = dados.Cpf is { Length: 11 } cpf
-            ? $"***.***.***-{cpf[^2..]}"
-            : "Não informado"
+        Cpf = dados.Cpf
     };
 }

@@ -163,6 +163,7 @@ public sealed class AlunosController(
 
         model.Telefone = Request.Form["Telefone"].FirstOrDefault();
         model.Email = Request.Form["Email"].FirstOrDefault();
+        model.Cpf = Request.Form["Cpf"].FirstOrDefault();
 
         if (!ModelState.IsValid)
             return View(model);
@@ -180,6 +181,7 @@ public sealed class AlunosController(
             alunoId,
             model.NomeCompleto,
             dataNascimento,
+            model.Cpf,
             model.Telefone,
             model.Email,
             cancellationToken);

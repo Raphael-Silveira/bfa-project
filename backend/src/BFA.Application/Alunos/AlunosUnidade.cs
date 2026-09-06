@@ -216,7 +216,7 @@ public interface IAlunosServico
 
     Task<ResultadoAlunosUnidade<Guid>> AtualizarDadosAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        string nomeCompleto, DateOnly dataNascimento, string? telefone, string? email,
+        string nomeCompleto, DateOnly dataNascimento, string? cpf, string? telefone, string? email,
         CancellationToken cancellationToken);
 
     // Responsavel management
@@ -310,7 +310,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidade<Guid>> AtualizarDadosAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        string nomeCompleto, DateOnly dataNascimento, string? telefone, string? email,
+        string nomeCompleto, DateOnly dataNascimento, string? cpf, string? telefone, string? email,
         CancellationToken cancellationToken)
     {
         var contexto = await ObterContextoAsync(
@@ -367,7 +367,7 @@ public sealed class AlunosServico(
             dataNascimento,
             dataCivilAtual,
             agoraUtc,
-            cpf: dadosExistentes.Aluno.Cpf,
+            cpf: cpf,
             telefone: telefone,
             email: email);
 
