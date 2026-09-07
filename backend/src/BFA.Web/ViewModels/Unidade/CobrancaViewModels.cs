@@ -25,6 +25,9 @@ public sealed class CobrancasListaViewModel : IUnidadeContextoViewModel
     [BindProperty(SupportsGet = true)]
     public string? Tipo { get; init; }
 
+    [BindProperty(SupportsGet = true)]
+    public string? AlunoNome { get; init; }
+
     public required DateOnly DataInicio { get; init; }
     public required DateOnly DataFim { get; init; }
 
@@ -32,7 +35,7 @@ public sealed class CobrancasListaViewModel : IUnidadeContextoViewModel
     public required int TamanhoPagina { get; init; }
     public required int TotalItens { get; init; }
     public bool PossuiFiltros => !string.IsNullOrEmpty(Status) || !string.IsNullOrEmpty(Tipo)
-        || AlunoId.HasValue;
+        || AlunoId.HasValue || !string.IsNullOrWhiteSpace(AlunoNome);
 }
 
 public sealed record CobrancaGrupoAlunoViewModel(
@@ -50,59 +53,12 @@ public sealed record CobrancaResumoViewModel(
     string Valor,
     string ValorPago,
     string DataVencimento,
-    string Status);
-
-public sealed class CobrancaDetalheAlunoViewModel : IUnidadeContextoViewModel
+    string Status,
+    decimal ValorNumerico,
+    decimal ValorPagoNumerico)
 {
-    public required Guid OrganizacaoId { get; init; }
-    public required Guid UnidadeId { get; init; }
-    public required string NomeUnidade { get; init; }
-    public required bool PodeTrocarUnidade { get; init; }
-    public required bool PodeGerenciar { get; init; }
-    public required Guid AlunoId { get; init; }
-    public required string AlunoNome { get; init; }
-    public required string ValorTotal { get; init; }
-    public required string ValorPagoTotal { get; init; }
-    public required string SaldoDevedorTotal { get; init; }
-    public required IReadOnlyList<CobrancaDetalheItemViewModel> Cobrancas { get; init; } = [];
-}
-
-public sealed class CobrancaDetalheViewModel : IUnidadeContextoViewModel
-{
-    public required Guid OrganizacaoId { get; init; }
-    public required Guid UnidadeId { get; init; }
-    public required string NomeUnidade { get; init; }
-    public required bool PodeTrocarUnidade { get; init; }
-    public required bool PodeGerenciar { get; init; }
-    public required CobrancaDetalheItemViewModel Cobranca { get; init; }
-}
-
-public sealed class CobrancaDetalheItemViewModel
-{
-    public required Guid CobrancaId { get; init; }
-    public required string AlunoNome { get; init; }
-    public required string? AlunoCpf { get; init; }
-    public required string Descricao { get; init; }
-    public required string Tipo { get; init; }
-    public required string Valor { get; init; }
-    public required string ValorPago { get; init; }
-    public required string SaldoDevedor { get; init; }
-    public required string DataEmissao { get; init; }
-    public required string DataVencimento { get; init; }
-    public required string? DataPagamento { get; init; }
-    public required string Status { get; init; }
-    public string? Observacoes { get; init; }
-    public IReadOnlyList<PagamentoResumoViewModel> Pagamentos { get; init; } = [];
-    public bool PodeRegistrarPagamento => Status is "Pendente" or "Atrasada";
     public bool PodeCancelar => Status == "Pendente";
 }
-
-public sealed record PagamentoResumoViewModel(
-    Guid PagamentoId,
-    string Valor,
-    string DataPagamento,
-    string FormaPagamento,
-    string? Observacoes);
 
 public sealed class CobrancaFormViewModel : IUnidadeContextoViewModel
 {
@@ -140,21 +96,6 @@ public sealed record AlunoParaSelecaoViewModel(
     string? Cpf,
     Guid MatriculaId);
 
-public sealed class PagamentoFormViewModel
-{
-    [Required(ErrorMessage = "Informe o valor do pagamento.")]
-    [Range(0.01, 99999999.99, ErrorMessage = "O valor deve ser maior que zero.")]
-    public decimal? Valor { get; set; }
-
-    [Required(ErrorMessage = "Informe a data do pagamento.")]
-    public DateOnly? DataPagamento { get; set; }
-
-    [Required(ErrorMessage = "Selecione a forma de pagamento.")]
-    public string? FormaPagamento { get; set; }
-
-    public string? Observacoes { get; set; }
-}
-
 public static class CobrancaViewModelMapper
 {
     private static readonly CultureInfo PtBr = new("pt-BR");
@@ -163,6 +104,7 @@ public static class CobrancaViewModelMapper
         UnidadeAcessoResumo contexto,
         IReadOnlyList<CobrancaGrupoAlunoViewModel> grupos,
         Guid? alunoId,
+        string? alunoNome,
         string? status,
         string? tipo,
         DateOnly dataInicio,
@@ -178,6 +120,7 @@ public static class CobrancaViewModelMapper
         PodeGerenciar = true,
         Grupos = grupos,
         AlunoId = alunoId,
+        AlunoNome = alunoNome,
         Status = status,
         Tipo = tipo,
         DataInicio = dataInicio,
@@ -213,69 +156,6 @@ public static class CobrancaViewModelMapper
             return StatusCobranca.Paga;
         return StatusCobranca.Cancelada;
     }
-
-    public static CobrancaDetalheViewModel MapearDetalhe(
-        UnidadeAcessoResumo contexto,
-        CobrancaDetalhe detalhe) => new()
-    {
-        OrganizacaoId = contexto.OrganizacaoId,
-        UnidadeId = contexto.UnidadeId,
-        NomeUnidade = contexto.Nome,
-        PodeTrocarUnidade = false,
-        PodeGerenciar = true,
-        Cobranca = new CobrancaDetalheItemViewModel
-        {
-            CobrancaId = detalhe.CobrancaId,
-            AlunoNome = detalhe.AlunoNome,
-            AlunoCpf = detalhe.AlunoCpf,
-            Descricao = detalhe.Descricao,
-            Tipo = MapearTipo(detalhe.Tipo),
-            Valor = detalhe.Valor.ToString("C", PtBr),
-            ValorPago = detalhe.ValorPago.ToString("C", PtBr),
-            SaldoDevedor = detalhe.SaldoDevedor.ToString("C", PtBr),
-            DataEmissao = detalhe.DataEmissao.ToString("dd/MM/yyyy"),
-            DataVencimento = detalhe.DataVencimento.ToString("dd/MM/yyyy"),
-            DataPagamento = detalhe.DataPagamento?.ToString("dd/MM/yyyy"),
-            Status = MapearStatus(detalhe.Status),
-            Observacoes = detalhe.Observacoes,
-            Pagamentos = detalhe.Pagamentos.Select(MapearPagamento).ToArray()
-        }
-    };
-
-    public static CobrancaDetalheAlunoViewModel MapearDetalheAluno(
-        UnidadeAcessoResumo contexto,
-        Guid alunoId,
-        string alunoNome,
-        IReadOnlyList<CobrancaListaItem> itens) => new()
-    {
-        OrganizacaoId = contexto.OrganizacaoId,
-        UnidadeId = contexto.UnidadeId,
-        NomeUnidade = contexto.Nome,
-        PodeTrocarUnidade = false,
-        PodeGerenciar = true,
-        AlunoId = alunoId,
-        AlunoNome = alunoNome,
-        ValorTotal = itens.Sum(i => i.Valor).ToString("C", PtBr),
-        ValorPagoTotal = itens.Sum(i => i.ValorPago).ToString("C", PtBr),
-        SaldoDevedorTotal = itens.Sum(i => i.Valor - i.ValorPago).ToString("C", PtBr),
-        Cobrancas = itens.Select(i => new CobrancaDetalheItemViewModel
-        {
-            CobrancaId = i.CobrancaId,
-            AlunoNome = i.AlunoNome,
-            AlunoCpf = null,
-            Descricao = i.Descricao,
-            Tipo = MapearTipo(i.Tipo),
-            Valor = i.Valor.ToString("C", PtBr),
-            ValorPago = i.ValorPago.ToString("C", PtBr),
-            SaldoDevedor = (i.Valor - i.ValorPago).ToString("C", PtBr),
-            DataEmissao = i.DataVencimento.AddMonths(-1).ToString("dd/MM/yyyy"),
-            DataVencimento = i.DataVencimento.ToString("dd/MM/yyyy"),
-            DataPagamento = i.ValorPago > 0 ? i.DataVencimento.ToString("dd/MM/yyyy") : null,
-            Status = MapearStatus(i.Status),
-            Observacoes = null,
-            Pagamentos = []
-        }).ToArray()
-    };
 
     public static CobrancaFormViewModel MapearFormularioCriacao(
         UnidadeAcessoResumo contexto,
@@ -340,14 +220,9 @@ public static class CobrancaViewModelMapper
         item.Valor.ToString("C", PtBr),
         item.ValorPago.ToString("C", PtBr),
         item.DataVencimento.ToString("dd/MM/yyyy"),
-        MapearStatus(item.Status));
-
-    private static PagamentoResumoViewModel MapearPagamento(PagamentoResumo pgto) => new(
-        pgto.PagamentoId,
-        pgto.Valor.ToString("C", PtBr),
-        pgto.DataPagamento.ToString("dd/MM/yyyy"),
-        MapearFormaPagamento(pgto.FormaPagamento),
-        pgto.Observacoes);
+        MapearStatus(item.Status),
+        item.Valor,
+        item.ValorPago);
 
     private static string MapearStatus(StatusCobranca status) => status switch
     {

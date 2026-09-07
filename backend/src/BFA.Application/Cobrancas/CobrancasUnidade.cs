@@ -60,14 +60,15 @@ public sealed record CriarCobrancaSolicitacao(
     DateOnly DataVencimento,
     string? Observacoes);
 
-public sealed record RegistrarPagamentoSolicitacao(
-    decimal Valor,
+public sealed record RegistrarPagamentoConsolidadoSolicitacao(
+    IReadOnlyList<Guid> CobrancaIds,
     DateOnly DataPagamento,
     FormaPagamento FormaPagamento,
     string? Observacoes);
 
 public sealed record FiltroCobrancas(
     Guid? AlunoId,
+    string? AlunoNome,
     StatusCobranca? Status,
     TipoCobranca? Tipo,
     DateOnly? DataVencimentoInicio,
@@ -115,9 +116,6 @@ public interface ICobrancasServico
     Task<EstadoCobrancas> CancelarAsync(
         Guid usuarioId, Guid unidadeId, Guid cobrancaId);
 
-    Task<(EstadoCobrancas Estado, PagamentoResumo? Pagamento)> RegistrarPagamentoAsync(
-        Guid usuarioId, Guid unidadeId, Guid cobrancaId, RegistrarPagamentoSolicitacao solicitacao);
-
     Task<(EstadoCobrancas Estado, IReadOnlyList<AlunoParaSelecao> Alunos)> ListarAlunosAsync(
         Guid usuarioId, Guid unidadeId);
 
@@ -126,4 +124,7 @@ public interface ICobrancasServico
 
     Task<(EstadoCobrancas Estado, IReadOnlyList<CobrancaListaItem> Itens)> ListarPorAlunoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId);
+
+    Task<(EstadoCobrancas Estado, IReadOnlyList<PagamentoResumo> Pagamentos)> RegistrarPagamentoConsolidadoAsync(
+        Guid usuarioId, Guid unidadeId, RegistrarPagamentoConsolidadoSolicitacao solicitacao);
 }

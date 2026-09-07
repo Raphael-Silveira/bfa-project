@@ -25,6 +25,7 @@ public sealed class CobrancasController(
     public async Task<IActionResult> Index(
         Guid unidadeId,
         [FromQuery] Guid? alunoId,
+        [FromQuery] string? alunoNome,
         [FromQuery] string? status,
         [FromQuery] string? tipo,
         [FromQuery] string? dataInicio,
@@ -33,34 +34,29 @@ public sealed class CobrancasController(
         [FromQuery] int? tamanhoPagina,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var culture = new CultureInfo("pt-BR");
-        var styles = DateTimeStyles.None;
-
-        var inicio = DateOnly.TryParseExact(dataInicio, "dd/MM/yyyy", culture, styles, out var d1)
-            ? d1 : hoje;
-        var fim = DateOnly.TryParseExact(dataFim, "dd/MM/yyyy", culture, styles, out var d2)
-            ? d2 : inicio;
+        var (inicio, fim) = ObterPeriodoConsulta(dataInicio, dataFim);
 
         var filtro = new FiltroCobrancas(
             alunoId,
+            alunoNome,
             ParseStatus(status),
             ParseTipo(tipo),
             inicio,
             fim);
 
         var (estado, itens) = await cobrancasServico.ListarAsync(
-            usuarioId, unidadeId, filtro);
+            usuario.UsuarioId, unidadeId, filtro);
 
         if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
             return NotFound();
         if (estado != EstadoCobrancas.Sucesso)
             return Forbid();
 
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
-        if (contexto is null) return Forbid();
+        var contexto = await ObterContextoOuForbidAsync(usuario.UsuarioId, unidadeId, cancellationToken);
+        if (contexto.Resultado is not null) return contexto.Resultado;
 
         var grupos = itens
             .GroupBy(i => i.AlunoId)
@@ -71,11 +67,8 @@ public sealed class CobrancasController(
             .OrderByDescending(g => g.DataVencimento)
             .ToList();
 
-        var tamanho = Math.Clamp(tamanhoPagina ?? 10, 5, 50);
         var totalItens = grupos.Count;
-        var paginaAtual = Math.Max(1, pagina ?? 1);
-        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanho);
-        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+        var (paginaAtual, tamanho) = ObterPaginacao(pagina, tamanhoPagina, totalItens);
 
         var gruposPagina = grupos
             .Skip((paginaAtual - 1) * tamanho)
@@ -83,7 +76,7 @@ public sealed class CobrancasController(
             .ToList();
 
         return View(CobrancaViewModelMapper.MapearListaAgrupada(
-            contexto, gruposPagina, alunoId, status, tipo,
+            contexto.Valor!, gruposPagina, alunoId, alunoNome, status, tipo,
             inicio, fim,
             paginaAtual, tamanho, totalItens));
     }
@@ -93,15 +86,16 @@ public sealed class CobrancasController(
         Guid unidadeId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
-        if (contexto is null) return Forbid();
+        var contexto = await ObterContextoOuForbidAsync(usuario.UsuarioId, unidadeId, cancellationToken);
+        if (contexto.Resultado is not null) return contexto.Resultado;
 
-        var (estado, alunos) = await cobrancasServico.ListarAlunosAsync(usuarioId, unidadeId);
+        var (estado, alunos) = await cobrancasServico.ListarAlunosAsync(usuario.UsuarioId, unidadeId);
         if (estado != EstadoCobrancas.Sucesso) return Forbid();
 
-        return View(CobrancaViewModelMapper.MapearFormularioCriacao(contexto, alunos));
+        return View(CobrancaViewModelMapper.MapearFormularioCriacao(contexto.Valor!, alunos));
     }
 
     [HttpPost("nova")]
@@ -111,17 +105,18 @@ public sealed class CobrancasController(
         CobrancaFormViewModel model,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
-        if (contexto is null) return Forbid();
+        var contexto = await ObterContextoOuForbidAsync(usuario.UsuarioId, unidadeId, cancellationToken);
+        if (contexto.Resultado is not null) return contexto.Resultado;
 
         if (!ModelState.IsValid)
         {
-            var (estadoAlunos, alunos) = await cobrancasServico.ListarAlunosAsync(usuarioId, unidadeId);
+            var (estadoAlunos, alunos) = await cobrancasServico.ListarAlunosAsync(usuario.UsuarioId, unidadeId);
             if (estadoAlunos != EstadoCobrancas.Sucesso) return Forbid();
 
-            return View(CobrancaViewModelMapper.ReconstituirFormularioCriacao(contexto, model, alunos));
+            return View(CobrancaViewModelMapper.ReconstituirFormularioCriacao(contexto.Valor!, model, alunos));
         }
 
         if (model.AlunoId is not { } alunoId
@@ -145,43 +140,20 @@ public sealed class CobrancasController(
             dataVencimento,
             model.Observacoes);
 
-        var (estado, item) = await cobrancasServico.CriarAsync(usuarioId, unidadeId, solicitacao);
+        var (estado, item) = await cobrancasServico.CriarAsync(usuario.UsuarioId, unidadeId, solicitacao);
 
         if (estado == EstadoCobrancas.DadosInvalidos)
         {
             ModelState.AddModelError(string.Empty, "Dados invalidos para criacao da cobranca.");
-            var (estadoAlunos, alunos) = await cobrancasServico.ListarAlunosAsync(usuarioId, unidadeId);
+            var (estadoAlunos, alunos) = await cobrancasServico.ListarAlunosAsync(usuario.UsuarioId, unidadeId);
             if (estadoAlunos != EstadoCobrancas.Sucesso) return Forbid();
-            return View(CobrancaViewModelMapper.ReconstituirFormularioCriacao(contexto, model, alunos));
+            return View(CobrancaViewModelMapper.ReconstituirFormularioCriacao(contexto.Valor!, model, alunos));
         }
 
         if (estado != EstadoCobrancas.Sucesso || item is null)
             return Forbid();
 
-        return RedirectToAction(nameof(Detalhes), new { unidadeId, cobrancaId = item.CobrancaId });
-    }
-
-    [HttpGet("detalhes/{cobrancaId:guid}")]
-    public async Task<IActionResult> Detalhes(
-        Guid unidadeId,
-        Guid cobrancaId,
-        CancellationToken cancellationToken)
-    {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
-
-        var (estado, detalhe) = await cobrancasServico.ObterAsync(usuarioId, unidadeId, cobrancaId);
-
-        if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
-            return NotFound();
-        if (estado == EstadoCobrancas.CobrancaNaoEncontrada)
-            return NotFound();
-        if (estado != EstadoCobrancas.Sucesso || detalhe is null)
-            return Forbid();
-
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
-        if (contexto is null) return Forbid();
-
-        return View(CobrancaViewModelMapper.MapearDetalhe(contexto, detalhe));
+        return RedirectToAction(nameof(DetalhesAluno), new { unidadeId, alunoId = item.AlunoId });
     }
 
     [HttpGet("detalhes/aluno/{alunoId:guid}")]
@@ -190,34 +162,22 @@ public sealed class CobrancasController(
         Guid alunoId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
-
-        var (estado, itens) = await cobrancasServico.ListarPorAlunoAsync(usuarioId, unidadeId, alunoId);
-
-        if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
-            return NotFound();
-        if (estado == EstadoCobrancas.CobrancaNaoEncontrada || itens.Count == 0)
-            return NotFound();
-        if (estado != EstadoCobrancas.Sucesso)
-            return Forbid();
-
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
-        if (contexto is null) return Forbid();
-
-        var alunoNome = itens.Count > 0 ? itens[0].AlunoNome : "Aluno";
-        return View("DetalhesAluno", CobrancaViewModelMapper.MapearDetalheAluno(contexto, alunoId, alunoNome, itens));
+        return RedirectToAction(nameof(Index), new { unidadeId, alunoId });
     }
 
     [HttpPost("cancelar/{cobrancaId:guid}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancelar(
         Guid unidadeId,
+        Guid alunoId,
         Guid cobrancaId,
+        string? returnUrl,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
-        var estado = await cobrancasServico.CancelarAsync(usuarioId, unidadeId, cobrancaId);
+        var estado = await cobrancasServico.CancelarAsync(usuario.UsuarioId, unidadeId, cobrancaId);
 
         if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
             return NotFound();
@@ -226,49 +186,7 @@ public sealed class CobrancasController(
         if (estado != EstadoCobrancas.Sucesso)
             return Forbid();
 
-        return RedirectToAction(nameof(Detalhes), new { unidadeId, cobrancaId });
-    }
-
-    [HttpPost("pagamento/{cobrancaId:guid}")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RegistrarPagamento(
-        Guid unidadeId,
-        Guid cobrancaId,
-        PagamentoFormViewModel model,
-        CancellationToken cancellationToken)
-    {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
-
-        if (!ModelState.IsValid)
-            return RedirectToAction(nameof(Detalhes), new { unidadeId, cobrancaId });
-
-        if (model.Valor is not { } valor
-            || model.DataPagamento is not { } dataPagamento
-            || model.FormaPagamento is not { } formaStr
-            || ParseFormaPagamento(formaStr) is not { } forma)
-        {
-            return BadRequest();
-        }
-
-        var solicitacao = new RegistrarPagamentoSolicitacao(
-            valor,
-            dataPagamento,
-            forma,
-            model.Observacoes);
-
-        var (estado, pagamento) = await cobrancasServico.RegistrarPagamentoAsync(
-            usuarioId, unidadeId, cobrancaId, solicitacao);
-
-        if (estado == EstadoCobrancas.CobrancaNaoPendente)
-        {
-            TempData["Erro"] = "Esta cobranca nao pode receber pagamentos.";
-        }
-        else if (estado == EstadoCobrancas.ValorExcedeSaldo)
-        {
-            TempData["Erro"] = "O valor informado excede o saldo devedor.";
-        }
-
-        return RedirectToAction(nameof(Detalhes), new { unidadeId, cobrancaId });
+        return RedirecionarParaOrigemOuIndex(returnUrl, unidadeId, alunoId);
     }
 
     [HttpGet("resumo")]
@@ -276,29 +194,113 @@ public sealed class CobrancasController(
         Guid unidadeId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
-        var (estado, resumo) = await cobrancasServico.ObterResumoFinanceiroAsync(usuarioId, unidadeId);
+        var (estado, resumo) = await cobrancasServico.ObterResumoFinanceiroAsync(usuario.UsuarioId, unidadeId);
 
         if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
             return NotFound();
         if (estado != EstadoCobrancas.Sucesso || resumo is null)
             return Forbid();
 
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
-        if (contexto is null) return Forbid();
+        var contexto = await ObterContextoOuForbidAsync(usuario.UsuarioId, unidadeId, cancellationToken);
+        if (contexto.Resultado is not null) return contexto.Resultado;
 
-        return View(CobrancaViewModelMapper.MapearResumoFinanceiro(contexto, resumo));
+        return View(CobrancaViewModelMapper.MapearResumoFinanceiro(contexto.Valor!, resumo));
     }
 
-    private async Task<UnidadeAcessoResumo?> ObterContextoAsync(
-        Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
+    [HttpPost("pagamento-consolidado/{alunoId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegistrarPagamentoConsolidado(
+        Guid unidadeId,
+        Guid alunoId,
+        IReadOnlyList<Guid> cobrancaIds,
+        DateOnly dataPagamento,
+        string formaPagamento,
+        string? observacoes,
+        string? returnUrl,
+        CancellationToken cancellationToken)
+    {
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
+
+        if (cobrancaIds == null || cobrancaIds.Count == 0)
+            return BadRequest("Nenhuma cobrança selecionada.");
+
+        if (dataPagamento == default)
+            return BadRequest("Data de pagamento inválida.");
+
+        if (ParseFormaPagamento(formaPagamento) is not { } forma)
+            return BadRequest("Forma de pagamento inválida.");
+
+        var solicitacao = new RegistrarPagamentoConsolidadoSolicitacao(
+            cobrancaIds,
+            dataPagamento,
+            forma,
+            observacoes);
+
+        var (estado, _) = await cobrancasServico.RegistrarPagamentoConsolidadoAsync(
+            usuario.UsuarioId, unidadeId, solicitacao);
+
+        if (estado == EstadoCobrancas.Falha)
+            TempData["Erro"] = "Não foi possível registrar o pagamento consolidado. Verifique se todas as cobranças estão pendentes e o valor não excede o saldo.";
+        else if (estado == EstadoCobrancas.DadosInvalidos)
+            TempData["Erro"] = "Dados inválidos para pagamento consolidado.";
+        else if (estado == EstadoCobrancas.Sucesso)
+            TempData["Sucesso"] = "Pagamento consolidado registrado com sucesso.";
+
+        return RedirecionarParaOrigemOuIndex(returnUrl, unidadeId, alunoId);
+    }
+
+    private async Task<(UnidadeAcessoResumo? Valor, IActionResult? Resultado)> ObterContextoOuForbidAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        CancellationToken cancellationToken)
     {
         var unidade = await unidadesUsuarioConsulta.ObterAdministradaAsync(
             usuarioId, unidadeId, cancellationToken);
 
-        return unidade;
+        return unidade is null ? (null, Forbid()) : (unidade, null);
     }
+
+    private static (DateOnly Inicio, DateOnly Fim) ObterPeriodoConsulta(
+        string? dataInicio,
+        string? dataFim)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var culture = CultureInfo.GetCultureInfo("pt-BR");
+        var styles = DateTimeStyles.None;
+
+        var inicio = DateOnly.TryParseExact(dataInicio, "dd/MM/yyyy", culture, styles, out var d1)
+            ? d1 : hoje;
+        var fim = DateOnly.TryParseExact(dataFim, "dd/MM/yyyy", culture, styles, out var d2)
+            ? d2 : inicio;
+
+        return (inicio, fim);
+    }
+
+    private static (int PaginaAtual, int TamanhoPagina) ObterPaginacao(
+        int? pagina,
+        int? tamanhoPagina,
+        int totalItens)
+    {
+        var tamanho = Math.Clamp(tamanhoPagina ?? 10, 5, 50);
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanho);
+
+        if (paginaAtual > totalPaginas && totalPaginas > 0)
+        {
+            paginaAtual = totalPaginas;
+        }
+
+        return (paginaAtual, tamanho);
+    }
+
+    private (Guid UsuarioId, IActionResult? Resultado) ObterUsuarioOuForbid() =>
+        usuarioAtual.UsuarioId is { } usuarioId
+            ? (usuarioId, null)
+            : (Guid.Empty, Forbid());
 
     private static StatusCobranca? ParseStatus(string? valor) => valor switch
     {
@@ -328,4 +330,12 @@ public sealed class CobrancasController(
         "Outros" => FormaPagamento.Outros,
         _ => null
     };
+
+    private IActionResult RedirecionarParaOrigemOuIndex(string? returnUrl, Guid unidadeId, Guid alunoId)
+    {
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            return LocalRedirect(returnUrl);
+
+        return RedirectToAction(nameof(Index), new { unidadeId, alunoId });
+    }
 }

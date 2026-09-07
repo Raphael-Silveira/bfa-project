@@ -1,7 +1,7 @@
 @using System.Globalization
 @using BFA.Web.ViewModels.Shared
 @model CobrancasListaViewModel
-@{
+@{ 
     ViewData["Title"] = "Financeiro";
     Layout = "_UnidadeLayout";
     var culture = new CultureInfo("pt-BR");
@@ -14,6 +14,37 @@
     var isSemana = Model.DataInicio == inicioSemana && Model.DataFim == fimSemana;
     var isMes = Model.DataInicio == inicioMes && Model.DataFim == fimMes;
     var isCustom = !isHoje && !isSemana && !isMes;
+
+    string MontarUrl(DateOnly inicio, DateOnly fim)
+    {
+        var qs = new List<string>
+        {
+            $"dataInicio={inicio:dd/MM/yyyy}",
+            $"dataFim={fim:dd/MM/yyyy}"
+        };
+
+        if (Model.AlunoId.HasValue)
+        {
+            qs.Add($"alunoId={Model.AlunoId.Value}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Model.AlunoNome))
+        {
+            qs.Add($"alunoNome={Uri.EscapeDataString(Model.AlunoNome)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Model.Status))
+        {
+            qs.Add($"status={Uri.EscapeDataString(Model.Status)}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Model.Tipo))
+        {
+            qs.Add($"tipo={Uri.EscapeDataString(Model.Tipo)}");
+        }
+
+        return $"/unidade/{Model.UnidadeId}/cobrancas?{string.Join("&", qs)}";
+    }
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-financeiro">
@@ -59,17 +90,17 @@
 
     <div class="bfa-quick-filters" aria-label="Períodos rápidos">
         <a class="bfa-chip @(isHoje ? "bfa-chip--active" : "")"
-           href="/unidade/@Model.UnidadeId/cobrancas?dataInicio=@hoje.ToString("dd/MM/yyyy")&dataFim=@hoje.ToString("dd/MM/yyyy")">Hoje</a>
+           href="@MontarUrl(hoje, hoje)">Hoje</a>
         <a class="bfa-chip @(isSemana ? "bfa-chip--active" : "")"
-           href="/unidade/@Model.UnidadeId/cobrancas?dataInicio=@inicioSemana.ToString("dd/MM/yyyy")&dataFim=@fimSemana.ToString("dd/MM/yyyy")">Esta semana</a>
+           href="@MontarUrl(inicioSemana, fimSemana)">Esta semana</a>
         <a class="bfa-chip @(isMes ? "bfa-chip--active" : "")"
-           href="/unidade/@Model.UnidadeId/cobrancas?dataInicio=@inicioMes.ToString("dd/MM/yyyy")&dataFim=@fimMes.ToString("dd/MM/yyyy")">Este mês</a>
+           href="@MontarUrl(inicioMes, fimMes)">Este mês</a>
         <span class="bfa-chip @(isCustom ? "bfa-chip--active" : "")" @(isCustom ? "" : "style=\"pointer-events:none;opacity:.5\"")>Personalizado</span>
     </div>
 
     <div class="bfa-filter-divider"></div>
 
-    <form class="bfa-period-filter" method="get" action="/unidade/@Model.UnidadeId/cobrancas">
+    <form class="bfa-period-filter bfa-cobrancas-filter-form" method="get" action="/unidade/@Model.UnidadeId/cobrancas">
         <input type="hidden" name="alunoId" value="@(Model.AlunoId?.ToString())" />
 
         <div class="bfa-field">
@@ -104,6 +135,66 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 </button>
             </div>
+        </div>
+
+        <div class="bfa-field">
+            <label for="filtro-status">Status</label>
+            <select id="filtro-status" name="status" class="form-select bfa-form-control">
+                @if (string.IsNullOrWhiteSpace(Model.Status))
+                {
+                    <option value="" selected>Todos</option>
+                }
+                else
+                {
+                    <option value="">Todos</option>
+                }
+
+                @if (Model.Status == "Pendente")
+                {
+                    <option value="Pendente" selected>Pendente</option>
+                }
+                else
+                {
+                    <option value="Pendente">Pendente</option>
+                }
+
+                @if (Model.Status == "Atrasada")
+                {
+                    <option value="Atrasada" selected>Atrasada</option>
+                }
+                else
+                {
+                    <option value="Atrasada">Atrasada</option>
+                }
+
+                @if (Model.Status == "Paga")
+                {
+                    <option value="Paga" selected>Paga</option>
+                }
+                else
+                {
+                    <option value="Paga">Paga</option>
+                }
+
+                @if (Model.Status == "Cancelada")
+                {
+                    <option value="Cancelada" selected>Cancelada</option>
+                }
+                else
+                {
+                    <option value="Cancelada">Cancelada</option>
+                }
+            </select>
+        </div>
+
+        <div class="bfa-field">
+            <label for="filtro-aluno">Aluno</label>
+            <input id="filtro-aluno"
+                   name="alunoNome"
+                   class="form-control bfa-form-control"
+                   type="text"
+                   value="@Model.AlunoNome"
+                   placeholder="Buscar por nome" />
         </div>
 
         <div class="bfa-filter-actions">
@@ -142,6 +233,9 @@ else
                 <tbody>
                 @foreach (var grupo in Model.Grupos)
                 {
+                    var cobrancasPendentes = grupo.Itens.Where(item => item.Status is "Pendente" or "Atrasada").ToArray();
+                    var podeConsolidar = cobrancasPendentes.Length > 0;
+                    var saldoConsolidado = cobrancasPendentes.Sum(item => item.ValorNumerico - item.ValorPagoNumerico);
                     var badgeClass = grupo.Status switch
                     {
                         "Pendente" => "bfa-data-badge--pending",
@@ -178,12 +272,15 @@ else
                         </td>
                         <td>
                             <div class="bfa-actions-cell">
-                                <a class="bfa-admin-button bfa-btn-secondary"
-                                   asp-area="Unidade"
-                                   asp-controller="Cobrancas"
-                                   asp-action="DetalhesAluno"
-                                   asp-route-unidadeId="@Model.UnidadeId"
-                                   asp-route-alunoId="@grupo.AlunoId">Detalhes</a>
+                                @if (podeConsolidar)
+                                {
+                                    <button type="button"
+                                            class="bfa-admin-button bfa-btn-secondary bfa-btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#pagamentoConsolidadoModal-@grupo.AlunoId">
+                                        Pagar consolidado
+                                    </button>
+                                }
                             </div>
                         </td>
                     </tr>
@@ -197,6 +294,7 @@ else
                                         <span>Valor</span>
                                         <span>Vencimento</span>
                                         <span>Status</span>
+                                        <span>Ações</span>
                                     </div>
                                     @foreach (var item in grupo.Itens)
                                     {
@@ -244,12 +342,32 @@ else
                                                     @item.Status
                                                 </span>
                                             </div>
+                                            <div class="bfa-cobranca-subgrid-row__acoes">
+                                                @if (item.PodeCancelar)
+                                                {
+                                                    <form asp-area="Unidade"
+                                                          asp-controller="Cobrancas"
+                                                          asp-action="Cancelar"
+                                                          asp-route-unidadeId="@Model.UnidadeId"
+                                                          asp-route-alunoId="@grupo.AlunoId"
+                                                          asp-route-cobrancaId="@item.CobrancaId"
+                                                          method="post"
+                                                          style="display:inline;">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="returnUrl" value="@(ViewContext.HttpContext.Request.Path + ViewContext.HttpContext.Request.QueryString)" />
+                                                        <button class="bfa-admin-button bfa-btn-secondary bfa-btn-sm"
+                                                                type="submit"
+                                                                onclick="return confirm('Tem certeza que deseja cancelar esta cobrança?')">Cancelar</button>
+                                                    </form>
+                                                }
+                                            </div>
                                         </div>
                                     }
                                 </div>
                             </div>
                         </td>
                     </tr>
+
                 }
                 </tbody>
             </table>
@@ -265,6 +383,7 @@ else
                 if (Model.Status is not null) qsParts.Add($"status={Model.Status}");
                 if (Model.Tipo is not null) qsParts.Add($"tipo={Model.Tipo}");
                 if (Model.AlunoId.HasValue) qsParts.Add($"alunoId={Model.AlunoId}");
+                if (!string.IsNullOrWhiteSpace(Model.AlunoNome)) qsParts.Add($"alunoNome={Uri.EscapeDataString(Model.AlunoNome)}");
                 var baseQs = string.Join("&", qsParts);
 
                 var paginacao = new PaginacaoViewModel
@@ -315,26 +434,23 @@ else
                     </div>
                 </div>
                 <div class="bfa-mobile-card__actions">
-                    @if (grupo.Itens.Count == 1)
+                    <button type="button" class="bfa-admin-button bfa-btn-secondary bfa-cobranca-mobile-toggle"
+                            data-grupo-toggle="@grupo.AlunoId">
+                        <span>Ver itens</span>
+                        <span class="bfa-mobile-toggle-count">@grupo.Itens.Count</span>
+                    </button>
+                    @if (grupo.Itens.Any(item => item.Status is "Pendente" or "Atrasada"))
                     {
-                        <a class="bfa-admin-button bfa-btn-secondary"
-                           asp-area="Unidade"
-                           asp-controller="Cobrancas"
-                           asp-action="Detalhes"
-                           asp-route-unidadeId="@Model.UnidadeId"
-                           asp-route-cobrancaId="@grupo.Itens[0].CobrancaId">Detalhes</a>
-                    }
-                    else
-                    {
-                        <button type="button" class="bfa-admin-button bfa-btn-secondary bfa-cobranca-mobile-toggle"
-                                data-grupo-toggle="@grupo.AlunoId">
-                            <span>Ver detalhes</span>
-                            <span class="bfa-mobile-toggle-count">@grupo.Itens.Count</span>
+                        <button type="button"
+                                class="bfa-admin-button bfa-btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#pagamentoConsolidadoModal-@grupo.AlunoId">
+                            Pagar consolidado
                         </button>
                     }
                 </div>
 
-                @if (grupo.Itens.Count > 1)
+                @if (grupo.Itens.Count > 0)
                 {
                     <div class="bfa-cobranca-mobile-itens" id="mobile-itens-@grupo.AlunoId" style="display:none;">
                         @foreach (var item in grupo.Itens)
@@ -359,12 +475,23 @@ else
                                     </span>
                                 </div>
                                 <div class="bfa-cobranca-item__acao">
-                                    <a class="bfa-admin-button bfa-btn-secondary bfa-btn-sm"
-                                       asp-area="Unidade"
-                                       asp-controller="Cobrancas"
-                                       asp-action="Detalhes"
-                                       asp-route-unidadeId="@Model.UnidadeId"
-                                       asp-route-cobrancaId="@item.CobrancaId">Detalhes</a>
+                                    @if (item.PodeCancelar)
+                                    {
+                                        <form asp-area="Unidade"
+                                              asp-controller="Cobrancas"
+                                              asp-action="Cancelar"
+                                              asp-route-unidadeId="@Model.UnidadeId"
+                                              asp-route-alunoId="@grupo.AlunoId"
+                                              asp-route-cobrancaId="@item.CobrancaId"
+                                              method="post"
+                                              style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="returnUrl" value="@(ViewContext.HttpContext.Request.Path + ViewContext.HttpContext.Request.QueryString)" />
+                                            <button class="bfa-admin-button bfa-btn-secondary bfa-btn-sm"
+                                                    type="submit"
+                                                    onclick="return confirm('Tem certeza que deseja cancelar esta cobrança?')">Cancelar</button>
+                                        </form>
+                                    }
                                 </div>
                             </div>
                         }
@@ -373,11 +500,275 @@ else
             </article>
         }
     </section>
+
+    @foreach (var grupo in Model.Grupos)
+    {
+        var cobrancasPendentes = grupo.Itens.Where(item => item.Status is "Pendente" or "Atrasada").ToArray();
+        if (cobrancasPendentes.Length == 0)
+        {
+            continue;
+        }
+
+        var saldoConsolidado = cobrancasPendentes.Sum(item => item.ValorNumerico - item.ValorPagoNumerico);
+        <div class="modal fade bfa-cobranca-modal" id="pagamentoConsolidadoModal-@grupo.AlunoId" tabindex="-1" aria-labelledby="pagamentoConsolidadoModalLabel-@grupo.AlunoId" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable bfa-cobranca-modal__dialog">
+                <div class="modal-content bfa-cobranca-modal__content">
+                    <form asp-area="Unidade"
+                          asp-controller="Cobrancas"
+                          asp-action="RegistrarPagamentoConsolidado"
+                          asp-route-unidadeId="@Model.UnidadeId"
+                          asp-route-alunoId="@grupo.AlunoId"
+                          method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="returnUrl" value="@(ViewContext.HttpContext.Request.Path + ViewContext.HttpContext.Request.QueryString)" />
+
+                        @foreach (var item in cobrancasPendentes)
+                        {
+                            <input type="hidden" name="cobrancaIds" value="@item.CobrancaId" />
+                        }
+
+                        <div class="modal-header bfa-cobranca-modal__header">
+                            <div>
+                                <p class="bfa-cobranca-modal__eyebrow">Financeiro da unidade</p>
+                                <h5 class="modal-title" id="pagamentoConsolidadoModalLabel-@grupo.AlunoId">Registrar pagamento consolidado</h5>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body bfa-cobranca-modal__body">
+                            <div class="bfa-cobranca-modal__intro" role="status">
+                                Serão quitadas as cobranças pendentes e atrasadas de @grupo.AlunoNome.
+                            </div>
+
+                            <div class="bfa-admin-card bfa-cobranca-modal__summary mb-3">
+                                <div class="bfa-cobranca-modal__summary-label">Total consolidado</div>
+                                <div class="bfa-cobranca-modal__summary-value">@saldoConsolidado.ToString("C", culture)</div>
+                            </div>
+
+                            <div class="bfa-admin-table-container bfa-cobranca-modal__table mb-3">
+                                <table class="bfa-admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Descrição</th>
+                                            <th>Valor</th>
+                                            <th>Vencimento</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in cobrancasPendentes)
+                                        {
+                                            <tr>
+                                                <td>@item.Descricao</td>
+                                                <td>@item.Valor</td>
+                                                <td>@item.DataVencimento</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="bfa-admin-form bfa-cobranca-modal__form">
+                                <div class="bfa-form-field">
+                                    <label class="bfa-form-label" for="pag-data-@grupo.AlunoId">Data do pagamento *</label>
+                                    <input class="form-control bfa-form-control"
+                                           id="pag-data-@grupo.AlunoId"
+                                           name="DataPagamento"
+                                           type="date"
+                                           value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                </div>
+
+                                <div class="bfa-form-field">
+                                    <label class="bfa-form-label" for="pag-forma-@grupo.AlunoId">Forma de pagamento *</label>
+                                    <select class="form-control bfa-form-control" id="pag-forma-@grupo.AlunoId" name="FormaPagamento">
+                                        <option value="">Selecione</option>
+                                        <option value="Dinheiro">Dinheiro</option>
+                                        <option value="Pix">Pix</option>
+                                        <option value="CartaoCredito">Cartão de Crédito</option>
+                                        <option value="CartaoDebito">Cartão de Débito</option>
+                                        <option value="Boleto">Boleto</option>
+                                        <option value="Transferencia">Transferência</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                </div>
+
+                                <div class="bfa-form-field">
+                                    <label class="bfa-form-label" for="pag-obs-@grupo.AlunoId">Observações</label>
+                                    <textarea class="form-control bfa-form-control"
+                                              id="pag-obs-@grupo.AlunoId"
+                                              name="Observacoes"
+                                              rows="2"
+                                              maxlength="500"
+                                              placeholder="Observações do pagamento (opcional)"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bfa-cobranca-modal__footer">
+                            <button type="button" class="bfa-btn-secondary bfa-admin-button" data-bs-dismiss="modal">Cancelar</button>
+                            <button class="bfa-btn-primary bfa-admin-button" type="submit">Confirmar pagamento consolidado</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
 }
 
 @section Styles {
 <style>
     .bfa-cobranca-itens td { padding: 0 !important; border-top: none !important; }
+
+    .bfa-cobrancas-filter-form {
+        grid-template-columns: minmax(11rem, 15rem) 1.75rem minmax(11rem, 15rem) minmax(11rem, 15rem) minmax(12rem, 16rem) auto;
+    }
+
+    .bfa-cobrancas-filter-form .bfa-field {
+        min-width: 0;
+    }
+
+    .bfa-cobrancas-filter-form .bfa-filter-actions {
+        align-self: end;
+    }
+
+    @@media (max-width: 56rem) {
+        .bfa-cobrancas-filter-form {
+            grid-template-columns: 1fr 1.75rem 1fr;
+        }
+
+        .bfa-cobrancas-filter-form .bfa-period-separator {
+            display: none;
+        }
+
+        .bfa-cobrancas-filter-form .bfa-field:nth-of-type(3),
+        .bfa-cobrancas-filter-form .bfa-field:nth-of-type(4) {
+            grid-column: 1 / -1;
+        }
+
+        .bfa-cobrancas-filter-form .bfa-filter-actions {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-cobrancas-filter-form {
+            grid-template-columns: 1fr;
+        }
+
+        .bfa-cobrancas-filter-form .bfa-period-separator {
+            display: none;
+        }
+
+        .bfa-cobrancas-filter-form .bfa-filter-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .bfa-cobranca-modal .modal-dialog {
+        width: min(760px, calc(100vw - 2rem));
+        max-width: none;
+    }
+
+    .bfa-cobranca-modal__content {
+        overflow: hidden;
+        color: #f7f7f7;
+        background: #1b1d20;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 2px solid #ffc107;
+        border-radius: var(--radius-lg);
+        box-shadow:
+            0 0 0 1px rgba(0, 0, 0, 0.3),
+            0 0.5rem 1rem rgba(0, 0, 0, 0.25),
+            0 1.5rem 3rem rgba(0, 0, 0, 0.35);
+    }
+
+    .bfa-cobranca-modal__header {
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .bfa-cobranca-modal__eyebrow {
+        margin: 0 0 0.35rem;
+        color: #ffc107;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .bfa-cobranca-modal__header .modal-title {
+        margin: 0;
+        color: #ffffff;
+        font-size: 0.98rem;
+        font-weight: 700;
+        letter-spacing: -0.015em;
+    }
+
+    .bfa-cobranca-modal__body {
+        padding: 1.125rem 1.5rem 1.25rem;
+    }
+
+    .bfa-cobranca-modal__intro {
+        margin-bottom: 1rem;
+        padding: 0.95rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.875rem;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.88);
+        line-height: 1.5;
+    }
+
+    .bfa-cobranca-modal__summary {
+        min-height: auto;
+        padding: 1rem 1.125rem;
+        background: linear-gradient(145deg, #1f2225, #16181a);
+    }
+
+    .bfa-cobranca-modal__summary-label {
+        margin-bottom: 0.35rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-cobranca-modal__summary-value {
+        color: #fff;
+        font-size: clamp(1.65rem, 4vw, 2rem);
+        font-weight: 800;
+        line-height: 1.05;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-cobranca-modal__table {
+        background: #17191c;
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .bfa-cobranca-modal__table .bfa-admin-table {
+        min-width: 0;
+    }
+
+    .bfa-cobranca-modal__form {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .bfa-cobranca-modal__form .bfa-form-field {
+        margin-bottom: 0;
+    }
+
+    .bfa-cobranca-modal__footer {
+        gap: 0.75rem;
+        padding: 1rem 1.5rem 1.25rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        background: rgba(0, 0, 0, 0.18);
+    }
+
+    .bfa-cobranca-modal__footer .bfa-admin-button {
+        min-width: 10rem;
+    }
 
     .bfa-cobranca-itens__lista {
         padding: 0.5rem 1rem 0.75rem 2.5rem;
@@ -393,7 +784,7 @@ else
 
     .bfa-cobranca-subgrid-header {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
         padding: 0.5rem 1rem;
         background: rgba(255,255,255,0.04);
         border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -406,7 +797,7 @@ else
 
     .bfa-cobranca-subgrid-row {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
         align-items: center;
         padding: 0.75rem 1rem;
         border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -415,6 +806,11 @@ else
 
     .bfa-cobranca-subgrid-row:last-child { border-bottom: none; }
     .bfa-cobranca-subgrid-row:hover { background: rgba(255,255,255,0.03); }
+
+    .bfa-cobranca-subgrid-row__acoes {
+        display: flex;
+        justify-content: flex-end;
+    }
 
     .bfa-cobranca-subgrid-row__tipo {
         display: flex; align-items: center; gap: 0.5rem;
@@ -479,6 +875,28 @@ else
         }
         .bfa-cobranca-subgrid-row__tipo { grid-column: 1 / -1; }
         .bfa-cobranca-subgrid-row__valor { text-align: left; grid-column: 1 / -1; }
+    }
+
+    @@media (max-width: 30rem) {
+        .bfa-cobranca-modal .modal-dialog {
+            width: calc(100vw - 1.5rem);
+        }
+
+        .bfa-cobranca-modal__header,
+        .bfa-cobranca-modal__body,
+        .bfa-cobranca-modal__footer {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .bfa-cobranca-modal__footer {
+            flex-direction: column-reverse;
+        }
+
+        .bfa-cobranca-modal__footer .bfa-admin-button {
+            width: 100%;
+            min-width: 0;
+        }
     }
 
     .bfa-cobranca-mobile-toggle {

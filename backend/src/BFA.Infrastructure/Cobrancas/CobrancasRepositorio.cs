@@ -43,6 +43,15 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
             .Where(a => a.OrganizacaoId == organizacaoId && alunoIds.Contains(a.Id))
             .ToDictionaryAsync(a => a.Id, cancellationToken);
 
+        var alunoNome = filtro.AlunoNome?.Trim();
+        if (!string.IsNullOrWhiteSpace(alunoNome))
+        {
+            cobrancas = cobrancas
+                .Where(c => alunos.TryGetValue(c.AlunoId, out var aluno)
+                         && aluno.NomeCompleto.Contains(alunoNome, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
         return cobrancas.Select(c => new CobrancaListaItem(
             c.Id,
             c.AlunoId,
@@ -133,13 +142,6 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
             .FirstOrDefaultAsync(p => p.OrganizacaoId == organizacaoId
                                    && p.CobrancaId == cobrancaId
                                    && p.Id == pagamentoId, cancellationToken);
-    }
-
-    public async Task<bool> RegistrarPagamentoAsync(Pagamento pagamento, CancellationToken cancellationToken)
-    {
-        dbContext.Pagamentos.Add(pagamento);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return true;
     }
 
     public async Task<IReadOnlyList<AlunoParaSelecao>> ListarAlunosAsync(
@@ -339,5 +341,62 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
             c.ValorPago,
             c.DataVencimento,
             c.Status)).ToArray();
+    }
+
+    public async Task<IReadOnlyList<PagamentoResumo>> RegistrarPagamentoConsolidadoAsync(
+        Guid organizacaoId, Guid unidadeId, IReadOnlyList<Guid> cobrancaIds,
+        DateOnly dataPagamento, FormaPagamento formaPagamento, string? observacoes,
+        Guid usuarioId, DateTime agora, CancellationToken cancellationToken)
+    {
+        var cobrancas = await dbContext.Cobrancas
+            .Where(c => c.OrganizacaoId == organizacaoId
+                     && c.UnidadeId == unidadeId
+                     && cobrancaIds.Contains(c.Id))
+            .ToListAsync(cancellationToken);
+
+        if (cobrancas.Count != cobrancaIds.Count)
+            return [];
+
+        var pendentes = cobrancas.Where(c => c.Status == StatusCobranca.Pendente || c.Status == StatusCobranca.Atrasada).ToList();
+        if (pendentes.Count != cobrancas.Count)
+            return [];
+
+        var saldoTotal = pendentes.Sum(c => c.SaldoDevedor);
+        if (saldoTotal <= 0)
+            return [];
+
+        var pagamentos = new List<Pagamento>();
+        var valorRestante = saldoTotal;
+
+        foreach (var cobranca in pendentes.OrderBy(c => c.DataVencimento))
+        {
+            var valorParaEsta = Math.Min(cobranca.SaldoDevedor, valorRestante);
+            if (valorParaEsta <= 0) continue;
+
+            var pagamento = new Pagamento(
+                Guid.NewGuid(),
+                organizacaoId,
+                unidadeId,
+                cobranca.Id,
+                valorParaEsta,
+                dataPagamento,
+                formaPagamento,
+                usuarioId,
+                agora);
+
+            cobranca.RegistrarPagamento(valorParaEsta, agora);
+            pagamentos.Add(pagamento);
+            valorRestante -= valorParaEsta;
+        }
+
+        dbContext.Pagamentos.AddRange(pagamentos);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return pagamentos.Select(p => new PagamentoResumo(
+            p.Id,
+            p.Valor,
+            p.DataPagamento,
+            p.FormaPagamento,
+            p.Observacoes)).ToArray();
     }
 }
