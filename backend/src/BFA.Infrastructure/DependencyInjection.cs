@@ -42,6 +42,8 @@ using BFA.Infrastructure.Usuarios;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -214,6 +216,32 @@ public static class DependencyInjection
         services.AddScoped<ILocalidadesSincronizacaoServico,
             LocalidadesSincronizacaoServico>();
         services.AddSingleton(TimeProvider.System);
+
+        var hangfireEnabled = configuration.GetValue<bool>("Hangfire:Enabled");
+        var connectionString = configuration.GetConnectionString(DatabaseConnectionName);
+
+        if (hangfireEnabled
+            && !string.IsNullOrWhiteSpace(connectionString)
+            && !connectionString.Contains("not-used"))
+        {
+            var storageOptions = new PostgreSqlStorageOptions
+            {
+                PrepareSchemaIfNecessary = false
+            };
+
+            services.AddHangfire(config =>
+            {
+#pragma warning disable CS0618
+                config.UsePostgreSqlStorage(connectionString,
+                    connectionSetup: null,
+                    options: storageOptions);
+#pragma warning restore CS0618
+            });
+
+            services.AddHangfireServer();
+        }
+
+        services.AddScoped<GeracaoCobrancasJob>();
 
         return services;
     }

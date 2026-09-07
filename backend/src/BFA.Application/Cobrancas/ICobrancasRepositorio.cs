@@ -34,4 +34,17 @@ public interface ICobrancasRepositorio
     Task<ResumoFinanceiro> ObterResumoAsync(
         Guid organizacaoId, Guid unidadeId,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<MatriculaParaGeracao>> ListarMatriculasAtivasParaGeracaoAsync(
+        CancellationToken cancellationToken);
+
+    Task<bool> ExisteMensalidadeNoMesAsync(
+        Guid matriculaId, int ano, int mes,
+        CancellationToken cancellationToken);
+
+    Task<bool> ExisteTaxaMatriculaAsync(
+        Guid matriculaId,
+        CancellationToken cancellationToken);
+
+    Task<int> MarcarAtrasadasAsync(CancellationToken cancellationToken);
 }

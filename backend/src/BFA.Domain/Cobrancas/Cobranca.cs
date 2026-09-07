@@ -19,7 +19,7 @@ public sealed class Cobranca
         decimal valor,
         DateOnly dataEmissao,
         DateOnly dataVencimento,
-        Guid criadoPorUsuarioId,
+        Guid? criadoPorUsuarioId,
         DateTime criadoEmUtc)
     {
         ValidarIdentificador(id, nameof(id));
@@ -27,7 +27,6 @@ public sealed class Cobranca
         ValidarIdentificador(unidadeId, nameof(unidadeId));
         ValidarIdentificador(alunoId, nameof(alunoId));
         ValidarIdentificador(matriculaId, nameof(matriculaId));
-        ValidarIdentificador(criadoPorUsuarioId, nameof(criadoPorUsuarioId));
 
         if (string.IsNullOrWhiteSpace(descricao))
             throw new ArgumentException("A descricao deve ser informada.", nameof(descricao));
@@ -89,9 +88,9 @@ public sealed class Cobranca
 
     public string? Observacoes { get; private set; }
 
-    public Guid CriadoPorUsuarioId { get; private set; }
+    public Guid? CriadoPorUsuarioId { get; private set; }
 
-    public Guid AtualizadoPorUsuarioId { get; private set; }
+    public Guid? AtualizadoPorUsuarioId { get; private set; }
 
     public DateTime CriadoEmUtc { get; private set; }
 
@@ -104,6 +103,15 @@ public sealed class Cobranca
 
         Status = StatusCobranca.Cancelada;
         AtualizadoPorUsuarioId = usuarioId;
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
+    public void MarcarComoAtrasada(DateTime atualizadoEmUtc)
+    {
+        if (Status != StatusCobranca.Pendente)
+            return;
+
+        Status = StatusCobranca.Atrasada;
         AtualizadoEmUtc = atualizadoEmUtc;
     }
 

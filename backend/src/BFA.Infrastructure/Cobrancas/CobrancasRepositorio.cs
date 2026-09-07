@@ -207,4 +207,103 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
             cobrancasAtrasadas,
             alunosComDebito);
     }
+
+    public async Task<IReadOnlyList<MatriculaParaGeracao>> ListarMatriculasAtivasParaGeracaoAsync(
+        CancellationToken cancellationToken)
+    {
+        var matriculas = await dbContext.Matriculas.AsNoTracking()
+            .Where(m => m.Status == Domain.Matriculas.StatusMatricula.Ativa)
+            .ToListAsync(cancellationToken);
+
+        if (matriculas.Count == 0)
+            return [];
+
+        var alunoIds = matriculas.Select(m => m.AlunoId).Distinct().ToList();
+        var alunos = await dbContext.Alunos.AsNoTracking()
+            .Where(a => alunoIds.Contains(a.Id))
+            .ToDictionaryAsync(a => a.Id, cancellationToken);
+
+        var planoVersaoIds = matriculas.Select(m => m.PlanoVersaoId).Distinct().ToList();
+        var planoVersoes = await dbContext.PlanosVersoes.AsNoTracking()
+            .Where(pv => planoVersaoIds.Contains(pv.Id))
+            .ToDictionaryAsync(pv => pv.Id, cancellationToken);
+
+        var planos = await dbContext.Planos.AsNoTracking()
+            .Where(p => planoVersoes.Values.Select(pv => pv.PlanoId).Distinct().Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, cancellationToken);
+
+        return matriculas
+            .Where(m => alunos.ContainsKey(m.AlunoId) && planoVersoes.ContainsKey(m.PlanoVersaoId))
+            .Select(m =>
+            {
+                var planoVersao = planoVersoes[m.PlanoVersaoId];
+                var plano = planos.TryGetValue(planoVersao.PlanoId, out var p)
+                    ? p
+                    : null;
+                var aluno = alunos[m.AlunoId];
+
+                return new MatriculaParaGeracao(
+                    m.OrganizacaoId,
+                    m.UnidadeId,
+                    m.AlunoId,
+                    aluno.NomeCompleto,
+                    m.Id,
+                    m.PlanoVersaoId,
+                    plano?.Nome ?? "Plano nao encontrado",
+                    m.DataInicio,
+                    m.DataFimPrevista,
+                    m.ValorMensalContratado,
+                    m.CobraTaxaMatricula,
+                    m.ValorTaxaMatricula);
+            })
+            .ToList();
+    }
+
+    public async Task<bool> ExisteMensalidadeNoMesAsync(
+        Guid matriculaId, int ano, int mes,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Cobrancas.AsNoTracking()
+            .AnyAsync(c => c.MatriculaId == matriculaId
+                        && c.Tipo == TipoCobranca.Mensalidade
+                        && c.DataVencimento.Year == ano
+                        && c.DataVencimento.Month == mes
+                        && c.Status != StatusCobranca.Cancelada,
+                       cancellationToken);
+    }
+
+    public async Task<bool> ExisteTaxaMatriculaAsync(
+        Guid matriculaId,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Cobrancas.AsNoTracking()
+            .AnyAsync(c => c.MatriculaId == matriculaId
+                        && c.Tipo == TipoCobranca.Matricula
+                        && c.Status != StatusCobranca.Cancelada,
+                       cancellationToken);
+    }
+
+    public async Task<int> MarcarAtrasadasAsync(CancellationToken cancellationToken)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var cobrancasAtrasadas = await dbContext.Cobrancas
+            .Where(c => c.Status == StatusCobranca.Pendente
+                     && c.DataVencimento < hoje)
+            .ToListAsync(cancellationToken);
+
+        if (cobrancasAtrasadas.Count == 0)
+            return 0;
+
+        var agora = DateTime.UtcNow;
+
+        foreach (var cobranca in cobrancasAtrasadas)
+        {
+            cobranca.MarcarComoAtrasada(agora);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return cobrancasAtrasadas.Count;
+    }
 }

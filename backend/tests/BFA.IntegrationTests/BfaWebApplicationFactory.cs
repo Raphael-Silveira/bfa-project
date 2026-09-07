@@ -20,6 +20,7 @@ public class BfaWebApplicationFactory : WebApplicationFactory<Program>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:BfaDatabase"] = "Host=not-used;Database=not-used",
+                ["Hangfire:Enabled"] = "false",
                 ["Logging:EventLog:LogLevel:Default"] = "None"
             });
         });

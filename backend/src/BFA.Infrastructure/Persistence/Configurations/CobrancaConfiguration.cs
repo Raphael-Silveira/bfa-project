@@ -62,10 +62,12 @@ public sealed class CobrancaConfiguration : IEntityTypeConfiguration<Cobranca>
             .HasColumnName("observacoes");
 
         builder.Property(c => c.CriadoPorUsuarioId)
-            .HasColumnName("criado_por_usuario_id");
+            .HasColumnName("criado_por_usuario_id")
+            .IsRequired(false);
 
         builder.Property(c => c.AtualizadoPorUsuarioId)
-            .HasColumnName("atualizado_por_usuario_id");
+            .HasColumnName("atualizado_por_usuario_id")
+            .IsRequired(false);
 
         builder.Property(c => c.CriadoEmUtc)
             .HasColumnName("criado_em_utc");

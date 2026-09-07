@@ -87,6 +87,20 @@ public sealed record AlunoParaSelecao(
     string? Cpf,
     Guid MatriculaId);
 
+public sealed record MatriculaParaGeracao(
+    Guid OrganizacaoId,
+    Guid UnidadeId,
+    Guid AlunoId,
+    string AlunoNome,
+    Guid MatriculaId,
+    Guid PlanoVersaoId,
+    string PlanoNome,
+    DateOnly DataInicio,
+    DateOnly DataFimPrevista,
+    decimal ValorMensalContratado,
+    bool CobraTaxaMatricula,
+    decimal? ValorTaxaMatricula);
+
 public interface ICobrancasServico
 {
     Task<(EstadoCobrancas Estado, IReadOnlyList<CobrancaListaItem> Itens)> ListarAsync(

@@ -1,9 +1,11 @@
 using BFA.Infrastructure;
+using BFA.Infrastructure.Cobrancas;
 using BFA.Web;
 using BFA.Web.Bootstrap;
 using BFA.Web.Franqueados;
 using BFA.Web.Infrastructure;
 using BFA.Web.Localidades;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,6 +56,39 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+var hangfireEnabled = builder.Configuration.GetValue<bool>("Hangfire:Enabled");
+
+if (hangfireEnabled)
+{
+    var hangfireConfigured = app.Services.GetService<IRecurringJobManager>() is not null;
+
+    if (hangfireConfigured)
+    {
+        app.UseHangfireDashboard("/hangfire", new DashboardOptions
+        {
+            DashboardTitle = "BFA - Jobs"
+        });
+
+        RecurringJob.AddOrUpdate<GeracaoCobrancasJob>(
+            "gerar-mensalidades",
+            job => job.GerarMensalidadesAsync(CancellationToken.None),
+            Cron.Daily,
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time")
+            });
+
+        RecurringJob.AddOrUpdate<GeracaoCobrancasJob>(
+            "marcar-atrasadas",
+            job => job.MarcarAtrasadasAsync(CancellationToken.None),
+            Cron.Daily,
+            new RecurringJobOptions
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time")
+            });
+    }
+}
 
 app.MapStaticAssets();
 app.MapControllers();
