@@ -178,15 +178,12 @@ else
                         </td>
                         <td>
                             <div class="bfa-actions-cell">
-                                @if (grupo.Itens.Count == 1)
-                                {
-                                    <a class="bfa-admin-button bfa-btn-secondary"
-                                       asp-area="Unidade"
-                                       asp-controller="Cobrancas"
-                                       asp-action="Detalhes"
-                                       asp-route-unidadeId="@Model.UnidadeId"
-                                       asp-route-cobrancaId="@grupo.Itens[0].CobrancaId">Detalhes</a>
-                                }
+                                <a class="bfa-admin-button bfa-btn-secondary"
+                                   asp-area="Unidade"
+                                   asp-controller="Cobrancas"
+                                   asp-action="Detalhes"
+                                   asp-route-unidadeId="@Model.UnidadeId"
+                                   asp-route-alunoId="@grupo.AlunoId">Detalhes</a>
                             </div>
                         </td>
                     </tr>
@@ -200,7 +197,6 @@ else
                                         <span>Valor</span>
                                         <span>Vencimento</span>
                                         <span>Status</span>
-                                        <span></span>
                                     </div>
                                     @foreach (var item in grupo.Itens)
                                     {
@@ -247,14 +243,6 @@ else
                                                     <i class="bfa-data-badge__dot"></i>
                                                     @item.Status
                                                 </span>
-                                            </div>
-                                            <div class="bfa-cobranca-subgrid-row__acoes">
-                                                <a class="bfa-admin-button bfa-btn-secondary bfa-btn-sm"
-                                                   asp-area="Unidade"
-                                                   asp-controller="Cobrancas"
-                                                   asp-action="Detalhes"
-                                                   asp-route-unidadeId="@Model.UnidadeId"
-                                                   asp-route-cobrancaId="@item.CobrancaId">Detalhes</a>
                                             </div>
                                         </div>
                                     }
@@ -405,7 +393,7 @@ else
 
     .bfa-cobranca-subgrid-header {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
         padding: 0.5rem 1rem;
         background: rgba(255,255,255,0.04);
         border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -418,7 +406,7 @@ else
 
     .bfa-cobranca-subgrid-row {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
         align-items: center;
         padding: 0.75rem 1rem;
         border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -491,7 +479,6 @@ else
         }
         .bfa-cobranca-subgrid-row__tipo { grid-column: 1 / -1; }
         .bfa-cobranca-subgrid-row__valor { text-align: left; grid-column: 1 / -1; }
-        .bfa-cobranca-subgrid-row__acoes { text-align: left; grid-column: 1 / -1; }
     }
 
     .bfa-cobranca-mobile-toggle {
