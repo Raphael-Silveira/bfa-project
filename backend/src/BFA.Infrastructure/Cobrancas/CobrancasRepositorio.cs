@@ -306,4 +306,38 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
 
         return cobrancasAtrasadas.Count;
     }
+
+    public async Task<IReadOnlyList<CobrancaListaItem>> ListarPorAlunoAsync(
+        Guid organizacaoId, Guid unidadeId, Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        var cobrancas = await dbContext.Cobrancas.AsNoTracking()
+            .Where(c => c.OrganizacaoId == organizacaoId
+                     && c.UnidadeId == unidadeId
+                     && c.AlunoId == alunoId)
+            .OrderByDescending(c => c.DataVencimento)
+            .ThenByDescending(c => c.CriadoEmUtc)
+            .ToListAsync(cancellationToken);
+
+        if (cobrancas.Count == 0)
+            return [];
+
+        var aluno = await dbContext.Alunos.AsNoTracking()
+            .Where(a => a.OrganizacaoId == organizacaoId && a.Id == alunoId)
+            .Select(a => a.NomeCompleto)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var alunoNome = aluno ?? "Aluno não encontrado";
+
+        return cobrancas.Select(c => new CobrancaListaItem(
+            c.Id,
+            c.AlunoId,
+            alunoNome,
+            c.Descricao,
+            c.Tipo,
+            c.Valor,
+            c.ValorPago,
+            c.DataVencimento,
+            c.Status)).ToArray();
+    }
 }

@@ -52,6 +52,21 @@ public sealed record CobrancaResumoViewModel(
     string DataVencimento,
     string Status);
 
+public sealed class CobrancaDetalheAlunoViewModel : IUnidadeContextoViewModel
+{
+    public required Guid OrganizacaoId { get; init; }
+    public required Guid UnidadeId { get; init; }
+    public required string NomeUnidade { get; init; }
+    public required bool PodeTrocarUnidade { get; init; }
+    public required bool PodeGerenciar { get; init; }
+    public required Guid AlunoId { get; init; }
+    public required string AlunoNome { get; init; }
+    public required string ValorTotal { get; init; }
+    public required string ValorPagoTotal { get; init; }
+    public required string SaldoDevedorTotal { get; init; }
+    public required IReadOnlyList<CobrancaDetalheItemViewModel> Cobrancas { get; init; } = [];
+}
+
 public sealed class CobrancaDetalheViewModel : IUnidadeContextoViewModel
 {
     public required Guid OrganizacaoId { get; init; }
@@ -225,6 +240,41 @@ public static class CobrancaViewModelMapper
             Observacoes = detalhe.Observacoes,
             Pagamentos = detalhe.Pagamentos.Select(MapearPagamento).ToArray()
         }
+    };
+
+    public static CobrancaDetalheAlunoViewModel MapearDetalheAluno(
+        UnidadeAcessoResumo contexto,
+        Guid alunoId,
+        string alunoNome,
+        IReadOnlyList<CobrancaListaItem> itens) => new()
+    {
+        OrganizacaoId = contexto.OrganizacaoId,
+        UnidadeId = contexto.UnidadeId,
+        NomeUnidade = contexto.Nome,
+        PodeTrocarUnidade = false,
+        PodeGerenciar = true,
+        AlunoId = alunoId,
+        AlunoNome = alunoNome,
+        ValorTotal = itens.Sum(i => i.Valor).ToString("C", PtBr),
+        ValorPagoTotal = itens.Sum(i => i.ValorPago).ToString("C", PtBr),
+        SaldoDevedorTotal = itens.Sum(i => i.Valor - i.ValorPago).ToString("C", PtBr),
+        Cobrancas = itens.Select(i => new CobrancaDetalheItemViewModel
+        {
+            CobrancaId = i.CobrancaId,
+            AlunoNome = i.AlunoNome,
+            AlunoCpf = null,
+            Descricao = i.Descricao,
+            Tipo = MapearTipo(i.Tipo),
+            Valor = i.Valor.ToString("C", PtBr),
+            ValorPago = i.ValorPago.ToString("C", PtBr),
+            SaldoDevedor = (i.Valor - i.ValorPago).ToString("C", PtBr),
+            DataEmissao = i.DataVencimento.AddMonths(-1).ToString("dd/MM/yyyy"),
+            DataVencimento = i.DataVencimento.ToString("dd/MM/yyyy"),
+            DataPagamento = i.ValorPago > 0 ? i.DataVencimento.ToString("dd/MM/yyyy") : null,
+            Status = MapearStatus(i.Status),
+            Observacoes = null,
+            Pagamentos = []
+        }).ToArray()
     };
 
     public static CobrancaFormViewModel MapearFormularioCriacao(

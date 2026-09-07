@@ -184,6 +184,30 @@ public sealed class CobrancasController(
         return View(CobrancaViewModelMapper.MapearDetalhe(contexto, detalhe));
     }
 
+    [HttpGet("detalhes/aluno/{alunoId:guid}")]
+    public async Task<IActionResult> DetalhesAluno(
+        Guid unidadeId,
+        Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+
+        var (estado, itens) = await cobrancasServico.ListarPorAlunoAsync(usuarioId, unidadeId, alunoId);
+
+        if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
+            return NotFound();
+        if (estado == EstadoCobrancas.CobrancaNaoEncontrada || itens.Count == 0)
+            return NotFound();
+        if (estado != EstadoCobrancas.Sucesso)
+            return Forbid();
+
+        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        if (contexto is null) return Forbid();
+
+        var alunoNome = itens.Count > 0 ? itens[0].AlunoNome : "Aluno";
+        return View("DetalhesAluno", CobrancaViewModelMapper.MapearDetalheAluno(contexto, alunoId, alunoNome, itens));
+    }
+
     [HttpPost("cancelar/{cobrancaId:guid}")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancelar(

@@ -123,4 +123,7 @@ public interface ICobrancasServico
 
     Task<(EstadoCobrancas Estado, ResumoFinanceiro? Resumo)> ObterResumoFinanceiroAsync(
         Guid usuarioId, Guid unidadeId);
+
+    Task<(EstadoCobrancas Estado, IReadOnlyList<CobrancaListaItem> Itens)> ListarPorAlunoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId);
 }

@@ -31,6 +31,10 @@ public interface ICobrancasRepositorio
         Guid organizacaoId, Guid unidadeId,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<CobrancaListaItem>> ListarPorAlunoAsync(
+        Guid organizacaoId, Guid unidadeId, Guid alunoId,
+        CancellationToken cancellationToken);
+
     Task<ResumoFinanceiro> ObterResumoAsync(
         Guid organizacaoId, Guid unidadeId,
         CancellationToken cancellationToken);

@@ -43,6 +43,22 @@ public sealed class CobrancasServico(
         return (EstadoCobrancas.Sucesso, detalhe);
     }
 
+    public async Task<(EstadoCobrancas Estado, IReadOnlyList<CobrancaListaItem> Itens)> ListarPorAlunoAsync(
+        Guid usuarioId, Guid unidadeId, Guid alunoId)
+    {
+        var contexto = await ObterContextoAsync(usuarioId, unidadeId);
+        if (contexto.Estado != EstadoCobrancas.Sucesso)
+            return (contexto.Estado, []);
+
+        if (alunoId == Guid.Empty)
+            return (EstadoCobrancas.CobrancaNaoEncontrada, []);
+
+        var itens = await repositorio.ListarPorAlunoAsync(
+            contexto.Valor!.OrganizacaoId, unidadeId, alunoId, CancellationToken.None);
+
+        return (EstadoCobrancas.Sucesso, itens);
+    }
+
     public async Task<(EstadoCobrancas Estado, CobrancaListaItem? Item)> CriarAsync(
         Guid usuarioId, Guid unidadeId, CriarCobrancaSolicitacao solicitacao)
     {
