@@ -114,7 +114,7 @@
     </form>
 </section>
 
-@if (Model.Cobrancas.Count == 0)
+@if (Model.Grupos.Count == 0)
 {
     <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
@@ -128,59 +128,137 @@ else
 {
     <div class="bfa-data-card bfa-admin-desktop-list">
         <div class="bfa-table-wrap">
-            <table>
+            <table class="bfa-cobranca-table">
                 <thead>
                     <tr>
+                        <th class="bfa-cobranca-table__toggle-col"></th>
                         <th>Aluno</th>
-                        <th>Descrição</th>
-                        <th>Tipo</th>
-                        <th>Valor</th>
-                        <th>Pago</th>
+                        <th>Valor Total</th>
                         <th>Vencimento</th>
                         <th>Status</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                @foreach (var cobranca in Model.Cobrancas)
+                @foreach (var grupo in Model.Grupos)
                 {
-                    <tr>
-                        <td>
-                            <div class="bfa-data-primary">@cobranca.AlunoNome</div>
+                    var badgeClass = grupo.Status switch
+                    {
+                        "Pendente" => "bfa-data-badge--pending",
+                        "Paga" => "bfa-data-badge--active",
+                        "Atrasada" => "bfa-data-badge--overdue",
+                        "Cancelada" => "bfa-data-badge--inactive",
+                        _ => ""
+                    };
+
+                    <tr class="bfa-cobranca-grupo" data-grupo-id="@grupo.AlunoId">
+                        <td class="bfa-cobranca-table__toggle-col">
+                            <button type="button" class="bfa-cobranca-toggle" aria-expanded="false"
+                                    aria-controls="itens-@grupo.AlunoId"
+                                    data-grupo-toggle="@grupo.AlunoId"
+                                    data-count="@grupo.Itens.Count">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
                         </td>
-                        <td>@cobranca.Descricao</td>
-                        <td>@cobranca.Tipo</td>
                         <td>
-                            <div class="bfa-data-primary">@cobranca.Valor</div>
-                        </td>
-                        <td>@cobranca.ValorPago</td>
-                        <td>
-                            <div class="bfa-data-primary">@cobranca.DataVencimento</div>
+                            <div class="bfa-data-primary">@grupo.AlunoNome</div>
+                            <div class="bfa-data-secondary">@grupo.Itens.Count cobrança(s)</div>
                         </td>
                         <td>
-                            @{
-                                var badgeClass = cobranca.Status switch
-                                {
-                                    "Pendente" => "bfa-data-badge--pending",
-                                    "Paga" => "bfa-data-badge--active",
-                                    "Atrasada" => "bfa-data-badge--overdue",
-                                    "Cancelada" => "bfa-data-badge--inactive",
-                                    _ => ""
-                                };
-                            }
+                            <div class="bfa-data-primary">@grupo.ValorTotal</div>
+                        </td>
+                        <td>
+                            <div class="bfa-data-primary">@grupo.DataVencimento</div>
+                        </td>
+                        <td>
                             <span class="bfa-data-badge @badgeClass">
                                 <i class="bfa-data-badge__dot"></i>
-                                @cobranca.Status
+                                @grupo.Status
                             </span>
                         </td>
                         <td>
                             <div class="bfa-actions-cell">
-                                <a class="bfa-admin-button bfa-btn-secondary"
-                                   asp-area="Unidade"
-                                   asp-controller="Cobrancas"
-                                   asp-action="Detalhes"
-                                   asp-route-unidadeId="@Model.UnidadeId"
-                                   asp-route-cobrancaId="@cobranca.CobrancaId">Detalhes</a>
+                                @if (grupo.Itens.Count == 1)
+                                {
+                                    <a class="bfa-admin-button bfa-btn-secondary"
+                                       asp-area="Unidade"
+                                       asp-controller="Cobrancas"
+                                       asp-action="Detalhes"
+                                       asp-route-unidadeId="@Model.UnidadeId"
+                                       asp-route-cobrancaId="@grupo.Itens[0].CobrancaId">Detalhes</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="bfa-cobranca-itens" id="itens-@grupo.AlunoId" style="display:none;">
+                        <td colspan="6">
+                            <div class="bfa-cobranca-itens__lista">
+                                <div class="bfa-cobranca-subgrid">
+                                    <div class="bfa-cobranca-subgrid-header">
+                                        <span>Descrição</span>
+                                        <span>Valor</span>
+                                        <span>Vencimento</span>
+                                        <span>Status</span>
+                                        <span></span>
+                                    </div>
+                                    @foreach (var item in grupo.Itens)
+                                    {
+                                        var itemBadgeClass = item.Status switch
+                                        {
+                                            "Pendente" => "bfa-data-badge--pending",
+                                            "Paga" => "bfa-data-badge--active",
+                                            "Atrasada" => "bfa-data-badge--overdue",
+                                            "Cancelada" => "bfa-data-badge--inactive",
+                                            _ => ""
+                                        };
+                                        var tipoIconClass = item.Tipo switch
+                                        {
+                                            "Mensalidade" => "bfa-cobranca-tipo-icon--mensalidade",
+                                            "Matricula" => "bfa-cobranca-tipo-icon--matricula",
+                                            "Avulso" => "bfa-cobranca-tipo-icon--avulso",
+                                            _ => ""
+                                        };
+                                        var tipoLetra = item.Tipo switch
+                                        {
+                                            "Mensalidade" => "M",
+                                            "Matricula" => "T",
+                                            "Avulso" => "A",
+                                            _ => "?"
+                                        };
+                                        <div class="bfa-cobranca-subgrid-row">
+                                            <div class="bfa-cobranca-subgrid-row__tipo">
+                                                <span class="bfa-cobranca-tipo-icon @tipoIconClass">@tipoLetra</span>
+                                                <div class="bfa-cobranca-subgrid-row__info">
+                                                    <span class="bfa-cobranca-subgrid-row__descricao">@item.Descricao</span>
+                                                    <span class="bfa-cobranca-subgrid-row__sub">@item.Tipo</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="bfa-cobranca-subgrid-row__valor">@item.Valor</div>
+                                                @if (item.ValorPago != "R$ 0,00")
+                                                {
+                                                    <div class="bfa-cobranca-subgrid-row__pago">Pago: @item.ValorPago</div>
+                                                }
+                                            </div>
+                                            <div class="bfa-cobranca-subgrid-row__vencimento">@item.DataVencimento</div>
+                                            <div>
+                                                <span class="bfa-data-badge bfa-data-badge--small @itemBadgeClass">
+                                                    <i class="bfa-data-badge__dot"></i>
+                                                    @item.Status
+                                                </span>
+                                            </div>
+                                            <div class="bfa-cobranca-subgrid-row__acoes">
+                                                <a class="bfa-admin-button bfa-btn-secondary bfa-btn-sm"
+                                                   asp-area="Unidade"
+                                                   asp-controller="Cobrancas"
+                                                   asp-action="Detalhes"
+                                                   asp-route-unidadeId="@Model.UnidadeId"
+                                                   asp-route-cobrancaId="@item.CobrancaId">Detalhes</a>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -211,15 +289,15 @@ else
                     BaseQueryString = baseQs
                 };
             }
-            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> cobranças</div>
+            <div>Mostrando <strong>@primeiroIndice–@ultimoIndice</strong> de <strong>@Model.TotalItens</strong> alunos</div>
             <partial name="_Paginacao" model="paginacao" />
         </div>
     </div>
 
     <section class="bfa-mobile-card-list" aria-label="Cobranças da unidade">
-        @foreach (var cobranca in Model.Cobrancas)
+        @foreach (var grupo in Model.Grupos)
         {
-            var badgeClass = cobranca.Status switch
+            var badgeClass = grupo.Status switch
             {
                 "Pendente" => "bfa-data-badge--pending",
                 "Paga" => "bfa-data-badge--active",
@@ -230,40 +308,261 @@ else
             <article class="bfa-mobile-card">
                 <div class="bfa-mobile-card__head">
                     <div>
-                        <div class="bfa-data-primary">@cobranca.AlunoNome</div>
-                        <div class="bfa-data-secondary">@cobranca.Descricao</div>
+                        <div class="bfa-data-primary">@grupo.AlunoNome</div>
+                        <div class="bfa-data-secondary">@grupo.Itens.Count cobrança(s)</div>
                     </div>
                     <span class="bfa-data-badge @badgeClass">
                         <i class="bfa-data-badge__dot"></i>
-                        @cobranca.Status
+                        @grupo.Status
                     </span>
                 </div>
                 <div class="bfa-mobile-card__grid">
                     <div>
-                        <span class="bfa-mobile-card__label">Tipo</span>
-                        <div>@cobranca.Tipo</div>
-                    </div>
-                    <div>
-                        <span class="bfa-mobile-card__label">Valor</span>
-                        <div>@cobranca.Valor</div>
-                        <div class="bfa-data-secondary">Pago: @cobranca.ValorPago</div>
+                        <span class="bfa-mobile-card__label">Valor Total</span>
+                        <div>@grupo.ValorTotal</div>
                     </div>
                     <div>
                         <span class="bfa-mobile-card__label">Vencimento</span>
-                        <div>@cobranca.DataVencimento</div>
+                        <div>@grupo.DataVencimento</div>
                     </div>
                 </div>
                 <div class="bfa-mobile-card__actions">
-                    <a class="bfa-admin-button bfa-btn-secondary"
-                       asp-area="Unidade"
-                       asp-controller="Cobrancas"
-                       asp-action="Detalhes"
-                       asp-route-unidadeId="@Model.UnidadeId"
-                       asp-route-cobrancaId="@cobranca.CobrancaId">Detalhes</a>
+                    @if (grupo.Itens.Count == 1)
+                    {
+                        <a class="bfa-admin-button bfa-btn-secondary"
+                           asp-area="Unidade"
+                           asp-controller="Cobrancas"
+                           asp-action="Detalhes"
+                           asp-route-unidadeId="@Model.UnidadeId"
+                           asp-route-cobrancaId="@grupo.Itens[0].CobrancaId">Detalhes</a>
+                    }
+                    else
+                    {
+                        <button type="button" class="bfa-admin-button bfa-btn-secondary bfa-cobranca-mobile-toggle"
+                                data-grupo-toggle="@grupo.AlunoId">
+                            <span>Ver detalhes</span>
+                            <span class="bfa-mobile-toggle-count">@grupo.Itens.Count</span>
+                        </button>
+                    }
                 </div>
+
+                @if (grupo.Itens.Count > 1)
+                {
+                    <div class="bfa-cobranca-mobile-itens" id="mobile-itens-@grupo.AlunoId" style="display:none;">
+                        @foreach (var item in grupo.Itens)
+                        {
+                            var itemBadgeClass = item.Status switch
+                            {
+                                "Pendente" => "bfa-data-badge--pending",
+                                "Paga" => "bfa-data-badge--active",
+                                "Atrasada" => "bfa-data-badge--overdue",
+                                "Cancelada" => "bfa-data-badge--inactive",
+                                _ => ""
+                            };
+                            <div class="bfa-cobranca-item bfa-cobranca-item--mobile">
+                                <div class="bfa-cobranca-item__info">
+                                    <span class="bfa-cobranca-item__descricao">@item.Descricao</span>
+                                </div>
+                                <div class="bfa-cobranca-item__valores">
+                                    <span class="bfa-cobranca-item__valor">@item.Valor</span>
+                                    <span class="bfa-data-badge bfa-data-badge--small @itemBadgeClass">
+                                        <i class="bfa-data-badge__dot"></i>
+                                        @item.Status
+                                    </span>
+                                </div>
+                                <div class="bfa-cobranca-item__acao">
+                                    <a class="bfa-admin-button bfa-btn-secondary bfa-btn-sm"
+                                       asp-area="Unidade"
+                                       asp-controller="Cobrancas"
+                                       asp-action="Detalhes"
+                                       asp-route-unidadeId="@Model.UnidadeId"
+                                       asp-route-cobrancaId="@item.CobrancaId">Detalhes</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
             </article>
         }
     </section>
+}
+
+@section Styles {
+<style>
+    .bfa-cobranca-itens td { padding: 0 !important; border-top: none !important; }
+
+    .bfa-cobranca-itens__lista {
+        padding: 0.5rem 1rem 0.75rem 2.5rem;
+        display: flex; flex-direction: column; gap: 0;
+    }
+
+    .bfa-cobranca-subgrid {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .bfa-cobranca-subgrid-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--bfa-gray);
+    }
+
+    .bfa-cobranca-subgrid-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        transition: background .12s;
+    }
+
+    .bfa-cobranca-subgrid-row:last-child { border-bottom: none; }
+    .bfa-cobranca-subgrid-row:hover { background: rgba(255,255,255,0.03); }
+
+    .bfa-cobranca-subgrid-row__tipo {
+        display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .bfa-cobranca-tipo-icon {
+        width: 1.75rem; height: 1.75rem;
+        border-radius: 0.375rem;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.75rem; font-weight: 700;
+    }
+
+    .bfa-cobranca-tipo-icon--mensalidade {
+        background: rgba(59,130,246,0.18); color: #60a5fa;
+    }
+
+    .bfa-cobranca-tipo-icon--matricula {
+        background: rgba(168,85,247,0.18); color: #c084fc;
+    }
+
+    .bfa-cobranca-tipo-icon--avulso {
+        background: rgba(234,179,8,0.18); color: #facc15;
+    }
+
+    .bfa-cobranca-subgrid-row__info {
+        display: flex; flex-direction: column; gap: 0.125rem; min-width: 0;
+    }
+
+    .bfa-cobranca-subgrid-row__descricao {
+        font-size: 0.8125rem; font-weight: 500; color: var(--bfa-white);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .bfa-cobranca-subgrid-row__sub {
+        font-size: 0.6875rem; color: var(--bfa-gray);
+    }
+
+    .bfa-cobranca-subgrid-row__valor {
+        font-size: 0.875rem; font-weight: 600; color: var(--bfa-white);
+        text-align: right;
+    }
+
+    .bfa-cobranca-subgrid-row__pago {
+        font-size: 0.6875rem; color: #4ade80; text-align: right;
+    }
+
+    .bfa-cobranca-subgrid-row__vencimento {
+        font-size: 0.8125rem; color: var(--bfa-white); text-align: right;
+    }
+
+    .bfa-cobranca-subgrid-row__acoes {
+        text-align: right; padding-left: 0.75rem;
+    }
+
+    @@media (max-width: 768px) {
+        .bfa-cobranca-subgrid-header { display: none; }
+        .bfa-cobranca-subgrid-row {
+            grid-template-columns: auto 1fr;
+            gap: 0.375rem 0.625rem;
+            padding: 0.625rem 0.75rem;
+        }
+        .bfa-cobranca-subgrid-row__tipo { grid-column: 1 / -1; }
+        .bfa-cobranca-subgrid-row__valor { text-align: left; grid-column: 1 / -1; }
+        .bfa-cobranca-subgrid-row__acoes { text-align: left; grid-column: 1 / -1; }
+    }
+
+    .bfa-cobranca-mobile-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .bfa-mobile-toggle-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        padding: 0 0.375rem;
+        border-radius: 999px;
+        background: var(--bfa-gold);
+        color: var(--bfa-black);
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    /* Toggle button styling */
+    .bfa-cobranca-table__toggle-col { width: 3rem; }
+
+    .bfa-cobranca-toggle {
+        display: flex; align-items: center; justify-content: center;
+        width: 2rem; height: 2rem;
+        border: none; border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+        color: var(--bfa-gray);
+        cursor: pointer;
+        transition: background .15s, color .15s, transform .15s;
+        position: relative;
+    }
+
+    .bfa-cobranca-toggle::after {
+        content: attr(data-count);
+        position: absolute; top: -0.25rem; right: -0.25rem;
+        min-width: 1.125rem; height: 1.125rem; padding: 0 0.25rem;
+        border-radius: 999px; background: var(--bfa-gold); color: var(--bfa-black);
+        font-size: 0.625rem; font-weight: 700; line-height: 1.125rem; text-align: center;
+        opacity: 0; transform: scale(0.5);
+        transition: opacity .15s, transform .15s;
+    }
+
+    .bfa-cobranca-toggle[data-count]:not([data-count="0"])::after {
+        opacity: 1; transform: scale(1);
+    }
+
+    .bfa-cobranca-toggle:hover {
+        background: var(--bfa-gold); color: var(--bfa-black);
+    }
+
+    .bfa-cobranca-toggle:hover::after {
+        background: var(--bfa-black); color: var(--bfa-gold);
+    }
+
+    .bfa-cobranca-toggle svg { width: 0.875rem; height: 0.875rem; transition: transform .2s ease, stroke .15s; stroke: currentColor; }
+
+    .bfa-cobranca-grupo--open .bfa-cobranca-toggle {
+        background: var(--bfa-gold); color: var(--bfa-black);
+    }
+
+    .bfa-cobranca-grupo--open .bfa-cobranca-toggle svg { transform: rotate(90deg); }
+    .bfa-cobranca-grupo--open .bfa-cobranca-toggle::after {
+        background: var(--bfa-black); color: var(--bfa-gold);
+    }
+</style>
 }
 
 @section Scripts {
@@ -271,6 +570,25 @@ else
     <script>
         document.querySelectorAll('[data-bfa-date-field]').forEach(function (el) {
             BFADateField.init(el);
+        });
+
+        document.querySelectorAll('[data-grupo-toggle]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var grupoId = this.getAttribute('data-grupo-toggle');
+                var itensRow = document.getElementById('itens-' + grupoId);
+                var mobileItens = document.getElementById('mobile-itens-' + grupoId);
+                var expanded = this.getAttribute('aria-expanded') === 'true';
+
+                if (itensRow) {
+                    itensRow.style.display = expanded ? 'none' : '';
+                }
+                if (mobileItens) {
+                    mobileItens.style.display = expanded ? 'none' : '';
+                }
+
+                this.setAttribute('aria-expanded', !expanded);
+                this.closest('tr, .bfa-mobile-card')?.classList.toggle('bfa-cobranca-grupo--open', !expanded);
+            });
         });
     </script>
 }

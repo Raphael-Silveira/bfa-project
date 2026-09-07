@@ -62,19 +62,28 @@ public sealed class CobrancasController(
         var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
         if (contexto is null) return Forbid();
 
+        var grupos = itens
+            .GroupBy(i => i.AlunoId)
+            .Select(g => CobrancaViewModelMapper.MapearGrupo(
+                g.Key,
+                g.First().AlunoNome,
+                g.OrderByDescending(i => i.DataVencimento).ToList()))
+            .OrderByDescending(g => g.DataVencimento)
+            .ToList();
+
         var tamanho = Math.Clamp(tamanhoPagina ?? 10, 5, 50);
-        var totalItens = itens.Count;
+        var totalItens = grupos.Count;
         var paginaAtual = Math.Max(1, pagina ?? 1);
         var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanho);
         if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
 
-        var itensPagina = itens
+        var gruposPagina = grupos
             .Skip((paginaAtual - 1) * tamanho)
             .Take(tamanho)
             .ToList();
 
-        return View(CobrancaViewModelMapper.MapearLista(
-            contexto, itensPagina, alunoId, status, tipo,
+        return View(CobrancaViewModelMapper.MapearListaAgrupada(
+            contexto, gruposPagina, alunoId, status, tipo,
             inicio, fim,
             paginaAtual, tamanho, totalItens));
     }

@@ -3,6 +3,7 @@ using BFA.Application.Unidades;
 using BFA.Domain.Cobrancas;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace BFA.Web.ViewModels.Unidade;
 
@@ -13,7 +14,7 @@ public sealed class CobrancasListaViewModel : IUnidadeContextoViewModel
     public required string NomeUnidade { get; init; }
     public required bool PodeTrocarUnidade { get; init; }
     public required bool PodeGerenciar { get; init; }
-    public IReadOnlyList<CobrancaResumoViewModel> Cobrancas { get; init; } = [];
+    public IReadOnlyList<CobrancaGrupoAlunoViewModel> Grupos { get; init; } = [];
 
     [BindProperty(SupportsGet = true)]
     public Guid? AlunoId { get; init; }
@@ -34,9 +35,16 @@ public sealed class CobrancasListaViewModel : IUnidadeContextoViewModel
         || AlunoId.HasValue;
 }
 
+public sealed record CobrancaGrupoAlunoViewModel(
+    Guid AlunoId,
+    string AlunoNome,
+    string ValorTotal,
+    string DataVencimento,
+    string Status,
+    IReadOnlyList<CobrancaResumoViewModel> Itens);
+
 public sealed record CobrancaResumoViewModel(
     Guid CobrancaId,
-    string AlunoNome,
     string Descricao,
     string Tipo,
     string Valor,
@@ -134,9 +142,11 @@ public sealed class PagamentoFormViewModel
 
 public static class CobrancaViewModelMapper
 {
-    public static CobrancasListaViewModel MapearLista(
+    private static readonly CultureInfo PtBr = new("pt-BR");
+
+    public static CobrancasListaViewModel MapearListaAgrupada(
         UnidadeAcessoResumo contexto,
-        IReadOnlyList<CobrancaListaItem> itens,
+        IReadOnlyList<CobrancaGrupoAlunoViewModel> grupos,
         Guid? alunoId,
         string? status,
         string? tipo,
@@ -151,7 +161,7 @@ public static class CobrancaViewModelMapper
         NomeUnidade = contexto.Nome,
         PodeTrocarUnidade = false,
         PodeGerenciar = true,
-        Cobrancas = itens.Select(MapearResumo).ToArray(),
+        Grupos = grupos,
         AlunoId = alunoId,
         Status = status,
         Tipo = tipo,
@@ -161,6 +171,33 @@ public static class CobrancaViewModelMapper
         TamanhoPagina = tamanhoPagina,
         TotalItens = totalItens
     };
+
+    public static CobrancaGrupoAlunoViewModel MapearGrupo(
+        Guid alunoId, string alunoNome, IReadOnlyList<CobrancaListaItem> itens)
+    {
+        var valorTotal = itens.Sum(i => i.Valor);
+        var dataVencimento = itens.Min(i => i.DataVencimento);
+        var status = ObterPiorStatus(itens);
+
+        return new CobrancaGrupoAlunoViewModel(
+            alunoId,
+            alunoNome,
+            valorTotal.ToString("C", PtBr),
+            dataVencimento.ToString("dd/MM/yyyy"),
+            MapearStatus(status),
+            itens.Select(MapearResumo).ToArray());
+    }
+
+    private static StatusCobranca ObterPiorStatus(IReadOnlyList<CobrancaListaItem> itens)
+    {
+        if (itens.Any(i => i.Status == StatusCobranca.Atrasada))
+            return StatusCobranca.Atrasada;
+        if (itens.Any(i => i.Status == StatusCobranca.Pendente))
+            return StatusCobranca.Pendente;
+        if (itens.Any(i => i.Status == StatusCobranca.Paga))
+            return StatusCobranca.Paga;
+        return StatusCobranca.Cancelada;
+    }
 
     public static CobrancaDetalheViewModel MapearDetalhe(
         UnidadeAcessoResumo contexto,
@@ -178,9 +215,9 @@ public static class CobrancaViewModelMapper
             AlunoCpf = detalhe.AlunoCpf,
             Descricao = detalhe.Descricao,
             Tipo = MapearTipo(detalhe.Tipo),
-            Valor = detalhe.Valor.ToString("C"),
-            ValorPago = detalhe.ValorPago.ToString("C"),
-            SaldoDevedor = detalhe.SaldoDevedor.ToString("C"),
+            Valor = detalhe.Valor.ToString("C", PtBr),
+            ValorPago = detalhe.ValorPago.ToString("C", PtBr),
+            SaldoDevedor = detalhe.SaldoDevedor.ToString("C", PtBr),
             DataEmissao = detalhe.DataEmissao.ToString("dd/MM/yyyy"),
             DataVencimento = detalhe.DataVencimento.ToString("dd/MM/yyyy"),
             DataPagamento = detalhe.DataPagamento?.ToString("dd/MM/yyyy"),
@@ -238,9 +275,9 @@ public static class CobrancaViewModelMapper
         NomeUnidade = contexto.Nome,
         PodeTrocarUnidade = false,
         PodeGerenciar = true,
-        TotalReceita = resumo.TotalReceita.ToString("C"),
-        TotalPendente = resumo.TotalPendente.ToString("C"),
-        TotalAtrasado = resumo.TotalAtrasado.ToString("C"),
+        TotalReceita = resumo.TotalReceita.ToString("C", PtBr),
+        TotalPendente = resumo.TotalPendente.ToString("C", PtBr),
+        TotalAtrasado = resumo.TotalAtrasado.ToString("C", PtBr),
         CobrancasPendentes = resumo.CobrancasPendentes,
         CobrancasAtrasadas = resumo.CobrancasAtrasadas,
         TotalAlunosComDebito = resumo.TotalAlunosComDebito
@@ -248,17 +285,16 @@ public static class CobrancaViewModelMapper
 
     private static CobrancaResumoViewModel MapearResumo(CobrancaListaItem item) => new(
         item.CobrancaId,
-        item.AlunoNome,
         item.Descricao,
         MapearTipo(item.Tipo),
-        item.Valor.ToString("C"),
-        item.ValorPago.ToString("C"),
+        item.Valor.ToString("C", PtBr),
+        item.ValorPago.ToString("C", PtBr),
         item.DataVencimento.ToString("dd/MM/yyyy"),
         MapearStatus(item.Status));
 
     private static PagamentoResumoViewModel MapearPagamento(PagamentoResumo pgto) => new(
         pgto.PagamentoId,
-        pgto.Valor.ToString("C"),
+        pgto.Valor.ToString("C", PtBr),
         pgto.DataPagamento.ToString("dd/MM/yyyy"),
         MapearFormaPagamento(pgto.FormaPagamento),
         pgto.Observacoes);
