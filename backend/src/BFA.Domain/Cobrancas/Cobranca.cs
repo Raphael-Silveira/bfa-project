@@ -78,6 +78,8 @@ public sealed class Cobranca
 
     public decimal ValorPago { get; private set; }
 
+    public decimal SaldoDevedor => Valor - ValorPago;
+
     public DateOnly DataEmissao { get; private set; }
 
     public DateOnly DataVencimento { get; private set; }
@@ -120,6 +122,22 @@ public sealed class Cobranca
         Observacoes = observacoes?.Trim();
         AtualizadoPorUsuarioId = usuarioId;
         AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
+    public void RegistrarPagamento(decimal valor, DateTime atualizadoEmUtc)
+    {
+        if (Status is StatusCobranca.Paga or StatusCobranca.Cancelada)
+            throw new InvalidOperationException("Cobrança já paga ou cancelada não pode receber pagamento.");
+
+        var saldo = Valor - ValorPago;
+        if (valor > saldo + 0.005m)
+            throw new InvalidOperationException("Valor do pagamento excede o saldo devedor.");
+
+        ValorPago += valor;
+        AtualizadoEmUtc = atualizadoEmUtc;
+
+        if (ValorPago >= Valor - 0.005m)
+            Status = StatusCobranca.Paga;
     }
 
     private static void ValidarIdentificador(Guid valor, string parametro)

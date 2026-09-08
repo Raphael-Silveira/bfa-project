@@ -1,8 +1,10 @@
 # BFA Platform
 
-Fundação técnica da plataforma da BFA — Brazilian Footvolley Academy, uma rede de franquias de futevôlei. O backend começa como um monólito modular em .NET 10, com MVC e Razor Views no mesmo host que futuramente exporá a API para o aplicativo do aluno.
+Plataforma operacional da BFA — Brazilian Footvolley Academy, uma rede de franquias de futevôlei. O backend é um monólito modular em .NET 10, com MVC e Razor Views no mesmo host que também expõe a API sob `/api/v1`.
 
-Esta etapa contém somente a fundação técnica. Ainda não há módulos de negócio, autenticação, tabelas ou conexão com banco de dados.
+O código é a fonte de verdade. As docs acompanham o estado real do repositório e precisam ser mantidas em sincronia com ele.
+
+Hoje o sistema já cobre franqueadora, operação de unidade, área do professor e área do aluno. Professor e Aluno ainda estão em transição de escopo/UX, mas já existem como áreas funcionais.
 
 ## Estrutura do monorepo
 
@@ -69,8 +71,15 @@ Em Development, configure `ConnectionStrings:BfaDatabase` com .NET User Secrets.
 
 ## PostgreSQL e evolução de schema
 
-Entity Framework Core com Npgsql é usado apenas para persistência em runtime dentro de `BFA.Infrastructure`. `BfaDbContext` é registrado por `AddInfrastructure` e ainda não possui `DbSet`.
+Entity Framework Core com Npgsql é usado apenas para persistência em runtime dentro de `BFA.Infrastructure`. O schema é versionado por SQL manual em `database/migrations/`; a aplicação nunca executa `EnsureCreated`, `EnsureDeleted` ou `Database.Migrate` na inicialização.
 
-A aplicação nunca executará `EnsureCreated`, `EnsureDeleted` ou `Database.Migrate` na inicialização. O deploy da aplicação e o deploy do schema são operações separadas.
+O deploy da aplicação e o deploy do schema são operações separadas.
+
+## Estado atual
+
+- Foco principal: operação da unidade.
+- Área do aluno: implementada, mas ainda em transição de escopo.
+- Área do professor: implementada, ainda em transição.
+- UI administrativa: padronizada por `docs/UI-ADMIN-STANDARDS.md`.
 
 Leia `AGENTS.md` e `docs/ARCHITECTURE.md` antes de implementar novas funcionalidades.

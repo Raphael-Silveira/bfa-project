@@ -29,7 +29,7 @@ As regras visuais e os elementos de marca permanecem exclusivamente em seus docu
 
 ## 2. Visão geral do produto
 
-A plataforma atende, progressivamente, a Franqueadora e seus administradores de rede, Franqueados, administradores de Unidade, Professores, Alunos e Responsáveis. Cada público possui responsabilidades e experiências próprias dentro da mesma rede:
+A plataforma atende, progressivamente, a Franqueadora e seus administradores de rede, Franqueados, administradores de Unidade, Professores, Alunos e Responsáveis. O foco atual é a operação da unidade; as áreas do Professor e do Aluno já existem, mas seguem em transição de escopo/UX. Cada público possui responsabilidades e experiências próprias dentro da mesma rede:
 
 ```text
 Organização / Rede BFA
@@ -170,7 +170,7 @@ cobrança ou pagamento automaticamente.
 
 ## 7. Professor
 
-`Professor` será uma entidade de negócio própria e poderá possuir um `UsuarioIdentity` associado quando precisar acessar o sistema.
+`Professor` é uma entidade de negócio própria e já possui uma área operacional inicial no produto, podendo também possuir um `UsuarioIdentity` associado quando precisar acessar o sistema.
 
 Sua experiência prevista inclui:
 
@@ -186,7 +186,7 @@ O perfil `Professor` não concede, por padrão, acesso administrativo global à 
 
 ## 8. Aluno
 
-`Aluno` será uma entidade de negócio própria. Poderá possuir um `UsuarioIdentity` associado para acessar a Área do Aluno, mas não deve ser tratado apenas como um usuário do Identity.
+`Aluno` é uma entidade de negócio própria e já possui uma Área do Aluno inicial no produto. A experiência do aluno segue em transição, mas não deve ser tratada apenas como um usuário do Identity.
 
 Sua experiência prevista inclui:
 

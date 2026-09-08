@@ -56,6 +56,10 @@ BFA starts as one modular monolith and one deployable web process.
 
 The web app and future API share the same business core.
 
+### 1.1 Estado atual do `BFA.Web`
+
+O `BFA.Web` está coerente com ajustes: usa shell compartilhado, separa responsabilidades por `Areas`, mantém controllers finos na maior parte dos fluxos e não coloca acesso a banco dentro das Views. Os pontos que ainda merecem revisão fina estão registrados em `docs/WEB-ARCHITECTURE-CHECKLIST.md`.
+
 ---
 
 ## 2. Solution

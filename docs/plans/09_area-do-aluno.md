@@ -2,7 +2,7 @@
 
 ## Status
 
-**Concluído**
+**Concluído, com evolução de UX/escopo ainda em transição**
 
 ## Objetivo
 
@@ -10,10 +10,10 @@ Implementar a **Área do Aluno** — portal self-service onde o aluno acessa seu
 
 ## Contexto Atual
 
-- Área Aluno existe como esqueleto vazio (`.gitkeep` apenas)
+- Área Aluno já está implementada no código e segue em transição de UX/escopo
 - `PerfilAcesso.Aluno` (valor 4) já existe no enum
 - `Aluno.UsuarioId` vincula o aluno ao Identity (login possível)
-- `DestinoPosLogin` NÃO redireciona alunos (caem em `/acesso-negado`)
+- `DestinoPosLogin` já redireciona alunos para a área apropriada
 - Domain层 completo: Aluno, Matricula, Aula, Presenca, Cobranca, Pagamento
 - Services admin existem (AlunosServico, MatriculasServico, etc.) — reutilizáveis read-only
 
@@ -152,6 +152,8 @@ Implementar a **Área do Aluno** — portal self-service onde o aluno acessa seu
 ## 7. Resultado
 
 **Concluído em:** 2026-09-04
+
+**Observação atual:** a área está entregue, mas a experiência continua em refinamento para se alinhar ao restante do produto.
 
 ### Arquivos Criados
 - `backend/src/BFA.Web/Areas/Aluno/Controllers/AlunoController.cs`

@@ -52,20 +52,13 @@ public sealed class ContratosController(
             return Conflict("O vínculo comercial está inativo.");
         }
 
-        var dataInicio = DateOnly.FromDateTime(DateTime.Today);
-        var model = new ContratoFranquiaFormViewModel
-        {
-            FranqueadoId = franqueadoId,
-            FranqueadoNome = painel.Valor.Contexto.FranqueadoNome,
-            UnidadeId = unidadeId,
-            UnidadeNome = painel.Valor.Contexto.UnidadeNome,
-            NumeroVersao = 1,
-            DataInicio = dataInicio,
-            DataInicioTexto = dataInicio.ToString("dd/MM/yyyy", CulturaPtBr),
-            PercentualRoyalties = "0,00",
-            MensalidadeFixa = "0,00"
-        };
-        return View("Formulario", model);
+        return View(
+            "Formulario",
+            CriarFormularioNovo(
+                franqueadoId,
+                unidadeId,
+                painel.Valor.Contexto.FranqueadoNome,
+                painel.Valor.Contexto.UnidadeNome));
     }
 
     [HttpPost("novo")]
@@ -85,13 +78,14 @@ public sealed class ContratosController(
             return await ExibirFormularioAsync(model, cancellationToken);
         }
 
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         var resultado = await servico.CriarAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             solicitacao!,
@@ -151,13 +145,14 @@ public sealed class ContratosController(
             return await ExibirFormularioAsync(model, cancellationToken);
         }
 
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         var resultado = await servico.AtualizarRascunhoAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -192,9 +187,10 @@ public sealed class ContratosController(
         UploadDocumentoContratoFranquiaViewModel model,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         if (!ModelState.IsValid || model.Arquivo is null || model.TipoDocumento is null)
@@ -205,7 +201,7 @@ public sealed class ContratosController(
 
         await using var stream = model.Arquivo.OpenReadStream();
         var resultado = await servico.EnviarDocumentoAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -247,9 +243,10 @@ public sealed class ContratosController(
         NovaVersaoContratoFranquiaViewModel model,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         if (!ModelState.IsValid)
@@ -259,7 +256,7 @@ public sealed class ContratosController(
         }
 
         var resultado = await servico.CriarNovaVersaoAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -288,13 +285,14 @@ public sealed class ContratosController(
         Guid versaoId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         var resultado = await servico.FormalizarVersaoAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -345,13 +343,14 @@ public sealed class ContratosController(
         Guid versaoId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         var resultado = await consulta.ObterVersaoAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -418,13 +417,14 @@ public sealed class ContratosController(
         bool baixar,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         var resultado = await consulta.AbrirDocumentoAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -466,13 +466,14 @@ public sealed class ContratosController(
         string mensagemSucesso,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return Forbid();
+            return usuario.Resultado;
         }
 
         var resultado = await operacao(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -532,13 +533,14 @@ public sealed class ContratosController(
             Guid versaoId,
             CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return (null, Forbid());
+            return (null, usuario.Resultado);
         }
 
         var versao = await consulta.ObterVersaoAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             contratoId,
@@ -592,13 +594,14 @@ public sealed class ContratosController(
         Guid unidadeId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null)
         {
-            return (null, Forbid());
+            return (null, usuario.Resultado);
         }
 
         var resultado = await consulta.ObterAsync(
-            usuarioId,
+            usuario.UsuarioId,
             franqueadoId,
             unidadeId,
             cancellationToken);
@@ -655,6 +658,32 @@ public sealed class ContratosController(
             model.Observacoes);
         return true;
     }
+
+    private static ContratoFranquiaFormViewModel CriarFormularioNovo(
+        Guid franqueadoId,
+        Guid unidadeId,
+        string franqueadoNome,
+        string unidadeNome)
+    {
+        var dataInicio = DateOnly.FromDateTime(DateTime.Today);
+        return new ContratoFranquiaFormViewModel
+        {
+            FranqueadoId = franqueadoId,
+            FranqueadoNome = franqueadoNome,
+            UnidadeId = unidadeId,
+            UnidadeNome = unidadeNome,
+            NumeroVersao = 1,
+            DataInicio = dataInicio,
+            DataInicioTexto = dataInicio.ToString("dd/MM/yyyy", CulturaPtBr),
+            PercentualRoyalties = "0,00",
+            MensalidadeFixa = "0,00"
+        };
+    }
+
+    private (Guid UsuarioId, IActionResult? Resultado) ObterUsuarioOuForbid() =>
+        usuarioAtual.UsuarioId is { } usuarioId
+            ? (usuarioId, null)
+            : (Guid.Empty, Forbid());
 
     private ContratoFranquiaPainelViewModel MontarPainel(ContratoFranquiaPainel painel)
     {

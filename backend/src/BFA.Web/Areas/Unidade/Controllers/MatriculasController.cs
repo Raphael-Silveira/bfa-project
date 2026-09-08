@@ -51,26 +51,17 @@ public sealed class MatriculasController(
         var totalEncerradas = todos.Count(m => m.Status == StatusMatricula.Encerrada);
         var totalCanceladas = todos.Count(m => m.Status == StatusMatricula.Cancelada);
 
-        var totalItens = todos.Count;
-        const int tamanhoPagina = 10;
-        var paginaAtual = Math.Max(1, pagina ?? 1);
-        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
-        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
-
-        var itensPagina = todos
-            .Skip((paginaAtual - 1) * tamanhoPagina)
-            .Take(tamanhoPagina)
-            .ToList();
+        var paginacao = Paginar(todos, pagina);
 
         return View(MatriculasViewModelMapper.Lista(
             resultado.Contexto,
-            itensPagina,
+            paginacao.ItensPagina,
             await PodeTrocarAsync(usuarioId, cancellationToken),
             textoNormalizado,
             statusNormalizado,
-            paginaAtual,
-            tamanhoPagina,
-            totalItens,
+            paginacao.PaginaAtual,
+            paginacao.TamanhoPagina,
+            paginacao.TotalItens,
             totalAtivas,
             totalEncerradas,
             totalCanceladas));
@@ -509,6 +500,23 @@ public sealed class MatriculasController(
         && Enum.IsDefined(valor)
             ? valor
             : null;
+
+    private static (List<MatriculaListaItem> ItensPagina, int PaginaAtual, int TamanhoPagina, int TotalItens)
+        Paginar(IReadOnlyList<MatriculaListaItem> todos, int? pagina)
+    {
+        const int tamanhoPagina = 10;
+        var totalItens = todos.Count;
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var totalPaginas = (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        if (paginaAtual > totalPaginas && totalPaginas > 0) paginaAtual = totalPaginas;
+
+        var itensPagina = todos
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToList();
+
+        return (itensPagina, paginaAtual, tamanhoPagina, totalItens);
+    }
 
     private async Task<IActionResult> ReexibirNovaAsync(
         Guid usuarioId,

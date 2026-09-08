@@ -25,7 +25,10 @@ public interface ICobrancasRepositorio
         Guid organizacaoId, Guid cobrancaId, Guid pagamentoId,
         CancellationToken cancellationToken);
 
-    Task<bool> RegistrarPagamentoAsync(Pagamento pagamento, CancellationToken cancellationToken);
+    Task<IReadOnlyList<PagamentoResumo>> RegistrarPagamentoConsolidadoAsync(
+        Guid organizacaoId, Guid unidadeId, IReadOnlyList<Guid> cobrancaIds,
+        DateOnly dataPagamento, FormaPagamento formaPagamento, string? observacoes,
+        Guid usuarioId, DateTime agora, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<AlunoParaSelecao>> ListarAlunosAsync(
         Guid organizacaoId, Guid unidadeId,

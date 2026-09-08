@@ -149,58 +149,6 @@ public sealed class CobrancasServico(
         return EstadoCobrancas.Sucesso;
     }
 
-    public async Task<(EstadoCobrancas Estado, PagamentoResumo? Pagamento)> RegistrarPagamentoAsync(
-        Guid usuarioId, Guid unidadeId, Guid cobrancaId, RegistrarPagamentoSolicitacao solicitacao)
-    {
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, exigirGerenciamento: true);
-        if (contexto.Estado != EstadoCobrancas.Sucesso)
-            return (contexto.Estado, null);
-
-        if (solicitacao.Valor <= 0)
-            return (EstadoCobrancas.DadosInvalidos, null);
-
-        var cobranca = await repositorio.ObterPorIdAsync(
-            contexto.Valor!.OrganizacaoId, unidadeId, cobrancaId, CancellationToken.None);
-
-        if (cobranca is null)
-            return (EstadoCobrancas.CobrancaNaoEncontrada, null);
-
-        if (cobranca.Status is StatusCobranca.Paga or StatusCobranca.Cancelada)
-            return (EstadoCobrancas.CobrancaNaoPendente, null);
-
-        var saldoDevedor = cobranca.Valor - cobranca.ValorPago;
-        if (solicitacao.Valor > saldoDevedor)
-            return (EstadoCobrancas.ValorExcedeSaldo, null);
-
-        var agora = timeProvider.GetUtcNow().UtcDateTime;
-
-        var pagamento = new Pagamento(
-            Guid.NewGuid(),
-            contexto.Valor.OrganizacaoId,
-            unidadeId,
-            cobrancaId,
-            solicitacao.Valor,
-            solicitacao.DataPagamento,
-            solicitacao.FormaPagamento,
-            usuarioId,
-            agora);
-
-        await repositorio.RegistrarPagamentoAsync(pagamento, CancellationToken.None);
-
-        logger.LogInformation(
-            "Pagamento registrado: {PagamentoId} para cobranca {CobrancaId} na unidade {UnidadeId}",
-            pagamento.Id, cobrancaId, unidadeId);
-
-        var resumo = new PagamentoResumo(
-            pagamento.Id,
-            pagamento.Valor,
-            pagamento.DataPagamento,
-            pagamento.FormaPagamento,
-            pagamento.Observacoes);
-
-        return (EstadoCobrancas.Sucesso, resumo);
-    }
-
     public async Task<(EstadoCobrancas Estado, IReadOnlyList<AlunoParaSelecao> Alunos)> ListarAlunosAsync(
         Guid usuarioId, Guid unidadeId)
     {
@@ -225,6 +173,37 @@ public sealed class CobrancasServico(
             contexto.Valor!.OrganizacaoId, unidadeId, CancellationToken.None);
 
         return (EstadoCobrancas.Sucesso, resumo);
+    }
+
+    public async Task<(EstadoCobrancas Estado, IReadOnlyList<PagamentoResumo> Pagamentos)> RegistrarPagamentoConsolidadoAsync(
+        Guid usuarioId, Guid unidadeId, RegistrarPagamentoConsolidadoSolicitacao solicitacao)
+    {
+        var contexto = await ObterContextoAsync(usuarioId, unidadeId, exigirGerenciamento: true);
+        if (contexto.Estado != EstadoCobrancas.Sucesso)
+            return (contexto.Estado, []);
+
+        if (solicitacao.CobrancaIds.Count == 0)
+            return (EstadoCobrancas.DadosInvalidos, []);
+
+        var pagamentos = await repositorio.RegistrarPagamentoConsolidadoAsync(
+            contexto.Valor!.OrganizacaoId,
+            unidadeId,
+            solicitacao.CobrancaIds,
+            solicitacao.DataPagamento,
+            solicitacao.FormaPagamento,
+            solicitacao.Observacoes,
+            usuarioId,
+            timeProvider.GetUtcNow().UtcDateTime,
+            CancellationToken.None);
+
+        if (pagamentos.Count == 0)
+            return (EstadoCobrancas.Falha, []);
+
+        logger.LogInformation(
+            "Pagamento consolidado registrado: {Count} pagamentos para {CobrancaIds} na unidade {UnidadeId}",
+            pagamentos.Count, string.Join(",", solicitacao.CobrancaIds), unidadeId);
+
+        return (EstadoCobrancas.Sucesso, pagamentos);
     }
 
     private async Task<(EstadoCobrancas Estado, UnidadeContextoResumo? Valor)> ObterContextoAsync(

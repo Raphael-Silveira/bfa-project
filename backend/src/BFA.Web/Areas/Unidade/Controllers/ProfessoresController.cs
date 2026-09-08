@@ -173,24 +173,7 @@ public sealed class ProfessoresController(
         var totalAtivos = todos.Count(p => p.VinculoAtivo);
         var totalEncerrados = todos.Count(p => !p.VinculoAtivo);
 
-        IEnumerable<ProfessorUnidadeResumo> filtrados = filtroAplicado switch
-        {
-            FiltroProfessoresUnidade.Ativos => todos.Where(p => p.VinculoAtivo),
-            FiltroProfessoresUnidade.Encerrados => todos.Where(p => !p.VinculoAtivo),
-            _ => todos
-        };
-
-        if (!string.IsNullOrWhiteSpace(termo))
-        {
-            var termoNormalizado = termo.Trim().ToLowerInvariant();
-            filtrados = filtrados.Where(p =>
-                (p.NomeCompleto?.ToLowerInvariant().Contains(termoNormalizado) == true) ||
-                (p.Cpf?.Contains(termoNormalizado) == true) ||
-                (p.Email?.ToLowerInvariant().Contains(termoNormalizado) == true) ||
-                (p.Telefone?.Contains(termoNormalizado) == true));
-        }
-
-        var listaFiltrada = filtrados.ToList();
+        var listaFiltrada = FiltrarProfessores(todos, filtroAplicado, termo);
         var totalItens = listaFiltrada.Count;
         const int tamanhoPagina = 10;
         var paginaAtual = Math.Max(1, pagina ?? 1);
@@ -594,6 +577,31 @@ public sealed class ProfessoresController(
         var unidades = await unidadesUsuarioConsulta.ListarAdministradasAsync(
             usuarioId, cancellationToken);
         return (contexto, unidades.Count > 1, null);
+    }
+
+    private static List<ProfessorUnidadeResumo> FiltrarProfessores(
+        IReadOnlyList<ProfessorUnidadeResumo> professores,
+        FiltroProfessoresUnidade filtro,
+        string? termo)
+    {
+        IEnumerable<ProfessorUnidadeResumo> filtrados = filtro switch
+        {
+            FiltroProfessoresUnidade.Ativos => professores.Where(p => p.VinculoAtivo),
+            FiltroProfessoresUnidade.Encerrados => professores.Where(p => !p.VinculoAtivo),
+            _ => professores
+        };
+
+        if (!string.IsNullOrWhiteSpace(termo))
+        {
+            var termoNormalizado = termo.Trim().ToLowerInvariant();
+            filtrados = filtrados.Where(p =>
+                (p.NomeCompleto?.ToLowerInvariant().Contains(termoNormalizado) == true) ||
+                (p.Cpf?.Contains(termoNormalizado) == true) ||
+                (p.Email?.ToLowerInvariant().Contains(termoNormalizado) == true) ||
+                (p.Telefone?.Contains(termoNormalizado) == true));
+        }
+
+        return filtrados.ToList();
     }
 
     private static void PreencherContexto(

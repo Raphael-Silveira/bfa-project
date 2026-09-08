@@ -30,7 +30,8 @@ public sealed class AulasController(
         int? tamanhoPagina,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         var hoje = DateOnly.FromDateTime(DateTime.Today);
         var culture = new CultureInfo("pt-BR");
@@ -65,7 +66,7 @@ public sealed class AulasController(
         var paginaAtual = Math.Max(1, pagina ?? 1);
 
         var resultado = await aulasServico.ListarPaginadoAsync(
-            usuarioId, unidadeId, inicio, fim,
+            usuario.UsuarioId, unidadeId, inicio, fim,
             paginaAtual, tamanho, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
@@ -95,9 +96,10 @@ public sealed class AulasController(
         Guid unidadeId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        var contexto = await ObterContextoAsync(usuario.UsuarioId, unidadeId, cancellationToken);
         if (contexto is null) return Forbid();
 
         return View(AulasViewModelMapper.MapearFormularioCriacao(contexto));
@@ -110,9 +112,10 @@ public sealed class AulasController(
         AulaFormViewModel model,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
-        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        var contexto = await ObterContextoAsync(usuario.UsuarioId, unidadeId, cancellationToken);
         if (contexto is null) return Forbid();
 
         if (!ModelState.IsValid)
@@ -128,7 +131,7 @@ public sealed class AulasController(
             model.Observacoes);
 
         var resultado = await aulasServico.CriarAsync(
-            usuarioId, unidadeId, solicitacao, cancellationToken);
+            usuario.UsuarioId, unidadeId, solicitacao, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -155,10 +158,11 @@ public sealed class AulasController(
         Guid aulaId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         var resultado = await aulasServico.ObterAsync(
-            usuarioId, unidadeId, aulaId, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -180,10 +184,11 @@ public sealed class AulasController(
         Guid aulaId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         var resultado = await aulasServico.ObterAsync(
-            usuarioId, unidadeId, aulaId, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -207,7 +212,8 @@ public sealed class AulasController(
         AulaEdicaoFormViewModel model,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         if (!ModelState.IsValid)
         {
@@ -219,7 +225,7 @@ public sealed class AulasController(
             model.Observacoes);
 
         var resultado = await aulasServico.AtualizarAsync(
-            usuarioId, unidadeId, aulaId, solicitacao, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, solicitacao, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -238,10 +244,11 @@ public sealed class AulasController(
         Guid aulaId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         var resultado = await aulasServico.ConcluirAsync(
-            usuarioId, unidadeId, aulaId, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -260,10 +267,11 @@ public sealed class AulasController(
         Guid aulaId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         var resultado = await aulasServico.CancelarAsync(
-            usuarioId, unidadeId, aulaId, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -281,10 +289,11 @@ public sealed class AulasController(
         Guid aulaId,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         var detalhe = await aulasServico.ObterAsync(
-            usuarioId, unidadeId, aulaId, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, cancellationToken);
 
         if (detalhe.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -296,7 +305,7 @@ public sealed class AulasController(
             return Forbid();
 
         var alunos = await aulasServico.ListarAlunosParaChamadaAsync(
-            usuarioId, unidadeId, aulaId, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, cancellationToken);
 
         if (alunos.Estado != EstadoAulasUnidade.Sucesso || alunos.Valor is null)
             return Forbid();
@@ -315,7 +324,8 @@ public sealed class AulasController(
         ChamadaFormViewModel model,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         if (model.Registros is null || model.Registros.Count == 0)
             return RedirectToAction(nameof(Chamada), new { unidadeId, aulaId });
@@ -330,7 +340,7 @@ public sealed class AulasController(
             .ToList();
 
         var resultado = await aulasServico.RegistrarPresencasEmLoteAsync(
-            usuarioId, unidadeId, aulaId, registros, cancellationToken);
+            usuario.UsuarioId, unidadeId, aulaId, registros, cancellationToken);
 
         if (resultado.Estado != EstadoAulasUnidade.Sucesso)
             return Forbid();
@@ -346,14 +356,15 @@ public sealed class AulasController(
         DateOnly? dataFim,
         CancellationToken cancellationToken)
     {
-        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+        var usuario = ObterUsuarioOuForbid();
+        if (usuario.Resultado is not null) return usuario.Resultado;
 
         var hoje = DateOnly.FromDateTime(DateTime.Today);
         var inicio = dataInicio ?? hoje.AddDays(-30);
         var fim = dataFim ?? hoje;
 
         var resultado = await aulasServico.ObterFrequenciaAsync(
-            usuarioId, unidadeId, turmaId, inicio, fim, cancellationToken);
+            usuario.UsuarioId, unidadeId, turmaId, inicio, fim, cancellationToken);
 
         if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
             return NotFound();
@@ -381,4 +392,9 @@ public sealed class AulasController(
             cancellationToken);
         return resultado.Contexto;
     }
+
+    private (Guid UsuarioId, IActionResult? Resultado) ObterUsuarioOuForbid() =>
+        usuarioAtual.UsuarioId is { } usuarioId
+            ? (usuarioId, null)
+            : (Guid.Empty, Forbid());
 }

@@ -1,10 +1,10 @@
 # PROJECT-STATE.md — BFA Platform
 
-**Última atualização:** 2026-09-04  
+**Última atualização:** 2026-09-07  
 **Status:** Em desenvolvimento ativo  
 **Branch:** feature/login-mvc  
-**Testes:** 1.177 aprovados (484 unitários + 693 integração)  
-**Build:** 0 erros, 0 warnings
+**Testes:** 1.178 aprovados (484 unitários + 694 integração)  
+**Build:** 0 erros
 
 ## Visão do Produto
 
@@ -60,6 +60,8 @@ backend/
 - Matrículas (`MatriculasController`) — CRUD completo com Grade
 - Alunos (`AlunosController`) — Listagem + Detalhe + Editar dados + Gerenciar Responsáveis
 - Aulas (`AulasController`) — CRUD + Chamada + Frequência
+- Cobranças (`CobrancasController`) — listagem agrupada, detalhe consolidado e registro de pagamento
+- Relatórios (`RelatoriosController`)
 - Contrato (read-only)
 
 ### Professor (Area: `/professor`)
@@ -67,7 +69,7 @@ backend/
 - Turmas (`TurmasController`)
 
 ### Aluno (Area: `/aluno`)
-- Apenas scaffold vazio
+- Área implementada, mas ainda em transição de UX/escopo
 
 ### Autenticação e Autorização
 - Identity completo (login, registro, recuperação)
@@ -113,6 +115,11 @@ Governança centralizada via `IGovernancaOperacionalUnidade`:
 | V013 | Grade das Matrículas |
 | V014 | Correção de validação de unidade na matrícula |
 | V015 | Aulas e Presenças |
+| V016 | Cobranças e Pagamentos |
+| V017 | Hangfire schema |
+| V018 | Permissão CREATE no schema Hangfire |
+| V019 | Tabelas do Hangfire |
+| V020 | Nullable em colunas de auditoria de cobranças |
 
 **Regra:** Migrations são imutáveis. Correções são novas migrations.
 
@@ -125,72 +132,19 @@ bfa_dev_app (LOGIN) → membro de bfa_app_role
 
 DDL exclusivamente por `bfa_dev_deploy`. Aplicação é apenas DML.
 
-## Trabalho Não Commitado (2026-09-03)
+## Estado recente
 
-### Arquivos Modificados
-- `MatriculasController.cs` — ações de Alterar Grade, Encerrar, Cancelar
-- `Detalhes.cshtml` — botões de ação
-- `Index.cshtml` — ajustes na listagem
-- `MatriculaViewModels.cs` — ViewModels para AlterarGrade e Finalizar
-- `unidade.css` — estilos para matrículas
-- `bfa-matricula-wizard.js` — scripts de grade
-- `AreaUnidadeMatriculasEndpointTests.cs` — testes de endpoint
-- `GovernancaOperacionalUnidade.cs` — adicionada `PodeGerenciarAlunos`
-- `_UnidadeNavLinks.cshtml` — adicionado menu "Alunos"
-- `Professores/Encerrar.cshtml` — validação `data-bfa-date-min`
-- `AlunosUnidade.cs` — adicionados `AtualizarDadosAsync`, `ObterDadosEdicaoAsync`, DTOs
-- `AlunosRepositorio.cs` — adicionados `ObterParaEdicaoAsync`, `PersistirAtualizacaoAsync`, etc.
-- `AlunoViewModels.cs` — adicionados `EditarAlunoViewModel`, `EditarAlunoMapper`
-- `AlunosController.cs` — adicionadas actions `Editar` GET/POST
-- `Alunos/Detalhes.cshtml` — adicionado botão [ Editar dados ] e mensagem de sucesso
-
-### Arquivos Novos (Não Rastreados)
-- `AlterarGrade.cshtml` — tela de alteração de grade
-- `Cancelar.cshtml` — tela de cancelamento
-- `Encerrar.cshtml` — tela de encerramento
-- `AlunosUnidade.cs` — Application layer (Alunos)
-- `AlunosRepositorio.cs` — Infrastructure layer (Alunos)
-- `AlunoViewModels.cs` — ViewModels (Alunos) + EditarAlunoViewModel + EditarAlunoMapper
-- `AlunosController.cs` — Controller (Alunos) — Index, Detalhes, Editar GET/POST
-- `Alunos/Index.cshtml` — Listagem de alunos
-- `Alunos/Detalhes.cshtml` — Detalhe do aluno
-- `Alunos/Editar.cshtml` — Formulário de edição de dados cadastrais
-
-## Bug Conhecido: Alterar Grade
-
-**Status:** RESOLVIDO (melhoria de UX)
-
-**Causa confirmada:**
-A regra D-1 na linha 445 do `MatriculasRepositorio.cs` é INTENCIONAL:
-```csharp
-if (removidos.Any(item => data <= item.VigenciaInicio))
-    return new(EstadoMatriculas.DataInvalida);
-```
-
-O teste `Mudanca_material_no_primeiro_dia_e_rejeitada` confirma:
-- Mudança material no primeiro dia da grade é rejeitada
-- Isso preserva integridade histórica (VigenciaFim não pode ser anterior a VigenciaInicio)
-
-**Mensagem de erro:** Melhorada para "A data final não pode ser anterior ao início da grade atual."
-
-**Solução implementada:**
-- Adicionada `DataMinimaGrade` ao ViewModel
-- View exibe data mínima e mensagem explicativa
-- JavaScript valida data mínima no submit
-- Usuário recebe feedback antes de enviar formulário
+- Área do Aluno implementada, mas ainda em transição de UX/escopo.
+- Área do Professor implementada, ainda em transição.
+- Fluxos centrais da operação da unidade já estão ativos: turmas, matrículas, aulas, alunos e financeiro.
+- A documentação precisa acompanhar o código com mais frequência, pois o código é a fonte de verdade.
 
 ## Funcionalidades em Andamento
 
-- Alterar Grade (bug conhecido) — CONCLUÍDO
-- Encerrar Matrícula — CONCLUÍDO
-- Cancelar Matrícula — CONCLUÍDO
-- Módulo Alunos — Etapa 1 (Listagem + Detalhe) CONCLUÍDO
-- Módulo Alunos — Etapa 2 (Editar Dados) CONCLUÍDO
-- Módulo Alunos — Etapa 3 (Gerenciar Responsáveis) CONCLUÍDO
-- Módulo Aulas e Presenças CONCLUÍDO
-- Módulo Financeiro (Cobranças + Pagamentos) CONCLUÍDO
-- Módulo Relatórios (Financeiro, Inadimplência, Frequência) CONCLUÍDO
-- Área do Aluno (Dashboard, Perfil, Matrículas, Agenda, Frequência, Financeiro) CONCLUÍDO
+- Consolidação visual do padrão administrativo.
+- Refinamento contínuo da Área do Aluno.
+- Refinamento contínuo da Área do Professor.
+- Evolução do Financeiro e dos detalhes de cobrança.
 
 ## Próximos Passos (Roadmap)
 
@@ -239,7 +193,7 @@ Planos sequenciais em `docs/plans/`:
 | 06 | Módulo Aulas e Presenças | Concluído |
 | 07 | Financeiro Unidade x Aluno | Concluído |
 | 08 | Relatórios | Concluído |
-| 09 | Área do Aluno | Concluído |
+| 09 | Área do Aluno | Concluído (em transição) |
 | 10 | Melhoria Visual Monitores Grandes | Concluído |
 | 11 | Pagamento Online Split Pagar.me | Planejado |
 | 12 | Incremento das 4 Visões | Planejado |
@@ -251,6 +205,7 @@ Planos sequenciais em `docs/plans/`:
 | `AGENTS.md` | Constituição operacional |
 | `docs/PRODUCT-VISION.md` | Visão de produto |
 | `docs/ARCHITECTURE.md` | Arquitetura técnica |
+| `docs/WEB-ARCHITECTURE-CHECKLIST.md` | Auditoria prática do BFA.Web |
 | `docs/UI-ADMIN-STANDARDS.md` | Padrão visual administrativo |
 | `brand/guide/brand-guide.md` | Identidade visual |
 | `docs/ENVIRONMENTS.md` | Configuração de ambientes |
