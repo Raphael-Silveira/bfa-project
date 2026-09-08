@@ -31,6 +31,25 @@
     </div>
 </header>
 
+<section class="bfa-matriculas-hero">
+    <div class="bfa-matriculas-hero__copy">
+        <p class="bfa-matriculas-hero__eyebrow">Gestão acadêmica</p>
+        <h2 class="bfa-matriculas-hero__title">Acompanhe vínculos e status</h2>
+        <p class="bfa-matriculas-hero__description">Busca e filtros por status ajudam a localizar cada matrícula sem excesso de informação.</p>
+    </div>
+
+    <div class="bfa-matriculas-hero__stats">
+        <div class="bfa-admin-card bfa-matriculas-stat">
+            <span class="bfa-matriculas-stat__label">Total</span>
+            <strong class="bfa-matriculas-stat__value">@Model.TotalItens</strong>
+        </div>
+        <div class="bfa-admin-card bfa-matriculas-stat">
+            <span class="bfa-matriculas-stat__label">Ativas</span>
+            <strong class="bfa-matriculas-stat__value">@Model.TotalAtivas</strong>
+        </div>
+    </div>
+</section>
+
 @if (TempData["Sucesso"] is string sucesso)
 {
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
@@ -78,7 +97,7 @@
 }
 else
 {
-    <div class="bfa-data-card bfa-admin-desktop-list">
+    <div class="bfa-data-card bfa-admin-desktop-list bfa-matriculas-list-card">
         <div class="bfa-table-wrap">
             <table>
                 <thead>
@@ -97,7 +116,7 @@ else
                     <tr>
                         <td>
                             <div class="bfa-data-primary">@item.NomeAluno</div>
-                            <div class="bfa-data-secondary">@item.Plano</div>
+                            <div class="bfa-data-secondary bfa-matriculas-plan-name">@item.Plano</div>
                         </td>
                         <td>
                             <span class="bfa-data-badge @(item.Ativa ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
@@ -131,7 +150,7 @@ else
                 </tbody>
             </table>
         </div>
-        <div class="bfa-table-footer">
+        <div class="bfa-table-footer bfa-matriculas-list-card__footer">
             @{
                 var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
                 var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
@@ -167,7 +186,7 @@ else
                 <div class="bfa-mobile-card__head">
                     <div>
                         <div class="bfa-data-primary">@item.NomeAluno</div>
-                        <div class="bfa-data-secondary">@item.Plano</div>
+                        <div class="bfa-data-secondary bfa-matriculas-plan-name">@item.Plano</div>
                     </div>
                     <span class="bfa-data-badge @(item.Ativa ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
                         <i class="bfa-data-badge__dot"></i>
@@ -203,4 +222,96 @@ else
             </article>
         }
     </section>
+}
+
+@section Styles {
+<style>
+    .bfa-matriculas-plan-name {
+        color: var(--bfa-accent);
+        font-weight: 600;
+    }
+
+    .bfa-matriculas-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.35fr);
+        gap: 1rem;
+        padding: 1.25rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-lg);
+        background:
+            radial-gradient(circle at top left, rgba(255, 193, 7, 0.09), transparent 18rem),
+            linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+        box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.22);
+    }
+
+    .bfa-matriculas-hero__eyebrow {
+        margin: 0 0 0.35rem;
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .bfa-matriculas-hero__title {
+        margin: 0;
+        color: var(--bfa-white);
+        font-size: clamp(1.45rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-matriculas-hero__description {
+        max-width: 40rem;
+        margin: 0.65rem 0 0;
+        color: var(--bfa-text-secondary);
+    }
+
+    .bfa-matriculas-hero__stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    .bfa-matriculas-stat {
+        display: grid;
+        gap: 0.35rem;
+        align-content: start;
+    }
+
+    .bfa-matriculas-stat__label {
+        color: var(--bfa-text-secondary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-matriculas-stat__value {
+        color: var(--bfa-white);
+        font-size: clamp(1.3rem, 3vw, 1.75rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-matriculas-list-card {
+        overflow: hidden;
+    }
+
+    @@media (max-width: 64rem) {
+        .bfa-matriculas-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .bfa-matriculas-hero__stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-matriculas-hero__stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 }

@@ -58,7 +58,7 @@
 }
 
 <div class="bfa-matricula-detail-sections">
-    <section class="bfa-admin-card bfa-matricula-overview" aria-labelledby="titulo-condicoes-matricula">
+    <section class="bfa-admin-card bfa-matricula-overview bfa-matricula-overview--plan" aria-labelledby="titulo-condicoes-matricula">
         <header>
             <div>
                 <p>Condições da matrícula</p>
@@ -94,7 +94,7 @@
         </dl>
     </section>
 
-    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-dados-aluno">
+    <section class="bfa-admin-card bfa-matricula-section bfa-matricula-section--plan">
         <header>
             <p>Cadastro</p>
             <h2 id="titulo-dados-aluno">Dados do aluno</h2>
@@ -108,7 +108,7 @@
         </dl>
     </section>
 
-    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-responsaveis-matricula">
+    <section class="bfa-admin-card bfa-matricula-section bfa-matricula-section--plan" aria-labelledby="titulo-responsaveis-matricula">
         <header>
             <p>Contatos relacionados</p>
             <h2 id="titulo-responsaveis-matricula">Responsáveis</h2>
@@ -153,7 +153,7 @@
         }
     </section>
 
-    <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-grade-atual">
+    <section class="bfa-admin-card bfa-matricula-section bfa-matricula-section--plan" aria-labelledby="titulo-grade-atual">
         <header>
             <p>Programação vigente</p>
             <h2 id="titulo-grade-atual">Grade atual</h2>
@@ -181,7 +181,7 @@
 
     @if (matricula.HistoricoGrade.Count > 0)
     {
-        <section class="bfa-admin-card bfa-matricula-section" aria-labelledby="titulo-historico-grade">
+        <section class="bfa-admin-card bfa-matricula-section bfa-matricula-section--plan" aria-labelledby="titulo-historico-grade">
             <header>
                 <p>Programações encerradas</p>
                 <h2 id="titulo-historico-grade">Histórico da Grade</h2>
@@ -203,3 +203,12 @@
         </section>
     }
 </div>
+
+@section Styles {
+<style>
+    .bfa-matricula-overview--plan,
+    .bfa-matricula-section--plan {
+        overflow: hidden;
+    }
+</style>
+}

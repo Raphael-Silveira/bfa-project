@@ -13,13 +13,24 @@
 
 @if (Model.Count == 0)
 {
-    <div class="bfa-admin-card">
-        <p class="bfa-admin-empty-state">Nenhuma matrícula encontrada.</p>
-    </div>
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhuma matrícula encontrada.</h2>
+            <p>Quando houver vínculos ativos ou encerrados, eles aparecerão aqui.</p>
+        </div>
+    </section>
 }
 else
 {
-    <div class="bfa-admin-card">
+    <div class="bfa-admin-card bfa-aluno-matriculas-card">
+        <div class="bfa-aluno-matriculas-card__header">
+            <div>
+                <p class="bfa-aluno-matriculas-card__eyebrow">Matrículas</p>
+                <h2 class="bfa-admin-card__title">Meu histórico acadêmico</h2>
+            </div>
+            <span class="bfa-admin-badge is-active">@Model.Count vínculos</span>
+        </div>
         <div class="bfa-admin-table-container bfa-admin-desktop-list">
             <table class="bfa-admin-table">
                 <thead>
@@ -68,4 +79,35 @@ else
             }
         </div>
     </div>
+}
+
+@section Styles {
+<style>
+    .bfa-aluno-matriculas-card {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .bfa-aluno-matriculas-card__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .bfa-aluno-matriculas-card__eyebrow {
+        margin: 0 0 0.35rem;
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-aluno-matriculas-card__header {
+            flex-direction: column;
+        }
+    }
+</style>
 }

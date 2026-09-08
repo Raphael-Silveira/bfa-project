@@ -182,9 +182,30 @@
         const planoSelecionado = () => formulario.querySelector("[data-plan-option]:checked");
         const atualizarCamposPlano = (inicializarValores = false) => {
             const plano = planoSelecionado();
+            const nomePlano = formulario.querySelector("#plano-selecionado-titulo");
+            const statusPlano = formulario.querySelector("[data-plan-status]");
+            const escopoPlano = formulario.querySelector("[data-plan-scope]");
+            const duracaoPlano = formulario.querySelector("[data-plan-duration]");
+            const frequenciaPlano = formulario.querySelector("[data-plan-frequency]");
             formulario.querySelectorAll(".bfa-matricula-plan-card").forEach((card) =>
                 card.classList.toggle("is-selected", card.querySelector("input").checked));
-            if (!plano) return;
+            if (!plano) {
+                if (nomePlano) nomePlano.textContent = "Aguardando escolha";
+                if (statusPlano) {
+                    statusPlano.textContent = "Sem seleção";
+                    statusPlano.className = "bfa-admin-badge is-inactive";
+                }
+                if (escopoPlano) escopoPlano.textContent = "—";
+                if (duracaoPlano) duracaoPlano.textContent = "—";
+                if (frequenciaPlano) frequenciaPlano.textContent = "—";
+                formulario.querySelector("[data-catalog-price]").textContent = "—";
+                formulario.querySelector("[data-contracted-price]").textContent = "—";
+                formulario.querySelector("[data-selected-plan-summary]").textContent = "Selecione um plano para liberar os detalhes.";
+                formulario.querySelector("[data-grade-plan]").textContent = "Plano não selecionado";
+                formulario.querySelector("[data-grade-limit]").textContent = "—";
+                return;
+            }
+
             const mensalidade = formulario.querySelector("#ValorMensalContratadoTexto");
             const taxaAtiva = formulario.querySelector("[data-fee-toggle]");
             const taxaValor = formulario.querySelector("[data-fee-value]");
@@ -193,7 +214,16 @@
                 taxaAtiva.checked = plano.dataset.planFeeEnabled === "true";
                 taxaValor.value = taxaAtiva.checked ? plano.dataset.planFee : "";
             }
+            if (nomePlano) nomePlano.textContent = plano.dataset.planName;
+            if (statusPlano) {
+                statusPlano.textContent = plano.dataset.planFeeEnabled === "true" ? "Com taxa" : "Sem taxa";
+                statusPlano.className = `bfa-admin-badge ${plano.dataset.planFeeEnabled === "true" ? "is-active" : "is-inactive"}`;
+            }
+            if (escopoPlano) escopoPlano.textContent = plano.dataset.planScope ?? "—";
+            if (duracaoPlano) duracaoPlano.textContent = `${plano.dataset.planDuration} meses`;
+            if (frequenciaPlano) frequenciaPlano.textContent = `${plano.dataset.planFrequency}x por semana`;
             formulario.querySelector("[data-catalog-price]").textContent = moeda(numeroPtBr(plano.dataset.planPrice));
+            formulario.querySelector("[data-contracted-price]").textContent = moeda(numeroPtBr(mensalidade.value));
             formulario.querySelector("[data-selected-plan-summary]").textContent =
                 `${plano.dataset.planName} · ${plano.dataset.planFrequency}x por semana`;
             formulario.querySelector("[data-grade-plan]").textContent = plano.dataset.planName;
@@ -217,6 +247,7 @@
             input.checked = plano.planoVersaoId === selecionado;
             input.dataset.planOption = "";
             input.dataset.planName = plano.nome;
+            input.dataset.planScope = plano.escopo;
             input.dataset.planFrequency = plano.frequenciaSemanal;
             input.dataset.planDuration = plano.duracaoMeses;
             input.dataset.planPrice = plano.valorMensalInput;
@@ -402,7 +433,7 @@
             const plano = planoSelecionado();
             const revisaoPlano = formulario.querySelector("[data-review-plan]");
             if (plano) {
-                const catalogo = numeroPtBr(plano.dataset.planPrice);
+            const catalogo = numeroPtBr(plano.dataset.planPrice);
                 const contratado = numeroPtBr(formulario.querySelector("#ValorMensalContratadoTexto").value);
                 const itens = [
                     plano.dataset.planName,

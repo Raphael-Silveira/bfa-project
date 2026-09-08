@@ -22,6 +22,25 @@
     </div>
 </header>
 
+<section class="bfa-turmas-hero">
+    <div class="bfa-turmas-hero__copy">
+        <p class="bfa-turmas-hero__eyebrow">Organização de aulas</p>
+        <h2 class="bfa-turmas-hero__title">Turmas em operação</h2>
+        <p class="bfa-turmas-hero__description">Revise horários recorrentes, professor responsável e capacidade sem sair da listagem.</p>
+    </div>
+
+    <div class="bfa-turmas-hero__stats">
+        <div class="bfa-admin-card bfa-turmas-stat">
+            <span class="bfa-turmas-stat__label">Total</span>
+            <strong class="bfa-turmas-stat__value">@Model.TotalItens</strong>
+        </div>
+        <div class="bfa-admin-card bfa-turmas-stat">
+            <span class="bfa-turmas-stat__label">Gerenciamento</span>
+            <strong class="bfa-turmas-stat__value">@(podeGerenciar ? "Liberado" : "Somente leitura")</strong>
+        </div>
+    </div>
+</section>
+
 @if (TempData["Sucesso"] is string sucesso)
 {
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
@@ -39,7 +58,7 @@
 }
 else
 {
-    <div class="bfa-data-card bfa-admin-desktop-list">
+    <div class="bfa-data-card bfa-admin-desktop-list bfa-turmas-list-card">
         <div class="bfa-table-wrap">
             <table>
                 <thead>
@@ -87,7 +106,7 @@ else
                 </tbody>
             </table>
         </div>
-        <div class="bfa-table-footer">
+        <div class="bfa-table-footer bfa-turmas-list-card__footer">
             @{
                 var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
                 var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);
@@ -144,4 +163,81 @@ else
             </article>
         }
     </section>
+}
+
+@section Styles {
+<style>
+    .bfa-turmas-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
+        gap: 1rem;
+        padding: 1.25rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-lg);
+        background:
+            radial-gradient(circle at top left, rgba(0, 173, 181, 0.11), transparent 18rem),
+            linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+        box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.22);
+    }
+
+    .bfa-turmas-hero__eyebrow {
+        margin: 0 0 0.35rem;
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .bfa-turmas-hero__title {
+        margin: 0;
+        color: var(--bfa-white);
+        font-size: clamp(1.45rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-turmas-hero__description {
+        max-width: 42rem;
+        margin: 0.65rem 0 0;
+        color: var(--bfa-text-secondary);
+    }
+
+    .bfa-turmas-hero__stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    .bfa-turmas-stat {
+        display: grid;
+        gap: 0.35rem;
+        align-content: start;
+    }
+
+    .bfa-turmas-stat__label {
+        color: var(--bfa-text-secondary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-turmas-stat__value {
+        color: var(--bfa-white);
+        font-size: clamp(1.3rem, 3vw, 1.75rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-turmas-list-card {
+        overflow: hidden;
+    }
+
+    @@media (max-width: 64rem) {
+        .bfa-turmas-hero {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 }

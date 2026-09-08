@@ -34,6 +34,9 @@ public sealed class CobrancasListaViewModel : IUnidadeContextoViewModel
     public required int PaginaAtual { get; init; }
     public required int TamanhoPagina { get; init; }
     public required int TotalItens { get; init; }
+    public required int TotalCobrancas { get; init; }
+    public required decimal TotalPendente { get; init; }
+    public required int TotalAlunosComDebito { get; init; }
     public bool PossuiFiltros => !string.IsNullOrEmpty(Status) || !string.IsNullOrEmpty(Tipo)
         || AlunoId.HasValue || !string.IsNullOrWhiteSpace(AlunoNome);
 }
@@ -111,7 +114,10 @@ public static class CobrancaViewModelMapper
         DateOnly dataFim,
         int paginaAtual,
         int tamanhoPagina,
-        int totalItens) => new()
+        int totalItens,
+        int totalCobrancas,
+        decimal totalPendente,
+        int totalAlunosComDebito) => new()
     {
         OrganizacaoId = contexto.OrganizacaoId,
         UnidadeId = contexto.UnidadeId,
@@ -127,7 +133,10 @@ public static class CobrancaViewModelMapper
         DataFim = dataFim,
         PaginaAtual = paginaAtual,
         TamanhoPagina = tamanhoPagina,
-        TotalItens = totalItens
+        TotalItens = totalItens,
+        TotalCobrancas = totalCobrancas,
+        TotalPendente = totalPendente,
+        TotalAlunosComDebito = totalAlunosComDebito
     };
 
     public static CobrancaGrupoAlunoViewModel MapearGrupo(

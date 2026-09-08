@@ -4,6 +4,87 @@
 }
 
 /* Planos comerciais: composição compartilhada entre Franqueadora e Unidade. */
+.bfa-plan-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.95fr);
+  gap: 1rem;
+  margin: 1rem 0 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top left, rgba(255, 193, 7, 0.1), transparent 20rem),
+    linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+  box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.22);
+}
+
+.bfa-plan-hero__copy {
+  min-width: 0;
+}
+
+.bfa-plan-hero__eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--bfa-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bfa-plan-hero__title {
+  margin: 0;
+  color: var(--bfa-white);
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.bfa-plan-hero__description {
+  max-width: 42rem;
+  margin: 0.65rem 0 0;
+  color: var(--bfa-text-secondary);
+}
+
+.bfa-plan-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.bfa-plan-stat {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+}
+
+.bfa-plan-stat__label {
+  color: var(--bfa-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-plan-stat__value {
+  color: var(--bfa-white);
+  font-size: clamp(1.3rem, 3vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.bfa-plan-list-card,
+.bfa-plan-detail-card {
+  overflow: hidden;
+}
+
+.bfa-plan-detail-card {
+  padding: 1rem 1.15rem;
+}
+
+.bfa-plan-detail-card > header,
+.bfa-plan-section-heading {
+  margin-bottom: 0.25rem;
+}
 .bfa-plan-filters {
   display: flex;
   flex-wrap: wrap;
@@ -134,6 +215,14 @@
 }
 
 @media (max-width: 767px) {
+  .bfa-plan-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-plan-hero__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .bfa-plan-form-grid,
   .bfa-plan-card dl,
   .bfa-plan-detail-grid,
@@ -153,7 +242,10 @@
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
-  background: var(--bfa-bg-primary);
+  background:
+    radial-gradient(circle at top left, rgba(255, 193, 7, 0.05), transparent 22rem),
+    radial-gradient(circle at top right, rgba(255, 193, 7, 0.03), transparent 18rem),
+    var(--bfa-bg-primary);
   color: var(--bfa-text-primary);
 }
 
@@ -574,6 +666,8 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .bfa-admin-page-header__copy {
@@ -614,9 +708,9 @@
   min-width: 0;
   padding: 1.125rem;
   border: 1px solid var(--bfa-border);
-  border-radius: var(--radius-md);
-  background: linear-gradient(145deg, #1C1F21, #16181A);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+  box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.24);
 }
 
 .bfa-admin-card-grid {
@@ -664,9 +758,9 @@
   display: block;
   min-height: auto;
   margin: 0.45rem 0 0.25rem;
-  color: var(--bfa-text);
+  color: var(--bfa-text-secondary);
   font-size: 0.875rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0;
 }
 
@@ -698,7 +792,10 @@
   overflow-x: auto;
   border: 1px solid var(--bfa-border);
   border-radius: var(--radius-lg);
-  background: var(--bfa-surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.005)),
+    var(--bfa-surface);
+  box-shadow: 0 0.85rem 2rem rgba(0, 0, 0, 0.18);
 }
 
 .bfa-admin-table {
@@ -709,7 +806,7 @@
 
 .bfa-admin-table th,
 .bfa-admin-table td {
-  padding: 0.85rem 1rem;
+  padding: 0.95rem 1.05rem;
   border-bottom: 1px solid var(--bfa-border);
   text-align: left;
   vertical-align: middle;
@@ -728,7 +825,7 @@
 }
 
 .bfa-admin-table tbody tr:hover {
-  background: var(--bfa-surface-elevated);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .bfa-admin-table tbody tr:last-child td {
@@ -1293,7 +1390,10 @@
   gap: 1.25rem;
   border: 1px solid var(--bfa-border);
   border-radius: var(--radius-lg);
-  background: var(--bfa-surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.004)),
+    var(--bfa-surface);
+  box-shadow: 0 0.9rem 2.2rem rgba(0, 0, 0, 0.18);
 }
 
 .bfa-admin-empty-state__symbol {
@@ -1577,7 +1677,9 @@
 
 .bfa-filter-panel {
   position: relative;
-  background: linear-gradient(180deg, rgba(255,255,255,.015), transparent), var(--bfa-surface);
+  background:
+    radial-gradient(circle at top left, rgba(255, 193, 7, 0.07), transparent 16rem),
+    linear-gradient(180deg, rgba(255,255,255,.015), transparent), var(--bfa-surface);
   border: 1px solid var(--bfa-border);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
@@ -1913,9 +2015,11 @@
 
 .bfa-mobile-card {
   border: 1px solid var(--bfa-border);
-  border-radius: var(--radius-md);
-  background: var(--bfa-surface);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
   padding: 1rem;
+  box-shadow: 0 0.85rem 1.8rem rgba(0, 0, 0, 0.18);
 }
 
 .bfa-mobile-card__head {

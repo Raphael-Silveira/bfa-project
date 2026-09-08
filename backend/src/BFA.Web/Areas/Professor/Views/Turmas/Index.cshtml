@@ -1,23 +1,144 @@
 @model MinhasTurmasProfessorViewModel
 @{ ViewData["Title"] = "Minhas Turmas"; Layout = "_ProfessorLayout"; }
 
-<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Área do Professor</p><h1 class="bfa-admin-page-header__title">Minhas Turmas</h1><p class="bfa-admin-page-header__description">Turmas atribuídas a você em @Model.NomeUnidade.</p></div></header>
+<header class="bfa-admin-page-header" aria-labelledby="titulo-minhas-turmas">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Área do Professor</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-minhas-turmas">Minhas Turmas</h1>
+        <p class="bfa-admin-page-header__description">Turmas atribuídas a você em @Model.NomeUnidade.</p>
+    </div>
+</header>
 
 @if (Model.Turmas.Count == 0)
 {
-    <section class="bfa-admin-empty-state" role="status"><div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div><div><h2>Nenhuma turma atribuída a você nesta unidade.</h2><p>Quando uma turma for atribuída ao seu vínculo profissional, ela aparecerá aqui.</p></div></section>
+    <section class="bfa-admin-empty-state" role="status">
+        <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
+        <div>
+            <h2>Nenhuma turma atribuída a você nesta unidade.</h2>
+            <p>Quando uma turma for atribuída ao seu vínculo profissional, ela aparecerá aqui.</p>
+        </div>
+    </section>
 }
 else
 {
     <section class="bfa-admin-card-grid bfa-minhas-turmas-grid" aria-label="Turmas atribuídas ao professor">
-    @foreach (var turma in Model.Turmas)
-    {
-        <article class="bfa-admin-card bfa-minhas-turmas-card">
-            <header><div><p>Turma</p><h2>@turma.Nome</h2></div><span class="bfa-admin-badge @(turma.Ativo ? "is-active" : "is-inactive")">@(turma.Ativo ? "Ativa" : "Inativa")</span></header>
-            <dl><div><dt>Capacidade</dt><dd>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</dd></div></dl>
-            <section aria-label="Horários atuais"><h3>Horários</h3>@if (turma.HorariosAtuais.Count == 0) { <p class="bfa-minhas-turmas-muted">Nenhum horário atual.</p> } else { <partial name="_Horarios" model="turma.HorariosAtuais" /> }</section>
-            <footer><a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas/@turma.Id">Ver detalhes</a></footer>
-        </article>
-    }
+        @foreach (var turma in Model.Turmas)
+        {
+            <article class="bfa-admin-card bfa-minhas-turmas-card">
+                <header class="bfa-minhas-turmas-card__header">
+                    <div>
+                        <p>Turma</p>
+                        <h2>@turma.Nome</h2>
+                    </div>
+                    <span class="bfa-admin-badge @(turma.Ativo ? "is-active" : "is-inactive")">@(turma.Ativo ? "Ativa" : "Inativa")</span>
+                </header>
+
+                <dl class="bfa-minhas-turmas-card__meta">
+                    <div>
+                        <dt>Capacidade</dt>
+                        <dd>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</dd>
+                    </div>
+                </dl>
+
+                <section class="bfa-minhas-turmas-card__schedules" aria-label="Horários atuais">
+                    <h3>Horários</h3>
+                    @if (turma.HorariosAtuais.Count == 0)
+                    {
+                        <p class="bfa-minhas-turmas-muted">Nenhum horário atual.</p>
+                    }
+                    else
+                    {
+                        <partial name="_Horarios" model="turma.HorariosAtuais" />
+                    }
+                </section>
+
+                <footer class="bfa-minhas-turmas-card__footer">
+                    <a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas/@turma.Id">Ver detalhes</a>
+                </footer>
+            </article>
+        }
     </section>
+}
+
+@section Styles {
+<style>
+    .bfa-minhas-turmas-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+    }
+
+    .bfa-minhas-turmas-card {
+        display: grid;
+        gap: 1rem;
+        min-height: 100%;
+    }
+
+    .bfa-minhas-turmas-card__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .bfa-minhas-turmas-card__header p {
+        margin: 0 0 0.35rem;
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .bfa-minhas-turmas-card__header h2 {
+        margin: 0;
+    }
+
+    .bfa-minhas-turmas-card__meta {
+        display: grid;
+        margin: 0;
+        gap: 0.85rem;
+    }
+
+    .bfa-minhas-turmas-card__meta dt {
+        color: var(--bfa-text-muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-minhas-turmas-card__meta dd {
+        margin: 0.25rem 0 0;
+        color: var(--bfa-text-primary);
+        font-weight: 700;
+    }
+
+    .bfa-minhas-turmas-card__schedules {
+        display: grid;
+        gap: 0.65rem;
+        padding-top: 0.95rem;
+        border-top: 1px solid var(--bfa-border);
+    }
+
+    .bfa-minhas-turmas-card__schedules h3 {
+        margin: 0;
+        color: var(--bfa-text-primary);
+        font-size: 0.95rem;
+    }
+
+    .bfa-minhas-turmas-card__footer {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 0.25rem;
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-minhas-turmas-card__header {
+            flex-direction: column;
+        }
+
+        .bfa-minhas-turmas-card__footer .bfa-admin-button {
+            width: 100%;
+        }
+    }
+</style>
 }

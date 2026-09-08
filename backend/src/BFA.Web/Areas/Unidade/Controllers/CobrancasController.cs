@@ -68,6 +68,11 @@ public sealed class CobrancasController(
             .ToList();
 
         var totalItens = grupos.Count;
+        var totalCobrancas = grupos.Sum(grupo => grupo.Itens.Count);
+        var totalAlunosComDebito = grupos.Count(grupo => grupo.Itens.Any(item => item.Status is "Pendente" or "Atrasada"));
+        var totalPendente = grupos.Sum(grupo => grupo.Itens
+            .Where(item => item.Status is "Pendente" or "Atrasada")
+            .Sum(item => item.ValorNumerico - item.ValorPagoNumerico));
         var (paginaAtual, tamanho) = ObterPaginacao(pagina, tamanhoPagina, totalItens);
 
         var gruposPagina = grupos
@@ -78,7 +83,8 @@ public sealed class CobrancasController(
         return View(CobrancaViewModelMapper.MapearListaAgrupada(
             contexto.Valor!, gruposPagina, alunoId, alunoNome, status, tipo,
             inicio, fim,
-            paginaAtual, tamanho, totalItens));
+            paginaAtual, tamanho, totalItens,
+            totalCobrancas, totalPendente, totalAlunosComDebito));
     }
 
     [HttpGet("nova")]

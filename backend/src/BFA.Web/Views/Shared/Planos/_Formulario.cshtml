@@ -1,5 +1,5 @@
 @model BFA.Web.ViewModels.Planos.PlanoFormViewModel
-@{
+@{ 
     var titulo = Model.NovaVersao ? "Nova versão comercial" : (Model.EhLocal ? "Novo plano local" : "Novo plano da Rede");
     var action = Model.NovaVersao
         ? $"{Model.RotaBase}/{Model.PlanoId}/nova-versao"

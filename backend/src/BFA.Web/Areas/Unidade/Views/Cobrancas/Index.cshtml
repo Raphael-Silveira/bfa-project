@@ -77,6 +77,39 @@
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
 }
 
+<section class="bfa-cobrancas-hero">
+    <div class="bfa-cobrancas-hero__copy">
+        <p class="bfa-cobrancas-hero__eyebrow">Painel financeiro</p>
+        <h2 class="bfa-cobrancas-hero__title">Cobranças da unidade</h2>
+        <p class="bfa-cobrancas-hero__description">
+            Localize pendências, acompanhe pagamentos e registre recebimentos sem sair da lista.
+        </p>
+    </div>
+
+    <div class="bfa-cobrancas-hero__stats" aria-label="Resumo da listagem">
+        <article class="bfa-cobrancas-stat bfa-cobrancas-stat--accent">
+            <span class="bfa-cobrancas-stat__label">Alunos</span>
+            <strong class="bfa-cobrancas-stat__value">@Model.TotalItens</strong>
+            <span class="bfa-cobrancas-stat__hint">com cobranças no período</span>
+        </article>
+        <article class="bfa-cobrancas-stat">
+            <span class="bfa-cobrancas-stat__label">Cobranças</span>
+            <strong class="bfa-cobrancas-stat__value">@Model.TotalCobrancas</strong>
+            <span class="bfa-cobrancas-stat__hint">itens no filtro</span>
+        </article>
+        <article class="bfa-cobrancas-stat bfa-cobrancas-stat--money">
+            <span class="bfa-cobrancas-stat__label">Pendência</span>
+            <strong class="bfa-cobrancas-stat__value">@Model.TotalPendente.ToString("C", culture)</strong>
+            <span class="bfa-cobrancas-stat__hint">saldo em aberto</span>
+        </article>
+        <article class="bfa-cobrancas-stat">
+            <span class="bfa-cobrancas-stat__label">Em débito</span>
+            <strong class="bfa-cobrancas-stat__value">@Model.TotalAlunosComDebito</strong>
+            <span class="bfa-cobrancas-stat__hint">alunos com saldo aberto</span>
+        </article>
+    </div>
+</section>
+
 <section class="bfa-filter-panel" aria-labelledby="filtros-financeiro">
     <div class="bfa-filter-panel__header">
         <div class="bfa-filter-panel__icon" aria-hidden="true">
@@ -84,7 +117,7 @@
         </div>
         <div>
             <h2 id="filtros-financeiro">Filtros</h2>
-            <p>Selecione um período para visualizar as cobranças.</p>
+            <p>Filtre por período, status e aluno para encontrar rapidamente o que precisa.</p>
         </div>
     </div>
 
@@ -616,6 +649,106 @@ else
 <style>
     .bfa-cobranca-itens td { padding: 0 !important; border-top: none !important; }
 
+    .bfa-cobrancas-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr);
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        padding: 1.25rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-lg);
+        background:
+            radial-gradient(circle at top left, rgba(255, 193, 7, 0.11), transparent 32%),
+            linear-gradient(145deg, rgba(28, 28, 28, 0.95), rgba(20, 20, 20, 0.98));
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.25);
+    }
+
+    .bfa-cobrancas-hero__copy {
+        min-width: 0;
+    }
+
+    .bfa-cobrancas-hero__eyebrow {
+        margin: 0 0 0.45rem;
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    .bfa-cobrancas-hero__title {
+        margin: 0;
+        color: var(--bfa-white);
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+    }
+
+    .bfa-cobrancas-hero__description {
+        max-width: 42rem;
+        margin: 0.65rem 0 0;
+        color: var(--bfa-text-secondary);
+        line-height: 1.55;
+    }
+
+    .bfa-cobrancas-hero__stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .bfa-cobrancas-stat {
+        min-width: 0;
+        padding: 0.95rem 1rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-md);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+    }
+
+    .bfa-cobrancas-stat--accent {
+        border-color: rgba(255, 193, 7, 0.22);
+        background: linear-gradient(180deg, rgba(255, 193, 7, 0.1), rgba(255, 255, 255, 0.015));
+    }
+
+    .bfa-cobrancas-stat__label {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--bfa-text-secondary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-cobrancas-stat__value {
+        display: block;
+        color: var(--bfa-white);
+        font-size: clamp(1.25rem, 2.6vw, 1.65rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bfa-cobrancas-stat--money .bfa-cobrancas-stat__value {
+        font-size: clamp(0.92rem, 1.55vw, 1.08rem);
+        line-height: 1.1;
+    }
+
+    .bfa-cobrancas-stat__hint {
+        display: block;
+        margin-top: 0.35rem;
+        color: var(--bfa-text-muted);
+        font-size: 0.72rem;
+        line-height: 1.4;
+    }
+
+    .bfa-filter-panel {
+        border-radius: var(--radius-lg);
+        box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.18);
+    }
+
     .bfa-cobrancas-filter-form {
         grid-template-columns: minmax(11rem, 15rem) 1.75rem minmax(11rem, 15rem) minmax(11rem, 15rem) minmax(12rem, 16rem) auto;
     }
@@ -768,6 +901,11 @@ else
 
     .bfa-cobranca-modal__footer .bfa-admin-button {
         min-width: 10rem;
+    }
+
+    .bfa-data-card.bfa-admin-desktop-list {
+        border-radius: var(--radius-lg);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.22);
     }
 
     .bfa-cobranca-itens__lista {
@@ -966,6 +1104,27 @@ else
     .bfa-cobranca-grupo--open .bfa-cobranca-toggle svg { transform: rotate(90deg); }
     .bfa-cobranca-grupo--open .bfa-cobranca-toggle::after {
         background: var(--bfa-black); color: var(--bfa-gold);
+    }
+
+    @@media (max-width: 64rem) {
+        .bfa-cobrancas-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .bfa-cobrancas-hero__stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-cobrancas-hero,
+        .bfa-filter-panel {
+            padding: 1rem;
+        }
+
+        .bfa-cobrancas-hero__stats {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 }

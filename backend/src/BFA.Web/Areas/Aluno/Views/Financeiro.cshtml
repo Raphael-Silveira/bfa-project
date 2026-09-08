@@ -11,21 +11,38 @@
     </div>
 </header>
 
-<div class="bfa-admin-card-grid">
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Pendente</div>
-        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalPendente</div>
+<section class="bfa-aluno-financeiro-hero">
+    <div class="bfa-aluno-financeiro-hero__main">
+        <p class="bfa-aluno-financeiro-hero__eyebrow">Resumo financeiro</p>
+        <h2 class="bfa-aluno-financeiro-hero__title">Acompanhe cobranças e pagamentos</h2>
+        <p class="bfa-aluno-financeiro-hero__description">Tudo que está aberto, quitado e registrado aparece nesta tela.</p>
     </div>
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Pago</div>
-        <div class="bfa-admin-metric-card__value">@Model.TotalPago</div>
+
+    <div class="bfa-aluno-financeiro-hero__stats">
+        <div class="bfa-admin-card bfa-aluno-financeiro-stat">
+            <span class="bfa-aluno-financeiro-stat__label">Pendente</span>
+            <strong class="bfa-aluno-financeiro-stat__value bfa-admin-metric-card__value--danger">@Model.TotalPendente</strong>
+        </div>
+        <div class="bfa-admin-card bfa-aluno-financeiro-stat">
+            <span class="bfa-aluno-financeiro-stat__label">Pago</span>
+            <strong class="bfa-aluno-financeiro-stat__value">@Model.TotalPago</strong>
+        </div>
+        <div class="bfa-admin-card bfa-aluno-financeiro-stat">
+            <span class="bfa-aluno-financeiro-stat__label">Cobranças</span>
+            <strong class="bfa-aluno-financeiro-stat__value">@Model.Cobrancas.Count</strong>
+        </div>
     </div>
-</div>
+</section>
 
 @if (Model.Cobrancas.Count > 0)
 {
-    <div class="bfa-admin-card">
-        <h2 class="bfa-admin-card__title">Cobranças</h2>
+    <div class="bfa-admin-card bfa-aluno-financeiro-card">
+        <div class="bfa-aluno-financeiro-card__header">
+            <div>
+                <p class="bfa-aluno-financeiro-card__eyebrow">Cobranças</p>
+                <h2 class="bfa-admin-card__title">Histórico de cobranças</h2>
+            </div>
+        </div>
         <div class="bfa-admin-table-container bfa-admin-desktop-list">
             <table class="bfa-admin-table">
                 <thead>
@@ -81,8 +98,13 @@
 
 @if (Model.Pagamentos.Count > 0)
 {
-    <div class="bfa-admin-card">
-        <h2 class="bfa-admin-card__title">Pagamentos</h2>
+    <div class="bfa-admin-card bfa-aluno-financeiro-card">
+        <div class="bfa-aluno-financeiro-card__header">
+            <div>
+                <p class="bfa-aluno-financeiro-card__eyebrow">Pagamentos</p>
+                <h2 class="bfa-admin-card__title">Histórico de pagamentos</h2>
+            </div>
+        </div>
         <div class="bfa-admin-table-container bfa-admin-desktop-list">
             <table class="bfa-admin-table">
                 <thead>
@@ -105,4 +127,105 @@
             </table>
         </div>
     </div>
+}
+
+@section Styles {
+<style>
+    .bfa-aluno-financeiro-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.95fr);
+        gap: 1rem;
+        padding: 1.25rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-lg);
+        background:
+            radial-gradient(circle at top left, rgba(255, 193, 7, 0.1), transparent 18rem),
+            linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+        box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.22);
+    }
+
+    .bfa-aluno-financeiro-hero__eyebrow,
+    .bfa-aluno-financeiro-card__eyebrow {
+        margin: 0 0 0.35rem;
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .bfa-aluno-financeiro-hero__title {
+        margin: 0;
+        color: var(--bfa-white);
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-aluno-financeiro-hero__description {
+        max-width: 40rem;
+        margin: 0.6rem 0 0;
+        color: var(--bfa-text-secondary);
+    }
+
+    .bfa-aluno-financeiro-hero__stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    .bfa-aluno-financeiro-stat {
+        display: grid;
+        gap: 0.35rem;
+        align-content: start;
+        min-width: 0;
+    }
+
+    .bfa-aluno-financeiro-stat__label {
+        color: var(--bfa-text-secondary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-aluno-financeiro-stat__value {
+        color: var(--bfa-white);
+        font-size: clamp(1.3rem, 3vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-aluno-financeiro-card {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .bfa-aluno-financeiro-card__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    @@media (max-width: 64rem) {
+        .bfa-aluno-financeiro-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .bfa-aluno-financeiro-hero__stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-aluno-financeiro-hero__stats {
+            grid-template-columns: 1fr;
+        }
+
+        .bfa-aluno-financeiro-card__header {
+            flex-direction: column;
+        }
+    }
+</style>
 }

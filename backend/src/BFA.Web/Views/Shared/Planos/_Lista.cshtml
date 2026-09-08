@@ -2,12 +2,26 @@
 @using BFA.Application.Planos
 @using BFA.Web.ViewModels.Shared
 @model BFA.Web.ViewModels.Planos.PlanosListaViewModel
-@{
+@{ 
     var cultura = CultureInfo.GetCultureInfo("pt-BR");
     var titulo = Model.EhLocal ? "Planos da Unidade" : "Planos da Rede";
     var descricao = Model.EhLocal
         ? $"Catálogo comercial exclusivo de {Model.NomeUnidade}."
         : "Catálogo comercial administrado pela Franqueadora.";
+    var ativos = 0;
+    var inativos = 0;
+
+    foreach (var plano in Model.Planos)
+    {
+        if (plano.Ativo)
+        {
+            ativos++;
+        }
+        else
+        {
+            inativos++;
+        }
+    }
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-planos">
@@ -23,6 +37,29 @@
         </div>
     }
 </header>
+
+<section class="bfa-plan-hero" aria-label="Resumo dos planos">
+    <div class="bfa-plan-hero__copy">
+        <p class="bfa-plan-hero__eyebrow">@(Model.EhLocal ? "Operação da unidade" : "Rede BFA")</p>
+        <h2 class="bfa-plan-hero__title">@(Model.EhLocal ? "Catálogo local em foco" : "Catálogo comercial da rede")</h2>
+        <p class="bfa-plan-hero__description">@(Model.EhLocal ? "Revise os planos comerciais disponíveis para esta unidade." : "Acompanhe o portfólio comercial disponível para todas as unidades.")</p>
+    </div>
+
+    <div class="bfa-plan-hero__stats">
+        <div class="bfa-admin-card bfa-plan-stat">
+            <span class="bfa-plan-stat__label">Listados</span>
+            <strong class="bfa-plan-stat__value">@Model.Planos.Count</strong>
+        </div>
+        <div class="bfa-admin-card bfa-plan-stat">
+            <span class="bfa-plan-stat__label">Ativos</span>
+            <strong class="bfa-plan-stat__value">@ativos</strong>
+        </div>
+        <div class="bfa-admin-card bfa-plan-stat">
+            <span class="bfa-plan-stat__label">Inativos</span>
+            <strong class="bfa-plan-stat__value">@inativos</strong>
+        </div>
+    </div>
+</section>
 
 @if (Model.EhLocal && Model.PossuiFranqueadoAtivo && !Model.PodeGerenciar)
 {
@@ -65,7 +102,7 @@
 }
 else
 {
-    <div class="bfa-data-card bfa-admin-desktop-list">
+    <div class="bfa-data-card bfa-admin-desktop-list bfa-plan-list-card">
         <div class="bfa-table-wrap">
             <table>
                 <thead>
@@ -116,7 +153,7 @@ else
             </table>
         </div>
         <div class="bfa-table-footer">
-            @{
+            @{ 
                 var totalPaginas = (int)Math.Ceiling((double)Model.TotalItens / Model.TamanhoPagina);
                 var primeiroIndice = Model.TotalItens == 0 ? 0 : (Model.PaginaAtual - 1) * Model.TamanhoPagina + 1;
                 var ultimoIndice = Math.Min(Model.PaginaAtual * Model.TamanhoPagina, Model.TotalItens);

@@ -1,13 +1,148 @@
 @model TurmaProfessorDetalheViewModel
 @{ ViewData["Title"] = Model.Turma.Nome; Layout = "_ProfessorLayout"; }
 
-<header class="bfa-admin-page-header"><div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Minhas Turmas</p><h1 class="bfa-admin-page-header__title">@Model.Turma.Nome</h1><p class="bfa-admin-page-header__description">Detalhes da turma em @Model.NomeUnidade.</p></div><div class="bfa-admin-page-header__actions"><a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Voltar às turmas</a></div></header>
+<header class="bfa-admin-page-header" aria-labelledby="titulo-turma-detalhe">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Minhas Turmas</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-turma-detalhe">@Model.Turma.Nome</h1>
+        <p class="bfa-admin-page-header__description">Detalhes da turma em @Model.NomeUnidade.</p>
+    </div>
+    <div class="bfa-admin-page-header__actions">
+        <a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Voltar às turmas</a>
+    </div>
+</header>
 
-<div class="bfa-minhas-turmas-detail-sections">
-    <section class="bfa-admin-card bfa-minhas-turmas-detail"><header><div><p>Turma</p><h2>@Model.Turma.Nome</h2></div><span class="bfa-admin-badge @(Model.Turma.Ativo ? "is-active" : "is-inactive")">@(Model.Turma.Ativo ? "Ativa" : "Inativa")</span></header><dl><div><dt>Professor responsável</dt><dd>@Model.Turma.NomeProfessor</dd></div><div><dt>Capacidade</dt><dd>@Model.Turma.Capacidade @(Model.Turma.Capacidade == 1 ? "aluno" : "alunos")</dd></div></dl></section>
-    <section class="bfa-admin-card bfa-minhas-turmas-detail" aria-labelledby="horarios-atuais"><header><div><p>Recorrência vigente</p><h2 id="horarios-atuais">Horários atuais</h2></div></header>@if (Model.Turma.HorariosAtuais.Count == 0) { <p class="bfa-minhas-turmas-muted">Nenhum horário atual.</p> } else { <partial name="_Horarios" model="Model.Turma.HorariosAtuais" /> }</section>
+<section class="bfa-professor-detail-hero">
+    <div class="bfa-professor-detail-hero__copy">
+        <p class="bfa-professor-detail-hero__eyebrow">Turma</p>
+        <h2 class="bfa-professor-detail-hero__title">@Model.Turma.Nome</h2>
+        <p class="bfa-professor-detail-hero__description">A visão consolidada da turma, horários e histórico de recorrência.</p>
+    </div>
+    <div class="bfa-professor-detail-hero__badge">
+        <span class="bfa-admin-badge @(Model.Turma.Ativo ? "is-active" : "is-inactive")">@(Model.Turma.Ativo ? "Ativa" : "Inativa")</span>
+    </div>
+</section>
+
+<div class="bfa-professor-detail-grid">
+    <section class="bfa-admin-card bfa-professor-detail-card">
+        <p class="bfa-professor-detail-card__eyebrow">Resumo</p>
+        <dl class="bfa-professor-detail-card__meta">
+            <div><dt>Professor responsável</dt><dd>@Model.Turma.NomeProfessor</dd></div>
+            <div><dt>Capacidade</dt><dd>@Model.Turma.Capacidade @(Model.Turma.Capacidade == 1 ? "aluno" : "alunos")</dd></div>
+        </dl>
+    </section>
+
+    <section class="bfa-admin-card bfa-professor-detail-card" aria-labelledby="horarios-atuais">
+        <p class="bfa-professor-detail-card__eyebrow">Recorrência vigente</p>
+        <h2 id="horarios-atuais" class="bfa-professor-detail-card__title">Horários atuais</h2>
+        @if (Model.Turma.HorariosAtuais.Count == 0)
+        {
+            <p class="bfa-minhas-turmas-muted">Nenhum horário atual.</p>
+        }
+        else
+        {
+            <partial name="_Horarios" model="Model.Turma.HorariosAtuais" />
+        }
+    </section>
+
     @if (Model.Turma.HistoricoHorarios.Count > 0)
     {
-        <section class="bfa-admin-card bfa-minhas-turmas-detail" aria-labelledby="historico-horarios"><header><div><p>Histórico preservado</p><h2 id="historico-horarios">Histórico de horários</h2></div></header><partial name="_Horarios" model="Model.Turma.HistoricoHorarios" view-data='new ViewDataDictionary(ViewData) { ["Historico"] = true }' /></section>
+        <section class="bfa-admin-card bfa-professor-detail-card" aria-labelledby="historico-horarios">
+            <p class="bfa-professor-detail-card__eyebrow">Histórico preservado</p>
+            <h2 id="historico-horarios" class="bfa-professor-detail-card__title">Histórico de horários</h2>
+            <partial name="_Horarios" model="Model.Turma.HistoricoHorarios" view-data='new ViewDataDictionary(ViewData) { ["Historico"] = true }' />
+        </section>
     }
 </div>
+
+@section Styles {
+<style>
+    .bfa-professor-detail-hero {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.25rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-lg);
+        background:
+            radial-gradient(circle at top left, rgba(255, 193, 7, 0.1), transparent 16rem),
+            linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+        box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.22);
+    }
+
+    .bfa-professor-detail-hero__eyebrow,
+    .bfa-professor-detail-card__eyebrow {
+        margin: 0 0 0.35rem;
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .bfa-professor-detail-hero__title,
+    .bfa-professor-detail-card__title {
+        margin: 0;
+        color: var(--bfa-white);
+    }
+
+    .bfa-professor-detail-hero__title {
+        font-size: clamp(1.45rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+    }
+
+    .bfa-professor-detail-hero__description {
+        margin: 0.65rem 0 0;
+        color: var(--bfa-text-secondary);
+        max-width: 44rem;
+    }
+
+    .bfa-professor-detail-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .bfa-professor-detail-card {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .bfa-professor-detail-card__meta {
+        display: grid;
+        gap: 0.85rem;
+        margin: 0;
+    }
+
+    .bfa-professor-detail-card__meta dt {
+        color: var(--bfa-text-muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-professor-detail-card__meta dd {
+        margin: 0.25rem 0 0;
+        color: var(--bfa-text-primary);
+        font-weight: 700;
+    }
+
+    @@media (min-width: 64rem) {
+        .bfa-professor-detail-grid {
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        }
+
+        .bfa-professor-detail-grid > .bfa-professor-detail-card:nth-child(3) {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-professor-detail-hero {
+            flex-direction: column;
+        }
+    }
+</style>
+}

@@ -245,13 +245,50 @@
                 <p class="bfa-matricula-loading" data-plan-loading role="status" hidden>Atualizando planos...</p>
             </div>
 
+            <section class="bfa-matricula-plan-overview" aria-labelledby="plano-selecionado-titulo">
+                <header>
+                    <div>
+                        <p>Plano selecionado</p>
+                        <h3 id="plano-selecionado-titulo">Aguardando escolha</h3>
+                    </div>
+                    <span class="bfa-admin-badge is-inactive" data-plan-status>Sem seleção</span>
+                </header>
+                <div class="bfa-matricula-plan-overview__grid">
+                    <div class="bfa-matricula-plan-overview__item">
+                        <span>Escopo</span>
+                        <strong data-plan-scope>—</strong>
+                    </div>
+                    <div class="bfa-matricula-plan-overview__item">
+                        <span>Duração</span>
+                        <strong data-plan-duration>—</strong>
+                    </div>
+                    <div class="bfa-matricula-plan-overview__item">
+                        <span>Frequência</span>
+                        <strong data-plan-frequency>—</strong>
+                    </div>
+                    <div class="bfa-matricula-plan-overview__item">
+                        <span>Valor de catálogo</span>
+                        <strong data-catalog-price>—</strong>
+                    </div>
+                    <div class="bfa-matricula-plan-overview__item">
+                        <span>Mensalidade contratada</span>
+                        <strong data-contracted-price>—</strong>
+                    </div>
+                    <div class="bfa-matricula-plan-overview__item">
+                        <span>Vigência prevista</span>
+                        <strong data-end-date>—</strong>
+                    </div>
+                </div>
+                <p class="bfa-matricula-plan-overview__note" data-selected-plan-summary>Selecione um plano para liberar os detalhes.</p>
+            </section>
+
             <fieldset class="bfa-matricula-choice-fieldset">
                 <legend>Planos elegíveis</legend>
                 <div class="bfa-matricula-plan-grid" data-plan-list>
                     @foreach (var plano in Model.Planos)
                     {
                         <label class="bfa-matricula-plan-card">
-                            <input type="radio" name="PlanoVersaoId" value="@plano.PlanoVersaoId" checked="@(Model.PlanoVersaoId == plano.PlanoVersaoId)" data-plan-option data-plan-name="@plano.Nome" data-plan-frequency="@plano.FrequenciaSemanal" data-plan-duration="@plano.DuracaoMeses" data-plan-price="@plano.ValorMensalInput" data-plan-fee-enabled="@plano.CobraMatricula.ToString().ToLowerInvariant()" data-plan-fee="@plano.ValorMatriculaInput" />
+                            <input type="radio" name="PlanoVersaoId" value="@plano.PlanoVersaoId" checked="@(Model.PlanoVersaoId == plano.PlanoVersaoId)" data-plan-option data-plan-name="@plano.Nome" data-plan-scope="@plano.Escopo" data-plan-frequency="@plano.FrequenciaSemanal" data-plan-duration="@plano.DuracaoMeses" data-plan-price="@plano.ValorMensalInput" data-plan-fee-enabled="@plano.CobraMatricula.ToString().ToLowerInvariant()" data-plan-fee="@plano.ValorMatriculaInput" />
                             <span class="bfa-matricula-plan-card__scope">@plano.Escopo</span>
                             <strong>@plano.Nome</strong>
                             <span>@plano.Frequencia · @plano.Duracao</span>
