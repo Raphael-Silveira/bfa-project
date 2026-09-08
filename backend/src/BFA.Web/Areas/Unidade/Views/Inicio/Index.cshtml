@@ -63,32 +63,32 @@
     </article>
 </section>
 
-<section class="bfa-admin-card-grid" aria-label="Métricas financeiras">
-    <article class="bfa-admin-card bfa-admin-metric-card">
+<section class="bfa-admin-card-grid bfa-unidade-finance-grid" aria-label="Métricas financeiras">
+    <article class="bfa-admin-card bfa-admin-metric-card bfa-admin-metric-card--money">
         <div class="bfa-admin-metric-card__icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
         <div class="bfa-admin-metric-card__body">
             <span class="bfa-admin-metric-card__label">Receita mensal</span>
-            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.ReceitaMes</strong>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent bfa-admin-metric-card__value--money">@Model.ReceitaMes</strong>
         </div>
     </article>
-    <article class="bfa-admin-card bfa-admin-metric-card">
+    <article class="bfa-admin-card bfa-admin-metric-card bfa-admin-metric-card--money">
         <div class="bfa-admin-metric-card__icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div class="bfa-admin-metric-card__body">
             <span class="bfa-admin-metric-card__label">Pendente</span>
-            <strong class="bfa-admin-metric-card__value">@Model.Pendente</strong>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--money">@Model.Pendente</strong>
         </div>
     </article>
-    <article class="bfa-admin-card bfa-admin-metric-card">
+    <article class="bfa-admin-card bfa-admin-metric-card bfa-admin-metric-card--money">
         <div class="bfa-admin-metric-card__icon bfa-admin-metric-card__icon--danger">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
         <div class="bfa-admin-metric-card__body">
             <span class="bfa-admin-metric-card__label">Em atraso</span>
-            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.EmAtraso</strong>
+            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger bfa-admin-metric-card__value--money">@Model.EmAtraso</strong>
         </div>
     </article>
 </section>
@@ -173,4 +173,56 @@
         dia is { } valor ? $"Dia {valor}" : "Não informado";
 
     private static readonly CultureInfo CulturaPtBr = CultureInfo.GetCultureInfo("pt-BR");
+}
+
+@section Styles {
+<style>
+    .bfa-unidade-welcome {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(16rem, 0.85fr);
+        gap: 1.25rem;
+    }
+
+    .bfa-unidade-welcome__quote {
+        max-width: 18rem;
+    }
+
+    .bfa-unidade-finance-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .bfa-admin-metric-card--money .bfa-admin-metric-card__body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .bfa-admin-metric-card__value--money {
+        font-size: clamp(1.35rem, 2.35vw, 1.95rem);
+        line-height: 1.04;
+        letter-spacing: -0.03em;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    @@media (max-width: 72rem) {
+        .bfa-unidade-welcome {
+            grid-template-columns: 1fr;
+        }
+
+        .bfa-unidade-finance-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 44rem) {
+        .bfa-unidade-finance-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .bfa-admin-metric-card__value--money {
+            font-size: clamp(1.2rem, 7vw, 1.55rem);
+        }
+    }
+</style>
 }
