@@ -1,0 +1,83 @@
+@model ResumoFinanceiroViewModel
+@{
+    ViewData["Title"] = "Resumo Financeiro";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-resumo-financeiro">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Relatórios</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-resumo-financeiro">Resumo Financeiro</h1>
+        <p class="bfa-admin-page-header__description">
+            Panorama financeiro de @Model.NomeUnidade.
+        </p>
+    </div>
+</header>
+
+<section class="bfa-relatorio-hero" aria-labelledby="titulo-resumo-financeiro-resumo">
+    <div class="bfa-relatorio-hero__copy">
+        <p class="bfa-relatorio-hero__eyebrow">Panorama geral</p>
+        <h2 class="bfa-relatorio-hero__title" id="titulo-resumo-financeiro-resumo">Leitura executiva do financeiro</h2>
+        <p class="bfa-relatorio-hero__description">
+            Visão direta do faturamento, do saldo em aberto e do volume de cobrança da unidade.
+        </p>
+        <div class="bfa-relatorio-hero__actions">
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Relatorios"
+               asp-action="Index"
+               asp-route-unidadeId="@Model.UnidadeId">Voltar aos relatórios</a>
+        </div>
+    </div>
+    <div class="bfa-relatorio-hero__stats" aria-label="Indicadores financeiros">
+        <article class="bfa-relatorio-stat">
+            <span class="bfa-relatorio-stat__label">Total receita</span>
+            <strong class="bfa-relatorio-stat__value">@Model.TotalReceita</strong>
+            <span class="bfa-relatorio-stat__hint">recebido no período</span>
+        </article>
+        <article class="bfa-relatorio-stat">
+            <span class="bfa-relatorio-stat__label">Total pendente</span>
+            <strong class="bfa-relatorio-stat__value">@Model.TotalPendente</strong>
+            <span class="bfa-relatorio-stat__hint">saldo em aberto</span>
+        </article>
+        <article class="bfa-relatorio-stat">
+            <span class="bfa-relatorio-stat__label">Total atrasado</span>
+            <strong class="bfa-relatorio-stat__value">@Model.TotalAtrasado</strong>
+            <span class="bfa-relatorio-stat__hint">saldo em atraso</span>
+        </article>
+        <article class="bfa-relatorio-stat bfa-relatorio-stat--wide">
+            <span class="bfa-relatorio-stat__label">Alunos com débito</span>
+            <strong class="bfa-relatorio-stat__value">@Model.TotalAlunosComDebito</strong>
+            <span class="bfa-relatorio-stat__hint">alunos afetados</span>
+        </article>
+    </div>
+</section>
+
+<section class="bfa-relatorio-panel">
+    <div class="bfa-relatorio-panel__header">
+        <div>
+            <h2 class="bfa-relatorio-panel__title">Cobranças em aberto</h2>
+            <p class="bfa-relatorio-panel__description">Quantidade consolidada de cobranças pendentes e atrasadas.</p>
+        </div>
+    </div>
+    <div class="bfa-relatorio-grid bfa-relatorio-grid--cards-2">
+        <article class="bfa-relatorio-mini-card">
+            <span class="bfa-relatorio-mini-card__label">Cobranças pendentes</span>
+            <strong class="bfa-relatorio-mini-card__value">@Model.CobrancasPendentes</strong>
+            <span class="bfa-relatorio-mini-card__meta">itens aguardando pagamento</span>
+        </article>
+        <article class="bfa-relatorio-mini-card">
+            <span class="bfa-relatorio-mini-card__label">Cobranças atrasadas</span>
+            <strong class="bfa-relatorio-mini-card__value bfa-relatorio-mini-card__value--danger">@Model.CobrancasAtrasadas</strong>
+            <span class="bfa-relatorio-mini-card__meta">itens fora do prazo</span>
+        </article>
+    </div>
+</section>
+
+<div class="bfa-admin-form-actions">
+    <a class="bfa-btn-secondary bfa-admin-button"
+       asp-area="Unidade"
+       asp-controller="Relatorios"
+       asp-action="Index"
+       asp-route-unidadeId="@Model.UnidadeId">Voltar</a>
+</div>

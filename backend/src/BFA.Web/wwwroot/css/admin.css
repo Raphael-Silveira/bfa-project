@@ -495,6 +495,52 @@
   color: var(--bfa-accent);
 }
 
+.bfa-admin-nav-group {
+  display: grid;
+  gap: 3px;
+}
+
+.bfa-admin-nav-group__summary {
+  list-style: none;
+}
+
+.bfa-admin-nav-group__summary::-webkit-details-marker {
+  display: none;
+}
+
+.bfa-admin-nav-link--group {
+  justify-content: flex-start;
+  cursor: pointer;
+}
+
+.bfa-admin-nav-link__chevron {
+  margin-left: auto;
+  transition: transform 150ms ease;
+}
+
+.bfa-admin-nav-group[open] .bfa-admin-nav-link__chevron {
+  transform: rotate(90deg);
+}
+
+.bfa-admin-nav-group__items {
+  display: grid;
+  gap: 3px;
+  margin-left: 0.25rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--bfa-border-soft);
+}
+
+.bfa-admin-nav-link--nested {
+  min-height: 2.375rem;
+  padding-left: 1rem;
+  font-size: 0.92rem;
+}
+
+.bfa-admin-nav-link--nested svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 .bfa-admin-main {
   min-width: 0;
   width: min(1440px, calc(100% - 4rem));
@@ -786,6 +832,52 @@
 
 .bfa-admin-metric-card__link:hover {
   color: var(--bfa-accent);
+}
+
+.bfa-admin-report-card {
+  display: flex;
+  min-height: 10rem;
+  align-items: flex-start;
+  gap: 1rem;
+  color: var(--bfa-text-primary);
+  text-decoration: none;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.bfa-admin-report-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--bfa-border-strong);
+  color: var(--bfa-text-primary);
+}
+
+.bfa-admin-report-card__icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: var(--bfa-accent-subtle);
+  color: var(--bfa-accent);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.bfa-admin-report-card__content {
+  min-width: 0;
+}
+
+.bfa-admin-report-card__title {
+  margin: 0;
+  color: var(--bfa-white);
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.bfa-admin-report-card__description {
+  margin: 0.45rem 0 0;
+  color: var(--bfa-text-secondary);
 }
 
 .bfa-admin-table-container {

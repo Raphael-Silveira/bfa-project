@@ -1,6 +1,10 @@
 using BFA.Application.Acessos;
+using BFA.Application.Aulas;
+using BFA.Application.Cobrancas;
 using BFA.Application.Relatorios;
 using BFA.Application.Unidades;
+using BFA.Domain.Aulas;
+using BFA.Domain.Cobrancas;
 using BFA.Web.Authorization;
 using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +20,8 @@ namespace BFA.Web.Areas.Unidade.Controllers;
 public sealed class RelatoriosController(
     IUsuarioAtual usuarioAtual,
     IRelatoriosServico relatoriosServico,
+    IAulasServico aulasServico,
+    ICobrancasServico cobrancasServico,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     ILogger<RelatoriosController> logger) : Controller
 {
@@ -61,6 +67,61 @@ public sealed class RelatoriosController(
             return Forbid();
 
         return View(RelatorioViewModelMapper.MapearFinanceiro(contexto, relatorio, dataInicio, dataFim));
+    }
+
+    [HttpGet("resumo-financeiro")]
+    public async Task<IActionResult> ResumoFinanceiro(
+        Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+
+        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        if (contexto is null) return Forbid();
+
+        var (estado, resumo) = await cobrancasServico.ObterResumoFinanceiroAsync(usuarioId, unidadeId);
+
+        if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
+            return NotFound();
+        if (estado != EstadoCobrancas.Sucesso || resumo is null)
+            return Forbid();
+
+        return View(CobrancaViewModelMapper.MapearResumoFinanceiro(contexto, resumo));
+    }
+
+    [HttpGet("frequencia")]
+    public async Task<IActionResult> Frequencia(
+        Guid unidadeId,
+        Guid? turmaId,
+        DateOnly? dataInicio,
+        DateOnly? dataFim,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
+
+        var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
+        if (contexto is null) return Forbid();
+
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var inicio = dataInicio ?? hoje.AddDays(-30);
+        var fim = dataFim ?? hoje;
+
+        var resultado = await aulasServico.ObterFrequenciaAsync(
+            usuarioId, unidadeId, turmaId, inicio, fim, cancellationToken);
+
+        if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
+            return NotFound();
+        if (resultado.Estado != EstadoAulasUnidade.Sucesso
+            || resultado.Valor is null
+            || resultado.Contexto is null)
+            return Forbid();
+
+        return View(AulasViewModelMapper.MapearFrequencia(
+            resultado.Contexto,
+            resultado.Valor,
+            turmaId,
+            inicio,
+            fim));
     }
 
     [HttpGet("inadimplencia")]

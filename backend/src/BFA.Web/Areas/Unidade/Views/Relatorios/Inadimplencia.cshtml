@@ -14,33 +14,48 @@
     </div>
 </header>
 
-<div class="bfa-admin-card-grid">
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Total Atrasado</div>
-        <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalAtrasado</div>
+<section class="bfa-relatorio-hero" aria-labelledby="titulo-inadimplencia-resumo">
+    <div class="bfa-relatorio-hero__copy">
+        <p class="bfa-relatorio-hero__eyebrow">Saúde da carteira</p>
+        <h2 class="bfa-relatorio-hero__title" id="titulo-inadimplencia-resumo">Visão consolidada da inadimplência</h2>
+        <p class="bfa-relatorio-hero__description">
+            Acompanhe saldo em atraso, quantidade de alunos com débito e a distribuição por faixa.
+        </p>
     </div>
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Alunos com Débito</div>
-        <div class="bfa-admin-metric-card__value">@Model.TotalAlunos</div>
+    <div class="bfa-relatorio-hero__stats" aria-label="Indicadores de inadimplência">
+        <article class="bfa-relatorio-stat bfa-relatorio-stat--wide">
+            <span class="bfa-relatorio-stat__label">Total atrasado</span>
+            <strong class="bfa-relatorio-stat__value">@Model.TotalAtrasado</strong>
+            <span class="bfa-relatorio-stat__hint">saldo em cobrança</span>
+        </article>
+        <article class="bfa-relatorio-stat">
+            <span class="bfa-relatorio-stat__label">Alunos com débito</span>
+            <strong class="bfa-relatorio-stat__value">@Model.TotalAlunos</strong>
+            <span class="bfa-relatorio-stat__hint">quantidade de alunos</span>
+        </article>
     </div>
-</div>
+</section>
 
 @if (Model.PorFaixa.Count > 0)
 {
-    <div class="bfa-data-card">
-        <div class="bfa-card-title-row">
-            <h2 class="bfa-card-title-row__title">Por Faixa de Atraso</h2>
+    <section class="bfa-relatorio-panel">
+        <div class="bfa-relatorio-panel__header">
+            <div>
+                <h2 class="bfa-relatorio-panel__title">Por faixa de atraso</h2>
+                <p class="bfa-relatorio-panel__description">Concentração do saldo por tempo de atraso.</p>
+            </div>
         </div>
-        <div class="bfa-admin-card-grid">
+        <div class="bfa-relatorio-grid bfa-relatorio-grid--cards">
             @foreach (var faixa in Model.PorFaixa)
             {
-                <div class="bfa-admin-metric-card">
-                    <div class="bfa-admin-metric-card__label">@faixa.Faixa</div>
-                    <div class="bfa-admin-metric-card__value">@faixa.QuantidadeAlunos alunos · @faixa.ValorTotal</div>
-                </div>
+                <article class="bfa-relatorio-mini-card">
+                    <span class="bfa-relatorio-mini-card__label">@faixa.Faixa</span>
+                    <strong class="bfa-relatorio-mini-card__value">@faixa.QuantidadeAlunos</strong>
+                    <span class="bfa-relatorio-mini-card__meta">alunos · @faixa.ValorTotal</span>
+                </article>
             }
         </div>
-    </div>
+    </section>
 }
 
 @if (Model.Alunos.Count == 0)
@@ -55,7 +70,13 @@
 }
 else
 {
-    <div class="bfa-data-card bfa-admin-desktop-list">
+    <section class="bfa-relatorio-panel bfa-admin-desktop-list">
+        <div class="bfa-relatorio-panel__header">
+            <div>
+                <h2 class="bfa-relatorio-panel__title">Alunos inadimplentes</h2>
+                <p class="bfa-relatorio-panel__description">Lista consolidada dos alunos com cobranças atrasadas.</p>
+            </div>
+        </div>
         <div class="bfa-table-wrap">
             <table>
                 <thead>
@@ -103,7 +124,7 @@ else
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
     <section class="bfa-mobile-card-list" aria-label="Alunos inadimplentes">
         @foreach (var aluno in Model.Alunos)

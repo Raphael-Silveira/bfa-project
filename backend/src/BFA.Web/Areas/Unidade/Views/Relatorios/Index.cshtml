@@ -9,7 +9,7 @@
         <p class="bfa-admin-page-header__eyebrow">Operação da unidade</p>
         <h1 class="bfa-admin-page-header__title" id="titulo-relatorios">Relatórios</h1>
         <p class="bfa-admin-page-header__description">
-            Relatórios e indicadores de @Model.NomeUnidade.
+            Escolha um relatório para analisar @Model.NomeUnidade.
         </p>
     </div>
 </header>
@@ -18,8 +18,8 @@
     <a class="bfa-admin-card bfa-admin-report-card"
        asp-area="Unidade"
        asp-controller="Relatorios"
-       asp-action="Financeiro"
-       asp-route-unidadeId="@Model.UnidadeId">
+        asp-action="Financeiro"
+        asp-route-unidadeId="@Model.UnidadeId">
         <div class="bfa-admin-report-card__icon" aria-hidden="true">$</div>
         <div class="bfa-admin-report-card__content">
             <h2 class="bfa-admin-report-card__title">Financeiro</h2>
@@ -30,8 +30,8 @@
     <a class="bfa-admin-card bfa-admin-report-card"
        asp-area="Unidade"
        asp-controller="Relatorios"
-       asp-action="Inadimplencia"
-       asp-route-unidadeId="@Model.UnidadeId">
+        asp-action="Inadimplencia"
+        asp-route-unidadeId="@Model.UnidadeId">
         <div class="bfa-admin-report-card__icon" aria-hidden="true">!</div>
         <div class="bfa-admin-report-card__content">
             <h2 class="bfa-admin-report-card__title">Inadimplência</h2>
@@ -40,10 +40,10 @@
     </a>
 
     <a class="bfa-admin-card bfa-admin-report-card"
-       asp-area="Unidade"
-       asp-controller="Aulas"
-       asp-action="Frequencia"
-       asp-route-unidadeId="@Model.UnidadeId">
+        asp-area="Unidade"
+        asp-controller="Relatorios"
+        asp-action="Frequencia"
+        asp-route-unidadeId="@Model.UnidadeId">
         <div class="bfa-admin-report-card__icon" aria-hidden="true">%</div>
         <div class="bfa-admin-report-card__content">
             <h2 class="bfa-admin-report-card__title">Frequência</h2>
@@ -52,10 +52,10 @@
     </a>
 
     <a class="bfa-admin-card bfa-admin-report-card"
-       asp-area="Unidade"
-       asp-controller="Cobrancas"
-       asp-action="Resumo"
-       asp-route-unidadeId="@Model.UnidadeId">
+        asp-area="Unidade"
+        asp-controller="Relatorios"
+        asp-action="ResumoFinanceiro"
+        asp-route-unidadeId="@Model.UnidadeId">
         <div class="bfa-admin-report-card__icon" aria-hidden="true">R</div>
         <div class="bfa-admin-report-card__content">
             <h2 class="bfa-admin-report-card__title">Resumo Financeiro</h2>

@@ -356,29 +356,10 @@ public sealed class AulasController(
         DateOnly? dataFim,
         CancellationToken cancellationToken)
     {
-        var usuario = ObterUsuarioOuForbid();
-        if (usuario.Resultado is not null) return usuario.Resultado;
-
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var inicio = dataInicio ?? hoje.AddDays(-30);
-        var fim = dataFim ?? hoje;
-
-        var resultado = await aulasServico.ObterFrequenciaAsync(
-            usuario.UsuarioId, unidadeId, turmaId, inicio, fim, cancellationToken);
-
-        if (resultado.Estado == EstadoAulasUnidade.UnidadeNaoEncontrada)
-            return NotFound();
-        if (resultado.Estado != EstadoAulasUnidade.Sucesso
-            || resultado.Valor is null
-            || resultado.Contexto is null)
-            return Forbid();
-
-        return View(AulasViewModelMapper.MapearFrequencia(
-            resultado.Contexto,
-            resultado.Valor,
-            turmaId,
-            inicio,
-            fim));
+        return RedirectToAction(
+            "Frequencia",
+            "Relatorios",
+            new { area = "Unidade", unidadeId, turmaId, dataInicio, dataFim });
     }
 
     private async Task<ContextoAulasResumo?> ObterContextoAsync(

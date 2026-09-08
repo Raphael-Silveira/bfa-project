@@ -200,20 +200,10 @@ public sealed class CobrancasController(
         Guid unidadeId,
         CancellationToken cancellationToken)
     {
-        var usuario = ObterUsuarioOuForbid();
-        if (usuario.Resultado is not null) return usuario.Resultado;
-
-        var (estado, resumo) = await cobrancasServico.ObterResumoFinanceiroAsync(usuario.UsuarioId, unidadeId);
-
-        if (estado == EstadoCobrancas.UnidadeNaoEncontrada)
-            return NotFound();
-        if (estado != EstadoCobrancas.Sucesso || resumo is null)
-            return Forbid();
-
-        var contexto = await ObterContextoOuForbidAsync(usuario.UsuarioId, unidadeId, cancellationToken);
-        if (contexto.Resultado is not null) return contexto.Resultado;
-
-        return View(CobrancaViewModelMapper.MapearResumoFinanceiro(contexto.Valor!, resumo));
+        return RedirectToAction(
+            "ResumoFinanceiro",
+            "Relatorios",
+            new { area = "Unidade", unidadeId });
     }
 
     [HttpPost("pagamento-consolidado/{alunoId:guid}")]

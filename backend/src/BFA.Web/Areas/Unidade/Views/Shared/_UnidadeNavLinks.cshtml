@@ -11,33 +11,27 @@
     var rotaMatriculas = $"{rotaUnidade}/matriculas";
     var rotaFinanceiro = $"{rotaUnidade}/cobrancas";
     var rotaRelatorios = $"{rotaUnidade}/relatorios";
-    var contratoAtivo = caminhoAtual.StartsWith(
-        rotaContrato,
-        StringComparison.OrdinalIgnoreCase);
-    var professoresAtivo = caminhoAtual.StartsWith(
-        rotaProfessores,
-        StringComparison.OrdinalIgnoreCase);
-    var turmasAtivo = caminhoAtual.StartsWith(
-        rotaTurmas,
-        StringComparison.OrdinalIgnoreCase);
-    var alunosAtivo = caminhoAtual.StartsWith(
-        rotaAlunos,
-        StringComparison.OrdinalIgnoreCase);
-    var aulasAtivo = caminhoAtual.StartsWith(
-        rotaAulas,
-        StringComparison.OrdinalIgnoreCase);
-    var planosAtivo = caminhoAtual.StartsWith(
-        rotaPlanos,
-        StringComparison.OrdinalIgnoreCase);
-    var matriculasAtivo = caminhoAtual.StartsWith(
-        rotaMatriculas,
-        StringComparison.OrdinalIgnoreCase);
-    var financeiroAtivo = caminhoAtual.StartsWith(
-        rotaFinanceiro,
-        StringComparison.OrdinalIgnoreCase);
-    var relatoriosAtivo = caminhoAtual.StartsWith(
-        rotaRelatorios,
-        StringComparison.OrdinalIgnoreCase);
+    var rotaRelatoriosFinanceiro = $"{rotaRelatorios}/financeiro";
+    var rotaRelatoriosInadimplencia = $"{rotaRelatorios}/inadimplencia";
+    var rotaRelatoriosFrequencia = $"{rotaRelatorios}/frequencia";
+    var rotaRelatoriosResumoFinanceiro = $"{rotaRelatorios}/resumo-financeiro";
+
+    var contratoAtivo = caminhoAtual.StartsWith(rotaContrato, StringComparison.OrdinalIgnoreCase);
+    var professoresAtivo = caminhoAtual.StartsWith(rotaProfessores, StringComparison.OrdinalIgnoreCase);
+    var turmasAtivo = caminhoAtual.StartsWith(rotaTurmas, StringComparison.OrdinalIgnoreCase);
+    var alunosAtivo = caminhoAtual.StartsWith(rotaAlunos, StringComparison.OrdinalIgnoreCase);
+    var aulasAtivo = caminhoAtual.StartsWith(rotaAulas, StringComparison.OrdinalIgnoreCase);
+    var planosAtivo = caminhoAtual.StartsWith(rotaPlanos, StringComparison.OrdinalIgnoreCase);
+    var matriculasAtivo = caminhoAtual.StartsWith(rotaMatriculas, StringComparison.OrdinalIgnoreCase);
+    var financeiroAtivo = caminhoAtual.StartsWith(rotaFinanceiro, StringComparison.OrdinalIgnoreCase);
+    var relatoriosPainelAtivo = string.Equals(caminhoAtual, rotaRelatorios, StringComparison.OrdinalIgnoreCase);
+    var relatoriosFinanceiroAtivo = caminhoAtual.StartsWith(rotaRelatoriosFinanceiro, StringComparison.OrdinalIgnoreCase);
+    var relatoriosInadimplenciaAtivo = caminhoAtual.StartsWith(rotaRelatoriosInadimplencia, StringComparison.OrdinalIgnoreCase);
+    var relatoriosFrequenciaAtivo = caminhoAtual.StartsWith(rotaRelatoriosFrequencia, StringComparison.OrdinalIgnoreCase);
+    var relatoriosResumoFinanceiroAtivo = caminhoAtual.StartsWith(rotaRelatoriosResumoFinanceiro, StringComparison.OrdinalIgnoreCase);
+    var relatoriosAtivo = relatoriosPainelAtivo || relatoriosFinanceiroAtivo
+        || relatoriosInadimplenciaAtivo || relatoriosFrequenciaAtivo
+        || relatoriosResumoFinanceiroAtivo;
     var visaoGeralAtiva = !contratoAtivo && !professoresAtivo && !turmasAtivo
         && !alunosAtivo && !aulasAtivo && !planosAtivo && !matriculasAtivo
         && !financeiroAtivo && !relatoriosAtivo
@@ -128,15 +122,64 @@
     <span>Financeiro</span>
 </a>
 
-<a class="bfa-admin-nav-link @(relatoriosAtivo ? "is-active" : null)"
-   href="@rotaRelatorios"
-   aria-current="@(relatoriosAtivo ? "page" : null)">
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path>
-    </svg>
-    <span>Relatórios</span>
-</a>
+<details class="bfa-admin-nav-group" @(relatoriosAtivo ? "open" : null)>
+    <summary class="bfa-admin-nav-group__summary bfa-admin-nav-link bfa-admin-nav-link--group @(relatoriosAtivo ? "is-active" : null)">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"></path>
+        </svg>
+        <span>Relatórios</span>
+        <svg class="bfa-admin-nav-link__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="m9 6 6 6-6 6"></path>
+        </svg>
+    </summary>
+    <div class="bfa-admin-nav-group__items">
+        <a class="bfa-admin-nav-link bfa-admin-nav-link--nested @(relatoriosPainelAtivo ? "is-active" : null)"
+           href="@rotaRelatorios"
+           aria-current="@(relatoriosPainelAtivo ? "page" : null)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 4h6v6H4z"></path>
+                <path d="M14 4h6v6h-6z"></path>
+                <path d="M4 14h6v6H4z"></path>
+                <path d="M14 14h6v6h-6z"></path>
+            </svg>
+            <span>Painel</span>
+        </a>
+        <a class="bfa-admin-nav-link bfa-admin-nav-link--nested @(relatoriosFinanceiroAtivo ? "is-active" : null)"
+           href="@rotaRelatoriosFinanceiro"
+           aria-current="@(relatoriosFinanceiroAtivo ? "page" : null)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>Financeiro</span>
+        </a>
+        <a class="bfa-admin-nav-link bfa-admin-nav-link--nested @(relatoriosInadimplenciaAtivo ? "is-active" : null)"
+           href="@rotaRelatoriosInadimplencia"
+           aria-current="@(relatoriosInadimplenciaAtivo ? "page" : null)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <path d="M12 9v4M12 17h.01"></path>
+            </svg>
+            <span>Inadimplência</span>
+        </a>
+        <a class="bfa-admin-nav-link bfa-admin-nav-link--nested @(relatoriosFrequenciaAtivo ? "is-active" : null)"
+           href="@rotaRelatoriosFrequencia"
+           aria-current="@(relatoriosFrequenciaAtivo ? "page" : null)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 1v4M12 19v4M4.22 4.22 7 7M17 17l2.78 2.78M1 12h4M19 12h4M4.22 19.78 7 17M17 7l2.78-2.78"></path>
+            </svg>
+            <span>Frequência</span>
+        </a>
+        <a class="bfa-admin-nav-link bfa-admin-nav-link--nested @(relatoriosResumoFinanceiroAtivo ? "is-active" : null)"
+           href="@rotaRelatoriosResumoFinanceiro"
+           aria-current="@(relatoriosResumoFinanceiroAtivo ? "page" : null)">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>Resumo financeiro</span>
+        </a>
+    </div>
+</details>
 
 <a class="bfa-admin-nav-link @(contratoAtivo ? "is-active" : null)"
    href="@rotaContrato"

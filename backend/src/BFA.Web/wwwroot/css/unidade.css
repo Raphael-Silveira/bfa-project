@@ -2359,6 +2359,195 @@
   font-size: 0.8125rem;
 }
 
+/* ─── Relatórios da Unidade ─── */
+
+.bfa-relatorio-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at top left, rgba(255, 193, 7, 0.08), transparent 24rem),
+    linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+  box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.22);
+}
+
+.bfa-relatorio-hero__copy {
+  min-width: 0;
+}
+
+.bfa-relatorio-hero__eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--bfa-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.bfa-relatorio-hero__title {
+  margin: 0;
+  color: var(--bfa-white);
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.bfa-relatorio-hero__description {
+  max-width: 42rem;
+  margin: 0.6rem 0 0;
+  color: var(--bfa-text-secondary);
+  line-height: 1.55;
+}
+
+.bfa-relatorio-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.bfa-relatorio-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.bfa-relatorio-stat {
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+  min-width: 0;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+}
+
+.bfa-relatorio-stat__label {
+  color: var(--bfa-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-relatorio-stat__value {
+  color: var(--bfa-white);
+  font-size: clamp(1.35rem, 2.8vw, 1.9rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.bfa-relatorio-stat__hint {
+  color: var(--bfa-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.bfa-relatorio-stat--wide {
+  grid-column: span 2;
+}
+
+.bfa-relatorio-panel {
+  padding: 1.125rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(29, 32, 35, 0.98), rgba(21, 23, 25, 0.98));
+  box-shadow: 0 1rem 2.75rem rgba(0, 0, 0, 0.22);
+}
+
+.bfa-relatorio-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bfa-relatorio-panel__title {
+  margin: 0;
+  color: var(--bfa-white);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.bfa-relatorio-panel__description {
+  margin: 0.35rem 0 0;
+  color: var(--bfa-text-secondary);
+  font-size: 0.875rem;
+}
+
+.bfa-relatorio-panel__body {
+  min-width: 0;
+}
+
+.bfa-relatorio-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.bfa-relatorio-grid--cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bfa-relatorio-grid--cards-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bfa-relatorio-mini-card {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.bfa-relatorio-mini-card__label {
+  color: var(--bfa-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bfa-relatorio-mini-card__value {
+  color: var(--bfa-white);
+  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.bfa-relatorio-mini-card__value--danger {
+  color: var(--bfa-danger);
+}
+
+.bfa-relatorio-mini-card__meta {
+  color: var(--bfa-text-muted);
+  font-size: 0.72rem;
+}
+
+.bfa-relatorio-filter-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.bfa-relatorio-filter-card .bfa-matricula-filters {
+  margin: 0;
+}
+
 @media (max-width: 56rem) {
   .bfa-aula-detail-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -2407,5 +2596,23 @@
   .bfa-aula-actions .bfa-admin-button {
     flex: 1;
     justify-content: center;
+  }
+
+  .bfa-relatorio-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-relatorio-hero__stats,
+  .bfa-relatorio-grid--cards,
+  .bfa-relatorio-grid--cards-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-relatorio-stat--wide {
+    grid-column: auto;
+  }
+
+  .bfa-relatorio-panel__header {
+    flex-direction: column;
   }
 }
