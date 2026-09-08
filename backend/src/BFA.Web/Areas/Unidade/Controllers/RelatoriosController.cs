@@ -10,6 +10,7 @@ using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace BFA.Web.Areas.Unidade.Controllers;
 
@@ -48,8 +49,8 @@ public sealed class RelatoriosController(
     [HttpGet("financeiro")]
     public async Task<IActionResult> Financeiro(
         Guid unidadeId,
-        DateOnly? dataInicio,
-        DateOnly? dataFim,
+        string? dataInicio,
+        string? dataFim,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
@@ -57,7 +58,8 @@ public sealed class RelatoriosController(
         var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
         if (contexto is null) return Forbid();
 
-        var filtro = new FiltroRelatorio(dataInicio, dataFim);
+        var (inicio, fim) = ObterPeriodoFinanceiro(dataInicio, dataFim);
+        var filtro = new FiltroRelatorio(inicio, fim);
         var (estado, relatorio) = await relatoriosServico.ObterFinanceiroDetalhadoAsync(
             usuarioId, unidadeId, filtro);
 
@@ -66,7 +68,7 @@ public sealed class RelatoriosController(
         if (estado != EstadoRelatorios.Sucesso || relatorio is null)
             return Forbid();
 
-        return View(RelatorioViewModelMapper.MapearFinanceiro(contexto, relatorio, dataInicio, dataFim));
+        return View(RelatorioViewModelMapper.MapearFinanceiro(contexto, relatorio, inicio, fim));
     }
 
     [HttpGet("resumo-financeiro")]
@@ -93,8 +95,8 @@ public sealed class RelatoriosController(
     public async Task<IActionResult> Frequencia(
         Guid unidadeId,
         Guid? turmaId,
-        DateOnly? dataInicio,
-        DateOnly? dataFim,
+        string? dataInicio,
+        string? dataFim,
         CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId) return Forbid();
@@ -102,9 +104,7 @@ public sealed class RelatoriosController(
         var contexto = await ObterContextoAsync(usuarioId, unidadeId, cancellationToken);
         if (contexto is null) return Forbid();
 
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-        var inicio = dataInicio ?? hoje.AddDays(-30);
-        var fim = dataFim ?? hoje;
+        var (inicio, fim) = ObterPeriodoFrequencia(dataInicio, dataFim);
 
         var resultado = await aulasServico.ObterFrequenciaAsync(
             usuarioId, unidadeId, turmaId, inicio, fim, cancellationToken);
@@ -171,5 +171,33 @@ public sealed class RelatoriosController(
     {
         return await unidadesUsuarioConsulta.ObterAdministradaAsync(
             usuarioId, unidadeId, cancellationToken);
+    }
+
+    private static (DateOnly Inicio, DateOnly Fim) ObterPeriodoFinanceiro(string? dataInicio, string? dataFim)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var cultura = CultureInfo.GetCultureInfo("pt-BR");
+        var estilos = DateTimeStyles.None;
+
+        var inicio = DateOnly.TryParseExact(dataInicio, "dd/MM/yyyy", cultura, estilos, out var d1)
+            ? d1 : hoje;
+        var fim = DateOnly.TryParseExact(dataFim, "dd/MM/yyyy", cultura, estilos, out var d2)
+            ? d2 : inicio;
+
+        return (inicio, fim);
+    }
+
+    private static (DateOnly Inicio, DateOnly Fim) ObterPeriodoFrequencia(string? dataInicio, string? dataFim)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var cultura = CultureInfo.GetCultureInfo("pt-BR");
+        var estilos = DateTimeStyles.None;
+
+        var inicio = DateOnly.TryParseExact(dataInicio, "dd/MM/yyyy", cultura, estilos, out var d1)
+            ? d1 : hoje.AddDays(-30);
+        var fim = DateOnly.TryParseExact(dataFim, "dd/MM/yyyy", cultura, estilos, out var d2)
+            ? d2 : hoje;
+
+        return (inicio, fim);
     }
 }

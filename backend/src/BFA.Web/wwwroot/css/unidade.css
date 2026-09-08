@@ -2546,6 +2546,25 @@
 
 .bfa-relatorio-filter-card .bfa-matricula-filters {
   margin: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+.bfa-relatorio-filter-card .bfa-form-field {
+  min-width: 0;
+}
+
+.bfa-relatorio-filter-card .bfa-admin-date-field {
+  width: 100%;
+}
+
+@media (max-width: 58rem) {
+  .bfa-relatorio-filter-card .bfa-matricula-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bfa-relatorio-filter-card .bfa-matricula-filter-actions {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 56rem) {

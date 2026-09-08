@@ -14,39 +14,69 @@
     </div>
 </header>
 
-<section class="bfa-list-toolbar" aria-label="Filtros">
-    <form class="bfa-list-search" method="get" action="/unidade/@Model.UnidadeId/relatorios/frequencia">
-        <svg class="bfa-list-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
-        <input type="hidden" name="dataInicio" value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
-        <input type="hidden" name="dataFim" value="@Model.DataFim.ToString("yyyy-MM-dd")" />
-        <input type="search" placeholder="Filtrar por período..." aria-label="Filtrar por período" disabled />
-    </form>
-    <form class="bfa-filter-form" method="get" action="/unidade/@Model.UnidadeId/relatorios/frequencia">
-        <div class="bfa-filter-fields">
-            <div class="bfa-filter-field">
-                <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
-                <input class="bfa-form-control"
+<section class="bfa-relatorio-panel bfa-relatorio-filter-card" aria-labelledby="filtros-frequencia">
+    <div class="bfa-relatorio-panel__header">
+        <div>
+            <h2 class="bfa-relatorio-panel__title" id="filtros-frequencia">Período</h2>
+            <p class="bfa-relatorio-panel__description">Filtre o detalhamento de frequência por intervalo de datas.</p>
+        </div>
+    </div>
+
+    <form class="bfa-matricula-filters"
+          method="get"
+          action="/unidade/@Model.UnidadeId/relatorios/frequencia"
+          role="search">
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="filtro-data-inicio">Data início</label>
+            <div class="bfa-admin-date-field" data-bfa-date-field>
+                <input class="form-control bfa-form-control"
                        id="filtro-data-inicio"
                        name="dataInicio"
-                       type="date"
-                       value="@Model.DataInicio.ToString("yyyy-MM-dd")" />
+                       type="text"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       placeholder="dd/mm/aaaa"
+                       maxlength="10"
+                       data-bfa-date-input
+                       value="@Model.DataInicio.ToString("dd/MM/yyyy")" />
+                <button class="bfa-admin-date-field__trigger"
+                        type="button"
+                        aria-label="Abrir calendário da data inicial"
+                        title="Abrir calendário"
+                        data-bfa-date-trigger>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                </button>
             </div>
-            <div class="bfa-filter-field">
-                <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
-                <input class="bfa-form-control"
+        </div>
+        <div class="bfa-form-field">
+            <label class="bfa-form-label" for="filtro-data-fim">Data fim</label>
+            <div class="bfa-admin-date-field" data-bfa-date-field>
+                <input class="form-control bfa-form-control"
                        id="filtro-data-fim"
                        name="dataFim"
-                       type="date"
-                       value="@Model.DataFim.ToString("yyyy-MM-dd")" />
+                       type="text"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       placeholder="dd/mm/aaaa"
+                       maxlength="10"
+                       data-bfa-date-input
+                       value="@Model.DataFim.ToString("dd/MM/yyyy")" />
+                <button class="bfa-admin-date-field__trigger"
+                        type="button"
+                        aria-label="Abrir calendário da data final"
+                        title="Abrir calendário"
+                        data-bfa-date-trigger>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                </button>
             </div>
-            <div class="bfa-filter-actions">
-                <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
-                <a class="bfa-btn-secondary bfa-admin-button"
-                   asp-area="Unidade"
-                   asp-controller="Relatorios"
-                   asp-action="Frequencia"
-                   asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
-            </div>
+        </div>
+        <div class="bfa-matricula-filter-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Unidade"
+               asp-controller="Relatorios"
+               asp-action="Frequencia"
+               asp-route-unidadeId="@Model.UnidadeId">Limpar</a>
         </div>
     </form>
 </section>
@@ -61,6 +91,7 @@
         </div>
     </section>
 }
+
 else
 {
     <div class="bfa-data-card bfa-admin-desktop-list">
@@ -142,4 +173,13 @@ else
             </article>
         }
     </section>
+}
+
+@section Scripts {
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+    <script>
+        document.querySelectorAll('[data-bfa-date-field]').forEach(function (el) {
+            BFADateField.init(el);
+        });
+    </script>
 }

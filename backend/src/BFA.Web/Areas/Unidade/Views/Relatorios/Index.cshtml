@@ -1,7 +1,9 @@
+@using System.Globalization
 @model RelatorioIndexViewModel
-@{
+@{ 
     ViewData["Title"] = "Relatórios";
     Layout = "_UnidadeLayout";
+    var ptBr = CultureInfo.GetCultureInfo("pt-BR");
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-relatorios">
@@ -14,11 +16,45 @@
     </div>
 </header>
 
-<div class="bfa-admin-card-grid">
+<section class="bfa-relatorio-hero" aria-labelledby="titulo-relatorios-resumo">
+    <div class="bfa-relatorio-hero__copy">
+        <p class="bfa-relatorio-hero__eyebrow">Painel de relatórios</p>
+        <h2 class="bfa-relatorio-hero__title" id="titulo-relatorios-resumo">Indicadores principais da unidade</h2>
+        <p class="bfa-relatorio-hero__description">
+            Acompanhe a operação da unidade por financeiro, inadimplência e frequência em um único espaço.
+        </p>
+    </div>
+    <div class="bfa-relatorio-hero__stats" aria-label="Resumo da unidade">
+        <article class="bfa-relatorio-stat">
+            <span class="bfa-relatorio-stat__label">Receita</span>
+            <strong class="bfa-relatorio-stat__value">@Model.Resumo.TotalReceita.ToString("C", ptBr)</strong>
+            <span class="bfa-relatorio-stat__hint">acumulada</span>
+        </article>
+        <article class="bfa-relatorio-stat">
+            <span class="bfa-relatorio-stat__label">Pendente</span>
+            <strong class="bfa-relatorio-stat__value">@Model.Resumo.TotalPendente.ToString("C", ptBr)</strong>
+            <span class="bfa-relatorio-stat__hint">saldo em aberto</span>
+        </article>
+        <article class="bfa-relatorio-stat">
+            <span class="bfa-relatorio-stat__label">Atrasado</span>
+            <strong class="bfa-relatorio-stat__value">@Model.Resumo.TotalAtrasado.ToString("C", ptBr)</strong>
+            <span class="bfa-relatorio-stat__hint">valor vencido</span>
+        </article>
+    </div>
+</section>
+
+<section class="bfa-relatorio-panel">
+    <div class="bfa-relatorio-panel__header">
+        <div>
+            <h2 class="bfa-relatorio-panel__title">Relatórios disponíveis</h2>
+            <p class="bfa-relatorio-panel__description">Acesse os principais recortes da operação da unidade.</p>
+        </div>
+    </div>
+    <div class="bfa-relatorio-grid bfa-relatorio-grid--cards">
     <a class="bfa-admin-card bfa-admin-report-card"
        asp-area="Unidade"
        asp-controller="Relatorios"
-        asp-action="Financeiro"
+       asp-action="Financeiro"
         asp-route-unidadeId="@Model.UnidadeId">
         <div class="bfa-admin-report-card__icon" aria-hidden="true">$</div>
         <div class="bfa-admin-report-card__content">
@@ -62,36 +98,36 @@
             <p class="bfa-admin-report-card__description">Visão geral de receitas e pendências</p>
         </div>
     </a>
-</div>
+    </div>
+</section>
 
-<div class="bfa-admin-card">
-    <h2 class="bfa-admin-card__title">Indicadores Gerais</h2>
-    <div class="bfa-admin-card-grid">
-        <div class="bfa-admin-metric-card">
-            <div class="bfa-admin-metric-card__label">Alunos Ativos</div>
-            <div class="bfa-admin-metric-card__value">@Model.Resumo.TotalAlunosAtivos</div>
-        </div>
-        <div class="bfa-admin-metric-card">
-            <div class="bfa-admin-metric-card__label">Matrículas Ativas</div>
-            <div class="bfa-admin-metric-card__value">@Model.Resumo.TotalMatriculasAtivas</div>
-        </div>
-        <div class="bfa-admin-metric-card">
-            <div class="bfa-admin-metric-card__label">Aulas Concluídas</div>
-            <div class="bfa-admin-metric-card__value">@Model.Resumo.TotalAulasConcluidas</div>
+<section class="bfa-relatorio-panel">
+    <div class="bfa-relatorio-panel__header">
+        <div>
+            <h2 class="bfa-relatorio-panel__title">Indicadores gerais</h2>
+            <p class="bfa-relatorio-panel__description">Leitura rápida dos números operacionais da unidade.</p>
         </div>
     </div>
-    <div class="bfa-admin-card-grid">
-        <div class="bfa-admin-metric-card">
-            <div class="bfa-admin-metric-card__label">Receita Total</div>
-            <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--success">@Model.Resumo.TotalReceita.ToString("C")</div>
-        </div>
-        <div class="bfa-admin-metric-card">
-            <div class="bfa-admin-metric-card__label">Pendente</div>
-            <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--warning">@Model.Resumo.TotalPendente.ToString("C")</div>
-        </div>
-        <div class="bfa-admin-metric-card">
-            <div class="bfa-admin-metric-card__label">Atrasado</div>
-            <div class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.Resumo.TotalAtrasado.ToString("C")</div>
-        </div>
+    <div class="bfa-relatorio-grid bfa-relatorio-grid--cards-2">
+        <article class="bfa-relatorio-mini-card">
+            <span class="bfa-relatorio-mini-card__label">Alunos ativos</span>
+            <strong class="bfa-relatorio-mini-card__value">@Model.Resumo.TotalAlunosAtivos</strong>
+        </article>
+        <article class="bfa-relatorio-mini-card">
+            <span class="bfa-relatorio-mini-card__label">Matrículas ativas</span>
+            <strong class="bfa-relatorio-mini-card__value">@Model.Resumo.TotalMatriculasAtivas</strong>
+        </article>
+        <article class="bfa-relatorio-mini-card">
+            <span class="bfa-relatorio-mini-card__label">Aulas concluídas</span>
+            <strong class="bfa-relatorio-mini-card__value">@Model.Resumo.TotalAulasConcluidas</strong>
+        </article>
+        <article class="bfa-relatorio-mini-card">
+            <span class="bfa-relatorio-mini-card__label">Cobranças pendentes</span>
+            <strong class="bfa-relatorio-mini-card__value">@Model.Resumo.TotalCobrancasPendentes</strong>
+        </article>
+        <article class="bfa-relatorio-mini-card">
+            <span class="bfa-relatorio-mini-card__label">Cobranças atrasadas</span>
+            <strong class="bfa-relatorio-mini-card__value bfa-relatorio-mini-card__value--danger">@Model.Resumo.TotalCobrancasAtrasadas</strong>
+        </article>
     </div>
-</div>
+</section>

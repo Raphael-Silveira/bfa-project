@@ -2,6 +2,7 @@ using BFA.Application.Relatorios;
 using BFA.Application.Unidades;
 using BFA.Domain.Cobrancas;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 
 namespace BFA.Web.ViewModels.Unidade;
 
@@ -106,6 +107,8 @@ public sealed record CobrancaAtrasadaDetalheViewModel(
 
 public static class RelatorioViewModelMapper
 {
+    private static readonly CultureInfo PtBr = new("pt-BR");
+
     public static RelatorioIndexViewModel MapearIndex(
         UnidadeAcessoResumo contexto,
         ResumoGeralRelatorios resumo) => new()
@@ -129,21 +132,21 @@ public static class RelatorioViewModelMapper
         NomeUnidade = contexto.Nome,
         PodeTrocarUnidade = false,
         PodeGerenciar = true,
-        TotalReceita = relatorio.TotalReceita.ToString("C"),
-        TotalPendente = relatorio.TotalPendente.ToString("C"),
-        TotalAtrasado = relatorio.TotalAtrasado.ToString("C"),
+        TotalReceita = relatorio.TotalReceita.ToString("C", PtBr),
+        TotalPendente = relatorio.TotalPendente.ToString("C", PtBr),
+        TotalAtrasado = relatorio.TotalAtrasado.ToString("C", PtBr),
         PorTipo = relatorio.PorTipo.Select(t => new FinanceiroPorTipoViewModel(
             MapearTipo(t.Tipo),
-            t.Valor.ToString("C"),
+            t.Valor.ToString("C", PtBr),
             t.Quantidade)).ToList(),
         PorStatus = relatorio.PorStatus.Select(s => new FinanceiroPorStatusViewModel(
             MapearStatus(s.Status),
-            s.Valor.ToString("C"),
+            s.Valor.ToString("C", PtBr),
             s.Quantidade)).ToList(),
         PorPeriodo = relatorio.PorPeriodo.Select(p => new FinanceiroPorPeriodoViewModel(
             $"{p.Mes:D2}/{p.Ano}",
-            p.Receita.ToString("C"),
-            p.Pendente.ToString("C"))).ToList(),
+            p.Receita.ToString("C", PtBr),
+            p.Pendente.ToString("C", PtBr))).ToList(),
         DataInicio = dataInicio,
         DataFim = dataFim
     };
@@ -157,18 +160,18 @@ public static class RelatorioViewModelMapper
         NomeUnidade = contexto.Nome,
         PodeTrocarUnidade = false,
         PodeGerenciar = true,
-        TotalAtrasado = relatorio.TotalAtrasado.ToString("C"),
+        TotalAtrasado = relatorio.TotalAtrasado.ToString("C", PtBr),
         TotalAlunos = relatorio.TotalAlunos,
         PorFaixa = relatorio.PorFaixa.Select(f => new FaixaAtrasoViewModel(
             f.Faixa,
             f.QuantidadeAlunos,
-            f.ValorTotal.ToString("C"))).ToList(),
+            f.ValorTotal.ToString("C", PtBr))).ToList(),
         Alunos = relatorio.Alunos.Select(a => new InadimplenciaAlunoViewModel(
             a.AlunoId,
             a.NomeCompleto,
             a.Cpf,
             a.CobrancasAtrasadas,
-            a.ValorTotalAtrasado.ToString("C"),
+            a.ValorTotalAtrasado.ToString("C", PtBr),
             a.PrimeiraDataVencimento?.ToString("dd/MM/yyyy"),
             a.UltimaDataVencimento?.ToString("dd/MM/yyyy"),
             a.DiasEmAtraso,
@@ -187,14 +190,14 @@ public static class RelatorioViewModelMapper
         AlunoNome = detalhe.NomeCompleto,
         AlunoCpf = detalhe.Cpf,
         DiasEmAtraso = detalhe.DiasEmAtraso,
-        ValorTotalAtrasado = detalhe.ValorTotalAtrasado.ToString("C"),
+        ValorTotalAtrasado = detalhe.ValorTotalAtrasado.ToString("C", PtBr),
         Cobrancas = detalhe.Cobrancas.Select(c => new CobrancaAtrasadaDetalheViewModel(
             c.CobrancaId,
             c.Descricao,
             c.Tipo,
-            c.Valor.ToString("C"),
-            c.ValorPago.ToString("C"),
-            c.SaldoDevedor.ToString("C"),
+            c.Valor.ToString("C", PtBr),
+            c.ValorPago.ToString("C", PtBr),
+            c.SaldoDevedor.ToString("C", PtBr),
             c.DataVencimento.ToString("dd/MM/yyyy"),
             c.DiasAtraso)).ToList()
     };

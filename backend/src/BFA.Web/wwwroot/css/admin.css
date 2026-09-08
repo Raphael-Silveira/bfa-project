@@ -432,6 +432,13 @@
   scrollbar-gutter: stable;
   background: linear-gradient(180deg, #111214 0%, #0D0E0F 100%);
   border-right: 1px solid var(--bfa-border-soft);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bfa-admin-sidebar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .bfa-admin-nav-label,
@@ -647,6 +654,13 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.bfa-admin-drawer__body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .bfa-admin-drawer__nav {
