@@ -169,54 +169,54 @@ public interface IAulasServico
     Task<ResultadoAulasUnidade<IReadOnlyList<AulaResumo>>> ListarAsync(
         Guid usuarioId, Guid unidadeId,
         DateOnly dataInicio, DateOnly dataFim,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidade<AulaResumoPaginado>> ListarPaginadoAsync(
         Guid usuarioId, Guid unidadeId,
         DateOnly dataInicio, DateOnly dataFim,
         int pagina, int tamanhoPagina,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidade<AulaDetalhe>> ObterAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidade<Guid>> CriarAsync(
         Guid usuarioId, Guid unidadeId,
         CriarAulaSolicitacao solicitacao,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidadeSimples> AtualizarAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
         AtualizarAulaSolicitacao solicitacao,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidadeSimples> ConcluirAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidadeSimples> CancelarAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidade<IReadOnlyList<AlunoPresencaResumo>>> ListarAlunosParaChamadaAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidadeSimples> RegistrarPresencaAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId, Guid alunoId,
         RegistrarPresencaSolicitacao solicitacao,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidadeSimples> RegistrarPresencasEmLoteAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
         IReadOnlyList<RegistroPresencaLoteItem> registros,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAulasUnidade<IReadOnlyList<FrequenciaAlunoResumo>>> ObterFrequenciaAsync(
         Guid usuarioId, Guid unidadeId, Guid? turmaId,
         DateOnly dataInicio, DateOnly dataFim,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 }
 
 public sealed class AulasServico(
@@ -229,7 +229,7 @@ public sealed class AulasServico(
     public async Task<ResultadoAulasUnidade<IReadOnlyList<AulaResumo>>> ListarAsync(
         Guid usuarioId, Guid unidadeId,
         DateOnly dataInicio, DateOnly dataFim,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -238,6 +238,13 @@ public sealed class AulasServico(
 
         if (dataInicio > dataFim)
             return new(EstadoAulasUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var itens = await repositorio.ListarAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, dataInicio, dataFim,
@@ -250,7 +257,7 @@ public sealed class AulasServico(
         Guid usuarioId, Guid unidadeId,
         DateOnly dataInicio, DateOnly dataFim,
         int pagina, int tamanhoPagina,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -259,6 +266,13 @@ public sealed class AulasServico(
 
         if (dataInicio > dataFim)
             return new(EstadoAulasUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var paginaSegura = Math.Max(1, pagina);
         var tamanhoSeguro = Math.Clamp(tamanhoPagina, 1, 50);
@@ -274,7 +288,7 @@ public sealed class AulasServico(
 
     public async Task<ResultadoAulasUnidade<AulaDetalhe>> ObterAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -283,6 +297,13 @@ public sealed class AulasServico(
 
         if (aulaId == Guid.Empty)
             return new(EstadoAulasUnidade.AulaNaoEncontrada);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var detalhe = await repositorio.ObterAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, aulaId, cancellationToken);
@@ -296,7 +317,7 @@ public sealed class AulasServico(
     public async Task<ResultadoAulasUnidade<Guid>> CriarAsync(
         Guid usuarioId, Guid unidadeId,
         CriarAulaSolicitacao solicitacao,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         ArgumentNullException.ThrowIfNull(solicitacao);
 
@@ -311,6 +332,13 @@ public sealed class AulasServico(
         {
             return new(EstadoAulasUnidade.DadosInvalidos);
         }
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var existeConflito = await repositorio.ExisteAulaNoHorarioAsync(
             contexto.Valor!.OrganizacaoId,
@@ -357,7 +385,7 @@ public sealed class AulasServico(
     public async Task<ResultadoAulasUnidadeSimples> AtualizarAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
         AtualizarAulaSolicitacao solicitacao,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         ArgumentNullException.ThrowIfNull(solicitacao);
 
@@ -369,6 +397,13 @@ public sealed class AulasServico(
         if (aulaId == Guid.Empty)
             return new(EstadoAulasUnidade.AulaNaoEncontrada);
 
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
+
         var existente = await repositorio.ObterAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, aulaId, cancellationToken);
         if (existente is null)
@@ -377,10 +412,10 @@ public sealed class AulasServico(
         if (solicitacao.Status is not null && solicitacao.Status != existente.Status)
         {
             if (solicitacao.Status == StatusAula.Concluida)
-                return await ConcluirAsync(usuarioId, unidadeId, aulaId, cancellationToken);
+                return await ConcluirAsync(usuarioId, unidadeId, aulaId, cancellationToken, organizacaoId);
 
             if (solicitacao.Status == StatusAula.Cancelada)
-                return await CancelarAsync(usuarioId, unidadeId, aulaId, cancellationToken);
+                return await CancelarAsync(usuarioId, unidadeId, aulaId, cancellationToken, organizacaoId);
         }
 
         if (solicitacao.Observacoes is not null)
@@ -406,7 +441,7 @@ public sealed class AulasServico(
 
     public async Task<ResultadoAulasUnidadeSimples> ConcluirAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -415,6 +450,13 @@ public sealed class AulasServico(
 
         if (aulaId == Guid.Empty)
             return new(EstadoAulasUnidade.AulaNaoEncontrada);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var existente = await repositorio.ObterAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, aulaId, cancellationToken);
@@ -456,7 +498,7 @@ public sealed class AulasServico(
 
     public async Task<ResultadoAulasUnidadeSimples> CancelarAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -465,6 +507,13 @@ public sealed class AulasServico(
 
         if (aulaId == Guid.Empty)
             return new(EstadoAulasUnidade.AulaNaoEncontrada);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var existente = await repositorio.ObterAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, aulaId, cancellationToken);
@@ -506,7 +555,7 @@ public sealed class AulasServico(
 
     public async Task<ResultadoAulasUnidade<IReadOnlyList<AlunoPresencaResumo>>> ListarAlunosParaChamadaAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -515,6 +564,13 @@ public sealed class AulasServico(
 
         if (aulaId == Guid.Empty)
             return new(EstadoAulasUnidade.AulaNaoEncontrada);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var detalhe = await repositorio.ObterAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, aulaId, cancellationToken);
@@ -530,7 +586,7 @@ public sealed class AulasServico(
     public async Task<ResultadoAulasUnidadeSimples> RegistrarPresencaAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId, Guid alunoId,
         RegistrarPresencaSolicitacao solicitacao,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         ArgumentNullException.ThrowIfNull(solicitacao);
 
@@ -541,6 +597,13 @@ public sealed class AulasServico(
 
         if (aulaId == Guid.Empty || alunoId == Guid.Empty)
             return new(EstadoAulasUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var agora = timeProvider.GetUtcNow().UtcDateTime;
         var presencaId = Guid.NewGuid();
@@ -584,7 +647,7 @@ public sealed class AulasServico(
     public async Task<ResultadoAulasUnidadeSimples> RegistrarPresencasEmLoteAsync(
         Guid usuarioId, Guid unidadeId, Guid aulaId,
         IReadOnlyList<RegistroPresencaLoteItem> registros,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -593,6 +656,13 @@ public sealed class AulasServico(
 
         if (aulaId == Guid.Empty || registros is null || registros.Count == 0)
             return new(EstadoAulasUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var agora = timeProvider.GetUtcNow().UtcDateTime;
 
@@ -658,7 +728,7 @@ public sealed class AulasServico(
     public async Task<ResultadoAulasUnidade<IReadOnlyList<FrequenciaAlunoResumo>>> ObterFrequenciaAsync(
         Guid usuarioId, Guid unidadeId, Guid? turmaId,
         DateOnly dataInicio, DateOnly dataFim,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -667,6 +737,13 @@ public sealed class AulasServico(
 
         if (dataInicio > dataFim)
             return new(EstadoAulasUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var frequencia = await repositorio.ObterFrequenciaAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, turmaId,

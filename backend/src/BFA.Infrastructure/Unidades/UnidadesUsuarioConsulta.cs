@@ -87,7 +87,8 @@ public sealed class UnidadesUsuarioConsulta(BfaDbContext dbContext)
                 select new UnidadeContextoResumo(
                     unidade.OrganizacaoId,
                     unidade.Id,
-                    unidade.Nome))
+                    unidade.Nome,
+                    organizacao.Nome))
             .SingleOrDefaultAsync(cancellationToken);
     }
 

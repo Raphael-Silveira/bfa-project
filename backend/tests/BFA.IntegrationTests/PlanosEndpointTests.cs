@@ -456,7 +456,7 @@ public sealed class TestUnidadeContextoPlanos(Guid organizacaoId, Guid unidadeId
     public Task<UnidadeContextoResumo?> ObterAtivaAsync(
         Guid id, CancellationToken cancellationToken) => Task.FromResult(
             id == unidadeId
-                ? new UnidadeContextoResumo(organizacaoId, unidadeId, "BFA Cerquilho")
+                ? new UnidadeContextoResumo(organizacaoId, unidadeId, "BFA Cerquilho", "BFA")
                 : null);
 }
 

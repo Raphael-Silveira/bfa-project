@@ -313,7 +313,7 @@ public sealed class PlanosServicoTests
             Guid unidadeId, CancellationToken cancellationToken) =>
             Task.FromResult<UnidadeContextoResumo?>(
                 unidadeId == UnidadeId
-                    ? new(OrganizacaoId, UnidadeId, "BFA Cerquilho")
+                    ? new(OrganizacaoId, UnidadeId, "BFA Cerquilho", "BFA")
                     : null);
     }
 

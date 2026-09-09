@@ -121,7 +121,7 @@ public sealed class MatriculasServicoTests
         public Task<UnidadeContextoResumo?> ObterAtivaAsync(
             Guid id, CancellationToken cancellationToken) =>
             Task.FromResult<UnidadeContextoResumo?>(id == unidadeId
-                ? new(organizacaoId, unidadeId, "Unidade") : null);
+                ? new(organizacaoId, unidadeId, "Unidade", "Organizacao") : null);
     }
 
     private sealed class GovernancaFake(GovernancaOperacionalUnidade governanca)

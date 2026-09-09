@@ -204,55 +204,55 @@ public interface IAlunosServico
 {
     Task<ResultadoAlunosUnidade<IReadOnlyList<AlunoListaItem>>> ListarAsync(
         Guid usuarioId, Guid unidadeId, string? texto,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidade<AlunoDetalhe>> ObterAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidade<DadosEdicaoAluno>> ObterDadosEdicaoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidade<Guid>> AtualizarDadosAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
         string nomeCompleto, DateOnly dataNascimento, string? cpf, string? telefone, string? email,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     // Responsavel management
     Task<ResultadoAlunosUnidade<IReadOnlyList<ResponsavelAlunoResumo>>> ListarResponsaveisAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidade<ResponsavelDetalhe>> ObterResponsavelAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidade<Guid>> CriarResponsavelAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
         string nomeCompleto, string? cpf, string? telefone, string? email,
         TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
         bool principalContato, bool responsavelFinanceiro,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidade<Guid>> AtualizarResponsavelAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
         string nomeCompleto, string? cpf, string? telefone, string? email,
         TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
         bool principalContato, bool responsavelFinanceiro,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidadeSimples> DesativarVinculoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidadeSimples> AtivarVinculoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 
     Task<ResultadoAlunosUnidadeSimples> ReativarVinculoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? organizacaoId = null);
 }
 
 public sealed class AlunosServico(
@@ -263,12 +263,18 @@ public sealed class AlunosServico(
 {
     public async Task<ResultadoAlunosUnidade<IReadOnlyList<AlunoListaItem>>> ListarAsync(
         Guid usuarioId, Guid unidadeId, string? texto,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
         if (contexto.Estado != EstadoAlunosUnidade.Sucesso)
             return new(contexto.Estado);
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
         var itens = await repositorio.ListarAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, texto, cancellationToken);
         return new(EstadoAlunosUnidade.Sucesso, itens, contexto.Valor);
@@ -276,7 +282,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidade<AlunoDetalhe>> ObterAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -284,6 +290,12 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty)
             return new(EstadoAlunosUnidade.AlunoNaoEncontrado);
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
         var detalhe = await repositorio.ObterAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
         if (detalhe is null)
@@ -293,7 +305,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidade<DadosEdicaoAluno>> ObterDadosEdicaoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -301,6 +313,12 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty)
             return new(EstadoAlunosUnidade.AlunoNaoEncontrado);
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
         var dados = await repositorio.ObterParaEdicaoAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
         if (dados is null)
@@ -311,7 +329,7 @@ public sealed class AlunosServico(
     public async Task<ResultadoAlunosUnidade<Guid>> AtualizarDadosAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
         string nomeCompleto, DateOnly dataNascimento, string? cpf, string? telefone, string? email,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -323,6 +341,13 @@ public sealed class AlunosServico(
         {
             return new(EstadoAlunosUnidade.DadosInvalidos);
         }
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var dadosExistentes = await repositorio.ObterParaEdicaoAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
@@ -386,7 +411,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidade<IReadOnlyList<ResponsavelAlunoResumo>>> ListarResponsaveisAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -394,6 +419,13 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty)
             return new(EstadoAlunosUnidade.AlunoNaoEncontrado);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
@@ -407,7 +439,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidade<ResponsavelDetalhe>> ObterResponsavelAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: false, cancellationToken);
@@ -415,6 +447,13 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
             return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
@@ -450,7 +489,7 @@ public sealed class AlunosServico(
         string nomeCompleto, string? cpf, string? telefone, string? email,
         TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
         bool principalContato, bool responsavelFinanceiro,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -458,6 +497,13 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty || string.IsNullOrWhiteSpace(nomeCompleto))
             return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
@@ -612,7 +658,7 @@ public sealed class AlunosServico(
         string nomeCompleto, string? cpf, string? telefone, string? email,
         TipoRelacaoResponsavel tipoRelacao, string? descricaoRelacao,
         bool principalContato, bool responsavelFinanceiro,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -623,6 +669,13 @@ public sealed class AlunosServico(
         {
             return new(EstadoAlunosUnidade.DadosInvalidos);
         }
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
@@ -701,7 +754,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidadeSimples> DesativarVinculoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -709,6 +762,13 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
             return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
@@ -768,7 +828,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidadeSimples> AtivarVinculoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -776,6 +836,13 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
             return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);
@@ -805,7 +872,7 @@ public sealed class AlunosServico(
 
     public async Task<ResultadoAlunosUnidadeSimples> ReativarVinculoAsync(
         Guid usuarioId, Guid unidadeId, Guid alunoId, Guid responsavelId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? organizacaoId = null)
     {
         var contexto = await ObterContextoAsync(
             usuarioId, unidadeId, exigirGerenciamento: true, cancellationToken);
@@ -813,6 +880,13 @@ public sealed class AlunosServico(
             return new(contexto.Estado);
         if (alunoId == Guid.Empty || responsavelId == Guid.Empty)
             return new(EstadoAlunosUnidade.DadosInvalidos);
+
+        using var scope = logger.BeginScope(new Dictionary<string, object>
+        {
+            ["UsuarioId"] = usuarioId,
+            ["UnidadeId"] = unidadeId,
+            ["OrganizacaoId"] = organizacaoId ?? contexto.Valor!.OrganizacaoId
+        });
 
         var relacionado = await repositorio.ExisteRelacaoAlunoUnidadeAsync(
             contexto.Valor!.OrganizacaoId, unidadeId, alunoId, cancellationToken);

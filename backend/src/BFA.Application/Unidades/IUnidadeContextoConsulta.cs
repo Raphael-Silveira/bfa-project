@@ -3,7 +3,8 @@ namespace BFA.Application.Unidades;
 public sealed record UnidadeContextoResumo(
     Guid OrganizacaoId,
     Guid UnidadeId,
-    string Nome);
+    string Nome,
+    string OrganizacaoNome);
 
 public interface IUnidadeContextoConsulta
 {

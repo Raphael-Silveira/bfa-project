@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using BFA.Web.Authorization;
 
 namespace BFA.Web.Infrastructure;
 
@@ -9,9 +10,6 @@ public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<Reque
         var method = context.Request.Method;
         var path = context.Request.Path.Value ?? "/";
         var queryString = context.Request.QueryString.Value ?? "";
-        var userId = context.User?.Identity?.IsAuthenticated == true
-            ? context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            : null;
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -24,7 +22,6 @@ public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<Reque
             stopwatch.Stop();
             var statusCode = context.Response.StatusCode;
             var durationMs = stopwatch.ElapsedMilliseconds;
-            var elapsed = TimeSpan.FromMilliseconds(durationMs);
 
             var logLevel = statusCode switch
             {
@@ -33,7 +30,42 @@ public sealed class RequestLoggingMiddleware(RequestDelegate next, ILogger<Reque
                 _ => LogLevel.Information
             };
 
-            if (userId is not null)
+            var userId = context.User?.Identity?.IsAuthenticated == true
+                ? context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                : null;
+
+            Guid? unidadeId = null;
+            Guid? organizacaoId = null;
+            string? usuarioNome = null;
+            string? unidadeNome = null;
+            string? organizacaoNome = null;
+
+            if (context.Items.TryGetValue("LogContextoUnidade", out var ctxObj)
+                && ctxObj is ContextoUnidade contextoUnidade)
+            {
+                unidadeId = contextoUnidade.UnidadeId;
+                organizacaoId = contextoUnidade.OrganizacaoId;
+            }
+
+            context.Items.TryGetValue("LogUsuarioNome", out var uNomeObj);
+            usuarioNome = uNomeObj as string;
+
+            context.Items.TryGetValue("LogUnidadeNome", out var unNomeObj);
+            unidadeNome = unNomeObj as string;
+
+            context.Items.TryGetValue("LogOrganizacaoNome", out var oNomeObj);
+            organizacaoNome = oNomeObj as string;
+
+            if (userId is not null && unidadeId is not null && organizacaoId is not null)
+            {
+                logger.Log(logLevel,
+                    "{Method} {Path}{QueryString} respondido {StatusCode} em {Duration}ms [Usuario: {UsuarioId} ({UsuarioNome}), Unidade: {UnidadeId} ({UnidadeNome}), Organizacao: {OrganizacaoId} ({OrganizacaoNome})]",
+                    method, path, queryString, statusCode, durationMs,
+                    userId, usuarioNome ?? userId,
+                    unidadeId, unidadeNome ?? unidadeId.ToString(),
+                    organizacaoId, organizacaoNome ?? organizacaoId.ToString());
+            }
+            else if (userId is not null)
             {
                 logger.Log(logLevel,
                     "{Method} {Path}{QueryString} respondido {StatusCode} em {Duration}ms [Usuario: {UsuarioId}]",

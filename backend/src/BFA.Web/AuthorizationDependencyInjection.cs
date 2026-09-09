@@ -1,8 +1,11 @@
 using BFA.Application.Acessos;
+using BFA.Application.Unidades;
 using BFA.Domain.Acessos;
 using BFA.Web.Acessos;
 using BFA.Web.Authorization;
+using BFA.Web.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BFA.Web;
 
@@ -57,6 +60,17 @@ public static class AuthorizationDependencyInjection
         services.AddScoped<IAuthorizationHandler, AcessoUnidadeHandler>();
         services.AddScoped<IAuthorizationHandler, AcessoUnidadePorPerfilHandler>();
         services.AddScoped<GovernancaOperacionalUnidadeResultFilter>();
+
+        services.AddScoped<LogEnrichmentActionFilter>();
+
+        services.AddControllersWithViews(options =>
+        {
+            options.Filters.AddService<LogEnrichmentActionFilter>();
+        });
+        services.AddControllers(options =>
+        {
+            options.Filters.AddService<LogEnrichmentActionFilter>();
+        });
 
         return services;
     }
