@@ -1,3 +1,4 @@
+using BFA.Application;
 using BFA.Application.Acessos;
 using BFA.Application.Franqueadora.Franqueados;
 using BFA.Application.Localidades;
@@ -26,10 +27,13 @@ public sealed class FranqueadosServicoTests
 
         var resultado = await contexto.Servico.ListarAsync(
             contexto.UsuarioAtualId,
+            null,
+            1,
+            10,
             CancellationToken.None);
 
         Assert.Equal(EstadoGerenciamentoFranqueado.Sucesso, resultado.Estado);
-        Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<FranqueadoResumo>>(resultado.Valor));
+        Assert.Single(Assert.IsAssignableFrom<PaginaResultado<FranqueadoResumo>>(resultado.Valor).Itens);
         Assert.Equal(contexto.OrganizacaoId, contexto.Repositorio.OrganizacaoListada);
     }
 
@@ -366,13 +370,22 @@ public sealed class FranqueadosServicoTests
         public EstadoPersistenciaFranqueado ResultadoPersistencia { get; set; } =
             EstadoPersistenciaFranqueado.Sucesso;
 
-        public Task<IReadOnlyList<FranqueadoResumo>> ListarAsync(
+        public Task<PaginaResultado<FranqueadoResumo>> ListarAsync(
             Guid organizacaoId,
+            string? busca,
+            int pagina,
+            int tamanhoPagina,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             OrganizacaoListada = organizacaoId;
-            return Task.FromResult<IReadOnlyList<FranqueadoResumo>>([.. Resumos]);
+            return Task.FromResult(new PaginaResultado<FranqueadoResumo>
+            {
+                Itens = [.. Resumos],
+                PaginaAtual = pagina,
+                TamanhoPagina = tamanhoPagina,
+                TotalItens = Resumos.Count
+            });
         }
 
         public Task<FranqueadoDados?> ObterDadosAsync(

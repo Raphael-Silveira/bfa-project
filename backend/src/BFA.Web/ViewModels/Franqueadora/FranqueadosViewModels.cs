@@ -7,6 +7,16 @@ namespace BFA.Web.ViewModels.Franqueadora;
 public sealed class FranqueadosIndexViewModel
 {
     public IReadOnlyList<FranqueadoItemViewModel> Franqueados { get; init; } = [];
+
+    public string? Busca { get; init; }
+
+    public int PaginaAtual { get; init; }
+
+    public int TamanhoPagina { get; init; }
+
+    public int TotalItens { get; init; }
+
+    public bool PossuiBusca => !string.IsNullOrWhiteSpace(Busca);
 }
 
 public sealed record FranqueadoItemViewModel(

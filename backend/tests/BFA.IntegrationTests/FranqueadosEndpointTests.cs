@@ -62,6 +62,72 @@ public sealed partial class FranqueadosEndpointTests
         Assert.True(unidades < franqueados);
     }
 
+    [Theory]
+    [InlineData("Melissa", "Melissa e Carlos Buffet Ltda")]
+    [InlineData("BFA Premium", "Melissa e Carlos Buffet Ltda")]
+    [InlineData("12345678901", "Melissa e Carlos Buffet Ltda")]
+    public async Task Busca_franqueado_por_nome_fantasia_ou_documento(string busca, string esperado)
+    {
+        using var application = new UsuariosFranqueadoraWebApplicationFactory();
+        var organizacaoId = await application.InicializarAdministradorAsync();
+        await AdicionarFranqueadoAsync(
+            application,
+            organizacaoId,
+            "Melissa e Carlos Buffet Ltda",
+            nomeFantasia: "BFA Premium",
+            documento: "12345678901");
+        using var client = CriarCliente(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync($"/franqueadora/franqueados?busca={Uri.EscapeDataString(busca)}"));
+
+        Assert.Contains(esperado, html, StringComparison.Ordinal);
+        Assert.Contains("Mostrando", html, StringComparison.Ordinal);
+        Assert.Contains("1–1", html, StringComparison.Ordinal);
+        Assert.Contains("de <strong>1</strong> franqueados", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Busca_sem_resultado_diferencia_estado_vazio_e_preserva_limpar()
+    {
+        using var application = new UsuariosFranqueadoraWebApplicationFactory();
+        var organizacaoId = await application.InicializarAdministradorAsync();
+        await AdicionarFranqueadoAsync(application, organizacaoId, "Franqueado existente");
+        using var client = CriarCliente(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/franqueados?busca=inexistente"));
+
+        Assert.Contains("Nenhum franqueado encontrado.", html, StringComparison.Ordinal);
+        Assert.Contains("Ajuste o termo de busca", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora/franqueados\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Nenhum franqueado cadastrado.", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Lista_pagina_e_busca_preservam_paginacao_e_novo_franqueado()
+    {
+        using var application = new UsuariosFranqueadoraWebApplicationFactory();
+        var organizacaoId = await application.InicializarAdministradorAsync();
+        for (var indice = 1; indice <= 11; indice++)
+        {
+            await AdicionarFranqueadoAsync(application, organizacaoId, $"Rede Franqueado {indice:00}");
+        }
+        using var client = CriarCliente(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/franqueados?busca=rede&pagina=2"));
+
+        Assert.Contains("Mostrando", html, StringComparison.Ordinal);
+        Assert.Contains("11–11", html, StringComparison.Ordinal);
+        Assert.Contains("de <strong>11</strong> franqueados", html, StringComparison.Ordinal);
+        Assert.Contains("busca=rede&pagina=1", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora/usuarios/novo\"", html, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task Url_adulterada_nao_expoe_detalhe_nem_edicao_de_outro_tenant()
     {
@@ -356,16 +422,19 @@ public sealed partial class FranqueadosEndpointTests
         UsuariosFranqueadoraWebApplicationFactory application,
         Guid organizacaoId,
         string nome,
-        Guid? usuarioPrincipalId = null)
+        Guid? usuarioPrincipalId = null,
+        string? nomeFantasia = null,
+        string? documento = null)
     {
         var franqueado = new Franqueado(
             Guid.NewGuid(),
             organizacaoId,
             TipoPessoaFranqueado.PessoaFisica,
             nome,
-            GerarCpf(),
+            documento ?? GerarCpf(),
             $"franqueado-{Guid.NewGuid():N}@bfa.test",
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            nomeFantasia);
         await using var scope = application.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
         dbContext.Franqueados.Add(franqueado);

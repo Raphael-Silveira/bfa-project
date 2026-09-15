@@ -1,9 +1,14 @@
+using BFA.Application;
+
 namespace BFA.Application.Franqueadora.Franqueados;
 
 public interface IFranqueadosConsulta
 {
-    Task<ResultadoFranqueado<IReadOnlyList<FranqueadoResumo>>> ListarAsync(
+    Task<ResultadoFranqueado<PaginaResultado<FranqueadoResumo>>> ListarAsync(
         Guid usuarioAtualId,
+        string? busca,
+        int pagina,
+        int tamanhoPagina,
         CancellationToken cancellationToken);
 
     Task<ResultadoFranqueado<FranqueadoDetalhe>> ObterAsync(

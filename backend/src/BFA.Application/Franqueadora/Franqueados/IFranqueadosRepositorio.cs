@@ -1,3 +1,4 @@
+using BFA.Application;
 using BFA.Domain.Acessos;
 using BFA.Domain.Franqueados;
 
@@ -5,8 +6,11 @@ namespace BFA.Application.Franqueadora.Franqueados;
 
 public interface IFranqueadosRepositorio
 {
-    Task<IReadOnlyList<FranqueadoResumo>> ListarAsync(
+    Task<PaginaResultado<FranqueadoResumo>> ListarAsync(
         Guid organizacaoId,
+        string? busca,
+        int pagina,
+        int tamanhoPagina,
         CancellationToken cancellationToken);
 
     Task<FranqueadoDados?> ObterDadosAsync(

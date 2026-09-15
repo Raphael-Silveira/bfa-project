@@ -913,6 +913,10 @@
   min-width: 12rem;
 }
 
+.bfa-admin-filters__group--search {
+  flex: 1 1 24rem;
+}
+
 .bfa-admin-filters__label {
   font-size: 0.7rem;
   font-weight: 600;
@@ -954,7 +958,31 @@
   width: 100%;
 }
 
+.bfa-admin-filters__group--search .bfa-admin-filters__input {
+  width: 100%;
+}
+
 @media (max-width: 42.5rem) {
+  .bfa-admin-filters__form {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-admin-filters__group,
+  .bfa-admin-filters__actions {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .bfa-admin-filters__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bfa-admin-filters__actions .bfa-admin-btn {
+    width: 100%;
+  }
+
   .bfa-unidades-filters__form {
     display: grid;
     grid-template-columns: 1fr;

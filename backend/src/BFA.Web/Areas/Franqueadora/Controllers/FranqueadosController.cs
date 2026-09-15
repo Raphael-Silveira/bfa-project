@@ -24,31 +24,39 @@ public sealed class FranqueadosController(
     public const string MensagemErro = "Não foi possível concluir a operação.";
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        string? busca,
+        int? pagina,
+        CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId)
         {
             return Forbid();
         }
 
-        var resultado = await consulta.ListarAsync(usuarioId, cancellationToken);
+        var resultado = await consulta.ListarAsync(
+            usuarioId, busca, pagina ?? 1, 10, cancellationToken);
 
         if (resultado.Estado != EstadoGerenciamentoFranqueado.Sucesso
-            || resultado.Valor is not { } franqueados)
+            || resultado.Valor is not { } resultadoPagina)
         {
             return Forbid();
         }
 
         return View(new FranqueadosIndexViewModel
         {
-            Franqueados = franqueados.Select(franqueado => new FranqueadoItemViewModel(
+            Franqueados = resultadoPagina.Itens.Select(franqueado => new FranqueadoItemViewModel(
                 franqueado.Id,
                 franqueado.NomeRazaoSocial,
                 franqueado.NomeFantasia,
                 FormatarDocumento(franqueado.Documento, franqueado.TipoPessoa),
                 NomeTipoPessoa(franqueado.TipoPessoa),
                 franqueado.QuantidadeUnidadesAtivas,
-                franqueado.Ativo)).ToArray()
+                franqueado.Ativo)).ToArray(),
+            Busca = busca,
+            PaginaAtual = resultadoPagina.PaginaAtual,
+            TamanhoPagina = resultadoPagina.TamanhoPagina,
+            TotalItens = resultadoPagina.TotalItens
         });
     }
 

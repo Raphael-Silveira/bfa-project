@@ -1,3 +1,4 @@
+using BFA.Application;
 using BFA.Application.Franqueadora.Franqueados;
 using BFA.Domain.Acessos;
 using BFA.Domain.Contratos;
@@ -16,15 +17,49 @@ public sealed class FranqueadosRepositorio(BfaDbContext dbContext)
     private const string RestricaoUnidadeComFranqueadoAtivo =
         "uq_franqueados_unidades_unidade_ativa";
 
-    public async Task<IReadOnlyList<FranqueadoResumo>> ListarAsync(
+    public async Task<PaginaResultado<FranqueadoResumo>> ListarAsync(
         Guid organizacaoId,
+        string? busca,
+        int pagina,
+        int tamanhoPagina,
         CancellationToken cancellationToken)
     {
-        return await dbContext.Franqueados
+        var consulta = dbContext.Franqueados
             .AsNoTracking()
-            .Where(franqueado => franqueado.OrganizacaoId == organizacaoId)
+            .Where(franqueado => franqueado.OrganizacaoId == organizacaoId);
+
+        if (!string.IsNullOrWhiteSpace(busca))
+        {
+            var texto = busca.Trim().ToLower();
+            var documento = new string(busca
+                .Where(caractere => char.IsLetterOrDigit(caractere))
+                .ToArray())
+                .ToLower();
+
+            consulta = consulta.Where(franqueado =>
+                franqueado.NomeRazaoSocial.ToLower().Contains(texto)
+                || (franqueado.NomeFantasia != null
+                    && franqueado.NomeFantasia.ToLower().Contains(texto))
+                || (documento.Length > 0
+                    && franqueado.Documento.ToLower().Contains(documento)));
+        }
+
+        var ordenada = consulta
             .OrderBy(franqueado => franqueado.NomeRazaoSocial)
-            .ThenBy(franqueado => franqueado.Id)
+            .ThenBy(franqueado => franqueado.Id);
+        var totalItens = await ordenada.CountAsync(cancellationToken);
+        var totalPaginas = totalItens == 0
+            ? 0
+            : (int)Math.Ceiling((double)totalItens / tamanhoPagina);
+        var paginaAtual = Math.Max(1, pagina);
+        if (totalPaginas > 0)
+        {
+            paginaAtual = Math.Min(paginaAtual, totalPaginas);
+        }
+
+        var itens = await ordenada
+            .Skip((paginaAtual - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
             .Select(franqueado => new FranqueadoResumo(
                 franqueado.Id,
                 franqueado.NomeRazaoSocial,
@@ -37,6 +72,14 @@ public sealed class FranqueadosRepositorio(BfaDbContext dbContext)
                     && vinculo.Ativo),
                 franqueado.Ativo))
             .ToArrayAsync(cancellationToken);
+
+        return new PaginaResultado<FranqueadoResumo>
+        {
+            Itens = itens,
+            PaginaAtual = paginaAtual,
+            TamanhoPagina = tamanhoPagina,
+            TotalItens = totalItens
+        };
     }
 
     public Task<FranqueadoDados?> ObterDadosAsync(

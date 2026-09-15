@@ -1,3 +1,4 @@
+using BFA.Application;
 using System.ComponentModel.DataAnnotations;
 using BFA.Application.Acessos;
 using BFA.Application.Localidades;
@@ -15,8 +16,11 @@ public sealed class FranqueadosServico(
     ILogger<FranqueadosServico> logger)
     : IFranqueadosConsulta, IFranqueadosServico
 {
-    public async Task<ResultadoFranqueado<IReadOnlyList<FranqueadoResumo>>> ListarAsync(
+    public async Task<ResultadoFranqueado<PaginaResultado<FranqueadoResumo>>> ListarAsync(
         Guid usuarioAtualId,
+        string? busca,
+        int pagina,
+        int tamanhoPagina,
         CancellationToken cancellationToken)
     {
         var contexto = await ObterContextoAsync(usuarioAtualId, cancellationToken);
@@ -26,7 +30,8 @@ public sealed class FranqueadosServico(
             return new(contexto.Estado, null);
         }
 
-        var franqueados = await repositorio.ListarAsync(organizacaoId, cancellationToken);
+        var franqueados = await repositorio.ListarAsync(
+            organizacaoId, busca, pagina, tamanhoPagina, cancellationToken);
         return new(EstadoGerenciamentoFranqueado.Sucesso, franqueados);
     }
 
