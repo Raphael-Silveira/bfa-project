@@ -32,75 +32,85 @@
 }
 else
 {
-    <section class="bfa-admin-card-grid" aria-label="Resumo da Rede">
+    <section class="bfa-franqueadora-metrics bfa-franqueadora-metrics--operational" aria-label="Métricas operacionais">
         <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Total de Unidades</p>
-            <strong class="bfa-admin-metric-card__value">@Model.TotalUnidades</strong>
+            <div class="bfa-admin-metric-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M8 9h.01M12 9h.01M16 9h.01"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Total de Unidades</span><strong class="bfa-admin-metric-card__value">@Model.TotalUnidades</strong></div>
         </article>
         <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Unidades Ativas</p>
-            <strong class="bfa-admin-metric-card__value">@Model.UnidadesAtivas</strong>
+            <div class="bfa-admin-metric-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7 10 17l-5-5"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Unidades Ativas</span><strong class="bfa-admin-metric-card__value">@Model.UnidadesAtivas</strong></div>
         </article>
         <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Alunos Ativos</p>
-            <strong class="bfa-admin-metric-card__value">@Model.TotalAlunosAtivos</strong>
+            <div class="bfa-admin-metric-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Alunos Ativos</span><strong class="bfa-admin-metric-card__value">@Model.TotalAlunosAtivos</strong></div>
         </article>
         <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Matriculas Ativas</p>
-            <strong class="bfa-admin-metric-card__value">@Model.TotalMatriculasAtivas</strong>
+            <div class="bfa-admin-metric-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Matriculas Ativas</span><strong class="bfa-admin-metric-card__value">@Model.TotalMatriculasAtivas</strong></div>
         </article>
         <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Professores</p>
-            <strong class="bfa-admin-metric-card__value">@Model.TotalProfessores</strong>
+            <div class="bfa-admin-metric-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Professores</span><strong class="bfa-admin-metric-card__value">@Model.TotalProfessores</strong></div>
         </article>
-        <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Receita Total</p>
-            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent">@Model.TotalReceita</strong>
+    </section>
+
+    <section class="bfa-franqueadora-metrics bfa-franqueadora-metrics--financial" aria-label="Métricas financeiras">
+        <article class="bfa-admin-card bfa-admin-metric-card bfa-admin-metric-card--money">
+            <div class="bfa-admin-metric-card__icon bfa-admin-metric-card__icon--accent"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Receita Total</span><strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--accent bfa-admin-metric-card__value--money">@Model.TotalReceita</strong></div>
         </article>
-        <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Pendente</p>
-            <strong class="bfa-admin-metric-card__value">@Model.TotalPendente</strong>
+        <article class="bfa-admin-card bfa-admin-metric-card bfa-admin-metric-card--money">
+            <div class="bfa-admin-metric-card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Pendente</span><strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--money">@Model.TotalPendente</strong></div>
         </article>
-        <article class="bfa-admin-card bfa-admin-metric-card">
-            <p class="bfa-admin-metric-card__label">Em Atraso</p>
-            <strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger">@Model.TotalAtrasado</strong>
+        <article class="bfa-admin-card bfa-admin-metric-card bfa-admin-metric-card--money">
+            <div class="bfa-admin-metric-card__icon bfa-admin-metric-card__icon--danger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.3 3.9-8.5 14a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3l-8.5-14a2 2 0 0 0-3.4 0ZM12 9v4M12 17h.01"/></svg></div>
+            <div class="bfa-admin-metric-card__body"><span class="bfa-admin-metric-card__label">Em Atraso</span><strong class="bfa-admin-metric-card__value bfa-admin-metric-card__value--danger bfa-admin-metric-card__value--money">@Model.TotalAtrasado</strong></div>
         </article>
     </section>
 
     @if (Model.Unidades.Count > 0)
     {
-        <section class="bfa-admin-table-container" aria-label="Unidades da Rede">
-            <h2 class="bfa-admin-section-title">Unidades da Rede</h2>
-            <table class="bfa-admin-table">
-                <thead>
-                    <tr>
-                        <th>Unidade</th>
-                        <th>Alunos</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
+        <section class="bfa-franqueadora-unidades" aria-labelledby="titulo-unidades-rede">
+            <h2 class="bfa-admin-section-title" id="titulo-unidades-rede">Unidades da Rede</h2>
+            <div class="bfa-data-card bfa-admin-desktop-list">
+                <div class="bfa-table-wrap">
+                    <table>
+                        <thead><tr><th>Unidade</th><th>Alunos</th><th>Status</th></tr></thead>
+                        <tbody>
                     @foreach (var unidade in Model.Unidades)
                     {
                         <tr>
                             <td>
-                                <a href="/unidade/@unidade.UnidadeId" class="bfa-admin-link">@unidade.NomeUnidade</a>
+                                <a href="/unidade/@unidade.UnidadeId" class="bfa-admin-link bfa-data-primary">@unidade.NomeUnidade</a>
                             </td>
                             <td>@unidade.TotalAlunos</td>
                             <td>
                                 @if (unidade.Ativa)
                                 {
-                                    <span class="bfa-admin-badge is-active">Ativa</span>
+                                    <span class="bfa-data-badge bfa-data-badge--active"><i class="bfa-data-badge__dot"></i>Ativa</span>
                                 }
                                 else
                                 {
-                                    <span class="bfa-admin-badge is-inactive">Inativa</span>
+                                    <span class="bfa-data-badge bfa-data-badge--inactive"><i class="bfa-data-badge__dot"></i>Inativa</span>
                                 }
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="bfa-mobile-card-list" aria-label="Unidades da rede no celular">
+                @foreach (var unidade in Model.Unidades)
+                {
+                    <article class="bfa-mobile-card">
+                        <div class="bfa-mobile-card__head"><div><a href="/unidade/@unidade.UnidadeId" class="bfa-data-primary">@unidade.NomeUnidade</a></div><span class="bfa-data-badge @(unidade.Ativa ? "bfa-data-badge--active" : "bfa-data-badge--inactive")"><i class="bfa-data-badge__dot"></i>@(unidade.Ativa ? "Ativa" : "Inativa")</span></div>
+                        <div class="bfa-mobile-card__grid"><div><span class="bfa-mobile-card__label">Alunos</span><div>@unidade.TotalAlunos</div></div><div><span class="bfa-mobile-card__label">Status</span><div>@(unidade.Ativa ? "Ativa" : "Inativa")</div></div></div>
+                    </article>
+                }
+            </div>
         </section>
     }
 

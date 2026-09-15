@@ -1,4 +1,5 @@
 using BFA.Application.Franqueadora;
+using System.Globalization;
 
 namespace BFA.Web.ViewModels.Franqueadora;
 
@@ -35,6 +36,8 @@ public sealed record UnidadeResumoRedeViewModel(
 
 public static class FranqueadoraDashboardMapper
 {
+    private static readonly CultureInfo CulturaPtBr = CultureInfo.GetCultureInfo("pt-BR");
+
     public static FranqueadoraDashboardViewModel Mapear(
         FranqueadoraDashboardResumo resumo) => new()
     {
@@ -44,9 +47,9 @@ public static class FranqueadoraDashboardMapper
         TotalAlunosAtivos = resumo.TotalAlunosAtivos,
         TotalMatriculasAtivas = resumo.TotalMatriculasAtivas,
         TotalProfessores = resumo.TotalProfessores,
-        TotalReceita = resumo.TotalReceita.ToString("C"),
-        TotalPendente = resumo.TotalPendente.ToString("C"),
-        TotalAtrasado = resumo.TotalAtrasado.ToString("C"),
+        TotalReceita = resumo.TotalReceita.ToString("C", CulturaPtBr),
+        TotalPendente = resumo.TotalPendente.ToString("C", CulturaPtBr),
+        TotalAtrasado = resumo.TotalAtrasado.ToString("C", CulturaPtBr),
         Unidades = resumo.Unidades.Select(u => new UnidadeResumoRedeViewModel(
             u.UnidadeId,
             u.NomeUnidade,

@@ -5,6 +5,64 @@
   overflow-wrap: anywhere;
 }
 
+.bfa-franqueadora-metrics {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.bfa-franqueadora-metrics--operational {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.bfa-franqueadora-metrics--financial {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1.25rem;
+}
+
+.bfa-franqueadora-metrics .bfa-admin-metric-card__icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.bfa-franqueadora-metrics .bfa-admin-metric-card--money .bfa-admin-metric-card__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bfa-franqueadora-metrics .bfa-admin-metric-card__value--money {
+  font-size: clamp(1.35rem, 2.35vw, 1.95rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.bfa-franqueadora-unidades {
+  margin-top: 2rem;
+}
+
+@media (max-width: 90rem) {
+  .bfa-franqueadora-metrics--operational {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 44rem) {
+  .bfa-franqueadora-metrics--operational,
+  .bfa-franqueadora-metrics--financial {
+    grid-template-columns: 1fr;
+  }
+
+  .bfa-franqueadora-metrics .bfa-admin-metric-card__value--money {
+    font-size: clamp(1.2rem, 7vw, 1.55rem);
+  }
+}
+
 .bfa-unidade-card__header {
   display: flex;
   align-items: flex-start;

@@ -112,6 +112,59 @@ public sealed partial class FranqueadoraEndpointTests
     }
 
     [Fact]
+    public async Task Dashboard_da_rede_exibe_metricas_reorganizadas_valores_em_reais_e_unidades_responsivas()
+    {
+        using var application = new FranqueadoraWebApplicationFactory();
+        var organizacaoId = Guid.NewGuid();
+        var unidadeId = Guid.NewGuid();
+        application.Acessos.Adicionar(
+            application.UsuarioStore.Usuario.Id,
+            organizacaoId,
+            null,
+            PerfilAcesso.AdministradorRede);
+        application.Dashboard.Resultado = FranqueadoraDashboardResultado.Disponivel(
+            new FranqueadoraDashboardResumo(
+                organizacaoId,
+                "Brazilian Footvolley Academy",
+                1,
+                1,
+                24,
+                18,
+                6,
+                49440m,
+                960m,
+                120m,
+                [new UnidadeResumoRede(unidadeId, "BFA Tietê", 24, 18, true)]));
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        using var response = await client.GetAsync("/franqueadora");
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Métricas operacionais", html, StringComparison.Ordinal);
+        Assert.Contains("Métricas financeiras", html, StringComparison.Ordinal);
+        Assert.Contains("Total de Unidades", html, StringComparison.Ordinal);
+        Assert.Contains("Unidades Ativas", html, StringComparison.Ordinal);
+        Assert.Contains("Alunos Ativos", html, StringComparison.Ordinal);
+        Assert.Contains("Matriculas Ativas", html, StringComparison.Ordinal);
+        Assert.Contains("Professores", html, StringComparison.Ordinal);
+        Assert.Contains("Receita Total", html, StringComparison.Ordinal);
+        Assert.Contains("Pendente", html, StringComparison.Ordinal);
+        Assert.Contains("Em Atraso", html, StringComparison.Ordinal);
+        Assert.Contains("R$ 49.440,00", html, StringComparison.Ordinal);
+        Assert.Contains("R$ 960,00", html, StringComparison.Ordinal);
+        Assert.Contains("R$ 120,00", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-admin-metric-card__icon", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-admin-desktop-list", html, StringComparison.Ordinal);
+        Assert.Contains("bfa-mobile-card-list", html, StringComparison.Ordinal);
+        Assert.Contains($"href=\"/unidade/{unidadeId}\"", html, StringComparison.Ordinal);
+        Assert.Contains("BFA Tietê", html, StringComparison.Ordinal);
+        Assert.Contains("Alunos", html, StringComparison.Ordinal);
+        Assert.Contains("Ativa", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Administrador_rede_acessa_alunos_da_rede_por_url_direta()
     {
         using var application = new FranqueadoraWebApplicationFactory();
