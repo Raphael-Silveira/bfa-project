@@ -27,6 +27,19 @@
         </svg>
     </a>
 
+    @if (Model.FranqueadoIdAtivo is { } franqueadoId)
+    {
+        <a class="bfa-admin-icon-action"
+           href="/franqueadora/franqueados/@franqueadoId/unidades/@Model.Id/contrato"
+           aria-label="Gerenciar contrato da unidade @Model.Nome"
+           title="Gerenciar contrato">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 3h9l3 3v15H6z"></path>
+                <path d="M9 11h6M9 15h6M15 3v4h4"></path>
+            </svg>
+        </a>
+    }
+
     <a class="bfa-admin-icon-action is-edit"
        href="/franqueadora/unidades/@Model.Id/editar"
        aria-label="Editar unidade @Model.Nome"

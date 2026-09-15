@@ -26,10 +26,13 @@ public sealed class UnidadesFranqueadoraRepositorio(BfaDbContext dbContext)
                 unidade.Ativa,
                 unidade.CriadoEmUtc)
             {
-                PossuiFranqueadoAtivo = dbContext.FranqueadosUnidades.Any(
-                    vinculo => vinculo.OrganizacaoId == organizacaoId
+                FranqueadoIdAtivo = dbContext.FranqueadosUnidades
+                    .Where(vinculo =>
+                        vinculo.OrganizacaoId == organizacaoId
                         && vinculo.UnidadeId == unidade.Id
                         && vinculo.Ativo)
+                    .Select(vinculo => (Guid?)vinculo.FranqueadoId)
+                    .SingleOrDefault()
             })
             .ToArrayAsync(cancellationToken);
     }

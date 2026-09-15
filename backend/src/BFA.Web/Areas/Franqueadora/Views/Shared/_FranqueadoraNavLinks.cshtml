@@ -7,17 +7,11 @@
     var unidadesAtiva = caminhoAtual.StartsWith(
         "/franqueadora/unidades",
         StringComparison.OrdinalIgnoreCase);
-    var alunosAtiva = caminhoAtual.StartsWith(
-        "/franqueadora/alunos",
-        StringComparison.OrdinalIgnoreCase);
     var usuariosAtiva = caminhoAtual.StartsWith(
         "/franqueadora/usuarios",
         StringComparison.OrdinalIgnoreCase);
     var franqueadosAtiva = caminhoAtual.StartsWith(
         "/franqueadora/franqueados",
-        StringComparison.OrdinalIgnoreCase);
-    var planosAtiva = caminhoAtual.StartsWith(
-        "/franqueadora/planos",
         StringComparison.OrdinalIgnoreCase);
 }
 
@@ -53,17 +47,6 @@
     </svg>
     <span>Unidades</span>
 </a>
-<a class="bfa-admin-nav-link @(alunosAtiva ? "is-active" : null)"
-   href="/franqueadora/alunos"
-   aria-current="@(alunosAtiva ? "page" : null)">
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-    </svg>
-    <span>Alunos da Rede</span>
-</a>
 <a class="bfa-admin-nav-link @(franqueadosAtiva ? "is-active" : null)"
    href="/franqueadora/franqueados"
    aria-current="@(franqueadosAtiva ? "page" : null)">
@@ -73,13 +56,4 @@
         <path d="M9 10h6"></path>
     </svg>
     <span>Franqueados</span>
-</a>
-<a class="bfa-admin-nav-link @(planosAtiva ? "is-active" : null)"
-   href="/franqueadora/planos"
-   aria-current="@(planosAtiva ? "page" : null)">
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M4 5h16v14H4z"></path>
-        <path d="M8 9h8M8 13h5M8 17h3"></path>
-    </svg>
-    <span>Planos da Rede</span>
 </a>

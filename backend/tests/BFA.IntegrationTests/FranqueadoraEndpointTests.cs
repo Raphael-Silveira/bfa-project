@@ -100,9 +100,34 @@ public sealed partial class FranqueadoraEndpointTests
         Assert.Contains("aria-label=\"Abrir menu administrativo\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-label=\"Fechar menu administrativo\"", html, StringComparison.Ordinal);
         Assert.Contains("aria-current=\"page\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora/usuarios\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora/unidades\"", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora/franqueados\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Planos da Rede", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Alunos da Rede", html, StringComparison.Ordinal);
         Assert.Contains("class=\"bfa-admin-drawer__logout\"", html, StringComparison.Ordinal);
         Assert.Contains("action=\"/logout\"", html, StringComparison.Ordinal);
         Assert.Contains("name=\"__RequestVerificationToken\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Administrador_rede_acessa_alunos_da_rede_por_url_direta()
+    {
+        using var application = new FranqueadoraWebApplicationFactory();
+        application.Acessos.Adicionar(
+            application.UsuarioStore.Usuario.Id,
+            Guid.NewGuid(),
+            null,
+            PerfilAcesso.AdministradorRede);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        using var response = await client.GetAsync("/franqueadora/alunos");
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Alunos da Rede", html, StringComparison.Ordinal);
     }
 
     [Fact]

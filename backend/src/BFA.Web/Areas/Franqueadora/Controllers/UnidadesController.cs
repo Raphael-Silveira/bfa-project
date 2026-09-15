@@ -45,7 +45,7 @@ public sealed class UnidadesController(
                     unidade.Slug,
                     unidade.Ativa,
                     unidade.CriadoEmUtc,
-                    unidade.PossuiFranqueadoAtivo))
+                    unidade.FranqueadoIdAtivo))
                 .ToArray()
         });
     }

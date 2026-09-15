@@ -93,6 +93,42 @@
     </article>
 </section>
 
+<section class="bfa-admin-card bfa-unidade-contract-overview"
+         aria-labelledby="titulo-resumo-contrato-unidade">
+    <header class="bfa-unidade-contract-overview__header">
+        <div>
+            <p>Relacionamento comercial</p>
+            <h2 id="titulo-resumo-contrato-unidade">Contrato da franquia</h2>
+        </div>
+        <a class="bfa-btn-secondary bfa-admin-button"
+           href="/unidade/@Model.UnidadeId/contrato">Ver contrato</a>
+    </header>
+
+    @if (Model.Contrato is { } contrato)
+    {
+        <dl class="bfa-unidade-contract-overview__facts">
+            <div>
+                <dt>Número</dt>
+                <dd>Contrato nº @(contrato.Numero ?? "Não informado")</dd>
+            </div>
+            <div>
+                <dt>Status</dt>
+                <dd><span class="bfa-admin-badge is-active">@contrato.Status</span></dd>
+            </div>
+            <div>
+                <dt>Vigência</dt>
+                <dd>@FormatarVigencia(contrato.DataInicio, contrato.DataFim)</dd>
+            </div>
+        </dl>
+    }
+    else
+    {
+        <div class="bfa-unidade-contract-overview__empty" role="status">
+            Nenhum contrato ativo disponível para esta unidade.
+        </div>
+    }
+</section>
+
 <div class="bfa-unidade-dashboard-grid">
     <section class="bfa-unidade-schedule-panel" aria-label="Próximas aulas">
         <div class="bfa-unidade-schedule-panel__header">
@@ -205,6 +241,64 @@
         font-variant-numeric: tabular-nums;
     }
 
+    .bfa-unidade-contract-overview {
+        margin-bottom: 1.25rem;
+        padding: clamp(1.25rem, 3vw, 1.75rem);
+    }
+
+    .bfa-unidade-contract-overview__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .bfa-unidade-contract-overview__header p {
+        margin: 0 0 0.35rem;
+        color: var(--bfa-accent);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-unidade-contract-overview__header h2 {
+        margin: 0;
+        font-size: 1.15rem;
+    }
+
+    .bfa-unidade-contract-overview__facts {
+        display: grid;
+        margin: 1.25rem 0 0;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .bfa-unidade-contract-overview__facts dt {
+        margin-bottom: 0.35rem;
+        color: var(--bfa-text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .bfa-unidade-contract-overview__facts dd {
+        margin: 0;
+        color: var(--bfa-text-primary);
+        font-weight: 700;
+        overflow-wrap: anywhere;
+    }
+
+    .bfa-unidade-contract-overview__empty {
+        margin-top: 1.25rem;
+        padding: 1rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: 0.55rem;
+        color: var(--bfa-text-muted);
+        background: var(--bfa-surface);
+    }
+
     @@media (max-width: 72rem) {
         .bfa-unidade-welcome {
             grid-template-columns: 1fr;
@@ -222,6 +316,19 @@
 
         .bfa-admin-metric-card__value--money {
             font-size: clamp(1.2rem, 7vw, 1.55rem);
+        }
+
+        .bfa-unidade-contract-overview__header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .bfa-unidade-contract-overview__header .bfa-admin-button {
+            width: 100%;
+        }
+
+        .bfa-unidade-contract-overview__facts {
+            grid-template-columns: 1fr;
         }
     }
 </style>

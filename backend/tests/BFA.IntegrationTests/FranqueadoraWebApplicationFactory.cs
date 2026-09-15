@@ -17,6 +17,9 @@ public class FranqueadoraWebApplicationFactory : LoginWebApplicationFactory
     public TestFranqueadoraDashboardConsulta Dashboard =>
         Services.GetRequiredService<TestFranqueadoraDashboardConsulta>();
 
+    public TestFranqueadoraAlunosConsulta Alunos =>
+        Services.GetRequiredService<TestFranqueadoraAlunosConsulta>();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
@@ -26,6 +29,7 @@ public class FranqueadoraWebApplicationFactory : LoginWebApplicationFactory
             services.RemoveAll<IAcessoUsuarioConsulta>();
             services.RemoveAll<IPainelFranqueadoraConsulta>();
             services.RemoveAll<IFranqueadoraDashboardConsulta>();
+            services.RemoveAll<IFranqueadoraAlunosConsulta>();
             services.AddSingleton<TestAcessoUsuarioConsulta>();
             services.AddSingleton<IAcessoUsuarioConsulta>(serviceProvider =>
                 serviceProvider.GetRequiredService<TestAcessoUsuarioConsulta>());
@@ -35,7 +39,29 @@ public class FranqueadoraWebApplicationFactory : LoginWebApplicationFactory
             services.AddSingleton<TestFranqueadoraDashboardConsulta>();
             services.AddSingleton<IFranqueadoraDashboardConsulta>(serviceProvider =>
                 serviceProvider.GetRequiredService<TestFranqueadoraDashboardConsulta>());
+            services.AddSingleton<TestFranqueadoraAlunosConsulta>();
+            services.AddSingleton<IFranqueadoraAlunosConsulta>(serviceProvider =>
+                serviceProvider.GetRequiredService<TestFranqueadoraAlunosConsulta>());
         });
+    }
+}
+
+public sealed class TestFranqueadoraAlunosConsulta : IFranqueadoraAlunosConsulta
+{
+    public Task<FranqueadoraAlunosResultado> ListarAsync(
+        Guid usuarioId,
+        Guid? unidadeId,
+        string? busca,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(FranqueadoraAlunosResultado.Sucesso(
+            new FranqueadoraAlunosResumo(
+                Guid.NewGuid(),
+                "Brazilian Footvolley Academy",
+                0,
+                [],
+                [])));
     }
 }
 

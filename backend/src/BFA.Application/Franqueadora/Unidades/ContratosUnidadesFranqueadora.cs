@@ -16,7 +16,9 @@ public sealed record UnidadeResumo(
     bool Ativa,
     DateTime CriadoEmUtc)
 {
-    public bool PossuiFranqueadoAtivo { get; init; }
+    public Guid? FranqueadoIdAtivo { get; init; }
+
+    public bool PossuiFranqueadoAtivo => FranqueadoIdAtivo.HasValue;
 }
 
 public sealed record UnidadeDetalhe(

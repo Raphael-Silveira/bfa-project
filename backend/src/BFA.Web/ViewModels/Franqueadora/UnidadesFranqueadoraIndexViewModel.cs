@@ -11,4 +11,7 @@ public sealed record UnidadeFranqueadoraItemViewModel(
     string Slug,
     bool Ativa,
     DateTime CriadoEmUtc,
-    bool PossuiFranqueadoAtivo);
+    Guid? FranqueadoIdAtivo)
+{
+    public bool PossuiFranqueadoAtivo => FranqueadoIdAtivo.HasValue;
+}

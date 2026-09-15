@@ -120,6 +120,56 @@ public sealed partial class UnidadesFranqueadoraEndpointTests
     }
 
     [Fact]
+    public async Task Unidade_franqueada_exibe_gerenciar_contrato_na_rota_existente()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        var unidade = await AdicionarUnidadeAsync(
+            application, organizacaoId, "BFA Franqueada", "bfa-franqueada");
+        await AdicionarFranqueadoAtivoAsync(application, organizacaoId, unidade.Id);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades"));
+
+        await using var scope = application.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+        var franqueadoId = await dbContext.FranqueadosUnidades
+            .AsNoTracking()
+            .Where(vinculo => vinculo.UnidadeId == unidade.Id && vinculo.Ativo)
+            .Select(vinculo => vinculo.FranqueadoId)
+            .SingleAsync();
+
+        Assert.Contains("title=\"Gerenciar contrato\"", html, StringComparison.Ordinal);
+        Assert.Contains(
+            $"href=\"/franqueadora/franqueados/{franqueadoId:D}/unidades/{unidade.Id:D}/contrato\"",
+            html,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Unidade_propria_da_rede_nao_exibe_gerenciar_contrato()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        var unidade = await AdicionarUnidadeAsync(
+            application, organizacaoId, "BFA Rede", "bfa-rede");
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades"));
+
+        Assert.DoesNotContain(
+            $"/franqueadora/franqueados/", html,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("title=\"Gerenciar contrato\"", html,
+            StringComparison.Ordinal);
+        Assert.Contains(unidade.Nome, html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Get_nova_retorna_formulario_para_administrador_rede()
     {
         using var application = new UnidadesFranqueadoraWebApplicationFactory();
