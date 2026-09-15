@@ -108,6 +108,16 @@ public sealed class Cobranca
         AtualizadoEmUtc = atualizadoEmUtc;
     }
 
+    public void CancelarPorReconciliacao(DateTime atualizadoEmUtc)
+    {
+        if (Status != StatusCobranca.Pendente)
+            throw new InvalidOperationException("Apenas cobrancas pendentes podem ser reconciliadas.");
+
+        Status = StatusCobranca.Cancelada;
+        AtualizadoPorUsuarioId = null;
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
     public void MarcarComoAtrasada(DateTime atualizadoEmUtc)
     {
         if (Status != StatusCobranca.Pendente)
@@ -130,14 +140,13 @@ public sealed class Cobranca
             throw new InvalidOperationException("Cobrança já paga ou cancelada não pode receber pagamento.");
 
         var saldo = Valor - ValorPago;
-        if (valor > saldo + 0.005m)
-            throw new InvalidOperationException("Valor do pagamento excede o saldo devedor.");
+        if (valor <= 0 || valor != saldo)
+            throw new InvalidOperationException("O pagamento deve quitar integralmente a cobrança.");
 
-        ValorPago += valor;
+        ValorPago = Valor;
         AtualizadoEmUtc = atualizadoEmUtc;
 
-        if (ValorPago >= Valor - 0.005m)
-            Status = StatusCobranca.Paga;
+        Status = StatusCobranca.Paga;
     }
 
     private static void ValidarIdentificador(Guid valor, string parametro)

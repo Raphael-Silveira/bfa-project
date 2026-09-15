@@ -444,8 +444,10 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
 
         foreach (var cobranca in pendentes.OrderBy(c => c.DataVencimento))
         {
-            var valorParaEsta = Math.Min(cobranca.SaldoDevedor, valorRestante);
-            if (valorParaEsta <= 0) continue;
+            if (valorRestante < cobranca.SaldoDevedor)
+                return [];
+
+            var valorParaEsta = cobranca.SaldoDevedor;
 
             var pagamento = new Pagamento(
                 Guid.NewGuid(),
@@ -462,6 +464,9 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
             pagamentos.Add(pagamento);
             valorRestante -= valorParaEsta;
         }
+
+        if (valorRestante != 0)
+            return [];
 
         dbContext.Pagamentos.AddRange(pagamentos);
         await dbContext.SaveChangesAsync(cancellationToken);

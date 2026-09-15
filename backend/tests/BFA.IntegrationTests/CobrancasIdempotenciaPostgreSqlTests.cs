@@ -133,6 +133,37 @@ public sealed class CobrancasIdempotenciaPostgreSqlTests(
             repositorio.CriarAutomaticaIdempotenteAsync(cobranca, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Pagamento_consolidado_quita_cada_cobranca_integralmente()
+    {
+        await fixture.ResetAsync();
+        await fixture.AplicarV021Async();
+        var primeiraId = Guid.NewGuid();
+        var segundaId = Guid.NewGuid();
+        await fixture.InserirAsync(
+            TipoCobranca.Avulso, fixture.OrganizacaoId, fixture.UnidadeId,
+            fixture.MatriculaId, new(2026, 9, 5), StatusCobranca.Pendente, primeiraId);
+        await fixture.InserirAsync(
+            TipoCobranca.Avulso, fixture.OrganizacaoId, fixture.UnidadeId,
+            fixture.MatriculaId, new(2026, 9, 6), StatusCobranca.Pendente, segundaId);
+
+        await using var conexao = new NpgsqlConnection(fixture.ConnectionString);
+        await conexao.OpenAsync();
+        await using var contexto = fixture.CriarContexto(conexao);
+        var repositorio = new CobrancasRepositorio(
+            contexto, NullLogger<CobrancasRepositorio>.Instance);
+
+        var pagamentos = await repositorio.RegistrarPagamentoConsolidadoAsync(
+            fixture.OrganizacaoId, fixture.UnidadeId, [primeiraId, segundaId],
+            new(2026, 9, 15), FormaPagamento.Pix, null, Guid.NewGuid(),
+            DateTime.UtcNow, CancellationToken.None);
+
+        Assert.Equal(2, pagamentos.Count);
+        Assert.Equal(2, await fixture.ContarPagamentosAsync());
+        Assert.Equal(2, await fixture.ContarCobrancasComStatusAsync(StatusCobranca.Paga));
+        Assert.Equal(0, await fixture.ContarCobrancasComValorPagoMenorQueValorAsync());
+    }
+
     private async Task<Cobranca[]> CriarConcorrenteAsync(Cobranca primeira, Cobranca segunda)
     {
         await using var conexaoUm = new NpgsqlConnection(fixture.ConnectionString);
@@ -194,6 +225,7 @@ public sealed class PostgreSqlCobrancasFixture : IAsyncLifetime
         command.CommandText = """
             DROP TABLE IF EXISTS cobrancas;
             DROP TABLE IF EXISTS bfa_schema_history;
+            DROP TABLE IF EXISTS pagamentos;
             CREATE TABLE cobrancas (
                 id uuid NOT NULL PRIMARY KEY,
                 organizacao_id uuid NOT NULL,
@@ -217,6 +249,19 @@ public sealed class PostgreSqlCobrancasFixture : IAsyncLifetime
             CREATE TABLE bfa_schema_history (
                 version varchar(10) NOT NULL,
                 descricao text NOT NULL
+            );
+            CREATE TABLE pagamentos (
+                id uuid NOT NULL PRIMARY KEY,
+                organizacao_id uuid NOT NULL,
+                unidade_id uuid NOT NULL,
+                cobranca_id uuid NOT NULL,
+                valor numeric(12,2) NOT NULL,
+                data_pagamento date NOT NULL,
+                data_registro timestamptz NOT NULL,
+                forma_pagamento varchar(20) NOT NULL,
+                observacoes text NULL,
+                registrado_por_usuario_id uuid NOT NULL,
+                criado_em_utc timestamptz NOT NULL
             );
             """;
         await command.ExecuteNonQueryAsync();
@@ -291,6 +336,34 @@ public sealed class PostgreSqlCobrancasFixture : IAsyncLifetime
         await connection.OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM cobrancas";
+        return Convert.ToInt32(await command.ExecuteScalarAsync());
+    }
+
+    public async Task<int> ContarPagamentosAsync()
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM pagamentos";
+        return Convert.ToInt32(await command.ExecuteScalarAsync());
+    }
+
+    public async Task<int> ContarCobrancasComStatusAsync(StatusCobranca status)
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM cobrancas WHERE status = @status";
+        command.Parameters.AddWithValue("status", status.ToString());
+        return Convert.ToInt32(await command.ExecuteScalarAsync());
+    }
+
+    public async Task<int> ContarCobrancasComValorPagoMenorQueValorAsync()
+    {
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM cobrancas WHERE valor_pago > 0 AND valor_pago < valor";
         return Convert.ToInt32(await command.ExecuteScalarAsync());
     }
 

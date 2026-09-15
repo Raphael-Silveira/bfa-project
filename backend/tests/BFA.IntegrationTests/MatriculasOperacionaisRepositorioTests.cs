@@ -1,5 +1,6 @@
 using BFA.Application.Matriculas;
 using BFA.Domain.Alunos;
+using BFA.Domain.Cobrancas;
 using BFA.Domain.Matriculas;
 using BFA.Domain.Planos;
 using BFA.Domain.Professores;
@@ -450,9 +451,52 @@ public sealed class MatriculasOperacionaisRepositorioTests
         var grade = new MatriculaHorario(
             Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
             matricula.Id, cenario.Horarios[0], Inicio, cenario.UsuarioId, Agora);
-        db.AddRange(matricula, grade);
+        var mensalidadeAtual = new Cobranca(
+            Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+            cenario.AlunoId, matricula.Id, TipoCobranca.Mensalidade,
+            "Mensalidade setembro", 100m, new(2026, 9, 1), new(2026, 9, 30),
+            cenario.UsuarioId, Agora);
+        var mensalidadePosterior = new Cobranca(
+            Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+            cenario.AlunoId, matricula.Id, TipoCobranca.Mensalidade,
+            "Mensalidade outubro", 100m, new(2026, 10, 1), new(2026, 10, 31),
+            cenario.UsuarioId, Agora);
+        var mensalidadePaga = new Cobranca(
+            Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+            cenario.AlunoId, matricula.Id, TipoCobranca.Mensalidade,
+            "Mensalidade novembro", 100m, new(2026, 11, 1), new(2026, 11, 30),
+            cenario.UsuarioId, Agora);
+        mensalidadePaga.RegistrarPagamento(100m, Agora.AddDays(1));
+        var pagamento = new Pagamento(
+            Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+            mensalidadePaga.Id, 100m, new(2026, 11, 1), FormaPagamento.Pix,
+            cenario.UsuarioId, Agora.AddDays(1));
+        var mensalidadeAtrasada = new Cobranca(
+            Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+            cenario.AlunoId, matricula.Id, TipoCobranca.Mensalidade,
+            "Mensalidade dezembro", 100m, new(2026, 12, 1), new(2026, 12, 1),
+            cenario.UsuarioId, Agora);
+        mensalidadeAtrasada.MarcarComoAtrasada(Agora.AddDays(2));
+        var taxa = new Cobranca(
+            Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+            cenario.AlunoId, matricula.Id, TipoCobranca.Matricula,
+            "Taxa de matrícula", 100m, new(2026, 10, 1), new(2026, 10, 5),
+            cenario.UsuarioId, Agora);
+        var avulsa = new Cobranca(
+            Guid.NewGuid(), cenario.OrganizacaoId, cenario.UnidadeId,
+            cenario.AlunoId, matricula.Id, TipoCobranca.Avulso,
+            "Avulsa", 100m, new(2026, 10, 1), new(2026, 10, 5),
+            cenario.UsuarioId, Agora);
+        var cobrancaOutroTenant = new Cobranca(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            cenario.AlunoId, matricula.Id, TipoCobranca.Mensalidade,
+            "Mensalidade de outro tenant", 100m, new(2026, 10, 1), new(2026, 10, 5),
+            cenario.UsuarioId, Agora);
+        db.AddRange(matricula, grade, mensalidadeAtual, mensalidadePosterior,
+            mensalidadePaga, pagamento, mensalidadeAtrasada, taxa, avulsa,
+            cobrancaOutroTenant);
         await db.SaveChangesAsync();
-        var fim = new DateOnly(2026, 12, 31);
+        var fim = new DateOnly(2026, 9, 15);
         var repositorio = new MatriculasRepositorio(db, NullLogger<MatriculasRepositorio>.Instance);
 
         var estado = await repositorio.FinalizarAsync(
@@ -469,6 +513,28 @@ public sealed class MatriculasOperacionaisRepositorioTests
         Assert.Equal(statusEsperado, matricula.Status);
         Assert.Equal(fim, matricula.DataFimReal);
         Assert.Equal(fim, grade.VigenciaFim);
+        Assert.Equal(StatusCobranca.Pendente,
+            await db.Cobrancas.Where(item => item.Id == mensalidadeAtual.Id)
+                .Select(item => item.Status).SingleAsync());
+        Assert.Equal(StatusCobranca.Cancelada,
+            await db.Cobrancas.Where(item => item.Id == mensalidadePosterior.Id)
+                .Select(item => item.Status).SingleAsync());
+        Assert.Equal(StatusCobranca.Paga,
+            await db.Cobrancas.Where(item => item.Id == mensalidadePaga.Id)
+                .Select(item => item.Status).SingleAsync());
+        Assert.Equal(StatusCobranca.Atrasada,
+            await db.Cobrancas.Where(item => item.Id == mensalidadeAtrasada.Id)
+                .Select(item => item.Status).SingleAsync());
+        Assert.Equal(StatusCobranca.Pendente,
+            await db.Cobrancas.Where(item => item.Id == taxa.Id)
+                .Select(item => item.Status).SingleAsync());
+        Assert.Equal(StatusCobranca.Pendente,
+            await db.Cobrancas.Where(item => item.Id == avulsa.Id)
+                .Select(item => item.Status).SingleAsync());
+        Assert.Equal(StatusCobranca.Pendente,
+            await db.Cobrancas.Where(item => item.Id == cobrancaOutroTenant.Id)
+                .Select(item => item.Status).SingleAsync());
+        Assert.Single(await db.Pagamentos.Where(item => item.CobrancaId == mensalidadePaga.Id).ToListAsync());
     }
 
     private static async Task<Cenario> CriarCenarioAsync(

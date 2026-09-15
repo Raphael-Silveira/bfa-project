@@ -1,5 +1,6 @@
 using BFA.Application.Matriculas;
 using BFA.Domain.Alunos;
+using BFA.Domain.Cobrancas;
 using BFA.Domain.Matriculas;
 using BFA.Domain.Turmas;
 using BFA.Infrastructure.Persistence;
@@ -540,8 +541,23 @@ public sealed class MatriculasRepositorio(BfaDbContext dbContext, ILogger<Matric
                 matricula.Cancelar(dataFinalEfetiva, usuarioId, agoraUtc);
             else
                 matricula.Encerrar(dataFinalEfetiva, usuarioId, agoraUtc);
+
+            var cobrancas = await dbContext.Cobrancas
+                .Where(item => item.OrganizacaoId == organizacaoId
+                    && item.UnidadeId == unidadeId
+                    && item.MatriculaId == matriculaId)
+                .ToArrayAsync(cancellationToken);
+            var reconciliadas = ReconciliacaoCobrancas.Aplicar(
+                cobrancas, dataFinalEfetiva, agoraUtc);
+
             await dbContext.SaveChangesAsync(cancellationToken);
             await transacao.CommitAsync(cancellationToken);
+            if (reconciliadas > 0)
+            {
+                logger.LogInformation(
+                    "Reconciliação financeira aplicada: {Count} cobranças da matrícula {MatriculaId}",
+                    reconciliadas, matriculaId);
+            }
             return EstadoMatriculas.Sucesso;
         }
         catch (ArgumentException)
