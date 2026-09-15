@@ -1,3 +1,4 @@
+@using BFA.Application.Franqueadora.Unidades
 @model UnidadesFranqueadoraIndexViewModel
 @{
     ViewData["Title"] = "Unidades";
@@ -15,13 +16,48 @@
     </div>
 </header>
 
+<section class="bfa-admin-filters bfa-unidades-filters" aria-label="Filtros de unidades">
+    <form method="get" class="bfa-admin-filters__form">
+        <div class="bfa-admin-filters__group bfa-unidades-filters__search">
+            <label class="bfa-admin-filters__label" for="busca">Buscar unidade</label>
+            <input class="bfa-admin-filters__input"
+                   type="search"
+                   id="busca"
+                   name="busca"
+                   value="@Model.Busca"
+                   placeholder="Nome da unidade"
+                   aria-label="Buscar unidade" />
+        </div>
+        <div class="bfa-admin-filters__group">
+            <label class="bfa-admin-filters__label" for="tipo">Tipo</label>
+            <select class="bfa-admin-filters__select" id="tipo" name="tipo">
+                <option value="todos" selected="@(Model.Tipo == TipoUnidadeFiltro.Todos ? "selected" : null)">Todos</option>
+                <option value="franqueadas" selected="@(Model.Tipo == TipoUnidadeFiltro.Franqueadas ? "selected" : null)">Franqueadas</option>
+                <option value="rede" selected="@(Model.Tipo == TipoUnidadeFiltro.Rede ? "selected" : null)">Rede</option>
+            </select>
+        </div>
+        <div class="bfa-admin-filters__actions">
+            <button type="submit" class="bfa-admin-btn bfa-admin-btn--primary">Filtrar</button>
+            <a href="/franqueadora/unidades" class="bfa-admin-btn bfa-admin-btn--secondary">Limpar</a>
+        </div>
+    </form>
+</section>
+
 @if (Model.Unidades.Count == 0)
 {
     <section class="bfa-admin-empty-state" role="status">
         <div class="bfa-admin-empty-state__symbol" aria-hidden="true">BFA</div>
         <div>
-            <h2>Nenhuma unidade cadastrada.</h2>
-            <p>Use o botão "Nova unidade" para iniciar o cadastro.</p>
+            @if (Model.PossuiFiltros)
+            {
+                <h2>Nenhuma unidade encontrada com os filtros informados.</h2>
+                <p>Tente ajustar os filtros de busca.</p>
+            }
+            else
+            {
+                <h2>Nenhuma unidade cadastrada.</h2>
+                <p>Use o botão "Nova unidade" para iniciar o cadastro.</p>
+            }
         </div>
     </section>
 }

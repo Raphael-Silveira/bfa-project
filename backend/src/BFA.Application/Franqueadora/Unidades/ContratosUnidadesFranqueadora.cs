@@ -9,6 +9,17 @@ public enum EstadoGerenciamentoUnidade
     SlugDuplicado = 5
 }
 
+public enum TipoUnidadeFiltro
+{
+    Todos = 1,
+    Franqueadas = 2,
+    Rede = 3
+}
+
+public sealed record FiltroUnidadesFranqueadora(
+    string? Busca,
+    TipoUnidadeFiltro Tipo);
+
 public sealed record UnidadeResumo(
     Guid Id,
     string Nome,

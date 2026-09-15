@@ -120,6 +120,138 @@ public sealed partial class UnidadesFranqueadoraEndpointTests
     }
 
     [Fact]
+    public async Task Busca_por_nome_e_case_insensitive_preserva_querystring_e_isola_tenant()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        await AdicionarUnidadeAsync(application, organizacaoId, "BFA Cerquilho", "cerquilho");
+        await AdicionarUnidadeAsync(application, organizacaoId, "BFA Tietê", "tiete");
+        await AdicionarUnidadeAsync(application, Guid.NewGuid(), "BFA Cerquilho Externa", "externa");
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades?busca=CERQUILHO"));
+
+        Assert.Contains("BFA Cerquilho", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("BFA Tietê", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("BFA Cerquilho Externa", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"CERQUILHO\"", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"todos\" selected", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/franqueadora/unidades\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Busca_inexistente_exibe_empty_state_de_filtros()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        await AdicionarUnidadeAsync(application, organizacaoId, "BFA Cerquilho", "cerquilho");
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades?busca=Inexistente"));
+
+        Assert.Contains(
+            "Nenhuma unidade encontrada com os filtros informados.",
+            html,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("Nenhuma unidade cadastrada.", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("BFA Cerquilho", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Filtro_franqueadas_retorna_somente_vinculos_ativos_e_preserva_contrato()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        var franqueada = await AdicionarUnidadeAsync(
+            application, organizacaoId, "BFA Franqueada", "bfa-franqueada");
+        await AdicionarFranqueadoAtivoAsync(application, organizacaoId, franqueada.Id);
+        await AdicionarUnidadeAsync(application, organizacaoId, "BFA Rede", "bfa-rede");
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades?tipo=franqueadas"));
+
+        Assert.Contains("BFA Franqueada", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("BFA Rede", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"franqueadas\" selected", html, StringComparison.Ordinal);
+        Assert.Contains("title=\"Gerenciar contrato\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Filtro_rede_retorna_somente_unidades_sem_vinculo_ativo_e_oculta_contrato()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        var franqueada = await AdicionarUnidadeAsync(
+            application, organizacaoId, "BFA Franqueada", "bfa-franqueada");
+        await AdicionarFranqueadoAtivoAsync(application, organizacaoId, franqueada.Id);
+        await AdicionarUnidadeAsync(application, organizacaoId, "BFA Rede", "bfa-rede");
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades?tipo=rede"));
+
+        Assert.DoesNotContain("BFA Franqueada", html, StringComparison.Ordinal);
+        Assert.Contains("BFA Rede", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"rede\" selected", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("title=\"Gerenciar contrato\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Filtro_todos_nao_restringe_por_tipo()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        var franqueada = await AdicionarUnidadeAsync(
+            application, organizacaoId, "BFA Franqueada", "bfa-franqueada");
+        await AdicionarFranqueadoAtivoAsync(application, organizacaoId, franqueada.Id);
+        await AdicionarUnidadeAsync(application, organizacaoId, "BFA Rede", "bfa-rede");
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync("/franqueadora/unidades?tipo=todos"));
+
+        Assert.Contains("BFA Franqueada", html, StringComparison.Ordinal);
+        Assert.Contains("BFA Rede", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"todos\" selected", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Busca_e_tipo_sao_aplicados_em_conjunto()
+    {
+        using var application = new UnidadesFranqueadoraWebApplicationFactory();
+        var organizacaoId = ConfigurarAdministradorRede(application);
+        var franqueadaCentro = await AdicionarUnidadeAsync(
+            application, organizacaoId, "Centro Franqueada", "centro-franqueada");
+        await AdicionarFranqueadoAtivoAsync(application, organizacaoId, franqueadaCentro.Id);
+        var redeCentro = await AdicionarUnidadeAsync(
+            application, organizacaoId, "Centro Rede", "centro-rede");
+        var franqueadaSul = await AdicionarUnidadeAsync(
+            application, organizacaoId, "Sul Franqueada", "sul-franqueada");
+        await AdicionarFranqueadoAtivoAsync(application, organizacaoId, franqueadaSul.Id);
+        using var client = CreateClient(application);
+        await LoginAsync(client, application);
+
+        var html = WebUtility.HtmlDecode(
+            await client.GetStringAsync(
+                "/franqueadora/unidades?busca=Centro&tipo=franqueadas"));
+
+        Assert.Contains("Centro Franqueada", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Centro Rede", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sul Franqueada", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"Centro\"", html, StringComparison.Ordinal);
+        Assert.Contains("value=\"franqueadas\" selected", html, StringComparison.Ordinal);
+        Assert.DoesNotContain($"{redeCentro.Id:D}", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Unidade_franqueada_exibe_gerenciar_contrato_na_rota_existente()
     {
         using var application = new UnidadesFranqueadoraWebApplicationFactory();

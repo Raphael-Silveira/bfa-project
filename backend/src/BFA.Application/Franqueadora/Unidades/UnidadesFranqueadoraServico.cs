@@ -13,8 +13,10 @@ public sealed class UnidadesFranqueadoraServico(
 {
     public async Task<ResultadoUnidadesFranqueadora<IReadOnlyList<UnidadeResumo>>> ListarAsync(
         Guid usuarioId,
+        FiltroUnidadesFranqueadora filtro,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(filtro);
         var contexto = await ObterContextoAsync(usuarioId, cancellationToken);
 
         if (contexto.OrganizacaoId is not { } organizacaoId)
@@ -22,7 +24,10 @@ public sealed class UnidadesFranqueadoraServico(
             return new(contexto.Estado, null);
         }
 
-        var unidades = await repositorio.ListarAsync(organizacaoId, cancellationToken);
+        var unidades = await repositorio.ListarAsync(
+            organizacaoId,
+            filtro,
+            cancellationToken);
         return new(EstadoGerenciamentoUnidade.Sucesso, unidades);
     }
 

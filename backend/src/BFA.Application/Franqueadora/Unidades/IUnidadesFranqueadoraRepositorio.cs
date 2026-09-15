@@ -6,6 +6,7 @@ public interface IUnidadesFranqueadoraRepositorio
 {
     Task<IReadOnlyList<UnidadeResumo>> ListarAsync(
         Guid organizacaoId,
+        FiltroUnidadesFranqueadora filtro,
         CancellationToken cancellationToken);
 
     Task<UnidadeDetalhe?> ObterDetalheAsync(

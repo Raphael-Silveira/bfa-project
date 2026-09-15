@@ -27,6 +27,7 @@ public sealed class UnidadesFranqueadoraServicoTests
 
         var resultado = await contexto.Servico.ListarAsync(
             contexto.UsuarioId,
+            new FiltroUnidadesFranqueadora(null, TipoUnidadeFiltro.Todos),
             CancellationToken.None);
 
         Assert.Equal(EstadoGerenciamentoUnidade.Sucesso, resultado.Estado);
@@ -45,6 +46,7 @@ public sealed class UnidadesFranqueadoraServicoTests
 
         var resultado = await contexto.Servico.ListarAsync(
             contexto.UsuarioId,
+            new FiltroUnidadesFranqueadora(null, TipoUnidadeFiltro.Todos),
             CancellationToken.None);
 
         var unidade = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<UnidadeResumo>>(
@@ -227,6 +229,7 @@ public sealed class UnidadesFranqueadoraServicoTests
 
         public Task<IReadOnlyList<UnidadeResumo>> ListarAsync(
             Guid organizacaoId,
+            FiltroUnidadesFranqueadora filtro,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

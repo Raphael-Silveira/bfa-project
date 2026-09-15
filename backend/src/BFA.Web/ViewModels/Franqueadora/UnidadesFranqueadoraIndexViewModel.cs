@@ -1,8 +1,17 @@
+using BFA.Application.Franqueadora.Unidades;
+
 namespace BFA.Web.ViewModels.Franqueadora;
 
 public sealed class UnidadesFranqueadoraIndexViewModel
 {
+    public string? Busca { get; init; }
+
+    public TipoUnidadeFiltro Tipo { get; init; } = TipoUnidadeFiltro.Todos;
+
     public IReadOnlyList<UnidadeFranqueadoraItemViewModel> Unidades { get; init; } = [];
+
+    public bool PossuiFiltros => !string.IsNullOrWhiteSpace(Busca)
+        || Tipo != TipoUnidadeFiltro.Todos;
 }
 
 public sealed record UnidadeFranqueadoraItemViewModel(

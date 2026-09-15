@@ -21,14 +21,25 @@ public sealed class UnidadesController(
         "Já existe uma unidade com este identificador.";
 
     [HttpGet("")]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        string? busca,
+        string? tipo,
+        CancellationToken cancellationToken)
     {
         if (usuarioAtual.UsuarioId is not { } usuarioId)
         {
             return Forbid();
         }
 
-        var resultado = await consulta.ListarAsync(usuarioId, cancellationToken);
+        var tipoFiltro = tipo?.Trim().ToLowerInvariant() switch
+        {
+            "franqueadas" => TipoUnidadeFiltro.Franqueadas,
+            "rede" => TipoUnidadeFiltro.Rede,
+            _ => TipoUnidadeFiltro.Todos
+        };
+        var filtro = new FiltroUnidadesFranqueadora(busca, tipoFiltro);
+
+        var resultado = await consulta.ListarAsync(usuarioId, filtro, cancellationToken);
 
         if (resultado.Estado != EstadoGerenciamentoUnidade.Sucesso
             || resultado.Valor is not { } unidades)
@@ -38,6 +49,8 @@ public sealed class UnidadesController(
 
         return View(new UnidadesFranqueadoraIndexViewModel
         {
+            Busca = busca,
+            Tipo = tipoFiltro,
             Unidades = unidades
                 .Select(unidade => new UnidadeFranqueadoraItemViewModel(
                     unidade.Id,

@@ -13,11 +13,37 @@ public sealed class UnidadesFranqueadoraRepositorio(BfaDbContext dbContext)
 
     public async Task<IReadOnlyList<UnidadeResumo>> ListarAsync(
         Guid organizacaoId,
+        FiltroUnidadesFranqueadora filtro,
         CancellationToken cancellationToken)
     {
-        return await dbContext.Unidades
+        ArgumentNullException.ThrowIfNull(filtro);
+
+        var query = dbContext.Unidades
             .AsNoTracking()
-            .Where(unidade => unidade.OrganizacaoId == organizacaoId)
+            .Where(unidade => unidade.OrganizacaoId == organizacaoId);
+
+        if (!string.IsNullOrWhiteSpace(filtro.Busca))
+        {
+            var busca = filtro.Busca.Trim().ToLowerInvariant();
+            query = query.Where(unidade => unidade.Nome.ToLower().Contains(busca));
+        }
+
+        if (filtro.Tipo == TipoUnidadeFiltro.Franqueadas)
+        {
+            query = query.Where(unidade => dbContext.FranqueadosUnidades.Any(
+                vinculo => vinculo.OrganizacaoId == organizacaoId
+                    && vinculo.UnidadeId == unidade.Id
+                    && vinculo.Ativo));
+        }
+        else if (filtro.Tipo == TipoUnidadeFiltro.Rede)
+        {
+            query = query.Where(unidade => !dbContext.FranqueadosUnidades.Any(
+                vinculo => vinculo.OrganizacaoId == organizacaoId
+                    && vinculo.UnidadeId == unidade.Id
+                    && vinculo.Ativo));
+        }
+
+        return await query
             .OrderBy(unidade => unidade.Nome)
             .Select(unidade => new UnidadeResumo(
                 unidade.Id,
