@@ -302,3 +302,29 @@ public sealed record ResumoFinanceiro(
 - 484 unitários passando
 - 693 integração passando
 - Total: 1.177
+
+## 10. Segurança operacional do Hangfire em Development
+
+O Hangfire fica desabilitado por padrão em Development para impedir que iniciar
+aplicação local gere cobranças automaticamente.
+
+Para testar intencionalmente os jobs, habilite o mecanismo existente com um
+override explícito:
+
+```powershell
+$env:Hangfire__Enabled = "true"
+dotnet run --project backend/src/BFA.Web
+```
+
+Os jobs recorrentes atuais são:
+
+- `gerar-mensalidades`: gera mensalidades e taxas de matrícula elegíveis;
+- `marcar-atrasadas`: marca cobranças vencidas como atrasadas.
+
+Antes de habilitar o Hangfire, confirme que o banco é de desenvolvimento e
+entenda que o processamento pode criar cobranças. Os testes automatizados
+mantêm `Hangfire:Enabled=false`.
+
+A idempotência sequencial existente evita duplicação após uma execução repetida.
+A disputa concorrente entre a consulta de existência e o INSERT permanece uma
+dívida técnica para uma fase posterior.

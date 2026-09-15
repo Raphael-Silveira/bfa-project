@@ -58,6 +58,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 var hangfireEnabled = builder.Configuration.GetValue<bool>("Hangfire:Enabled");
+app.Logger.LogInformation(
+    "Hangfire: {Estado}",
+    hangfireEnabled ? "HABILITADO" : "DESABILITADO");
 
 if (hangfireEnabled)
 {

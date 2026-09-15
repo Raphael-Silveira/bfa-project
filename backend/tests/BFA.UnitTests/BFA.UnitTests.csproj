@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\BFA.Domain\BFA.Domain.csproj" />
     <ProjectReference Include="..\..\src\BFA.Application\BFA.Application.csproj" />
+    <ProjectReference Include="..\..\src\BFA.Infrastructure\BFA.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
