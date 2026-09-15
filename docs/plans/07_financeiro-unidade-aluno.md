@@ -326,5 +326,26 @@ entenda que o processamento pode criar cobranças. Os testes automatizados
 mantêm `Hangfire:Enabled=false`.
 
 A idempotência sequencial existente evita duplicação após uma execução repetida.
-A disputa concorrente entre a consulta de existência e o INSERT permanece uma
-dívida técnica para uma fase posterior.
+A Fase de Idempotência Concorrente V1 adiciona a garantia definitiva no
+PostgreSQL por meio da V021 e trata a disputa entre a pré-consulta e o INSERT
+como uma corrida esperada.
+
+## 11. Idempotência concorrente de cobranças automáticas V1
+
+A identidade de uma cobrança automática é:
+
+- mensalidade: `OrganizacaoId + UnidadeId + MatriculaId + Tipo=Mensalidade + ano/mês(DataVencimento)`;
+- taxa de matrícula: `OrganizacaoId + UnidadeId + MatriculaId + Tipo=Matricula`.
+
+Os índices únicos da V021 não filtram por status: uma cobrança cancelada
+continua ocupando sua identidade e não é recriada automaticamente. Cobranças
+`Avulso` permanecem fora da unicidade e podem ser múltiplas.
+
+O repositório mantém a pré-consulta para eficiência, mas o PostgreSQL é a
+autoridade final. Uma violação `23505` somente nos índices financeiros é
+tratada como corrida idempotente: a cobrança vencedora é recuperada e o job
+prossegue. Outras violações únicas continuam sendo propagadas.
+
+A V021 valida duplicidades existentes antes de criar os índices e falha com
+mensagem explícita, sem saneamento automático. A reemissão de mensalidade ou
+taxa cancelada permanece uma operação explícita futura.

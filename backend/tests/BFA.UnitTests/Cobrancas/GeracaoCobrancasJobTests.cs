@@ -57,6 +57,38 @@ public sealed class GeracaoCobrancasJobTests
     }
 
     [Fact]
+    public async Task Mensalidade_cancelada_nao_e_recriada_automaticamente()
+    {
+        var repositorio = new RepositorioFake
+        {
+            Matriculas = [Matricula(valor: 275m)]
+        };
+        repositorio.Criadas.Add(CobrancaCancelada(TipoCobranca.Mensalidade, 275m));
+        var job = CriarJob(repositorio);
+
+        await job.GerarMensalidadesAsync(CancellationToken.None);
+
+        var cobranca = Assert.Single(repositorio.Criadas);
+        Assert.Equal(StatusCobranca.Cancelada, cobranca.Status);
+    }
+
+    [Fact]
+    public async Task Taxa_cancelada_nao_e_recriada_automaticamente()
+    {
+        var repositorio = new RepositorioFake
+        {
+            Matriculas = [Matricula(valor: 275m, cobraTaxa: true, taxa: 90m)]
+        };
+        repositorio.Criadas.Add(CobrancaCancelada(TipoCobranca.Matricula, 90m));
+        var job = CriarJob(repositorio);
+
+        await job.GerarTaxasMatriculaAsync(CancellationToken.None);
+
+        var cobranca = Assert.Single(repositorio.Criadas);
+        Assert.Equal(StatusCobranca.Cancelada, cobranca.Status);
+    }
+
+    [Fact]
     public async Task Valor_usa_snapshot_financeiro_da_matricula()
     {
         var repositorio = new RepositorioFake
@@ -124,6 +156,27 @@ public sealed class GeracaoCobrancasJobTests
             cobraTaxa,
             taxa);
 
+    private static Cobranca CobrancaCancelada(TipoCobranca tipo, decimal valor)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+        var cobranca = new Cobranca(
+            Guid.NewGuid(),
+            OrganizacaoId,
+            UnidadeId,
+            AlunoId,
+            MatriculaId,
+            tipo,
+            "Cobranca existente",
+            valor,
+            hoje,
+            hoje.AddDays(1),
+            null,
+            DateTime.UtcNow);
+
+        cobranca.Cancelar(Guid.NewGuid(), DateTime.UtcNow);
+        return cobranca;
+    }
+
     private sealed class RepositorioFake : ICobrancasRepositorio
     {
         public IReadOnlyList<MatriculaParaGeracao> Matriculas { get; init; } = [];
@@ -150,6 +203,13 @@ public sealed class GeracaoCobrancasJobTests
         {
             Criadas.Add(cobranca);
             return Task.FromResult(true);
+        }
+
+        public Task<Cobranca> CriarAutomaticaIdempotenteAsync(
+            Cobranca cobranca, CancellationToken cancellationToken)
+        {
+            Criadas.Add(cobranca);
+            return Task.FromResult(cobranca);
         }
 
         public Task<int> MarcarAtrasadasAsync(CancellationToken cancellationToken)

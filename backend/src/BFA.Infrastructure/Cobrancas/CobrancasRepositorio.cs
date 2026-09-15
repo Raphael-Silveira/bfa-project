@@ -3,11 +3,15 @@ using BFA.Domain.Cobrancas;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace BFA.Infrastructure.Cobrancas;
 
 public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<CobrancasRepositorio> logger) : ICobrancasRepositorio
 {
+    private const string IndiceMensalidade = "uq_cobrancas_mensalidade_competencia";
+    private const string IndiceTaxaMatricula = "uq_cobrancas_taxa_matricula";
+
     public async Task<IReadOnlyList<CobrancaListaItem>> ListarAsync(
         Guid organizacaoId, Guid unidadeId, FiltroCobrancas filtro,
         CancellationToken cancellationToken)
@@ -125,6 +129,34 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
         dbContext.Cobrancas.Add(cobranca);
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    public async Task<Cobranca> CriarAutomaticaIdempotenteAsync(
+        Cobranca cobranca, CancellationToken cancellationToken)
+    {
+        dbContext.Cobrancas.Add(cobranca);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return cobranca;
+        }
+        catch (DbUpdateException exception) when (EhConflitoFinanceiro(exception))
+        {
+            dbContext.Entry(cobranca).State = EntityState.Detached;
+
+            var existente = await ObterAutomaticaPorIdentidadeAsync(
+                cobranca, cancellationToken);
+
+            if (existente is null)
+                throw;
+
+            logger.LogDebug(
+                "Cobranca automatica ja criada por outra execucao: {CobrancaId} para matricula {MatriculaId}",
+                existente.Id, cobranca.MatriculaId);
+
+            return existente;
+        }
     }
 
     public async Task<bool> CancelarAsync(Cobranca cobranca, CancellationToken cancellationToken)
@@ -283,6 +315,48 @@ public sealed class CobrancasRepositorio(BfaDbContext dbContext, ILogger<Cobranc
                         && c.Tipo == TipoCobranca.Matricula
                         && c.Status != StatusCobranca.Cancelada,
                        cancellationToken);
+    }
+
+    private async Task<Cobranca?> ObterAutomaticaPorIdentidadeAsync(
+        Cobranca cobranca, CancellationToken cancellationToken)
+    {
+        var query = dbContext.Cobrancas.AsNoTracking()
+            .Where(c => c.OrganizacaoId == cobranca.OrganizacaoId
+                     && c.UnidadeId == cobranca.UnidadeId
+                     && c.MatriculaId == cobranca.MatriculaId
+                     && c.Tipo == cobranca.Tipo);
+
+        if (cobranca.Tipo == TipoCobranca.Mensalidade)
+        {
+            query = query.Where(c => c.DataVencimento.Year == cobranca.DataVencimento.Year
+                                  && c.DataVencimento.Month == cobranca.DataVencimento.Month);
+        }
+        else if (cobranca.Tipo != TipoCobranca.Matricula)
+        {
+            throw new InvalidOperationException(
+                "Somente mensalidades e taxas podem usar criacao automatica idempotente.");
+        }
+
+        return await query.FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private static bool EhConflitoFinanceiro(DbUpdateException exception)
+    {
+        var postgresException = EncontrarPostgresException(exception);
+
+        return postgresException?.SqlState == PostgresErrorCodes.UniqueViolation
+            && postgresException.ConstraintName is IndiceMensalidade or IndiceTaxaMatricula;
+    }
+
+    private static PostgresException? EncontrarPostgresException(Exception exception)
+    {
+        for (var atual = exception; atual is not null; atual = atual.InnerException)
+        {
+            if (atual is PostgresException postgresException)
+                return postgresException;
+        }
+
+        return null;
     }
 
     public async Task<int> MarcarAtrasadasAsync(CancellationToken cancellationToken)

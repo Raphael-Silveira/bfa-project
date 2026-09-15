@@ -19,6 +19,9 @@ public interface ICobrancasRepositorio
 
     Task<bool> CriarAsync(Cobranca cobranca, CancellationToken cancellationToken);
 
+    Task<Cobranca> CriarAutomaticaIdempotenteAsync(
+        Cobranca cobranca, CancellationToken cancellationToken);
+
     Task<bool> CancelarAsync(Cobranca cobranca, CancellationToken cancellationToken);
 
     Task<Pagamento?> ObterPagamentoAsync(

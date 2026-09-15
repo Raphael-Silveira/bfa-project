@@ -59,13 +59,17 @@ public sealed class GeracaoCobrancasJob(
                 null,
                 agora);
 
-            await repositorio.CriarAsync(cobranca, cancellationToken);
+            var mensalidadePersistida = await repositorio.CriarAutomaticaIdempotenteAsync(
+                cobranca, cancellationToken);
 
-            criadas++;
+            if (mensalidadePersistida.Id == cobranca.Id)
+            {
+                criadas++;
 
-            logger.LogInformation(
-                "Mensalidade criada: {CobrancaId} para aluno {AlunoId} na unidade {UnidadeId} - Valor: {Valor}",
-                cobranca.Id, matricula.AlunoId, matricula.UnidadeId, matricula.ValorMensalContratado);
+                logger.LogInformation(
+                    "Mensalidade criada: {CobrancaId} para aluno {AlunoId} na unidade {UnidadeId} - Valor: {Valor}",
+                    cobranca.Id, matricula.AlunoId, matricula.UnidadeId, matricula.ValorMensalContratado);
+            }
 
             if (matricula.CobraTaxaMatricula
                 && matricula.ValorTaxaMatricula.HasValue)
@@ -91,13 +95,17 @@ public sealed class GeracaoCobrancasJob(
                         null,
                         agora);
 
-                    await repositorio.CriarAsync(cobrancaTaxa, cancellationToken);
+                    var taxaPersistida = await repositorio.CriarAutomaticaIdempotenteAsync(
+                        cobrancaTaxa, cancellationToken);
 
-                    criadas++;
+                    if (taxaPersistida.Id == cobrancaTaxa.Id)
+                    {
+                        criadas++;
 
-                    logger.LogInformation(
-                        "Taxa de matrícula criada: {CobrancaId} para aluno {AlunoId} na unidade {UnidadeId} - Valor: {Valor}",
-                        cobrancaTaxa.Id, matricula.AlunoId, matricula.UnidadeId, matricula.ValorTaxaMatricula.Value);
+                        logger.LogInformation(
+                            "Taxa de matrícula criada: {CobrancaId} para aluno {AlunoId} na unidade {UnidadeId} - Valor: {Valor}",
+                            cobrancaTaxa.Id, matricula.AlunoId, matricula.UnidadeId, matricula.ValorTaxaMatricula.Value);
+                    }
                 }
             }
         }
@@ -151,13 +159,17 @@ public sealed class GeracaoCobrancasJob(
                 null,
                 agora);
 
-            await repositorio.CriarAsync(cobranca, cancellationToken);
+            var taxaPersistida = await repositorio.CriarAutomaticaIdempotenteAsync(
+                cobranca, cancellationToken);
 
-            criadas++;
+            if (taxaPersistida.Id == cobranca.Id)
+            {
+                criadas++;
 
-            logger.LogInformation(
-                "Taxa de matrícula criada: {CobrancaId} para aluno {AlunoId} na unidade {UnidadeId} - Valor: {Valor}",
-                cobranca.Id, matricula.AlunoId, matricula.UnidadeId, matricula.ValorTaxaMatricula.Value);
+                logger.LogInformation(
+                    "Taxa de matrícula criada: {CobrancaId} para aluno {AlunoId} na unidade {UnidadeId} - Valor: {Valor}",
+                    cobranca.Id, matricula.AlunoId, matricula.UnidadeId, matricula.ValorTaxaMatricula.Value);
+            }
         }
 
         logger.LogInformation("Geração de taxas de matrícula concluída: {Criadas} cobranças criadas", criadas);
