@@ -2416,6 +2416,10 @@
   gap: 0.75rem;
 }
 
+.bfa-relatorio-hero--detail {
+  grid-template-columns: 1fr;
+}
+
 .bfa-relatorio-stat {
   display: grid;
   gap: 0.25rem;
@@ -2443,6 +2447,10 @@
   letter-spacing: -0.03em;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+.bfa-relatorio-stat__value--danger {
+  color: var(--bfa-danger);
 }
 
 .bfa-relatorio-stat__hint {
@@ -2498,6 +2506,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.bfa-relatorio-grid--cards-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .bfa-relatorio-grid--cards-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -2537,6 +2549,60 @@
 .bfa-relatorio-mini-card__meta {
   color: var(--bfa-text-muted);
   font-size: 0.72rem;
+}
+
+.bfa-relatorio-table-card {
+  overflow: hidden;
+}
+
+.bfa-relatorio-table {
+  min-width: 68rem;
+  table-layout: fixed;
+}
+
+.bfa-relatorio-table th,
+.bfa-relatorio-table td {
+  overflow-wrap: anywhere;
+}
+
+.bfa-relatorio-table th:nth-child(1),
+.bfa-relatorio-table td:nth-child(1) {
+  width: 22%;
+}
+
+.bfa-relatorio-table th:nth-child(2),
+.bfa-relatorio-table td:nth-child(2) {
+  width: 13%;
+}
+
+.bfa-relatorio-table th:nth-child(3),
+.bfa-relatorio-table td:nth-child(3) {
+  width: 11%;
+}
+
+.bfa-relatorio-table th:nth-child(4),
+.bfa-relatorio-table td:nth-child(4) {
+  width: 15%;
+}
+
+.bfa-relatorio-table th:nth-child(5),
+.bfa-relatorio-table td:nth-child(5) {
+  width: 16%;
+}
+
+.bfa-relatorio-table th:nth-child(6),
+.bfa-relatorio-table td:nth-child(6) {
+  width: 15%;
+}
+
+.bfa-relatorio-table__numeric {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bfa-relatorio-table__actions {
+  text-align: center !important;
 }
 
 .bfa-relatorio-filter-card {
@@ -2627,11 +2693,21 @@
     grid-template-columns: 1fr;
   }
 
+  .bfa-relatorio-grid--cards-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .bfa-relatorio-stat--wide {
     grid-column: auto;
   }
 
   .bfa-relatorio-panel__header {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 30rem) {
+  .bfa-relatorio-grid--cards-4 {
+    grid-template-columns: 1fr;
   }
 }

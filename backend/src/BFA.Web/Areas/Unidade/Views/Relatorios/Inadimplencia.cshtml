@@ -45,7 +45,7 @@
                 <p class="bfa-relatorio-panel__description">Concentração do saldo por tempo de atraso.</p>
             </div>
         </div>
-        <div class="bfa-relatorio-grid bfa-relatorio-grid--cards">
+        <div class="bfa-relatorio-grid bfa-relatorio-grid--cards-4">
             @foreach (var faixa in Model.PorFaixa)
             {
                 <article class="bfa-relatorio-mini-card">
@@ -77,52 +77,47 @@ else
                 <p class="bfa-relatorio-panel__description">Lista consolidada dos alunos com cobranças atrasadas.</p>
             </div>
         </div>
-        <div class="bfa-table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Aluno</th>
-                        <th>CPF</th>
-                        <th>Cobranças</th>
-                        <th>Valor Total</th>
-                        <th>Dias em Atraso</th>
-                        <th>Faixa</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var aluno in Model.Alunos)
-                {
-                    <tr>
-                        <td>
-                            <div class="bfa-data-primary">@aluno.NomeCompleto</div>
-                        </td>
-                        <td>@(aluno.Cpf ?? "—")</td>
-                        <td>@aluno.CobrancasAtrasadas</td>
-                        <td>
-                            <div class="bfa-data-primary">@aluno.ValorTotalAtrasado</div>
-                        </td>
-                        <td>@aluno.DiasEmAtraso dias</td>
-                        <td>
-                            <span class="bfa-data-badge bfa-data-badge--overdue">
-                                <i class="bfa-data-badge__dot"></i>
-                                @aluno.FaixaAtraso
-                            </span>
-                        </td>
-                        <td>
-                            <div class="bfa-actions-cell">
-                                <a class="bfa-admin-button bfa-btn-secondary"
-                                   asp-area="Unidade"
-                                   asp-controller="Relatorios"
-                                   asp-action="InadimplenciaDetalhe"
-                                   asp-route-unidadeId="@Model.UnidadeId"
-                                   asp-route-alunoId="@aluno.AlunoId">Detalhes</a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="bfa-data-card bfa-relatorio-table-card">
+            <div class="bfa-table-wrap">
+                <table class="bfa-relatorio-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Aluno</th>
+                            <th scope="col">CPF</th>
+                            <th class="bfa-relatorio-table__numeric" scope="col">Cobranças</th>
+                            <th class="bfa-relatorio-table__numeric" scope="col">Valor total</th>
+                            <th class="bfa-relatorio-table__numeric" scope="col">Dias em atraso</th>
+                            <th class="bfa-relatorio-table__actions" scope="col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var aluno in Model.Alunos)
+                    {
+                        <tr>
+                            <td>
+                                <div class="bfa-data-primary">@aluno.NomeCompleto</div>
+                            </td>
+                            <td>@(aluno.Cpf ?? "—")</td>
+                            <td class="bfa-relatorio-table__numeric">@aluno.CobrancasAtrasadas</td>
+                            <td class="bfa-relatorio-table__numeric">
+                                <div class="bfa-data-primary">@aluno.ValorTotalAtrasado</div>
+                            </td>
+                            <td class="bfa-relatorio-table__numeric">@aluno.DiasEmAtraso dias</td>
+                            <td class="bfa-relatorio-table__actions">
+                                <div class="bfa-actions-cell">
+                                    <a class="bfa-admin-button bfa-btn-secondary"
+                                       asp-area="Unidade"
+                                       asp-controller="Relatorios"
+                                       asp-action="InadimplenciaDetalhe"
+                                       asp-route-unidadeId="@Model.UnidadeId"
+                                       asp-route-alunoId="@aluno.AlunoId">Detalhes</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
 
@@ -148,10 +143,6 @@ else
                     <div>
                         <span class="bfa-mobile-card__label">Valor Total</span>
                         <div>@aluno.ValorTotalAtrasado</div>
-                    </div>
-                    <div>
-                        <span class="bfa-mobile-card__label">Faixa</span>
-                        <div>@aluno.FaixaAtraso</div>
                     </div>
                 </div>
                 <div class="bfa-mobile-card__actions">

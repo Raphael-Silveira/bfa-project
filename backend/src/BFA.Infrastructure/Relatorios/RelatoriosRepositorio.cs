@@ -79,7 +79,7 @@ public sealed class RelatoriosRepositorio(BfaDbContext dbContext, ILogger<Relato
                           && a.Data <= ate, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<CobrancaRelatorio>> ListarCobrancasAtrasadasAsync(
+    public async Task<IReadOnlyList<CobrancaInadimplenciaRelatorio>> ListarCobrancasAtrasadasAsync(
         Guid organizacaoId, Guid unidadeId,
         CancellationToken cancellationToken)
     {
@@ -87,20 +87,23 @@ public sealed class RelatoriosRepositorio(BfaDbContext dbContext, ILogger<Relato
             .Where(c => c.OrganizacaoId == organizacaoId
                      && c.UnidadeId == unidadeId
                      && c.Status == StatusCobranca.Atrasada)
-            .Select(c => new CobrancaRelatorio(
-                c.Id,
-                c.Tipo,
-                c.Status,
-                c.Valor,
-                c.ValorPago,
-                c.Descricao,
-                c.DataEmissao,
-                c.DataVencimento,
-                c.AlunoId))
+            .Join(dbContext.Alunos.AsNoTracking(),
+                cobranca => new { cobranca.OrganizacaoId, AlunoId = cobranca.AlunoId },
+                aluno => new { aluno.OrganizacaoId, AlunoId = aluno.Id },
+                (cobranca, aluno) => new CobrancaInadimplenciaRelatorio(
+                cobranca.Id,
+                cobranca.Tipo,
+                cobranca.Valor,
+                cobranca.ValorPago,
+                cobranca.Descricao,
+                cobranca.DataVencimento,
+                cobranca.AlunoId,
+                aluno.NomeCompleto,
+                aluno.Cpf))
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<CobrancaRelatorio>> ListarCobrancasAtrasadasPorAlunoAsync(
+    public async Task<IReadOnlyList<CobrancaInadimplenciaRelatorio>> ListarCobrancasAtrasadasPorAlunoAsync(
         Guid organizacaoId, Guid unidadeId, Guid alunoId,
         CancellationToken cancellationToken)
     {
@@ -109,16 +112,19 @@ public sealed class RelatoriosRepositorio(BfaDbContext dbContext, ILogger<Relato
                      && c.UnidadeId == unidadeId
                      && c.AlunoId == alunoId
                      && c.Status == StatusCobranca.Atrasada)
-            .Select(c => new CobrancaRelatorio(
-                c.Id,
-                c.Tipo,
-                c.Status,
-                c.Valor,
-                c.ValorPago,
-                c.Descricao,
-                c.DataEmissao,
-                c.DataVencimento,
-                c.AlunoId))
+            .Join(dbContext.Alunos.AsNoTracking(),
+                cobranca => new { cobranca.OrganizacaoId, AlunoId = cobranca.AlunoId },
+                aluno => new { aluno.OrganizacaoId, AlunoId = aluno.Id },
+                (cobranca, aluno) => new CobrancaInadimplenciaRelatorio(
+                cobranca.Id,
+                cobranca.Tipo,
+                cobranca.Valor,
+                cobranca.ValorPago,
+                cobranca.Descricao,
+                cobranca.DataVencimento,
+                cobranca.AlunoId,
+                aluno.NomeCompleto,
+                aluno.Cpf))
             .ToListAsync(cancellationToken);
     }
 }

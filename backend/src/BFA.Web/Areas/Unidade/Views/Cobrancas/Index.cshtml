@@ -1,4 +1,5 @@
 @using System.Globalization
+@using BFA.Domain.Cobrancas
 @using BFA.Web.ViewModels.Shared
 @model CobrancasListaViewModel
 @{ 
@@ -138,15 +139,18 @@
 
         <div class="bfa-field">
             <label for="filtro-data-inicio">Vencimento início</label>
-            <div class="bfa-date-input">
-                <input id="filtro-data-inicio"
+            <div class="bfa-admin-date-field" data-bfa-date-field>
+                <input class="form-control bfa-form-control"
+                       id="filtro-data-inicio"
                        name="dataInicio"
                        type="text"
                        inputmode="numeric"
+                       autocomplete="off"
                        value="@Model.DataInicio.ToString("dd/MM/yyyy")"
                        placeholder="dd/mm/aaaa"
-                       maxlength="10" />
-                <button type="button" class="bfa-date-button" aria-label="Abrir calendário da data inicial" data-bfa-date-trigger>
+                       maxlength="10"
+                       data-bfa-date-input />
+                <button type="button" class="bfa-admin-date-field__trigger" aria-label="Abrir calendário da data inicial" data-bfa-date-trigger>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 </button>
             </div>
@@ -156,15 +160,18 @@
 
         <div class="bfa-field">
             <label for="filtro-data-fim">Vencimento fim</label>
-            <div class="bfa-date-input">
-                <input id="filtro-data-fim"
+            <div class="bfa-admin-date-field" data-bfa-date-field>
+                <input class="form-control bfa-form-control"
+                       id="filtro-data-fim"
                        name="dataFim"
                        type="text"
                        inputmode="numeric"
+                       autocomplete="off"
                        value="@Model.DataFim.ToString("dd/MM/yyyy")"
                        placeholder="dd/mm/aaaa"
-                       maxlength="10" />
-                <button type="button" class="bfa-date-button" aria-label="Abrir calendário da data final" data-bfa-date-trigger>
+                       maxlength="10"
+                       data-bfa-date-input />
+                <button type="button" class="bfa-admin-date-field__trigger" aria-label="Abrir calendário da data final" data-bfa-date-trigger>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 </button>
             </div>
@@ -321,14 +328,7 @@ else
                     <tr class="bfa-cobranca-itens" id="itens-@grupo.AlunoId" style="display:none;">
                         <td colspan="6">
                             <div class="bfa-cobranca-itens__lista">
-                                <div class="bfa-cobranca-subgrid">
-                                    <div class="bfa-cobranca-subgrid-header">
-                                        <span>Descrição</span>
-                                        <span>Valor</span>
-                                        <span>Vencimento</span>
-                                        <span>Status</span>
-                                        <span>Ações</span>
-                                    </div>
+                                <div class="bfa-cobranca-detalhes" aria-label="Cobranças do aluno">
                                     @foreach (var item in grupo.Itens)
                                     {
                                         var itemBadgeClass = item.Status switch
@@ -353,29 +353,41 @@ else
                                             "Avulso" => "A",
                                             _ => "?"
                                         };
-                                        <div class="bfa-cobranca-subgrid-row">
-                                            <div class="bfa-cobranca-subgrid-row__tipo">
+                                        <article class="bfa-cobranca-detalhe">
+                                            <div class="bfa-cobranca-detalhe__principal">
                                                 <span class="bfa-cobranca-tipo-icon @tipoIconClass">@tipoLetra</span>
-                                                <div class="bfa-cobranca-subgrid-row__info">
-                                                    <span class="bfa-cobranca-subgrid-row__descricao">@item.Descricao</span>
-                                                    <span class="bfa-cobranca-subgrid-row__sub">@item.Tipo</span>
+                                                <div class="bfa-cobranca-detalhe__descricao">
+                                                    <span class="bfa-cobranca-detalhe__titulo">@item.Descricao</span>
+                                                    <span class="bfa-cobranca-detalhe__tipo">@item.Tipo</span>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <div class="bfa-cobranca-subgrid-row__valor">@item.Valor</div>
+                                            <dl class="bfa-cobranca-detalhe__metadados">
+                                                <div>
+                                                    <dt>Valor</dt>
+                                                    <dd>@item.Valor</dd>
+                                                </div>
                                                 @if (item.ValorPago != "R$ 0,00")
                                                 {
-                                                    <div class="bfa-cobranca-subgrid-row__pago">Pago: @item.ValorPago</div>
+                                                    <div>
+                                                        <dt>Pago</dt>
+                                                        <dd class="bfa-cobranca-detalhe__pago">@item.ValorPago</dd>
+                                                    </div>
                                                 }
-                                            </div>
-                                            <div class="bfa-cobranca-subgrid-row__vencimento">@item.DataVencimento</div>
-                                            <div>
-                                                <span class="bfa-data-badge bfa-data-badge--small @itemBadgeClass">
-                                                    <i class="bfa-data-badge__dot"></i>
-                                                    @item.Status
-                                                </span>
-                                            </div>
-                                            <div class="bfa-cobranca-subgrid-row__acoes">
+                                                <div>
+                                                    <dt>Vencimento</dt>
+                                                    <dd>@item.DataVencimento</dd>
+                                                </div>
+                                                <div>
+                                                    <dt>Status</dt>
+                                                    <dd>
+                                                        <span class="bfa-data-badge bfa-data-badge--small @itemBadgeClass">
+                                                            <i class="bfa-data-badge__dot"></i>
+                                                            @item.Status
+                                                        </span>
+                                                    </dd>
+                                                </div>
+                                            </dl>
+                                            <div class="bfa-cobranca-detalhe__acao">
                                                 @if (item.PodeCancelar)
                                                 {
                                                     <form asp-area="Unidade"
@@ -394,7 +406,7 @@ else
                                                     </form>
                                                 }
                                             </div>
-                                        </div>
+                                        </article>
                                     }
                                 </div>
                             </div>
@@ -499,9 +511,15 @@ else
                             <div class="bfa-cobranca-item bfa-cobranca-item--mobile">
                                 <div class="bfa-cobranca-item__info">
                                     <span class="bfa-cobranca-item__descricao">@item.Descricao</span>
+                                    <span class="bfa-cobranca-item__tipo">@item.Tipo</span>
                                 </div>
                                 <div class="bfa-cobranca-item__valores">
                                     <span class="bfa-cobranca-item__valor">@item.Valor</span>
+                                    @if (item.ValorPago != "R$ 0,00")
+                                    {
+                                        <span class="bfa-cobranca-item__pago">Pago: @item.ValorPago</span>
+                                    }
+                                    <span class="bfa-cobranca-item__vencimento">Vencimento: @item.DataVencimento</span>
                                     <span class="bfa-data-badge bfa-data-badge--small @itemBadgeClass">
                                         <i class="bfa-data-badge__dot"></i>
                                         @item.Status
@@ -602,25 +620,50 @@ else
                             <div class="bfa-admin-form bfa-cobranca-modal__form">
                                 <div class="bfa-form-field">
                                     <label class="bfa-form-label" for="pag-data-@grupo.AlunoId">Data do pagamento *</label>
-                                    <input class="form-control bfa-form-control"
-                                           id="pag-data-@grupo.AlunoId"
-                                           name="DataPagamento"
-                                           type="date"
-                                           value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                    <div class="bfa-admin-date-field" data-bfa-date-field>
+                                        <input class="form-control bfa-form-control"
+                                               id="pag-data-@grupo.AlunoId"
+                                               name="DataPagamento"
+                                               type="text"
+                                               inputmode="numeric"
+                                               autocomplete="off"
+                                               placeholder="dd/mm/aaaa"
+                                               maxlength="10"
+                                               required
+                                               data-bfa-date-input
+                                               data-bfa-date-required="true"
+                                               data-bfa-date-invalid-message="Informe uma data válida no formato dd/mm/aaaa."
+                                               value="@DateTime.Today.ToString("dd/MM/yyyy")" />
+                                        <button class="bfa-admin-date-field__trigger"
+                                                type="button"
+                                                aria-label="Abrir calendário da data do pagamento"
+                                                title="Abrir calendário"
+                                                data-bfa-date-trigger>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="bfa-form-field">
                                     <label class="bfa-form-label" for="pag-forma-@grupo.AlunoId">Forma de pagamento *</label>
-                                    <select class="form-control bfa-form-control" id="pag-forma-@grupo.AlunoId" name="FormaPagamento">
+                                    <select class="form-control bfa-form-control"
+                                            id="pag-forma-@grupo.AlunoId"
+                                            name="FormaPagamento"
+                                            required
+                                            aria-describedby="pag-forma-erro-@grupo.AlunoId"
+                                            data-forma-pagamento>
                                         <option value="">Selecione</option>
-                                        <option value="Dinheiro">Dinheiro</option>
-                                        <option value="Pix">Pix</option>
-                                        <option value="CartaoCredito">Cartão de Crédito</option>
-                                        <option value="CartaoDebito">Cartão de Débito</option>
-                                        <option value="Boleto">Boleto</option>
-                                        <option value="Transferencia">Transferência</option>
-                                        <option value="Outros">Outros</option>
+                                        <option value="@FormaPagamento.Dinheiro">Dinheiro</option>
+                                        <option value="@FormaPagamento.Pix" selected>Pix</option>
+                                        <option value="@FormaPagamento.CartaoCredito">Cartão de Crédito</option>
+                                        <option value="@FormaPagamento.CartaoDebito">Cartão de Débito</option>
+                                        <option value="@FormaPagamento.Boleto">Boleto</option>
+                                        <option value="@FormaPagamento.Transferencia">Transferência</option>
+                                        <option value="@FormaPagamento.Outros">Outros</option>
                                     </select>
+                                    <span class="bfa-validation-message" id="pag-forma-erro-@grupo.AlunoId" role="alert" hidden>
+                                        Selecione uma forma de pagamento.
+                                    </span>
                                 </div>
 
                                 <div class="bfa-form-field">
@@ -755,10 +798,30 @@ else
 
     .bfa-cobrancas-filter-form .bfa-field {
         min-width: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .bfa-cobrancas-filter-form .bfa-filter-actions {
         align-self: end;
+        min-height: 2.75rem;
+        align-items: stretch;
+    }
+
+    .bfa-cobrancas-filter-form .bfa-admin-date-field,
+    .bfa-cobrancas-filter-form .bfa-admin-date-field .bfa-form-control,
+    .bfa-cobrancas-filter-form .bfa-field > select,
+    .bfa-cobrancas-filter-form .bfa-field > input,
+    .bfa-cobrancas-filter-form .bfa-filter-actions .bfa-admin-button {
+        min-height: 2.75rem;
+    }
+
+    .bfa-cobrancas-filter-form .bfa-period-separator {
+        align-self: end;
+        min-height: 2.75rem;
+        display: grid;
+        place-items: center;
+        padding: 0;
     }
 
     @@media (max-width: 56rem) {
@@ -929,47 +992,6 @@ else
         display: flex; flex-direction: column; gap: 0;
     }
 
-    .bfa-cobranca-subgrid {
-        background: rgba(0,0,0,0.3);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 0.5rem;
-        overflow: hidden;
-    }
-
-    .bfa-cobranca-subgrid-header {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr auto;
-        padding: 0.5rem 1rem;
-        background: rgba(255,255,255,0.04);
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        font-size: 0.6875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--bfa-gray);
-    }
-
-    .bfa-cobranca-subgrid-row {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr auto;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        transition: background .12s;
-    }
-
-    .bfa-cobranca-subgrid-row:last-child { border-bottom: none; }
-    .bfa-cobranca-subgrid-row:hover { background: rgba(255,255,255,0.03); }
-
-    .bfa-cobranca-subgrid-row__acoes {
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .bfa-cobranca-subgrid-row__tipo {
-        display: flex; align-items: center; gap: 0.5rem;
-    }
-
     .bfa-cobranca-tipo-icon {
         width: 1.75rem; height: 1.75rem;
         border-radius: 0.375rem;
@@ -990,45 +1012,105 @@ else
         background: rgba(234,179,8,0.18); color: #facc15;
     }
 
-    .bfa-cobranca-subgrid-row__info {
-        display: flex; flex-direction: column; gap: 0.125rem; min-width: 0;
+    .bfa-cobranca-detalhes {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.625rem 0.875rem 0.875rem 2.5rem;
+        background: rgba(0, 0, 0, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.625rem;
     }
 
-    .bfa-cobranca-subgrid-row__descricao {
-        font-size: 0.8125rem; font-weight: 500; color: var(--bfa-white);
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .bfa-cobranca-detalhe {
+        display: grid;
+        grid-template-columns: minmax(13rem, 1.35fr) minmax(25rem, 2fr) auto;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.875rem 1rem;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 0.5rem;
+        transition: background .12s, border-color .12s;
     }
 
-    .bfa-cobranca-subgrid-row__sub {
-        font-size: 0.6875rem; color: var(--bfa-gray);
+    .bfa-cobranca-detalhe:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 193, 7, 0.18);
     }
 
-    .bfa-cobranca-subgrid-row__valor {
-        font-size: 0.875rem; font-weight: 600; color: var(--bfa-white);
-        text-align: right;
+    .bfa-cobranca-detalhe__principal {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        min-width: 0;
     }
 
-    .bfa-cobranca-subgrid-row__pago {
-        font-size: 0.6875rem; color: #4ade80; text-align: right;
+    .bfa-cobranca-detalhe__descricao {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        min-width: 0;
     }
 
-    .bfa-cobranca-subgrid-row__vencimento {
-        font-size: 0.8125rem; color: var(--bfa-white); text-align: right;
+    .bfa-cobranca-detalhe__titulo {
+        overflow: hidden;
+        color: var(--bfa-white);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .bfa-cobranca-subgrid-row__acoes {
-        text-align: right; padding-left: 0.75rem;
+    .bfa-cobranca-detalhe__tipo {
+        color: var(--bfa-gray);
+        font-size: 0.6875rem;
+    }
+
+    .bfa-cobranca-detalhe__metadados {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin: 0;
+        min-width: 0;
+    }
+
+    .bfa-cobranca-detalhe__metadados > div { min-width: 0; }
+
+    .bfa-cobranca-detalhe__metadados dt {
+        margin-bottom: 0.2rem;
+        color: var(--bfa-gray);
+        font-size: 0.625rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .bfa-cobranca-detalhe__metadados dd {
+        margin: 0;
+        overflow: hidden;
+        color: var(--bfa-white);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .bfa-cobranca-detalhe__metadados dd.bfa-cobranca-detalhe__pago { color: #4ade80; }
+    .bfa-cobranca-detalhe__acao { display: flex; justify-content: flex-end; }
+
+    @@media (max-width: 1100px) {
+        .bfa-cobranca-detalhes { padding-left: 1.5rem; }
+        .bfa-cobranca-detalhe { grid-template-columns: minmax(12rem, 1fr) minmax(22rem, 1.6fr) auto; gap: 0.75rem; }
+        .bfa-cobranca-detalhe__metadados { gap: 0.5rem; }
     }
 
     @@media (max-width: 768px) {
-        .bfa-cobranca-subgrid-header { display: none; }
-        .bfa-cobranca-subgrid-row {
-            grid-template-columns: auto 1fr;
-            gap: 0.375rem 0.625rem;
-            padding: 0.625rem 0.75rem;
-        }
-        .bfa-cobranca-subgrid-row__tipo { grid-column: 1 / -1; }
-        .bfa-cobranca-subgrid-row__valor { text-align: left; grid-column: 1 / -1; }
+        .bfa-cobranca-detalhes { padding: 0.5rem 0 0; background: transparent; border: none; }
+        .bfa-cobranca-detalhe { grid-template-columns: 1fr auto; gap: 0.75rem; padding: 0.75rem; }
+        .bfa-cobranca-detalhe__principal { grid-column: 1 / -1; }
+        .bfa-cobranca-detalhe__metadados { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.625rem 1rem; }
+        .bfa-cobranca-detalhe__acao { grid-column: 1 / -1; justify-content: flex-start; }
     }
 
     @@media (max-width: 30rem) {
@@ -1171,10 +1253,6 @@ else
 @section Scripts {
     <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
     <script>
-        document.querySelectorAll('[data-bfa-date-field]').forEach(function (el) {
-            BFADateField.init(el);
-        });
-
         document.querySelectorAll('[data-grupo-toggle]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var grupoId = this.getAttribute('data-grupo-toggle');
@@ -1191,6 +1269,28 @@ else
 
                 this.setAttribute('aria-expanded', !expanded);
                 this.closest('tr, .bfa-mobile-card')?.classList.toggle('bfa-cobranca-grupo--open', !expanded);
+            });
+        });
+
+        document.querySelectorAll('[data-forma-pagamento]').forEach(function (select) {
+            var form = select.form;
+            var message = document.getElementById(select.getAttribute('aria-describedby'));
+
+            function validarFormaPagamento() {
+                var valida = select.value !== '' && Array.from(select.options).some(function (option) {
+                    return option.value === select.value;
+                });
+
+                select.setCustomValidity(valida ? '' : 'Selecione uma forma de pagamento.');
+                select.setAttribute('aria-invalid', valida ? 'false' : 'true');
+                if (message) message.hidden = valida;
+                return valida;
+            }
+
+            select.addEventListener('change', validarFormaPagamento);
+            select.addEventListener('invalid', validarFormaPagamento);
+            form.addEventListener('submit', function (event) {
+                if (!validarFormaPagamento()) event.preventDefault();
             });
         });
     </script>

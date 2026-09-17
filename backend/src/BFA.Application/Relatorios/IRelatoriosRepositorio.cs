@@ -23,11 +23,11 @@ public interface IRelatoriosRepositorio
         Guid organizacaoId, Guid unidadeId, DateOnly ate,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<CobrancaRelatorio>> ListarCobrancasAtrasadasAsync(
+    Task<IReadOnlyList<CobrancaInadimplenciaRelatorio>> ListarCobrancasAtrasadasAsync(
         Guid organizacaoId, Guid unidadeId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<CobrancaRelatorio>> ListarCobrancasAtrasadasPorAlunoAsync(
+    Task<IReadOnlyList<CobrancaInadimplenciaRelatorio>> ListarCobrancasAtrasadasPorAlunoAsync(
         Guid organizacaoId, Guid unidadeId, Guid alunoId,
         CancellationToken cancellationToken);
 }
@@ -42,3 +42,14 @@ public sealed record CobrancaRelatorio(
     DateOnly DataEmissao,
     DateOnly DataVencimento,
     Guid AlunoId);
+
+public sealed record CobrancaInadimplenciaRelatorio(
+    Guid CobrancaId,
+    TipoCobranca Tipo,
+    decimal Valor,
+    decimal ValorPago,
+    string? Descricao,
+    DateOnly DataVencimento,
+    Guid AlunoId,
+    string NomeAluno,
+    string? CpfAluno);

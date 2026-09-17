@@ -127,8 +127,6 @@ public sealed class RelatoriosServico(
             return (contexto.Estado, null);
 
         var orgId = contexto.Valor!.OrganizacaoId;
-        var hoje = DateOnly.FromDateTime(DateTime.Today);
-
         var cobrancasAtrasadas = await repositorio.ListarCobrancasAtrasadasAsync(
             orgId, unidadeId, CancellationToken.None);
 
@@ -137,26 +135,10 @@ public sealed class RelatoriosServico(
             return (EstadoRelatorios.Sucesso, new InadimplenciaRelatorio(0, 0, [], []));
         }
 
-        var totalAtrasado = cobrancasAtrasadas.Sum(c => c.Valor - c.ValorPago);
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var alunosInadimplentes = InadimplenciaConsolidador.Consolidar(cobrancasAtrasadas, hoje);
 
-        var alunosInadimplentes = cobrancasAtrasadas
-            .GroupBy(c => c.AlunoId)
-            .Select(g =>
-            {
-                var diasEmAtraso = g.Min(c => hoje.DayNumber - c.DataVencimento.DayNumber);
-                return new InadimplenciaAluno(
-                    g.Key,
-                    "Aluno",
-                    null,
-                    g.Count(),
-                    g.Sum(c => c.Valor - c.ValorPago),
-                    g.Min(c => c.DataVencimento),
-                    g.Max(c => c.DataVencimento),
-                    diasEmAtraso,
-                    MapearFaixaAtraso(diasEmAtraso));
-            })
-            .OrderByDescending(x => x.ValorTotalAtrasado)
-            .ToList();
+        var totalAtrasado = alunosInadimplentes.Sum(a => a.ValorTotalAtrasado);
 
         var porFaixa = alunosInadimplentes
             .GroupBy(a => a.FaixaAtraso)
@@ -185,7 +167,6 @@ public sealed class RelatoriosServico(
 
         var orgId = contexto.Valor!.OrganizacaoId;
         var hoje = DateOnly.FromDateTime(DateTime.Today);
-
         var cobrancas = await repositorio.ListarCobrancasAtrasadasPorAlunoAsync(
             orgId, unidadeId, alunoId, CancellationToken.None);
 
@@ -196,8 +177,8 @@ public sealed class RelatoriosServico(
 
         var detalhe = new InadimplenciaAlunoDetalhe(
             alunoId,
-            "Aluno",
-            null,
+            cobrancas[0].NomeAluno,
+            cobrancas[0].CpfAluno,
             diasEmAtraso,
             cobrancas.Sum(c => c.Valor - c.ValorPago),
             cobrancas.Select(c => new CobrancaAtrasadaDetalhe(
@@ -212,14 +193,6 @@ public sealed class RelatoriosServico(
 
         return (EstadoRelatorios.Sucesso, detalhe);
     }
-
-    private static string MapearFaixaAtraso(int dias) => dias switch
-    {
-        <= 30 => "1-30 dias",
-        <= 60 => "31-60 dias",
-        <= 90 => "61-90 dias",
-        _ => "90+ dias"
-    };
 
     private static string MapearTipoRelatorio(Domain.Cobrancas.TipoCobranca tipo) => tipo switch
     {

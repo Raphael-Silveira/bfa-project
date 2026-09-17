@@ -212,8 +212,8 @@ public sealed class CobrancasController(
         Guid unidadeId,
         Guid alunoId,
         IReadOnlyList<Guid> cobrancaIds,
-        DateOnly dataPagamento,
-        string formaPagamento,
+        string? dataPagamento,
+        string? formaPagamento,
         string? observacoes,
         string? returnUrl,
         CancellationToken cancellationToken)
@@ -224,15 +224,22 @@ public sealed class CobrancasController(
         if (cobrancaIds == null || cobrancaIds.Count == 0)
             return BadRequest("Nenhuma cobrança selecionada.");
 
-        if (dataPagamento == default)
-            return BadRequest("Data de pagamento inválida.");
+        if (!DateOnly.TryParseExact(
+                dataPagamento,
+                "dd/MM/yyyy",
+                CultureInfo.GetCultureInfo("pt-BR"),
+                DateTimeStyles.None,
+                out var dataPagamentoConvertida))
+            return BadRequest("Informe uma data de pagamento válida no formato dd/mm/aaaa.");
 
-        if (ParseFormaPagamento(formaPagamento) is not { } forma)
-            return BadRequest("Forma de pagamento inválida.");
+        if (FormaPagamentoValidador.TentarConverter(formaPagamento) is not { } forma)
+            return BadRequest(string.IsNullOrWhiteSpace(formaPagamento)
+                ? "Selecione uma forma de pagamento."
+                : "Selecione uma forma de pagamento válida.");
 
         var solicitacao = new RegistrarPagamentoConsolidadoSolicitacao(
             cobrancaIds,
-            dataPagamento,
+            dataPagamentoConvertida,
             forma,
             observacoes);
 
@@ -312,18 +319,6 @@ public sealed class CobrancasController(
         "Matricula" => TipoCobranca.Matricula,
         "Mensalidade" => TipoCobranca.Mensalidade,
         "Avulso" => TipoCobranca.Avulso,
-        _ => null
-    };
-
-    private static FormaPagamento? ParseFormaPagamento(string? valor) => valor switch
-    {
-        "Dinheiro" => FormaPagamento.Dinheiro,
-        "Pix" => FormaPagamento.Pix,
-        "CartaoCredito" => FormaPagamento.CartaoCredito,
-        "CartaoDebito" => FormaPagamento.CartaoDebito,
-        "Boleto" => FormaPagamento.Boleto,
-        "Transferencia" => FormaPagamento.Transferencia,
-        "Outros" => FormaPagamento.Outros,
         _ => null
     };
 

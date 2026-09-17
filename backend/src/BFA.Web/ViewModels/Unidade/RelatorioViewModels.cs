@@ -73,8 +73,7 @@ public sealed record InadimplenciaAlunoViewModel(
     string ValorTotalAtrasado,
     string? PrimeiraDataVencimento,
     string? UltimaDataVencimento,
-    int DiasEmAtraso,
-    string FaixaAtraso);
+    int DiasEmAtraso);
 
 public sealed record FaixaAtrasoViewModel(
     string Faixa,
@@ -174,8 +173,7 @@ public static class RelatorioViewModelMapper
             a.ValorTotalAtrasado.ToString("C", PtBr),
             a.PrimeiraDataVencimento?.ToString("dd/MM/yyyy"),
             a.UltimaDataVencimento?.ToString("dd/MM/yyyy"),
-            a.DiasEmAtraso,
-            a.FaixaAtraso)).ToList()
+            a.DiasEmAtraso)).ToList()
     };
 
     public static RelatorioInadimplenciaDetalheViewModel MapearInadimplenciaDetalhe(
