@@ -33,7 +33,8 @@ public sealed record AlunoListaItemViewModel(
     string? MatriculaAtual,
     string? PlanoAtual,
     string? StatusMatricula,
-    bool PossuiMatriculaAtiva);
+    bool PossuiMatriculaAtiva,
+    bool PortalAtivo);
 
 public sealed class AlunoDetalheViewModel : IUnidadeContextoViewModel
 {
@@ -45,13 +46,34 @@ public sealed class AlunoDetalheViewModel : IUnidadeContextoViewModel
     public required AlunoDetalheItemViewModel Aluno { get; init; }
 }
 
+public sealed record AcessoAlunoConcedidoViewModel(
+    Guid OrganizacaoId,
+    Guid UnidadeId,
+    Guid AlunoId,
+    string NomeUnidade,
+    string NomeAluno,
+    string Usuario,
+    string? SenhaTemporaria,
+    bool AcessoJaExistente,
+    bool PodeTrocarUnidade,
+    bool SenhaRedefinida = false) : IUnidadeContextoViewModel
+{
+    public string LoginFormatado => Usuario is { Length: 11 }
+        && Usuario.All(char.IsDigit)
+            ? $"{Usuario[..3]}.{Usuario[3..6]}.{Usuario[6..9]}-{Usuario[9..]}"
+            : Usuario;
+}
+
 public sealed class AlunoDetalheItemViewModel
 {
     public required Guid AlunoId { get; init; }
+    public Guid? UsuarioId { get; init; }
+    public bool AguardandoPrimeiroAcesso { get; init; }
     public required string NomeCompleto { get; init; }
     public required string DataNascimento { get; init; }
     public required int Idade { get; init; }
     public string? CpfMascarado { get; init; }
+    public bool PossuiCpf { get; init; }
     public string? Telefone { get; init; }
     public string? Email { get; init; }
     public required bool Ativo { get; init; }
@@ -118,14 +140,15 @@ internal static class AlunosViewModelMapper
     public static AlunoDetalheViewModel MapearDetalhe(
         ContextoAlunosResumo contexto,
         AlunoDetalhe detalhe,
-        bool podeTrocar) => new()
+        bool podeTrocar,
+        bool aguardandoPrimeiroAcesso = false) => new()
     {
         OrganizacaoId = contexto.OrganizacaoId,
         UnidadeId = contexto.UnidadeId,
         NomeUnidade = contexto.NomeUnidade,
         PodeTrocarUnidade = podeTrocar,
         PodeGerenciar = contexto.PodeGerenciar,
-        Aluno = MapearDetalheItem(detalhe)
+        Aluno = MapearDetalheItem(detalhe, aguardandoPrimeiroAcesso)
     };
 
     private static AlunoListaItemViewModel MapearListaItem(AlunoListaItem item)
@@ -155,10 +178,13 @@ internal static class AlunosViewModelMapper
                 StatusMatricula.Ativa => "Ativa",
                 _ => "Sem matrícula ativa"
             },
-            item.StatusMatricula == StatusMatricula.Ativa);
+            item.StatusMatricula == StatusMatricula.Ativa,
+            item.PortalAtivo);
     }
 
-    private static AlunoDetalheItemViewModel MapearDetalheItem(AlunoDetalhe detalhe)
+    private static AlunoDetalheItemViewModel MapearDetalheItem(
+        AlunoDetalhe detalhe,
+        bool aguardandoPrimeiroAcesso)
     {
         var hoje = DateOnly.FromDateTime(DateTime.Today);
         var idade = hoje.Year - detalhe.DataNascimento.Year;
@@ -168,10 +194,13 @@ internal static class AlunosViewModelMapper
         return new AlunoDetalheItemViewModel
         {
             AlunoId = detalhe.AlunoId,
+            UsuarioId = detalhe.UsuarioId,
+            AguardandoPrimeiroAcesso = aguardandoPrimeiroAcesso,
             NomeCompleto = detalhe.NomeCompleto,
             DataNascimento = detalhe.DataNascimento.ToString("dd/MM/yyyy"),
             Idade = idade,
             CpfMascarado = FormatCpf(detalhe.Cpf),
+            PossuiCpf = detalhe.Cpf is { Length: 11 },
             Telefone = detalhe.Telefone,
             Email = detalhe.Email,
             Ativo = detalhe.Ativo,

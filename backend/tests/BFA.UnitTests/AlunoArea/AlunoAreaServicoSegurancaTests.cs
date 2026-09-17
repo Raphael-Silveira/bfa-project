@@ -19,7 +19,9 @@ public sealed class AlunoAreaServicoSegurancaTests
         var repositorio = new RepositorioFake(alunoId, presencas);
         var servico = new AlunoAreaServico(
             repositorio,
-            NullLogger<AlunoAreaServico>.Instance);
+            NullLogger<AlunoAreaServico>.Instance,
+            TimeProvider.System,
+            TimeZoneInfo.Utc);
 
         var resultado = await servico.ObterFrequenciaAsync(
             repositorio.UsuarioId,
@@ -68,11 +70,11 @@ public sealed class AlunoAreaServicoSegurancaTests
                     ? new(Aluno, OrganizacaoId, UnidadeId)
                     : null);
 
-        public Task<IReadOnlyList<Matricula>> ListarMatriculasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, CancellationToken cancellationToken)
-            => Task.FromResult<IReadOnlyList<Matricula>>([]);
+        public Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<MatriculaAlunoConsulta>>([]);
 
-        public Task<IReadOnlyList<(string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status)>> ListarAulasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, DateOnly dataInicio, DateOnly dataFim, CancellationToken cancellationToken)
-            => Task.FromResult<IReadOnlyList<(string, DateOnly, string, string, string)>>([]);
+        public Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, bool ConfirmacaoAtiva)>> ListarAulasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, DateOnly dataInicio, DateOnly dataFim, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<(Guid, string, DateOnly, string, string, string, bool)>>([]);
 
         public Task<IReadOnlyList<(DateOnly Data, string TurmaNome, string HoraInicio, string HoraFim, string Status, string? Observacoes)>> ListarPresencasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, DateOnly dataInicio, DateOnly dataFim, CancellationToken cancellationToken)
         {
@@ -100,5 +102,14 @@ public sealed class AlunoAreaServicoSegurancaTests
 
         public Task<string?> ObterNomeUnidadeAsync(Guid organizacaoId, Guid unidadeId, CancellationToken cancellationToken)
             => Task.FromResult<string?>("Unidade Teste");
+
+        public Task<AulaConfirmacaoConsulta?> ObterAulaParaConfirmacaoAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, Guid aulaId, CancellationToken cancellationToken)
+            => Task.FromResult<AulaConfirmacaoConsulta?>(null);
+
+        public Task<bool> ConfirmarAulaAsync(Guid organizacaoId, Guid unidadeId, Guid aulaId, Guid alunoId, DateTime agoraUtc, CancellationToken cancellationToken)
+            => Task.FromResult(true);
+
+        public Task<bool> CancelarConfirmacaoAulaAsync(Guid organizacaoId, Guid unidadeId, Guid aulaId, Guid alunoId, DateTime agoraUtc, CancellationToken cancellationToken)
+            => Task.FromResult(true);
     }
 }

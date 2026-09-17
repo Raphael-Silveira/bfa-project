@@ -1,4 +1,5 @@
 using BFA.Application.Acessos;
+using BFA.Application.Alunos;
 using BFA.Application.Franqueadora;
 using BFA.Application.Franqueadora.AcessosUnidade;
 using BFA.Application.Franqueadora.Franqueados;
@@ -102,6 +103,15 @@ public sealed class InfrastructureRegistrationTests : IClassFixture<BfaWebApplic
         Assert.NotNull(repositorio);
         Assert.NotNull(primeiroAcesso);
         Assert.Same(consulta, servico);
+    }
+
+    [Fact]
+    public void Identidade_por_cpf_e_provisionamento_de_aluno_sao_registrados()
+    {
+        using var scope = _application.Services.CreateScope();
+
+        Assert.NotNull(scope.ServiceProvider.GetService<IUsuarioPorCpfConsulta>());
+        Assert.NotNull(scope.ServiceProvider.GetService<IAcessoAlunoServico>());
     }
 
     [Fact]

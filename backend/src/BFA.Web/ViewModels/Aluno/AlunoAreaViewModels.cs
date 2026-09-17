@@ -19,6 +19,10 @@ public sealed class DashboardAlunoViewModel : IAlunoContextoViewModel
     public required string PercentualFrequencia { get; init; }
     public required string TotalPendente { get; init; }
     public int TotalAulas { get; init; }
+    public MatriculaAlunoViewModel? MatriculaAtiva { get; init; }
+    public Guid? ProximaAulaId { get; init; }
+    public bool ProximaAulaConfirmada { get; init; }
+    public bool PodeAlterarConfirmacao { get; init; }
 
     public static DashboardAlunoViewModel Mapear(DashboardAlunoDto dto, Guid unidadeId)
     {
@@ -31,7 +35,13 @@ public sealed class DashboardAlunoViewModel : IAlunoContextoViewModel
             ProximaAula = dto.ProximaAula,
             PercentualFrequencia = dto.PercentualFrequencia,
             TotalPendente = dto.TotalPendente,
-            TotalAulas = dto.TotalAulas
+            TotalAulas = dto.TotalAulas,
+            ProximaAulaId = dto.ProximaAulaId,
+            ProximaAulaConfirmada = dto.ProximaAulaConfirmada,
+            PodeAlterarConfirmacao = dto.PodeAlterarConfirmacao,
+            MatriculaAtiva = dto.MatriculaAtiva is null
+                ? null
+                : MatriculaAlunoViewModel.Mapear(dto.MatriculaAtiva)
         };
     }
 }
@@ -80,6 +90,8 @@ public sealed class MatriculaAlunoViewModel
     public required string DataFimPrevista { get; init; }
     public string? DataFimReal { get; init; }
     public required string ValorMensal { get; init; }
+    public int FrequenciaSemanal { get; init; }
+    public IReadOnlyList<HorarioMatriculaViewModel> Horarios { get; init; } = [];
 
     public static MatriculaAlunoViewModel Mapear(MatriculaAlunoDto dto)
     {
@@ -90,29 +102,53 @@ public sealed class MatriculaAlunoViewModel
             DataInicio = dto.DataInicio.ToString("dd/MM/yyyy"),
             DataFimPrevista = dto.DataFimPrevista.ToString("dd/MM/yyyy"),
             DataFimReal = dto.DataFimReal?.ToString("dd/MM/yyyy"),
-            ValorMensal = $"R$ {dto.ValorMensal:N2}"
+            ValorMensal = $"R$ {dto.ValorMensal:N2}",
+            FrequenciaSemanal = dto.FrequenciaSemanal,
+            Horarios = dto.Horarios.Select(HorarioMatriculaViewModel.Mapear).ToList()
         };
     }
 }
 
+public sealed class HorarioMatriculaViewModel
+{
+    public required string DiaSemana { get; init; }
+    public required string HoraInicio { get; init; }
+    public required string HoraFim { get; init; }
+    public required string TurmaNome { get; init; }
+
+    public static HorarioMatriculaViewModel Mapear(HorarioMatriculaDto dto) => new()
+    {
+        DiaSemana = dto.DiaSemana,
+        HoraInicio = dto.HoraInicio,
+        HoraFim = dto.HoraFim,
+        TurmaNome = dto.TurmaNome
+    };
+}
+
 public sealed class AulaAlunoViewModel
 {
+    public Guid AulaId { get; init; }
     public required string Data { get; init; }
     public required string HoraInicio { get; init; }
     public required string HoraFim { get; init; }
     public required string TurmaNome { get; init; }
     public required string Status { get; init; }
+    public bool ConfirmacaoAtiva { get; init; }
+    public bool PodeAlterarConfirmacao { get; init; }
     public bool IsProgramada => Status == "Programada";
 
     public static AulaAlunoViewModel Mapear(AulaAlunoDto dto)
     {
         return new AulaAlunoViewModel
         {
+            AulaId = dto.AulaId,
             Data = dto.Data.ToString("dd/MM/yyyy"),
             HoraInicio = dto.HoraInicio,
             HoraFim = dto.HoraFim,
             TurmaNome = dto.TurmaNome,
-            Status = dto.Status
+            Status = dto.Status,
+            ConfirmacaoAtiva = dto.ConfirmacaoAtiva,
+            PodeAlterarConfirmacao = dto.PodeAlterarConfirmacao
         };
     }
 }

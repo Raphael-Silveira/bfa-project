@@ -1,4 +1,5 @@
 using BFA.Application.Acessos;
+using BFA.Application.Identidade;
 using BFA.Infrastructure.Identity;
 using BFA.Web.Acessos;
 using BFA.Web.Authorization;
@@ -14,6 +15,8 @@ public sealed class ContaController(
     UserManager<UsuarioIdentity> userManager,
     SignInManager<UsuarioIdentity> signInManager,
     IUsuarioAtual usuarioAtual,
+    IUsuarioPorCpfConsulta usuarioPorCpfConsulta,
+    IPrimeiroAcessoServico primeiroAcessoServico,
     IDestinoPosLogin destinoPosLogin,
     ILogger<ContaController> logger) : Controller
 {
@@ -45,11 +48,24 @@ public sealed class ContaController(
             return View(model);
         }
 
-        var usuario = await userManager.FindByNameAsync(model.Email.Trim());
+        UsuarioIdentity? usuario;
+        if (CpfIdentificador.TentarNormalizar(model.Email, out var cpf))
+        {
+            var usuarioId = await usuarioPorCpfConsulta.ObterAlunoAsync(
+                cpf,
+                cancellationToken);
+            usuario = usuarioId is { } id
+                ? await userManager.FindByIdAsync(id.ToString())
+                : null;
+        }
+        else
+        {
+            usuario = await userManager.FindByNameAsync(model.Email.Trim());
+        }
 
         if (usuario is null)
         {
-            logger.LogWarning("Conta {Action} falhou para {Email}", "Entrar", model.Email);
+            logger.LogWarning("Conta {Action} falhou: credencial não localizada", "Entrar");
             ModelState.AddModelError(string.Empty, CredenciaisInvalidas);
             return View(model);
         }
@@ -62,12 +78,19 @@ public sealed class ContaController(
 
         if (!resultado.Succeeded)
         {
-            logger.LogWarning("Conta {Action} falhou para {Email}", "Entrar", model.Email);
+            logger.LogWarning("Conta {Action} falhou: credencial inválida", "Entrar");
             ModelState.AddModelError(string.Empty, CredenciaisInvalidas);
             return View(model);
         }
 
-        logger.LogInformation("Conta {Action} bem-sucedido para {Email}", "Entrar", model.Email);
+        logger.LogInformation("Conta {Action} bem-sucedido", "Entrar");
+
+        if (await primeiroAcessoServico.TrocaObrigatoriaAsync(
+                usuario.Id,
+                cancellationToken))
+        {
+            return Redirect("/trocar-senha");
+        }
 
         if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
         {

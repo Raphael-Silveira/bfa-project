@@ -79,6 +79,8 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
 
     public DbSet<Presenca> Presencas => Set<Presenca>();
 
+    public DbSet<ConfirmacaoAulaAluno> ConfirmacoesAulaAluno => Set<ConfirmacaoAulaAluno>();
+
     public DbSet<Cobranca> Cobrancas => Set<Cobranca>();
 
     public DbSet<Pagamento> Pagamentos => Set<Pagamento>();

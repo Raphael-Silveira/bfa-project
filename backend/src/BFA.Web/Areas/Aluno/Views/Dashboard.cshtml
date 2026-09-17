@@ -32,6 +32,26 @@
         {
             <p class="bfa-aluno-hero__summary-label">Próxima aula</p>
             <strong>@Model.ProximaAula</strong>
+            @if (Model.ProximaAulaId.HasValue)
+            {
+                <span class="bfa-admin-badge @(Model.ProximaAulaConfirmada ? "is-active" : null)">
+                    @(Model.ProximaAulaConfirmada ? "Participação confirmada" : "Não confirmado")
+                </span>
+                @if (Model.PodeAlterarConfirmacao)
+                {
+                    <form method="post"
+                          asp-area="Aluno"
+                          asp-controller="Aluno"
+                          asp-action="@(Model.ProximaAulaConfirmada ? "CancelarConfirmacao" : "ConfirmarParticipacao")"
+                          asp-route-unidadeId="@Model.UnidadeId"
+                          asp-route-aulaId="@Model.ProximaAulaId">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="bfa-btn-secondary bfa-admin-button">
+                            @(Model.ProximaAulaConfirmada ? "Cancelar confirmação" : "Confirmar participação")
+                        </button>
+                    </form>
+                }
+            }
         }
         else
         {
@@ -71,6 +91,39 @@
         </div>
     </div>
 </div>
+
+<section class="bfa-admin-card bfa-aluno-enrollment-card" aria-labelledby="titulo-minha-matricula">
+    <div class="bfa-aluno-enrollment-card__header">
+        <div>
+            <p class="bfa-aluno-shortcuts-card__eyebrow">Minha matrícula</p>
+            <h2 class="bfa-admin-card__title" id="titulo-minha-matricula">
+                @(Model.MatriculaAtiva?.PlanoNome ?? "Nenhuma matrícula ativa no momento.")
+            </h2>
+        </div>
+        @if (Model.MatriculaAtiva is not null)
+        {
+            <span class="bfa-admin-badge is-active">@Model.MatriculaAtiva.Status</span>
+        }
+    </div>
+
+    @if (Model.MatriculaAtiva is { } matricula)
+    {
+        <dl class="bfa-aluno-enrollment-card__details">
+            <div><dt>Unidade</dt><dd>@Model.NomeUnidade</dd></div>
+            <div><dt>Período</dt><dd>@matricula.DataInicio a @matricula.DataFimPrevista</dd></div>
+            <div><dt>Frequência contratada</dt><dd>@matricula.FrequenciaSemanal x por semana</dd></div>
+        </dl>
+        <a class="bfa-btn-secondary bfa-admin-button"
+           asp-area="Aluno"
+           asp-controller="Aluno"
+           asp-action="Matriculas"
+           asp-route-unidadeId="@Model.UnidadeId">Ver matrícula</a>
+    }
+    else
+    {
+        <p class="bfa-matricula-muted">Nenhuma matrícula ativa no momento.</p>
+    }
+</section>
 
 <div class="bfa-admin-card bfa-aluno-shortcuts-card">
     <div class="bfa-aluno-shortcuts-card__header">
@@ -167,6 +220,45 @@
 
     .bfa-aluno-stats {
         margin-top: 0.05rem;
+    }
+
+    .bfa-aluno-enrollment-card {
+        display: grid;
+        gap: 1rem;
+        margin-top: 0.05rem;
+    }
+
+    .bfa-aluno-enrollment-card__header {
+        align-items: flex-start;
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+
+    .bfa-aluno-enrollment-card__details {
+        display: grid;
+        gap: .9rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 0;
+    }
+
+    .bfa-aluno-enrollment-card__details dt {
+        color: var(--bfa-text-secondary);
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-aluno-enrollment-card__details dd {
+        color: var(--bfa-white);
+        margin: .25rem 0 0;
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-aluno-enrollment-card__details {
+            grid-template-columns: 1fr;
+        }
     }
 
     .bfa-aluno-shortcuts-card {

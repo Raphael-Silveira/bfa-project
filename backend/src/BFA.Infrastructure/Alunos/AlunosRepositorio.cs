@@ -1,4 +1,6 @@
 using BFA.Application.Alunos;
+using BFA.Application.Identidade;
+using BFA.Domain.Acessos;
 using BFA.Domain.Alunos;
 using BFA.Domain.Matriculas;
 using BFA.Infrastructure.Persistence;
@@ -23,6 +25,16 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
             .Where(a => alunoIds.Contains(a.Id) && a.OrganizacaoId == organizacaoId)
             .ToDictionaryAsync(a => a.Id, cancellationToken);
 
+        var acessosPortal = await (from vinculo in dbContext.VinculosAcesso.AsNoTracking()
+                                   join usuario in dbContext.Users.AsNoTracking()
+                                       on vinculo.UsuarioId equals usuario.Id
+                                   where vinculo.OrganizacaoId == organizacaoId
+                                       && vinculo.UnidadeId == unidadeId
+                                       && vinculo.Perfil == PerfilAcesso.Aluno
+                                       && vinculo.Ativo
+                                   select usuario.Id)
+            .ToHashSetAsync(cancellationToken);
+
         var planoVersaoIds = matriculas.Select(m => m.PlanoVersaoId).Distinct().ToList();
 
         var planosVersoes = await dbContext.PlanosVersoes.AsNoTracking()
@@ -38,9 +50,11 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
         if (!string.IsNullOrWhiteSpace(texto))
         {
             var termo = texto.Trim().ToUpper();
+            var possuiCpf = CpfIdentificador.TentarNormalizar(texto, out var cpf);
             matriculas = matriculas
                 .Where(m => alunos.TryGetValue(m.AlunoId, out var a)
-                    && a.NomeCompleto.ToUpper().Contains(termo))
+                    && (a.NomeCompleto.ToUpper().Contains(termo)
+                        || (possuiCpf && a.Cpf == cpf)))
                 .ToList();
         }
 
@@ -81,7 +95,8 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
                 freq,
                 matriculaAtiva?.Status,
                 matriculaAtiva?.DataInicio,
-                matriculaAtiva?.DataFimPrevista));
+                matriculaAtiva?.DataFimPrevista,
+                aluno.UsuarioId is { } usuarioId && acessosPortal.Contains(usuarioId)));
         }
 
         return resultado;
@@ -207,6 +222,7 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
 
         return new AlunoDetalhe(
             aluno.Id,
+            aluno.UsuarioId,
             aluno.NomeCompleto,
             aluno.DataNascimento,
             aluno.Cpf,

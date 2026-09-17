@@ -16,13 +16,13 @@ public interface IAlunoAreaRepositorio
         Guid unidadeId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Matricula>> ListarMatriculasAsync(
+    Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<(string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status)>> ListarAulasAsync(
+    Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, bool ConfirmacaoAtiva)>> ListarAulasAsync(
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,
@@ -85,5 +85,28 @@ public interface IAlunoAreaRepositorio
     Task<string?> ObterNomeUnidadeAsync(
         Guid organizacaoId,
         Guid unidadeId,
+        CancellationToken cancellationToken);
+
+    Task<AulaConfirmacaoConsulta?> ObterAulaParaConfirmacaoAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid alunoId,
+        Guid aulaId,
+        CancellationToken cancellationToken);
+
+    Task<bool> ConfirmarAulaAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid aulaId,
+        Guid alunoId,
+        DateTime agoraUtc,
+        CancellationToken cancellationToken);
+
+    Task<bool> CancelarConfirmacaoAulaAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid aulaId,
+        Guid alunoId,
+        DateTime agoraUtc,
         CancellationToken cancellationToken);
 }

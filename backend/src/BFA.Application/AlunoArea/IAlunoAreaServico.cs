@@ -1,4 +1,6 @@
 using BFA.Domain.Acessos;
+using BFA.Domain.Aulas;
+using BFA.Domain.Matriculas;
 
 namespace BFA.Application.AlunoArea;
 
@@ -14,7 +16,19 @@ public sealed record PerfilAlunoDto(
 public sealed record MatriculaAlunoDto(
     Guid MatriculaId,
     string PlanoNome,
+    int FrequenciaSemanal,
     string Status,
+    DateOnly DataInicio,
+    DateOnly DataFimPrevista,
+    DateOnly? DataFimReal,
+    decimal ValorMensal,
+    IReadOnlyList<HorarioMatriculaDto> Horarios);
+
+public sealed record MatriculaAlunoConsulta(
+    Guid MatriculaId,
+    string PlanoNome,
+    int FrequenciaSemanal,
+    StatusMatricula Status,
     DateOnly DataInicio,
     DateOnly DataFimPrevista,
     DateOnly? DataFimReal,
@@ -33,7 +47,9 @@ public sealed record AulaAlunoDto(
     string HoraInicio,
     string HoraFim,
     string TurmaNome,
-    string Status);
+    string Status,
+    bool ConfirmacaoAtiva,
+    bool PodeAlterarConfirmacao);
 
 public sealed record PresencaAlunoDto(
     DateOnly Data,
@@ -80,7 +96,29 @@ public sealed record DashboardAlunoDto(
     string? ProximaAula,
     string PercentualFrequencia,
     string TotalPendente,
-    int TotalAulas);
+    int TotalAulas,
+    MatriculaAlunoDto? MatriculaAtiva,
+    Guid? ProximaAulaId = null,
+    bool ProximaAulaConfirmada = false,
+    bool PodeAlterarConfirmacao = false);
+
+public sealed record AulaConfirmacaoConsulta(
+    Guid AulaId,
+    Guid OrganizacaoId,
+    Guid UnidadeId,
+    DateOnly Data,
+    TimeOnly HoraInicio,
+    StatusAula Status,
+    bool ConfirmacaoAtiva,
+    bool ConfirmacaoExiste);
+
+public enum ResultadoConfirmacaoAula
+{
+    Sucesso,
+    NaoElegivel,
+    JanelaEncerrada,
+    NaoEncontrada
+}
 
 public interface IAlunoAreaServico
 {
@@ -116,5 +154,20 @@ public interface IAlunoAreaServico
     Task<FinanceiroResumoDto?> ObterFinanceiroAsync(
         Guid usuarioId,
         Guid unidadeId,
+        CancellationToken cancellationToken);
+}
+
+public interface IConfirmacaoAulaAlunoServico
+{
+    Task<ResultadoConfirmacaoAula> ConfirmarAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        Guid aulaId,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoConfirmacaoAula> CancelarAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        Guid aulaId,
         CancellationToken cancellationToken);
 }

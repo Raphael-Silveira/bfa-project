@@ -1,12 +1,12 @@
 @{
     var caminhoAtual = Context.Request.Path.Value?.TrimEnd('/') ?? string.Empty;
     var unidadeId = Context.Request.RouteValues["unidadeId"]?.ToString();
-    var rotaAluno = $"/aluno/{unidadeId}";
-    var rotaPerfil = $"{rotaAluno}/perfil";
-    var rotaMatriculas = $"{rotaAluno}/matriculas";
-    var rotaAgenda = $"{rotaAluno}/agenda";
-    var rotaFrequencia = $"{rotaAluno}/frequencia";
-    var rotaFinanceiro = $"{rotaAluno}/financeiro";
+    var rotaAluno = Url.Action("Dashboard", "Aluno", new { area = "Aluno", unidadeId }) ?? "#";
+    var rotaPerfil = Url.Action("Perfil", "Aluno", new { area = "Aluno", unidadeId }) ?? "#";
+    var rotaMatriculas = Url.Action("Matriculas", "Aluno", new { area = "Aluno", unidadeId }) ?? "#";
+    var rotaAgenda = Url.Action("Agenda", "Aluno", new { area = "Aluno", unidadeId }) ?? "#";
+    var rotaFrequencia = Url.Action("Frequencia", "Aluno", new { area = "Aluno", unidadeId }) ?? "#";
+    var rotaFinanceiro = Url.Action("Financeiro", "Aluno", new { area = "Aluno", unidadeId }) ?? "#";
     var perfilAtivo = caminhoAtual.StartsWith(
         rotaPerfil, StringComparison.OrdinalIgnoreCase);
     var matriculasAtivo = caminhoAtual.StartsWith(

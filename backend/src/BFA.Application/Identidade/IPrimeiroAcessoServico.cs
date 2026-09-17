@@ -12,6 +12,16 @@ public interface IPrimeiroAcessoServico
         string token,
         string novaSenha,
         CancellationToken cancellationToken);
+
+    Task<bool> TrocaObrigatoriaAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoDefinicaoSenha> TrocarSenhaObrigatoriaAsync(
+        Guid usuarioId,
+        string senhaAtual,
+        string novaSenha,
+        CancellationToken cancellationToken);
 }
 
 public enum EstadoDefinicaoSenha

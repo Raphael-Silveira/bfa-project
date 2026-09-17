@@ -35,6 +35,17 @@ public sealed class AuthorizationRegistrationTests : IClassFixture<BfaWebApplica
     }
 
     [Fact]
+    public async Task Policy_do_aluno_exige_senha_definitiva()
+    {
+        var policy = await _policyProvider.GetPolicyAsync(PoliticasAcesso.Aluno);
+
+        Assert.NotNull(policy);
+        Assert.Contains(
+            policy.Requirements,
+            requirement => requirement is SenhaDefinitivaRequirement);
+    }
+
+    [Fact]
     public void Destino_pos_login_esta_registrado_na_composicao_web()
     {
         using var scope = _application.Services.CreateScope();

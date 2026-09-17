@@ -42,6 +42,7 @@ public static class AuthorizationDependencyInjection
             {
                 policy.RequireAuthenticatedUser();
                 policy.AddRequirements(new PerfilAcessoRequirement(PerfilAcesso.Aluno));
+                policy.AddRequirements(new SenhaDefinitivaRequirement());
             });
             options.AddPolicy(PoliticasAcesso.Responsavel, policy =>
             {
@@ -57,6 +58,7 @@ public static class AuthorizationDependencyInjection
 
         services.AddScoped<IAuthorizationHandler, AdministradorRedeHandler>();
         services.AddScoped<IAuthorizationHandler, PerfilAcessoHandler>();
+        services.AddScoped<IAuthorizationHandler, SenhaDefinitivaHandler>();
         services.AddScoped<IAuthorizationHandler, AcessoUnidadeHandler>();
         services.AddScoped<IAuthorizationHandler, AcessoUnidadePorPerfilHandler>();
         services.AddScoped<GovernancaOperacionalUnidadeResultFilter>();

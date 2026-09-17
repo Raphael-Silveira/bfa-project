@@ -82,6 +82,75 @@ public sealed class PrimeiroAcessoServico(UserManager<UsuarioIdentity> userManag
             erros.Length == 0 ? ["A senha informada não atende aos requisitos de segurança."] : erros);
     }
 
+    public async Task<bool> TrocaObrigatoriaAsync(
+        Guid usuarioId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var usuario = await userManager.FindByIdAsync(usuarioId.ToString());
+        if (usuario is null)
+        {
+            return false;
+        }
+
+        var claims = await userManager.GetClaimsAsync(usuario);
+        return claims.Any(claim =>
+            claim.Type == IdentidadeClaims.TrocaSenhaObrigatoria
+            && claim.Value == "true");
+    }
+
+    public async Task<ResultadoDefinicaoSenha> TrocarSenhaObrigatoriaAsync(
+        Guid usuarioId,
+        string senhaAtual,
+        string novaSenha,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (usuarioId == Guid.Empty
+            || string.IsNullOrWhiteSpace(senhaAtual)
+            || string.IsNullOrWhiteSpace(novaSenha))
+        {
+            return SenhaInvalida(["Informe a senha atual e a nova senha."]);
+        }
+
+        var usuario = await userManager.FindByIdAsync(usuarioId.ToString());
+        if (usuario is null || !await TrocaObrigatoriaAsync(usuarioId, cancellationToken))
+        {
+            return LinkInvalido();
+        }
+
+        var resultado = await userManager.ChangePasswordAsync(
+            usuario,
+            senhaAtual,
+            novaSenha);
+        if (!resultado.Succeeded)
+        {
+            var erros = resultado.Errors
+                .Select(MapearErroSenha)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            return SenhaInvalida(
+                erros.Length == 0 ? ["A senha atual ou a nova senha é inválida."] : erros);
+        }
+
+        var claims = await userManager.GetClaimsAsync(usuario);
+        var claim = claims.FirstOrDefault(item =>
+            item.Type == IdentidadeClaims.TrocaSenhaObrigatoria
+            && item.Value == "true");
+        if (claim is not null)
+        {
+            var remocao = await userManager.RemoveClaimAsync(usuario, claim);
+            if (!remocao.Succeeded)
+            {
+                return SenhaInvalida(["Não foi possível concluir o primeiro acesso."]);
+            }
+        }
+
+        await userManager.UpdateSecurityStampAsync(usuario);
+        logger.LogInformation("Troca obrigatória de senha concluída para {UsuarioId}", usuarioId);
+        return new(EstadoDefinicaoSenha.Sucesso, []);
+    }
+
     private static ResultadoDefinicaoSenha LinkInvalido()
     {
         return new(
@@ -89,10 +158,16 @@ public sealed class PrimeiroAcessoServico(UserManager<UsuarioIdentity> userManag
             ["O link de definição de senha é inválido ou expirou."]);
     }
 
+    private static ResultadoDefinicaoSenha SenhaInvalida(IReadOnlyList<string> erros)
+    {
+        return new(EstadoDefinicaoSenha.SenhaInvalida, erros);
+    }
+
     private static string MapearErroSenha(IdentityError erro)
     {
         return erro.Code switch
         {
+            "PasswordMismatch" => "A senha atual está incorreta.",
             "PasswordTooShort" => "A senha deve ter no mínimo 6 caracteres.",
             "PasswordRequiresNonAlphanumeric" =>
                 "A senha deve conter ao menos um caractere especial.",

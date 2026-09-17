@@ -40,7 +40,8 @@ public sealed record AlunoListaItem(
     int? FrequenciaSemanal,
     StatusMatricula? StatusMatricula,
     DateOnly? DataInicioMatricula,
-    DateOnly? DataFimPrevistaMatricula);
+    DateOnly? DataFimPrevistaMatricula,
+    bool PortalAtivo);
 
 public sealed record ResponsavelAlunoResumo(
     Guid ResponsavelId,
@@ -80,6 +81,7 @@ public sealed record MatriculaAlunoResumo(
 
 public sealed record AlunoDetalhe(
     Guid AlunoId,
+    Guid? UsuarioId,
     string NomeCompleto,
     DateOnly DataNascimento,
     string? Cpf,

@@ -1,0 +1,39 @@
+@model BFA.Web.ViewModels.Conta.TrocarSenhaViewModel
+@{
+    ViewData["Title"] = "Definir senha";
+    Layout = "_AuthLayout";
+}
+
+<section class="bfa-auth-card" aria-labelledby="troca-senha-title">
+    <div class="bfa-auth-heading">
+        <h1 id="troca-senha-title" class="bfa-auth-title">Defina sua senha</h1>
+        <p class="bfa-auth-subtitle">Por segurança, troque a senha temporária antes de acessar o portal.</p>
+    </div>
+
+    <form asp-controller="TrocaSenha" asp-action="Index" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="bfa-validation-message" role="alert"></div>
+
+        <div class="mb-3">
+            <label asp-for="SenhaAtual" class="bfa-form-label"></label>
+            <input asp-for="SenhaAtual" class="form-control bfa-form-control" autocomplete="current-password" />
+            <span asp-validation-for="SenhaAtual" class="bfa-validation-message"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NovaSenha" class="bfa-form-label"></label>
+            <input asp-for="NovaSenha" class="form-control bfa-form-control" autocomplete="new-password" />
+            <span asp-validation-for="NovaSenha" class="bfa-validation-message"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="ConfirmacaoSenha" class="bfa-form-label"></label>
+            <input asp-for="ConfirmacaoSenha" class="form-control bfa-form-control" autocomplete="new-password" />
+            <span asp-validation-for="ConfirmacaoSenha" class="bfa-validation-message"></span>
+        </div>
+
+        <button class="bfa-btn-primary bfa-auth-submit" type="submit">Salvar nova senha</button>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

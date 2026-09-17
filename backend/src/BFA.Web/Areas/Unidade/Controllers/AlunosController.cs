@@ -1,5 +1,6 @@
 using BFA.Application.Alunos;
 using BFA.Application.Acessos;
+using BFA.Application.Identidade;
 using BFA.Application.Unidades;
 using BFA.Domain.Alunos;
 using BFA.Web.Authorization;
@@ -17,6 +18,8 @@ namespace BFA.Web.Areas.Unidade.Controllers;
 public sealed class AlunosController(
     IUsuarioAtual usuarioAtual,
     IAlunosServico alunosServico,
+    IAcessoAlunoServico acessoAlunoServico,
+    IPrimeiroAcessoServico primeiroAcessoServico,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     ILogger<AlunosController> logger) : Controller
 {
@@ -85,7 +88,156 @@ public sealed class AlunosController(
         return View(AlunosViewModelMapper.MapearDetalhe(
             resultado.Contexto,
             resultado.Valor,
+            await PodeTrocarAsync(usuarioId, cancellationToken),
+            resultado.Valor.UsuarioId is { } alunoUsuarioId
+                && await primeiroAcessoServico.TrocaObrigatoriaAsync(
+                    alunoUsuarioId,
+                    cancellationToken)));
+    }
+
+    [HttpPost("{alunoId:guid}/acesso")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConcederAcesso(
+        Guid unidadeId,
+        Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        {
+            return Forbid();
+        }
+
+        var resultado = await acessoAlunoServico.ConcederAsync(
+            usuarioId,
+            unidadeId,
+            alunoId,
+            cancellationToken);
+        if (resultado.Estado is not (EstadoAcessoAluno.Sucesso or EstadoAcessoAluno.AcessoJaExistente)
+            || resultado.Usuario is null)
+        {
+            TempData["Erro"] = resultado.Estado switch
+            {
+                EstadoAcessoAluno.CpfNaoInformado => "Cadastre um CPF válido antes de conceder o acesso.",
+                EstadoAcessoAluno.CpfDuplicado => "O CPF informado já está associado a outra identidade.",
+                EstadoAcessoAluno.UsuarioIncompativel => "Já existe uma identidade incompatível com este CPF.",
+                EstadoAcessoAluno.SemAcesso => "Você não tem permissão para conceder este acesso.",
+                _ => "Não foi possível conceder o acesso. Tente novamente."
+            };
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}");
+        }
+
+        var detalhe = await alunosServico.ObterAsync(
+            usuarioId,
+            unidadeId,
+            alunoId,
+            cancellationToken);
+        if (detalhe.Contexto is null || detalhe.Valor is null)
+        {
+            return NotFound();
+        }
+
+        return View("AcessoAlunoConcedido", new AcessoAlunoConcedidoViewModel(
+            detalhe.Contexto.OrganizacaoId,
+            detalhe.Contexto.UnidadeId,
+            alunoId,
+            detalhe.Contexto.NomeUnidade,
+            detalhe.Valor.NomeCompleto,
+            resultado.Usuario!,
+            resultado.SenhaTemporaria,
+            resultado.Estado == EstadoAcessoAluno.AcessoJaExistente,
             await PodeTrocarAsync(usuarioId, cancellationToken)));
+    }
+
+    [HttpPost("{alunoId:guid}/acesso/redefinir-senha")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RedefinirSenha(
+        Guid unidadeId,
+        Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        {
+            return Forbid();
+        }
+
+        var resultado = await acessoAlunoServico.RedefinirSenhaAsync(
+            usuarioId,
+            unidadeId,
+            alunoId,
+            cancellationToken);
+        if (resultado.Estado != EstadoAcessoAluno.Sucesso
+            || resultado.Usuario is null
+            || resultado.SenhaTemporaria is null)
+        {
+            TempData["Erro"] = resultado.Estado switch
+            {
+                EstadoAcessoAluno.SemAcesso => "Você não tem permissão para redefinir esta senha.",
+                EstadoAcessoAluno.AlunoNaoEncontrado => "Aluno não encontrado na Unidade selecionada.",
+                EstadoAcessoAluno.UsuarioIncompativel => "O acesso do aluno não está disponível para redefinição.",
+                _ => "Não foi possível gerar uma nova senha temporária. Tente novamente."
+            };
+            return Redirect($"/unidade/{unidadeId:D}/alunos/{alunoId:D}");
+        }
+
+        var detalhe = await alunosServico.ObterAsync(
+            usuarioId,
+            unidadeId,
+            alunoId,
+            cancellationToken);
+        if (detalhe.Contexto is null || detalhe.Valor is null)
+        {
+            return NotFound();
+        }
+
+        return View("AcessoAlunoConcedido", new AcessoAlunoConcedidoViewModel(
+            detalhe.Contexto.OrganizacaoId,
+            detalhe.Contexto.UnidadeId,
+            alunoId,
+            detalhe.Contexto.NomeUnidade,
+            detalhe.Valor.NomeCompleto,
+            resultado.Usuario,
+            resultado.SenhaTemporaria,
+            true,
+            await PodeTrocarAsync(usuarioId, cancellationToken),
+            true));
+    }
+
+    [HttpGet("{alunoId:guid}/cpf")]
+    public async Task<IActionResult> Cpf(
+        Guid unidadeId,
+        Guid alunoId,
+        CancellationToken cancellationToken)
+    {
+        if (usuarioAtual.UsuarioId is not { } usuarioId)
+        {
+            return Forbid();
+        }
+
+        var resultado = await alunosServico.ObterDadosEdicaoAsync(
+            usuarioId,
+            unidadeId,
+            alunoId,
+            cancellationToken);
+        if (resultado.Estado is EstadoAlunosUnidade.UnidadeNaoEncontrada
+            or EstadoAlunosUnidade.AlunoNaoEncontrado)
+        {
+            return NotFound();
+        }
+        if (resultado.Estado != EstadoAlunosUnidade.Sucesso
+            || resultado.Valor is null
+            || resultado.Contexto is null
+            || !resultado.Contexto.PodeGerenciar)
+        {
+            return Forbid();
+        }
+
+        var cpf = resultado.Valor.Aluno.Cpf;
+        if (cpf is not { Length: 11 } || cpf.Any(caractere => !char.IsDigit(caractere)))
+        {
+            return NotFound();
+        }
+
+        return Json(new { cpf = $"{cpf[..3]}.{cpf[3..6]}.{cpf[6..9]}-{cpf[9..]}" });
     }
 
     [HttpGet("{alunoId:guid}/editar")]

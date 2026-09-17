@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Security.Claims;
 using BFA.Application.Acessos;
 using BFA.Application.Unidades;
 using BFA.Infrastructure.Identity;
@@ -39,8 +40,10 @@ public class LoginWebApplicationFactory : BfaWebApplicationFactory
 
 public sealed class TestUsuarioStore :
     IUserEmailStore<UsuarioIdentity>,
-    IUserPasswordStore<UsuarioIdentity>
+    IUserPasswordStore<UsuarioIdentity>,
+    IUserClaimStore<UsuarioIdentity>
 {
+    private readonly List<Claim> _claims = [];
     public TestUsuarioStore()
     {
         Email = $"login-{Guid.NewGuid():N}@example.invalid";
@@ -259,5 +262,58 @@ public sealed class TestUsuarioStore :
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(IdentityResult.Success);
+    }
+
+    public Task<IList<Claim>> GetClaimsAsync(
+        UsuarioIdentity user,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult<IList<Claim>>(_claims.ToList());
+    }
+
+    public Task AddClaimsAsync(
+        UsuarioIdentity user,
+        IEnumerable<Claim> claims,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        _claims.AddRange(claims);
+        return Task.CompletedTask;
+    }
+
+    public Task ReplaceClaimAsync(
+        UsuarioIdentity user,
+        Claim claim,
+        Claim newClaim,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var index = _claims.FindIndex(item => item.Type == claim.Type && item.Value == claim.Value);
+        if (index >= 0)
+            _claims[index] = newClaim;
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveClaimsAsync(
+        UsuarioIdentity user,
+        IEnumerable<Claim> claims,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        foreach (var claim in claims.ToArray())
+            _claims.RemoveAll(item => item.Type == claim.Type && item.Value == claim.Value);
+        return Task.CompletedTask;
+    }
+
+    public Task<IList<UsuarioIdentity>> GetUsersForClaimAsync(
+        Claim claim,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var users = _claims.Any(item => item.Type == claim.Type && item.Value == claim.Value)
+            ? new List<UsuarioIdentity> { Usuario }
+            : [];
+        return Task.FromResult<IList<UsuarioIdentity>>(users);
     }
 }

@@ -143,6 +143,7 @@ public static class DependencyInjection
             TrocaProfessorTurmaServico>();
         services.AddScoped<IUsuarioApresentacaoConsulta, UsuarioApresentacaoConsulta>();
         services.AddScoped<IUsuarioPorEmailConsulta, UsuarioPorEmailConsulta>();
+        services.AddScoped<IUsuarioPorCpfConsulta, UsuarioPorCpfConsulta>();
         services.AddScoped<IPrimeiroAcessoServico, PrimeiroAcessoServico>();
         services.AddScoped<IBootstrapInicial, BootstrapInicial>();
         services.AddScoped<IPainelFranqueadoraConsulta, PainelFranqueadoraConsulta>();
@@ -196,6 +197,8 @@ public static class DependencyInjection
         services.AddScoped<IRelatoriosServico, RelatoriosServico>();
         services.AddScoped<IAlunoAreaRepositorio, AlunoAreaRepositorio>();
         services.AddScoped<IAlunoAreaServico, AlunoAreaServico>();
+        services.AddScoped<IConfirmacaoAulaAlunoServico, ConfirmacaoAulaAlunoServico>();
+        services.AddScoped<IAcessoAlunoServico, AcessoAlunoServico>();
         services.AddHttpClient<IIbgeLocalidadesClient, IbgeLocalidadesClient>(httpClient =>
         {
             const string configurationKey = "Integracoes:Ibge:BaseUrl";
@@ -216,6 +219,28 @@ public static class DependencyInjection
         services.AddScoped<ILocalidadesSincronizacaoServico,
             LocalidadesSincronizacaoServico>();
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(_ =>
+        {
+            var ids = OperatingSystem.IsWindows()
+                ? new[] { "E. South America Standard Time", "America/Sao_Paulo" }
+                : new[] { "America/Sao_Paulo", "E. South America Standard Time" };
+
+            foreach (var id in ids)
+            {
+                try
+                {
+                    return TimeZoneInfo.FindSystemTimeZoneById(id);
+                }
+                catch (TimeZoneNotFoundException)
+                {
+                }
+                catch (InvalidTimeZoneException)
+                {
+                }
+            }
+
+            throw new InvalidOperationException("Não foi possível configurar o fuso horário da BFA.");
+        });
 
         var hangfireEnabled = configuration.GetValue<bool>("Hangfire:Enabled");
         var connectionString = configuration.GetConnectionString(DatabaseConnectionName);

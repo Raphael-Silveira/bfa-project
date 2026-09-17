@@ -22,6 +22,34 @@
                asp-action="Editar"
                asp-route-unidadeId="@Model.UnidadeId"
                asp-route-alunoId="@aluno.AlunoId">Editar dados</a>
+            @if (aluno.UsuarioId is null)
+            {
+                <form asp-area="Unidade"
+                      asp-controller="Alunos"
+                      asp-action="ConcederAcesso"
+                      asp-route-unidadeId="@Model.UnidadeId"
+                      asp-route-alunoId="@aluno.AlunoId"
+                      method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="bfa-btn-secondary bfa-admin-button" type="submit">
+                        Conceder acesso ao portal
+                    </button>
+                </form>
+            }
+            else
+            {
+                <form asp-area="Unidade"
+                      asp-controller="Alunos"
+                      asp-action="RedefinirSenha"
+                      asp-route-unidadeId="@Model.UnidadeId"
+                      asp-route-alunoId="@aluno.AlunoId"
+                      method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="bfa-btn-secondary bfa-admin-button" type="submit">
+                        Redefinir senha de acesso
+                    </button>
+                </form>
+            }
         }
         <a class="bfa-btn-secondary bfa-admin-button"
            asp-area="Unidade"
@@ -31,9 +59,21 @@
     </div>
 </header>
 
+@if (aluno.AguardandoPrimeiroAcesso)
+{
+    <div class="bfa-admin-notice" role="status">
+        <strong>Aguardando primeiro acesso.</strong>
+        O aluno deve trocar a senha temporária antes de continuar.
+    </div>
+}
+
 @if (TempData["Sucesso"] is string sucesso)
 {
     <div class="bfa-admin-notice" role="status"><strong>@sucesso</strong></div>
+}
+@if (TempData["Erro"] is string erro)
+{
+    <div class="bfa-admin-notice is-error" role="alert"><strong>@erro</strong></div>
 }
 
 <div class="bfa-matricula-detail-sections">
@@ -45,7 +85,34 @@
         <dl class="bfa-matricula-detail-grid">
             <div><dt>Nome</dt><dd>@aluno.NomeCompleto</dd></div>
             <div><dt>Data de nascimento</dt><dd>@aluno.DataNascimento</dd></div>
-            <div><dt>CPF</dt><dd>@aluno.CpfMascarado</dd></div>
+            <div>
+                <dt>CPF</dt>
+                <dd class="bfa-sensitive-value" data-cpf-reveal>
+                    <span data-cpf-value>@aluno.CpfMascarado</span>
+                    @if (aluno.PossuiCpf)
+                    {
+                        <button class="bfa-sensitive-toggle"
+                                type="button"
+                                data-cpf-reveal-button
+                                data-cpf-endpoint="@Url.Action("Cpf", "Alunos", new { area = "Unidade", unidadeId = Model.UnidadeId, alunoId = aluno.AlunoId })"
+                                aria-label="Mostrar CPF"
+                                aria-pressed="false"
+                                title="Mostrar CPF">
+                            <svg data-cpf-eye="visible" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                                <path d="M2.5 12s3.4-5 9.5-5 9.5 5 9.5 5-3.4 5-9.5 5-9.5-5-9.5-5Z" />
+                                <circle cx="12" cy="12" r="2.25" />
+                            </svg>
+                            <svg data-cpf-eye="hidden" aria-hidden="true" viewBox="0 0 24 24" focusable="false" hidden>
+                                <path d="m3 3 18 18M10.6 6.9A9.8 9.8 0 0 1 12 7c6.1 0 9.5 5 9.5 5a16.5 16.5 0 0 1-3.1 3.2M6.2 6.8C3.9 8.1 2.5 12 2.5 12s3.4 5 9.5 5c1.5 0 2.8-.3 3.9-.8" />
+                                <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                            </svg>
+                        </button>
+                        <span class="bfa-sensitive-error" data-cpf-error role="alert" hidden>
+                            Não foi possível visualizar o CPF.
+                        </span>
+                    }
+                </dd>
+            </div>
             <div><dt>Telefone</dt><dd>@(aluno.Telefone ?? "Não informado")</dd></div>
             <div><dt>E-mail</dt><dd>@(aluno.Email ?? "Não informado")</dd></div>
             <div><dt>Situação</dt><dd>@(aluno.Ativo ? "Ativo" : "Inativo")</dd></div>
@@ -161,3 +228,7 @@
         </section>
     }
 </div>
+
+@section Scripts {
+    <script src="~/js/bfa-reveal-cpf.js" asp-append-version="true"></script>
+}

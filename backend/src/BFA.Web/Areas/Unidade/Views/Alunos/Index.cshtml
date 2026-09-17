@@ -68,6 +68,7 @@ else
                         <th>Contato</th>
                         <th>Matrícula atual</th>
                         <th>Status</th>
+                        <th>Portal</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -99,6 +100,12 @@ else
                             <span class="bfa-data-badge @(item.PossuiMatriculaAtiva ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
                                 <i class="bfa-data-badge__dot"></i>
                                 @(item.PossuiMatriculaAtiva ? "Ativa" : "Sem matrícula")
+                            </span>
+                        </td>
+                        <td>
+                            <span class="bfa-data-badge @(item.PortalAtivo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                                <i class="bfa-data-badge__dot"></i>
+                                @(item.PortalAtivo ? "Ativo" : "Sem acesso")
                             </span>
                         </td>
                         <td>
@@ -158,6 +165,13 @@ else
                     </span>
                 </div>
                 <div class="bfa-mobile-card__grid">
+                    <div>
+                        <span class="bfa-mobile-card__label">Portal</span>
+                        <span class="bfa-data-badge @(item.PortalAtivo ? "bfa-data-badge--active" : "bfa-data-badge--inactive")">
+                            <i class="bfa-data-badge__dot"></i>
+                            @(item.PortalAtivo ? "Ativo" : "Sem acesso")
+                        </span>
+                    </div>
                     <div>
                         <span class="bfa-mobile-card__label">Contato</span>
                         <div>@(item.Contato ?? "Não informado")</div>

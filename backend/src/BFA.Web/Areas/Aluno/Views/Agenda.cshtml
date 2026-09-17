@@ -40,6 +40,7 @@ else
                         <th>Turma</th>
                         <th>Horário</th>
                         <th>Status</th>
+                        <th>Participação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -53,6 +54,24 @@ else
                                 <span class="bfa-admin-badge @(aula.IsProgramada ? "is-active" : null)">
                                     @aula.Status
                                 </span>
+                            </td>
+                            <td>
+                                <span class="bfa-admin-badge @(aula.ConfirmacaoAtiva ? "is-active" : null)">
+                                    @(aula.ConfirmacaoAtiva ? "Confirmado" : "Não confirmado")
+                                </span>
+                                @if (aula.PodeAlterarConfirmacao)
+                                {
+                                    <form method="post" class="bfa-aluno-confirmacao-form"
+                                          asp-area="Aluno" asp-controller="Aluno"
+                                          asp-action="@(aula.ConfirmacaoAtiva ? "CancelarConfirmacao" : "ConfirmarParticipacao")"
+                                          asp-route-unidadeId="@Context.Request.RouteValues["unidadeId"]"
+                                          asp-route-aulaId="@aula.AulaId">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="bfa-btn-secondary bfa-admin-button">
+                                            @(aula.ConfirmacaoAtiva ? "Cancelar confirmação" : "Confirmar participação")
+                                        </button>
+                                    </form>
+                                }
                             </td>
                         </tr>
                     }
@@ -73,7 +92,23 @@ else
                     <div class="bfa-admin-mobile-list__details">
                         <span>@aula.Data</span>
                         <span>@aula.HoraInicio – @aula.HoraFim</span>
+                        <span class="bfa-admin-badge @(aula.ConfirmacaoAtiva ? "is-active" : null)">
+                            @(aula.ConfirmacaoAtiva ? "Confirmado" : "Não confirmado")
+                        </span>
                     </div>
+                    @if (aula.PodeAlterarConfirmacao)
+                    {
+                        <form method="post" class="bfa-aluno-confirmacao-form"
+                              asp-area="Aluno" asp-controller="Aluno"
+                              asp-action="@(aula.ConfirmacaoAtiva ? "CancelarConfirmacao" : "ConfirmarParticipacao")"
+                              asp-route-unidadeId="@Context.Request.RouteValues["unidadeId"]"
+                              asp-route-aulaId="@aula.AulaId">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="bfa-btn-secondary bfa-admin-button">
+                                @(aula.ConfirmacaoAtiva ? "Cancelar confirmação" : "Confirmar participação")
+                            </button>
+                        </form>
+                    }
                 </div>
             }
         </div>
@@ -101,6 +136,11 @@ else
         font-weight: 700;
         letter-spacing: 0.14em;
         text-transform: uppercase;
+    }
+
+    .bfa-aluno-confirmacao-form {
+        display: inline-block;
+        margin-top: 0.5rem;
     }
 
     @@media (max-width: 42.5rem) {

@@ -1,0 +1,66 @@
+@model AcessoAlunoConcedidoViewModel
+@{
+    ViewData["Title"] = "Acesso do aluno";
+    Layout = "_UnidadeLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-acesso-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Acesso do aluno · @Model.NomeUnidade</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-acesso-aluno">
+            @(Model.SenhaRedefinida
+                ? "Nova senha temporária gerada"
+                : Model.AcessoJaExistente ? "Acesso já existente" : "Acesso concedido")
+        </h1>
+        <p class="bfa-admin-page-header__description">
+            @(Model.SenhaRedefinida
+                ? "A nova credencial temporária abaixo é exibida somente nesta tela."
+                : Model.AcessoJaExistente
+                ? "O vínculo do aluno já estava provisionado e nenhuma nova senha foi gerada."
+                : "A credencial temporária abaixo é exibida somente nesta tela.")
+        </p>
+    </div>
+</header>
+
+<section class="bfa-admin-card" aria-labelledby="titulo-credencial-aluno">
+    <h2 class="bfa-admin-card__title" id="titulo-credencial-aluno">@Model.NomeAluno</h2>
+    <dl class="bfa-matricula-detail-grid">
+        <div><dt>Login</dt><dd>@Model.LoginFormatado</dd></div>
+        @if (Model.SenhaTemporaria is not null)
+        {
+            <div>
+                <dt>Senha temporária</dt>
+                <dd class="bfa-temporary-password" data-temporary-password>
+                    <code data-temporary-password-value>@Model.SenhaTemporaria</code>
+                    <button class="bfa-copy-sensitive"
+                            type="button"
+                            data-copy-temporary-password
+                            aria-label="Copiar senha temporária"
+                            title="Copiar senha">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                            <rect x="8" y="8" width="11" height="11" rx="1.5" />
+                            <path d="M5 16V5.5A1.5 1.5 0 0 1 6.5 4H17" />
+                        </svg>
+                    </button>
+                    <span class="bfa-copy-feedback" data-copy-feedback role="status" aria-live="polite"></span>
+                </dd>
+            </div>
+        }
+    </dl>
+    @if (Model.SenhaTemporaria is not null)
+    {
+        <p class="bfa-admin-form-help">
+            O aluno deverá trocar esta senha no primeiro acesso. Não salve esta informação em outro local.
+        </p>
+    }
+    <a class="bfa-btn-secondary bfa-admin-button"
+       asp-area="Unidade"
+       asp-controller="Alunos"
+       asp-action="Detalhes"
+       asp-route-unidadeId="@Model.UnidadeId"
+       asp-route-alunoId="@Model.AlunoId">Voltar ao aluno</a>
+</section>
+
+@section Scripts {
+    <script src="~/js/bfa-copy-temporary-password.js" asp-append-version="true"></script>
+}

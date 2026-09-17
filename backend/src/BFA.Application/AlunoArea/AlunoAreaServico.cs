@@ -1,12 +1,17 @@
 using BFA.Application.AlunoArea;
+using BFA.Domain.Aulas;
 using BFA.Domain.Cobrancas;
+using BFA.Domain.Matriculas;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace BFA.Application.AlunoArea;
 
 public sealed class AlunoAreaServico(
     IAlunoAreaRepositorio repositorio,
-    ILogger<AlunoAreaServico> logger)
+    ILogger<AlunoAreaServico> logger,
+    TimeProvider timeProvider,
+    TimeZoneInfo timeZoneInfo)
     : IAlunoAreaServico
 {
     public async Task<DashboardAlunoDto?> ObterDashboardAsync(
@@ -56,6 +61,13 @@ public sealed class AlunoAreaServico(
         var cobrancas = await repositorio.ListarCobrancasAsync(
             aluno.Aluno.OrganizacaoId, unidadeId, aluno.Aluno.Id, cancellationToken);
 
+        var matriculaAtiva = (await repositorio.ListarMatriculasAsync(
+                aluno.Aluno.OrganizacaoId,
+                unidadeId,
+                aluno.Aluno.Id,
+                cancellationToken))
+            .FirstOrDefault(m => m.Status == StatusMatricula.Ativa);
+
         var totalPendente = cobrancas
             .Where(c => c.Status is StatusCobranca.Pendente or StatusCobranca.Atrasada)
             .Sum(c => c.Valor - c.ValorPago);
@@ -64,6 +76,10 @@ public sealed class AlunoAreaServico(
             aluno.Aluno.OrganizacaoId,
             unidadeId,
             cancellationToken);
+
+        Guid? proximaAulaId = proximaAula.AulaId == Guid.Empty ? null : proximaAula.AulaId;
+        var podeAlterarConfirmacao = proximaAulaId.HasValue
+            && AulaAindaElegivel(proximaAula.Data, proximaAula.HoraInicio, proximaAula.Status);
 
         var resultado = new DashboardAlunoDto(
             aluno.Aluno.OrganizacaoId,
@@ -81,7 +97,11 @@ public sealed class AlunoAreaServico(
                 : null,
             $"{percentual}%",
             FormatBrl(totalPendente),
-            totalAulas);
+            totalAulas,
+            matriculaAtiva is null ? null : MapearMatricula(matriculaAtiva),
+            proximaAulaId,
+            proximaAula.ConfirmacaoAtiva,
+            podeAlterarConfirmacao);
 
         logger.LogDebug("ObterDashboard concluído para {AlunoId}", aluno.Aluno.Id);
         return resultado;
@@ -130,17 +150,36 @@ public sealed class AlunoAreaServico(
         var matriculas = await repositorio.ListarMatriculasAsync(
             aluno.Aluno.OrganizacaoId, unidadeId, aluno.Aluno.Id, cancellationToken);
 
-        return matriculas.Select(m => new MatriculaAlunoDto(
-            m.Id,
-            m.PlanoVersaoId.ToString()[..8],
-            m.Status.ToString(),
-            m.DataInicio,
-            m.DataFimPrevista,
-            m.DataFimReal,
-            m.ValorMensalContratado,
-            []))
+        return matriculas.Select(MapearMatricula)
             .ToList();
     }
+
+    private bool AulaAindaElegivel(DateOnly data, string horaInicio, string status)
+    {
+        if (!string.Equals(status, StatusAula.Programada.ToString(), StringComparison.Ordinal))
+            return false;
+
+        if (!TimeOnly.TryParseExact(
+                horaInicio, "HH:mm", CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var hora))
+            return false;
+
+        var agoraLocal = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), timeZoneInfo);
+        var inicioLocal = DateTime.SpecifyKind(data.ToDateTime(hora), DateTimeKind.Unspecified);
+        return agoraLocal.DateTime < inicioLocal;
+    }
+
+    private static MatriculaAlunoDto MapearMatricula(MatriculaAlunoConsulta matricula) =>
+        new(
+            matricula.MatriculaId,
+            matricula.PlanoNome,
+            matricula.FrequenciaSemanal,
+            matricula.Status.ToString(),
+            matricula.DataInicio,
+            matricula.DataFimPrevista,
+            matricula.DataFimReal,
+            matricula.ValorMensal,
+            matricula.Horarios);
 
     public async Task<IReadOnlyList<AulaAlunoDto>> ObterAgendaAsync(
         Guid usuarioId,
@@ -164,12 +203,14 @@ public sealed class AlunoAreaServico(
             dataInicio, dataFim, cancellationToken);
 
         return aulas.Select(a => new AulaAlunoDto(
-            Guid.Empty,
+            a.AulaId,
             a.Data,
             a.HoraInicio,
             a.HoraFim,
             a.TurmaNome,
-            a.Status)).ToList();
+            a.Status,
+            a.ConfirmacaoAtiva,
+            AulaAindaElegivel(a.Data, a.HoraInicio, a.Status))).ToList();
     }
 
     public async Task<FrequenciaResumoDto?> ObterFrequenciaAsync(

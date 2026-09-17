@@ -1,13 +1,17 @@
-@model IAlunoContextoViewModel
 @{
+    var alunoNome = ViewData["AlunoNome"] as string
+        ?? User.Identity?.Name
+        ?? "Aluno";
+    var unidadeId = Context.Request.RouteValues["unidadeId"]?.ToString() ?? string.Empty;
+
     Layout = "/Views/Shared/_AdminLayout.cshtml";
     ViewData[AdminShellViewData.Chave] = new AdminShellViewModel
     {
         AreaNome = "Aluno",
-        ContextoNome = Model.NomeAluno,
-        HomeUrl = $"/aluno/{Model.UnidadeId:D}",
-        HomeAriaLabel = $"Ir para o painel do aluno {Model.NomeAluno}",
-        NavegacaoAriaLabel = $"Navegação do aluno {Model.NomeAluno}",
+        ContextoNome = alunoNome,
+        HomeUrl = $"/aluno/{unidadeId}",
+        HomeAriaLabel = $"Ir para o painel do aluno {alunoNome}",
+        NavegacaoAriaLabel = $"Navegação do aluno {alunoNome}",
         NavegacaoTitulo = "Minha Área",
         MenuDescricao = "menu do aluno",
         NavegacaoPartial = "/Areas/Aluno/Views/Shared/_AlunoNavLinks.cshtml"

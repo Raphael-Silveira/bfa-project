@@ -11,6 +11,7 @@ namespace BFA.Web.Areas.Aluno.Controllers;
 [Authorize(Policy = PoliticasAcesso.Aluno)]
 public sealed class AlunoController(
     IAlunoAreaServico alunoAreaServico,
+    IConfirmacaoAulaAlunoServico confirmacaoAulaAlunoServico,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
     ILogger<AlunoController> logger)
     : Controller
@@ -47,7 +48,8 @@ public sealed class AlunoController(
         }
 
         var viewModel = DashboardAlunoViewModel.Mapear(dashboard, unidadeId);
-        return View(viewModel);
+        ViewData["AlunoNome"] = dashboard.Perfil.NomeCompleto;
+        return View("/Areas/Aluno/Views/Dashboard.cshtml", viewModel);
     }
 
     [HttpGet("aluno/{unidadeId:guid}/perfil")]
@@ -67,7 +69,8 @@ public sealed class AlunoController(
 
         if (perfil is null) return NotFound();
 
-        return View(PerfilAlunoViewModel.Mapear(perfil));
+        ViewData["AlunoNome"] = perfil.NomeCompleto;
+        return View("/Areas/Aluno/Views/Perfil.cshtml", PerfilAlunoViewModel.Mapear(perfil));
     }
 
     [HttpGet("aluno/{unidadeId:guid}/matriculas")]
@@ -89,7 +92,8 @@ public sealed class AlunoController(
             .Select(MatriculaAlunoViewModel.Mapear)
             .ToList();
 
-        return View(viewModel);
+        await ConfigurarContextoAsync(usuarioId.Value, unidadeId, cancellationToken);
+        return View("/Areas/Aluno/Views/Matriculas.cshtml", viewModel);
     }
 
     [HttpGet("aluno/{unidadeId:guid}/agenda")]
@@ -115,7 +119,8 @@ public sealed class AlunoController(
             .Select(AulaAlunoViewModel.Mapear)
             .ToList();
 
-        return View(viewModel);
+        await ConfigurarContextoAsync(usuarioId.Value, unidadeId, cancellationToken);
+        return View("/Areas/Aluno/Views/Agenda.cshtml", viewModel);
     }
 
     [HttpGet("aluno/{unidadeId:guid}/frequencia")]
@@ -142,7 +147,8 @@ public sealed class AlunoController(
         var viewModel = FrequenciaResumoAlunoViewModel.Mapear(
             frequencia, dataInicio, dataFim);
 
-        return View(viewModel);
+        await ConfigurarContextoAsync(usuarioId.Value, unidadeId, cancellationToken);
+        return View("/Areas/Aluno/Views/Frequencia.cshtml", viewModel);
     }
 
     [HttpGet("aluno/{unidadeId:guid}/financeiro")]
@@ -162,7 +168,60 @@ public sealed class AlunoController(
 
         if (financeiro is null) return NotFound();
 
-        return View(FinanceiroAlunoViewModel.Mapear(financeiro));
+        await ConfigurarContextoAsync(usuarioId.Value, unidadeId, cancellationToken);
+        return View("/Areas/Aluno/Views/Financeiro.cshtml", FinanceiroAlunoViewModel.Mapear(financeiro));
+    }
+
+    [HttpPost("aluno/{unidadeId:guid}/aulas/{aulaId:guid}/confirmar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmarParticipacao(
+        Guid unidadeId,
+        Guid aulaId,
+        CancellationToken cancellationToken)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId is null) return Forbid();
+
+        var resultado = await confirmacaoAulaAlunoServico.ConfirmarAsync(
+            usuarioId.Value, unidadeId, aulaId, cancellationToken);
+
+        if (resultado != ResultadoConfirmacaoAula.Sucesso)
+            TempData["AlunoAviso"] = "Não foi possível confirmar esta participação.";
+
+        return RedirectToAction(nameof(Agenda), new { unidadeId });
+    }
+
+    [HttpPost("aluno/{unidadeId:guid}/aulas/{aulaId:guid}/cancelar-confirmacao")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelarConfirmacao(
+        Guid unidadeId,
+        Guid aulaId,
+        CancellationToken cancellationToken)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId is null) return Forbid();
+
+        var resultado = await confirmacaoAulaAlunoServico.CancelarAsync(
+            usuarioId.Value, unidadeId, aulaId, cancellationToken);
+
+        if (resultado != ResultadoConfirmacaoAula.Sucesso)
+            TempData["AlunoAviso"] = "Não foi possível cancelar esta confirmação.";
+
+        return RedirectToAction(nameof(Agenda), new { unidadeId });
+    }
+
+    private async Task ConfigurarContextoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        var perfil = await alunoAreaServico.ObterPerfilAsync(
+            usuarioId, unidadeId, cancellationToken);
+
+        if (perfil is not null)
+        {
+            ViewData["AlunoNome"] = perfil.NomeCompleto;
+        }
     }
 
     private Guid? ObterUsuarioId()
