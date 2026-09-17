@@ -24,7 +24,7 @@ public sealed class DashboardAlunoViewModel : IAlunoContextoViewModel
     {
         return new DashboardAlunoViewModel
         {
-            OrganizacaoId = dto.Perfil.AlunoId,
+            OrganizacaoId = dto.OrganizacaoId,
             UnidadeId = unidadeId,
             NomeAluno = dto.Perfil.NomeCompleto,
             NomeUnidade = dto.NomeUnidade,
@@ -153,7 +153,6 @@ public sealed class FrequenciaResumoAlunoViewModel
 
     public static FrequenciaResumoAlunoViewModel Mapear(
         FrequenciaResumoDto dto,
-        IReadOnlyList<PresencaAlunoDto> presencas,
         DateOnly dataInicio,
         DateOnly dataFim)
     {
@@ -166,7 +165,7 @@ public sealed class FrequenciaResumoAlunoViewModel
             Justificados = dto.Justificados,
             PeriodoInicio = dataInicio.ToString("dd/MM/yyyy"),
             PeriodoFim = dataFim.ToString("dd/MM/yyyy"),
-            Presencas = presencas.Select(PresencaAlunoViewModel.Mapear).ToList()
+            Presencas = dto.Presencas.Select(PresencaAlunoViewModel.Mapear).ToList()
         };
     }
 }

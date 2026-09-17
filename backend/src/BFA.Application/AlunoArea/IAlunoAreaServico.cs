@@ -48,7 +48,8 @@ public sealed record FrequenciaResumoDto(
     int Presentes,
     int Ausentes,
     int Justificados,
-    decimal PercentualFrequencia);
+    decimal PercentualFrequencia,
+    IReadOnlyList<PresencaAlunoDto> Presencas);
 
 public sealed record CobrancaAlunoDto(
     Guid CobrancaId,
@@ -73,6 +74,7 @@ public sealed record FinanceiroResumoDto(
     IReadOnlyList<PagamentoAlunoDto> Pagamentos);
 
 public sealed record DashboardAlunoDto(
+    Guid OrganizacaoId,
     PerfilAlunoDto Perfil,
     string NomeUnidade,
     string? ProximaAula,

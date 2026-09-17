@@ -83,6 +83,7 @@ public interface IAlunoAreaRepositorio
         CancellationToken cancellationToken);
 
     Task<string?> ObterNomeUnidadeAsync(
+        Guid organizacaoId,
         Guid unidadeId,
         CancellationToken cancellationToken);
 }

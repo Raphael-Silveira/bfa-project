@@ -1,5 +1,6 @@
 using BFA.Application.AlunoArea;
 using BFA.Application.Unidades;
+using BFA.Web.Authorization;
 using BFA.Web.ViewModels.AlunoArea;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BFA.Web.Areas.Aluno.Controllers;
 
 [Area("Aluno")]
-[Authorize]
+[Authorize(Policy = PoliticasAcesso.Aluno)]
 public sealed class AlunoController(
     IAlunoAreaServico alunoAreaServico,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
@@ -138,14 +139,8 @@ public sealed class AlunoController(
 
         if (frequencia is null) return NotFound();
 
-        var presencas = await alunoAreaServico.ObterAgendaAsync(
-            usuarioId.Value, unidadeId, dataInicio, dataFim, cancellationToken);
-
-        var presencasDto = presencas.Select(a => new PresencaAlunoDto(
-            a.Data, a.TurmaNome, a.HoraInicio, a.HoraFim, a.Status, null)).ToList();
-
         var viewModel = FrequenciaResumoAlunoViewModel.Mapear(
-            frequencia, presencasDto, dataInicio, dataFim);
+            frequencia, dataInicio, dataFim);
 
         return View(viewModel);
     }

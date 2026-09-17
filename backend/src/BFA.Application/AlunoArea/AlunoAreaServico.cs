@@ -33,7 +33,7 @@ public sealed class AlunoAreaServico(
 
         var aulas = await repositorio.ListarAulasAsync(
             aluno.Aluno.OrganizacaoId, unidadeId, aluno.Aluno.Id,
-            hoje.AddDays(-30), hoje, cancellationToken);
+            hoje, hoje.AddDays(30), cancellationToken);
 
         var proximaAula = aulas
             .Where(a => a.Data >= hoje)
@@ -61,9 +61,12 @@ public sealed class AlunoAreaServico(
             .Sum(c => c.Valor - c.ValorPago);
 
         var nomeUnidade = await repositorio.ObterNomeUnidadeAsync(
-            unidadeId, cancellationToken);
+            aluno.Aluno.OrganizacaoId,
+            unidadeId,
+            cancellationToken);
 
         var resultado = new DashboardAlunoDto(
+            aluno.Aluno.OrganizacaoId,
             new PerfilAlunoDto(
                 aluno.Aluno.Id,
                 aluno.Aluno.NomeCompleto,
@@ -213,7 +216,14 @@ public sealed class AlunoAreaServico(
             presentes,
             ausentes,
             justificados,
-            percentual);
+            percentual,
+            presencas.Select(p => new PresencaAlunoDto(
+                p.Data,
+                p.TurmaNome,
+                p.HoraInicio,
+                p.HoraFim,
+                p.Status,
+                p.Observacoes)).ToList());
     }
 
     public async Task<FinanceiroResumoDto?> ObterFinanceiroAsync(
