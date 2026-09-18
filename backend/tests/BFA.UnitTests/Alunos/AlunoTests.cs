@@ -97,6 +97,55 @@ public sealed class AlunoTests
     }
 
     [Fact]
+    public void Atualizar_contato_preserva_identidade_e_dados_pessoais()
+    {
+        var aluno = CriarAluno();
+        var nome = aluno.NomeCompleto;
+        var cpf = aluno.Cpf;
+        var nascimento = aluno.DataNascimento;
+        var atualizadoEmUtc = CriadoEmUtc.AddMinutes(1);
+
+        aluno.AtualizarContato("(11) 99999-0000", " aluno@exemplo.com ", atualizadoEmUtc);
+
+        Assert.Equal(nome, aluno.NomeCompleto);
+        Assert.Equal(cpf, aluno.Cpf);
+        Assert.Equal(nascimento, aluno.DataNascimento);
+        Assert.Equal("5511999990000", aluno.Telefone);
+        Assert.Equal("aluno@exemplo.com", aluno.Email);
+        Assert.Equal(atualizadoEmUtc, aluno.AtualizadoEmUtc);
+    }
+
+    [Theory]
+    [InlineData("+55 (11) 99268-2235", "5511992682235")]
+    [InlineData("11992682235", "5511992682235")]
+    [InlineData("5511992682235", "5511992682235")]
+    [InlineData("+55 (11) 3333-4444", "551133334444")]
+    public void Telefone_brasileiro_e_normalizado_para_ddi_55(string entrada, string esperado)
+    {
+        Assert.Equal(esperado, TelefoneBrasileiro.Normalizar(entrada));
+        Assert.Equal(
+            entrada.Contains("3333-4444", StringComparison.Ordinal)
+                ? "+55 (11) 3333-4444"
+                : "+55 (11) 99268-2235",
+            TelefoneBrasileiro.Formatar(entrada));
+    }
+
+    [Fact]
+    public void Telefone_brasileiro_e_formatado_sem_ddi_no_formulario()
+    {
+        Assert.Equal("(11) 99268-2235", TelefoneBrasileiro.FormatarLocal("5511992682235"));
+    }
+
+    [Theory]
+    [InlineData("55119926822355")]
+    [InlineData("+55 (00) 99268-2235")]
+    [InlineData("telefone inválido")]
+    public void Telefone_brasileiro_invalido_e_rejeitado(string entrada)
+    {
+        Assert.Throws<ArgumentException>(() => TelefoneBrasileiro.Normalizar(entrada));
+    }
+
+    [Fact]
     public void Identidade_tenant_e_criacao_nao_possuem_setter_publico()
     {
         foreach (var propertyName in new[]

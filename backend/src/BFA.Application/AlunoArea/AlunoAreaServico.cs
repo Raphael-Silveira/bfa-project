@@ -2,7 +2,9 @@ using BFA.Application.AlunoArea;
 using BFA.Domain.Aulas;
 using BFA.Domain.Cobrancas;
 using BFA.Domain.Matriculas;
+using BFA.Domain.Alunos;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 
 namespace BFA.Application.AlunoArea;
@@ -59,7 +61,7 @@ public sealed class AlunoAreaServico(
             : 0m;
 
         var cobrancas = await repositorio.ListarCobrancasAsync(
-            aluno.Aluno.OrganizacaoId, unidadeId, aluno.Aluno.Id, cancellationToken);
+            aluno.Aluno.OrganizacaoId, unidadeId, aluno.Aluno.Id, null, null, cancellationToken);
 
         var matriculaAtiva = (await repositorio.ListarMatriculasAsync(
                 aluno.Aluno.OrganizacaoId,
@@ -130,6 +132,65 @@ public sealed class AlunoAreaServico(
             aluno.Aluno.Email,
             aluno.Aluno.DataNascimento,
             aluno.Aluno.Ativo);
+    }
+
+    public async Task<ResultadoAtualizacaoPerfilAluno> AtualizarPerfilAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        string? telefone,
+        string? email,
+        CancellationToken cancellationToken)
+    {
+        logger.LogDebug("AtualizarPerfil iniciado para {UsuarioId} na unidade {UnidadeId}",
+            usuarioId, unidadeId);
+
+        var emailNormalizado = email?.Trim();
+        if (string.IsNullOrWhiteSpace(emailNormalizado)
+            || emailNormalizado.Length > 256
+            || !new EmailAddressAttribute().IsValid(emailNormalizado))
+        {
+            logger.LogWarning("AtualizarPerfil rejeitado por e-mail inválido para {UsuarioId}", usuarioId);
+            return ResultadoAtualizacaoPerfilAluno.EmailInvalido;
+        }
+
+        string? telefoneNormalizado;
+        try
+        {
+            telefoneNormalizado = TelefoneBrasileiro.Normalizar(telefone);
+        }
+        catch (ArgumentException)
+        {
+            logger.LogWarning("AtualizarPerfil rejeitado por telefone inválido para {UsuarioId}", usuarioId);
+            return ResultadoAtualizacaoPerfilAluno.TelefoneInvalido;
+        }
+
+        var aluno = await repositorio.ObterAlunoPorUsuarioAsync(
+            usuarioId, unidadeId, cancellationToken);
+
+        if (aluno is null)
+        {
+            logger.LogWarning("AtualizarPerfil não encontrado para {UsuarioId} na unidade {UnidadeId}",
+                usuarioId, unidadeId);
+            return ResultadoAtualizacaoPerfilAluno.NaoEncontrado;
+        }
+
+        var atualizado = await repositorio.AtualizarPerfilAsync(
+            aluno.OrganizacaoId,
+            unidadeId,
+            aluno.Aluno.Id,
+            telefoneNormalizado,
+            emailNormalizado,
+            timeProvider.GetUtcNow().UtcDateTime,
+            cancellationToken);
+
+        if (!atualizado)
+        {
+            logger.LogWarning("AtualizarPerfil perdeu o vínculo autorizado para {UsuarioId}", usuarioId);
+            return ResultadoAtualizacaoPerfilAluno.NaoEncontrado;
+        }
+
+        logger.LogInformation("AtualizarPerfil concluído para {AlunoId}", aluno.Aluno.Id);
+        return ResultadoAtualizacaoPerfilAluno.Sucesso;
     }
 
     public async Task<IReadOnlyList<MatriculaAlunoDto>> ObterMatriculasAsync(
@@ -270,6 +331,8 @@ public sealed class AlunoAreaServico(
     public async Task<FinanceiroResumoDto?> ObterFinanceiroAsync(
         Guid usuarioId,
         Guid unidadeId,
+        DateOnly? dataInicio,
+        DateOnly? dataFim,
         CancellationToken cancellationToken)
     {
         logger.LogDebug("ObterFinanceiro iniciado para {UsuarioId}", usuarioId);
@@ -286,10 +349,10 @@ public sealed class AlunoAreaServico(
         var id = aluno.Aluno.Id;
 
         var cobrancas = await repositorio.ListarCobrancasAsync(
-            orgId, unidadeId, id, cancellationToken);
+            orgId, unidadeId, id, dataInicio, dataFim, cancellationToken);
 
         var pagamentos = await repositorio.ListarPagamentosAsync(
-            orgId, unidadeId, id, cancellationToken);
+            orgId, unidadeId, id, dataInicio, dataFim, cancellationToken);
 
         var totalPendente = cobrancas
             .Where(c => c.Status is StatusCobranca.Pendente or StatusCobranca.Atrasada)
@@ -317,11 +380,12 @@ public sealed class AlunoAreaServico(
                     ? (int)(hoje.ToDateTime(TimeOnly.MinValue) - c.DataVencimento.ToDateTime(TimeOnly.MinValue)).TotalDays
                     : 0)).ToList(),
             pagamentos.Select(p => new PagamentoAlunoDto(
-                p.DataPagamento,
-                FormatBrl(p.Valor),
-                p.FormaPagamento.ToString())).ToList());
+                p.Pagamento.DataPagamento,
+                p.Tipo.ToString(),
+                FormatBrl(p.Pagamento.Valor),
+                p.Pagamento.FormaPagamento.ToString())).ToList());
     }
 
     private static string FormatBrl(decimal valor)
-        => $"R$ {valor:N2}";
+        => $"R$ {valor.ToString("N2", CultureInfo.GetCultureInfo("pt-BR"))}";
 }

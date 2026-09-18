@@ -41,6 +41,7 @@ else
                         <th>Horário</th>
                         <th>Status</th>
                         <th>Participação</th>
+                        <th class="bfa-aluno-acoes-heading">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -55,10 +56,12 @@ else
                                     @aula.Status
                                 </span>
                             </td>
-                            <td>
+                            <td class="bfa-aluno-participacao">
                                 <span class="bfa-admin-badge @(aula.ConfirmacaoAtiva ? "is-active" : null)">
                                     @(aula.ConfirmacaoAtiva ? "Confirmado" : "Não confirmado")
                                 </span>
+                            </td>
+                            <td class="bfa-aluno-acoes">
                                 @if (aula.PodeAlterarConfirmacao)
                                 {
                                     <form method="post" class="bfa-aluno-confirmacao-form"
@@ -67,8 +70,8 @@ else
                                           asp-route-unidadeId="@Context.Request.RouteValues["unidadeId"]"
                                           asp-route-aulaId="@aula.AulaId">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="bfa-btn-secondary bfa-admin-button">
-                                            @(aula.ConfirmacaoAtiva ? "Cancelar confirmação" : "Confirmar participação")
+                                        <button type="submit" class="bfa-btn-secondary bfa-aluno-confirmacao-button">
+                                            @(aula.ConfirmacaoAtiva ? "Cancelar" : "Confirmar")
                                         </button>
                                     </form>
                                 }
@@ -92,9 +95,12 @@ else
                     <div class="bfa-admin-mobile-list__details">
                         <span>@aula.Data</span>
                         <span>@aula.HoraInicio – @aula.HoraFim</span>
-                        <span class="bfa-admin-badge @(aula.ConfirmacaoAtiva ? "is-active" : null)">
-                            @(aula.ConfirmacaoAtiva ? "Confirmado" : "Não confirmado")
-                        </span>
+                        <div class="bfa-aluno-mobile-participacao">
+                            <span class="bfa-aluno-mobile-participacao__label">Participação</span>
+                            <span class="bfa-admin-badge @(aula.ConfirmacaoAtiva ? "is-active" : null)">
+                                @(aula.ConfirmacaoAtiva ? "Confirmado" : "Não confirmado")
+                            </span>
+                        </div>
                     </div>
                     @if (aula.PodeAlterarConfirmacao)
                     {
@@ -104,8 +110,8 @@ else
                               asp-route-unidadeId="@Context.Request.RouteValues["unidadeId"]"
                               asp-route-aulaId="@aula.AulaId">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="bfa-btn-secondary bfa-admin-button">
-                                @(aula.ConfirmacaoAtiva ? "Cancelar confirmação" : "Confirmar participação")
+                            <button type="submit" class="bfa-btn-secondary bfa-aluno-confirmacao-button">
+                                @(aula.ConfirmacaoAtiva ? "Cancelar" : "Confirmar")
                             </button>
                         </form>
                     }
@@ -139,13 +145,59 @@ else
     }
 
     .bfa-aluno-confirmacao-form {
-        display: inline-block;
-        margin-top: 0.5rem;
+        display: inline-flex;
+        margin: 0;
+    }
+
+    .bfa-aluno-participacao {
+        width: 10rem;
+        vertical-align: middle;
+    }
+
+    .bfa-aluno-acoes-heading,
+    .bfa-aluno-acoes {
+        text-align: left;
+        vertical-align: middle;
+        width: 8rem;
+    }
+
+    .bfa-aluno-acoes > .bfa-aluno-confirmacao-form {
+        align-items: center;
+        justify-content: flex-start;
+    }
+
+    .bfa-aluno-confirmacao-button {
+        min-height: 2.25rem;
+        padding: 0.4rem 0.7rem;
+        white-space: nowrap;
+    }
+
+    .bfa-aluno-mobile-participacao {
+        align-items: center;
+        display: inline-flex;
+        gap: 0.55rem;
+        flex-wrap: wrap;
+    }
+
+    .bfa-aluno-mobile-participacao__label {
+        color: var(--bfa-text-secondary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
     }
 
     @@media (max-width: 42.5rem) {
         .bfa-aluno-agenda-card__header {
             flex-direction: column;
+        }
+
+        .bfa-aluno-confirmacao-form {
+            margin-top: 0.7rem;
+        }
+
+        .bfa-aluno-confirmacao-button {
+            width: auto;
         }
     }
 </style>

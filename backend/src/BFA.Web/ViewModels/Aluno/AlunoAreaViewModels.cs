@@ -1,4 +1,7 @@
 using BFA.Application.AlunoArea;
+using BFA.Domain.Alunos;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BFA.Web.ViewModels.AlunoArea;
 
@@ -66,7 +69,7 @@ public sealed class PerfilAlunoViewModel
         {
             NomeCompleto = dto.NomeCompleto,
             CpfFormatado = FormatCpf(dto.Cpf),
-            Telefone = dto.Telefone,
+            Telefone = TelefoneBrasileiro.Formatar(dto.Telefone),
             Email = dto.Email,
             DataNascimento = dto.DataNascimento.ToString("dd/MM/yyyy"),
             Idade = $"{idade} anos"
@@ -80,6 +83,59 @@ public sealed class PerfilAlunoViewModel
 
         return $"{cpf[..3]}.{cpf[3..6]}.{cpf[6..9]}-{cpf[9..]}";
     }
+}
+
+public sealed class EditarPerfilAlunoViewModel
+{
+    [BindNever]
+    public string NomeCompleto { get; private set; } = string.Empty;
+
+    [BindNever]
+    public string CpfFormatado { get; private set; } = string.Empty;
+
+    [BindNever]
+    public string DataNascimento { get; private set; } = string.Empty;
+
+    [BindNever]
+    public string Idade { get; private set; } = string.Empty;
+
+    [Required(ErrorMessage = "Informe um e-mail.")]
+    [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
+    public string Email { get; set; } = string.Empty;
+
+    [StringLength(30, ErrorMessage = "O telefone deve possuir no máximo 30 caracteres.")]
+    public string? Telefone { get; set; }
+
+    public static EditarPerfilAlunoViewModel Mapear(PerfilAlunoDto dto) => new()
+    {
+        NomeCompleto = dto.NomeCompleto,
+        CpfFormatado = FormatCpf(dto.Cpf) ?? "Não informado",
+        DataNascimento = dto.DataNascimento.ToString("dd/MM/yyyy"),
+        Idade = CalcularIdade(dto.DataNascimento),
+        Email = dto.Email ?? string.Empty,
+        Telefone = TelefoneBrasileiro.FormatarLocal(dto.Telefone)
+    };
+
+    public void AplicarDadosSomenteLeitura(PerfilAlunoDto dto)
+    {
+        NomeCompleto = dto.NomeCompleto;
+        CpfFormatado = FormatCpf(dto.Cpf) ?? "Não informado";
+        DataNascimento = dto.DataNascimento.ToString("dd/MM/yyyy");
+        Idade = CalcularIdade(dto.DataNascimento);
+    }
+
+    private static string CalcularIdade(DateOnly nascimento)
+    {
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        var idade = hoje.Year - nascimento.Year;
+        if (hoje < nascimento.AddYears(idade)) idade--;
+        return $"{idade} anos";
+    }
+
+    private static string? FormatCpf(string? cpf) =>
+        string.IsNullOrWhiteSpace(cpf) || cpf.Length != 11
+            ? cpf
+            : $"{cpf[..3]}.{cpf[3..6]}.{cpf[6..9]}-{cpf[9..]}";
 }
 
 public sealed class MatriculaAlunoViewModel
@@ -210,15 +266,25 @@ public sealed class FinanceiroAlunoViewModel
 {
     public required string TotalPendente { get; init; }
     public required string TotalPago { get; init; }
+    public required string Periodo { get; init; }
+    public string DataInicio { get; init; } = string.Empty;
+    public string DataFim { get; init; } = string.Empty;
     public IReadOnlyList<CobrancaAlunoViewModel> Cobrancas { get; init; } = [];
     public IReadOnlyList<PagamentoAlunoViewModel> Pagamentos { get; init; } = [];
 
-    public static FinanceiroAlunoViewModel Mapear(FinanceiroResumoDto dto)
+    public static FinanceiroAlunoViewModel Mapear(
+        FinanceiroResumoDto dto,
+        string periodo,
+        DateOnly? dataInicio,
+        DateOnly? dataFim)
     {
         return new FinanceiroAlunoViewModel
         {
             TotalPendente = dto.TotalPendente,
             TotalPago = dto.TotalPago,
+            Periodo = periodo,
+            DataInicio = dataInicio?.ToString("dd/MM/yyyy") ?? string.Empty,
+            DataFim = dataFim?.ToString("dd/MM/yyyy") ?? string.Empty,
             Cobrancas = dto.Cobrancas.Select(CobrancaAlunoViewModel.Mapear).ToList(),
             Pagamentos = dto.Pagamentos.Select(PagamentoAlunoViewModel.Mapear).ToList()
         };
@@ -256,6 +322,7 @@ public sealed class CobrancaAlunoViewModel
 public sealed class PagamentoAlunoViewModel
 {
     public required string DataPagamento { get; init; }
+    public required string Tipo { get; init; }
     public required string Valor { get; init; }
     public required string FormaPagamento { get; init; }
 
@@ -264,6 +331,7 @@ public sealed class PagamentoAlunoViewModel
         return new PagamentoAlunoViewModel
         {
             DataPagamento = dto.DataPagamento.ToString("dd/MM/yyyy"),
+            Tipo = dto.Tipo,
             Valor = dto.Valor,
             FormaPagamento = dto.FormaPagamento
         };

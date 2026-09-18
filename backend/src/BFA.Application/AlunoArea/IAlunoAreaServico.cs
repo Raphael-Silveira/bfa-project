@@ -13,6 +13,14 @@ public sealed record PerfilAlunoDto(
     DateOnly DataNascimento,
     bool Ativo);
 
+public enum ResultadoAtualizacaoPerfilAluno
+{
+    Sucesso,
+    NaoEncontrado,
+    EmailInvalido,
+    TelefoneInvalido
+}
+
 public sealed record MatriculaAlunoDto(
     Guid MatriculaId,
     string PlanoNome,
@@ -80,6 +88,7 @@ public sealed record CobrancaAlunoDto(
 
 public sealed record PagamentoAlunoDto(
     DateOnly DataPagamento,
+    string Tipo,
     string Valor,
     string FormaPagamento);
 
@@ -132,6 +141,13 @@ public interface IAlunoAreaServico
         Guid unidadeId,
         CancellationToken cancellationToken);
 
+    Task<ResultadoAtualizacaoPerfilAluno> AtualizarPerfilAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        string? telefone,
+        string? email,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<MatriculaAlunoDto>> ObterMatriculasAsync(
         Guid usuarioId,
         Guid unidadeId,
@@ -154,6 +170,8 @@ public interface IAlunoAreaServico
     Task<FinanceiroResumoDto?> ObterFinanceiroAsync(
         Guid usuarioId,
         Guid unidadeId,
+        DateOnly? dataInicio,
+        DateOnly? dataFim,
         CancellationToken cancellationToken);
 }
 

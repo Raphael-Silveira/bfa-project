@@ -711,6 +711,74 @@
   font-weight: 750;
 }
 
+.bfa-aluno-profile-header__action {
+  flex: 0 0 auto;
+}
+
+.bfa-aluno-profile-form-card {
+  max-width: 64rem;
+}
+
+.bfa-phone-input {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  overflow: hidden;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--bfa-surface);
+}
+
+.bfa-phone-input:focus-within {
+  border-color: var(--bfa-accent);
+  box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.15);
+}
+
+.bfa-phone-input__country {
+  flex: 0 0 auto;
+  padding-left: 0.85rem;
+  color: var(--bfa-text-secondary);
+  font-weight: 600;
+}
+
+.bfa-phone-input__number {
+  min-width: 0;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.85rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--bfa-text);
+}
+
+.bfa-phone-input__number::placeholder {
+  color: var(--bfa-text-muted);
+}
+
+.bfa-aluno-profile-readonly-grid,
+.bfa-aluno-profile-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.125rem 1.5rem;
+}
+
+.bfa-aluno-profile-edit-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--bfa-border);
+}
+
+.bfa-aluno-profile-readonly-value {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  overflow-wrap: anywhere;
+  color: var(--bfa-text-primary);
+  font-weight: 750;
+}
+
 .bfa-unidade-contract-card__actions {
   display: flex;
   margin-top: 1.5rem;
@@ -1046,6 +1114,16 @@
   .bfa-unidade-contract-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .bfa-aluno-profile-header__action,
+  .bfa-aluno-profile-form-card .bfa-form-actions .bfa-admin-button {
+    width: 100%;
+  }
+
+  .bfa-aluno-profile-readonly-grid,
+  .bfa-aluno-profile-edit-grid {
+    grid-template-columns: 1fr;
   }
 
   .bfa-unidade-contract-card__actions,

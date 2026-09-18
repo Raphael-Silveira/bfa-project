@@ -37,7 +37,7 @@ public sealed class Aluno
             nameof(nomeCompleto));
         DataNascimento = dataNascimento;
         Cpf = NormalizarCpf(cpf);
-        Telefone = NormalizarOpcional(telefone, TelefoneTamanhoMaximo, nameof(telefone));
+        Telefone = TelefoneBrasileiro.Normalizar(telefone);
         Email = NormalizarOpcional(email, EmailTamanhoMaximo, nameof(email));
         Ativo = true;
         CriadoEmUtc = criadoEmUtc;
@@ -97,10 +97,7 @@ public sealed class Aluno
             NomeCompletoTamanhoMaximo,
             nameof(nomeCompleto));
         var cpfNormalizado = NormalizarCpf(cpf);
-        var telefoneNormalizado = NormalizarOpcional(
-            telefone,
-            TelefoneTamanhoMaximo,
-            nameof(telefone));
+        var telefoneNormalizado = TelefoneBrasileiro.Normalizar(telefone);
         var emailNormalizado = NormalizarOpcional(email, EmailTamanhoMaximo, nameof(email));
 
         NomeCompleto = nomeNormalizado;
@@ -108,6 +105,18 @@ public sealed class Aluno
         Cpf = cpfNormalizado;
         Telefone = telefoneNormalizado;
         Email = emailNormalizado;
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
+    public void AtualizarContato(
+        string? telefone,
+        string? email,
+        DateTime atualizadoEmUtc)
+    {
+        ValidarDataUtc(atualizadoEmUtc, nameof(atualizadoEmUtc));
+
+        Telefone = TelefoneBrasileiro.Normalizar(telefone);
+        Email = NormalizarOpcional(email, EmailTamanhoMaximo, nameof(email));
         AtualizadoEmUtc = atualizadoEmUtc;
     }
 

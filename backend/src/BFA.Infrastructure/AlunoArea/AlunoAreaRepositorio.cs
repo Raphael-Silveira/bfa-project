@@ -41,6 +41,43 @@ public sealed class AlunoAreaRepositorio(BfaDbContext dbContext)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<bool> AtualizarPerfilAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid alunoId,
+        string? telefone,
+        string? email,
+        DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken)
+    {
+        var aluno = await dbContext.Alunos.FirstOrDefaultAsync(aluno =>
+            aluno.Id == alunoId
+            && aluno.OrganizacaoId == organizacaoId
+            && aluno.Ativo
+            && dbContext.Organizacoes.Any(organizacao =>
+                organizacao.Id == organizacaoId && organizacao.Ativa)
+            && dbContext.Unidades.Any(unidade =>
+                unidade.Id == unidadeId
+                && unidade.OrganizacaoId == organizacaoId
+                && unidade.Ativa)
+            && aluno.UsuarioId != null
+            && dbContext.VinculosAcesso.Any(vinculo =>
+                vinculo.UsuarioId == aluno.UsuarioId
+                && vinculo.OrganizacaoId == organizacaoId
+                && vinculo.UnidadeId == unidadeId
+                && vinculo.Perfil == PerfilAcesso.Aluno
+                && vinculo.Ativo), cancellationToken);
+
+        if (aluno is null)
+        {
+            return false;
+        }
+
+        aluno.AtualizarContato(telefone, email, atualizadoEmUtc);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(
         Guid organizacaoId,
         Guid unidadeId,
@@ -299,32 +336,54 @@ public sealed class AlunoAreaRepositorio(BfaDbContext dbContext)
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,
+        DateOnly? dataInicio,
+        DateOnly? dataFim,
         CancellationToken cancellationToken)
     {
-        return await dbContext.Cobrancas.AsNoTracking()
+        var consulta = dbContext.Cobrancas.AsNoTracking()
             .Where(c => c.OrganizacaoId == organizacaoId
                 && c.UnidadeId == unidadeId
-                && c.AlunoId == alunoId)
+                && c.AlunoId == alunoId);
+
+        if (dataInicio is not null)
+            consulta = consulta.Where(c => c.DataVencimento >= dataInicio.Value);
+
+        if (dataFim is not null)
+            consulta = consulta.Where(c => c.DataVencimento <= dataFim.Value);
+
+        return await consulta
             .OrderByDescending(c => c.DataEmissao)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Pagamento>> ListarPagamentosAsync(
+    public async Task<IReadOnlyList<(Pagamento Pagamento, TipoCobranca Tipo)>> ListarPagamentosAsync(
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,
+        DateOnly? dataInicio,
+        DateOnly? dataFim,
         CancellationToken cancellationToken)
     {
-        return await (from pagamento in dbContext.Pagamentos.AsNoTracking()
+        var consulta = from pagamento in dbContext.Pagamentos.AsNoTracking()
                       join cobranca in dbContext.Cobrancas.AsNoTracking()
                           on new { pagamento.OrganizacaoId, pagamento.UnidadeId, pagamento.CobrancaId }
                           equals new { cobranca.OrganizacaoId, cobranca.UnidadeId, CobrancaId = cobranca.Id }
                       where pagamento.OrganizacaoId == organizacaoId
                           && pagamento.UnidadeId == unidadeId
                           && cobranca.AlunoId == alunoId
-                      orderby pagamento.DataPagamento descending
-                      select pagamento)
+                      select new { Pagamento = pagamento, cobranca.Tipo };
+
+        if (dataInicio is not null)
+            consulta = consulta.Where(item => item.Pagamento.DataPagamento >= dataInicio.Value);
+
+        if (dataFim is not null)
+            consulta = consulta.Where(item => item.Pagamento.DataPagamento <= dataFim.Value);
+
+        var registros = await consulta
+            .OrderByDescending(item => item.Pagamento.DataPagamento)
             .ToListAsync(cancellationToken);
+
+        return registros.Select(item => (item.Pagamento, item.Tipo)).ToList();
     }
 
     public async Task<string?> ObterNomeUnidadeAsync(

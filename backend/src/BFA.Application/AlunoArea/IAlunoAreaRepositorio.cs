@@ -16,6 +16,15 @@ public interface IAlunoAreaRepositorio
         Guid unidadeId,
         CancellationToken cancellationToken);
 
+    Task<bool> AtualizarPerfilAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid alunoId,
+        string? telefone,
+        string? email,
+        DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(
         Guid organizacaoId,
         Guid unidadeId,
@@ -74,12 +83,16 @@ public interface IAlunoAreaRepositorio
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,
+        DateOnly? dataInicio,
+        DateOnly? dataFim,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Pagamento>> ListarPagamentosAsync(
+    Task<IReadOnlyList<(Pagamento Pagamento, TipoCobranca Tipo)>> ListarPagamentosAsync(
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,
+        DateOnly? dataInicio,
+        DateOnly? dataFim,
         CancellationToken cancellationToken);
 
     Task<string?> ObterNomeUnidadeAsync(

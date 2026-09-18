@@ -2,58 +2,78 @@
 @{
     ViewData["Title"] = "Frequência";
     Layout = "_AlunoLayout";
+    var presencasVisiveis = Model.Presencas
+        .Where(p => p.Status is "Presente" or "Ausente")
+        .ToList();
 }
 
 <header class="bfa-admin-page-header" aria-labelledby="titulo-frequencia-aluno">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Frequência</p>
         <h1 class="bfa-admin-page-header__title" id="titulo-frequencia-aluno">Registro de Frequência</h1>
-        <p class="bfa-admin-page-header__description">
-            Período: @Model.PeriodoInicio – @Model.PeriodoFim
-        </p>
+        <p class="bfa-admin-page-header__description">Frequência do mês atual</p>
+        <p class="bfa-aluno-frequencia-periodo">@Model.PeriodoInicio – @Model.PeriodoFim</p>
     </div>
 </header>
 
-<div class="bfa-admin-card-grid">
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Frequência</div>
-        <div class="bfa-admin-metric-card__value">@Model.Percentual%</div>
+<section class="bfa-admin-card bfa-aluno-frequencia-resumo" aria-labelledby="titulo-resumo-frequencia">
+    <div class="bfa-aluno-frequencia-resumo__header">
+        <div>
+            <p class="bfa-aluno-frequencia-eyebrow">Resumo</p>
+            <h2 class="bfa-admin-card__title" id="titulo-resumo-frequencia">Minha frequência</h2>
+        </div>
+        <span class="bfa-aluno-frequencia-resumo__periodo">@Model.PeriodoInicio – @Model.PeriodoFim</span>
     </div>
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Presentes</div>
-        <div class="bfa-admin-metric-card__value">@Model.Presentes / @Model.TotalAulas</div>
-    </div>
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Ausências</div>
-        <div class="bfa-admin-metric-card__value">@Model.Ausentes</div>
-    </div>
-    <div class="bfa-admin-metric-card">
-        <div class="bfa-admin-metric-card__label">Total de aulas</div>
-        <div class="bfa-admin-metric-card__value">@Model.TotalAulas</div>
-    </div>
-</div>
 
-@if (Model.Presencas.Count > 0)
-{
-    <div class="bfa-admin-card">
-        <h2 class="bfa-admin-card__title">Histórico</h2>
+    <div class="bfa-aluno-frequencia-kpis">
+        <div class="bfa-aluno-frequencia-kpi bfa-aluno-frequencia-kpi--accent">
+            <span class="bfa-aluno-frequencia-kpi__label">Frequência</span>
+            <strong class="bfa-aluno-frequencia-kpi__value">@Model.Percentual%</strong>
+        </div>
+        <div class="bfa-aluno-frequencia-kpi">
+            <span class="bfa-aluno-frequencia-kpi__label">Presenças</span>
+            <strong class="bfa-aluno-frequencia-kpi__value">@Model.Presentes</strong>
+        </div>
+        <div class="bfa-aluno-frequencia-kpi">
+            <span class="bfa-aluno-frequencia-kpi__label">Ausências</span>
+            <strong class="bfa-aluno-frequencia-kpi__value">@Model.Ausentes</strong>
+        </div>
+        <div class="bfa-aluno-frequencia-kpi">
+            <span class="bfa-aluno-frequencia-kpi__label">Total de aulas</span>
+            <strong class="bfa-aluno-frequencia-kpi__value">@Model.TotalAulas</strong>
+        </div>
+    </div>
+</section>
+
+<section class="bfa-admin-card bfa-aluno-frequencia-historico" aria-labelledby="titulo-historico-frequencia">
+    <div class="bfa-aluno-frequencia-historico__header">
+        <div>
+            <p class="bfa-aluno-frequencia-eyebrow">Histórico</p>
+            <h2 class="bfa-admin-card__title" id="titulo-historico-frequencia">Aulas realizadas</h2>
+        </div>
+        <span class="bfa-aluno-frequencia-resumo__periodo">@presencasVisiveis.Count registros</span>
+    </div>
+
+    @if (presencasVisiveis.Count > 0)
+    {
         <div class="bfa-admin-table-container bfa-admin-desktop-list">
             <table class="bfa-admin-table">
                 <thead>
                     <tr>
                         <th>Data</th>
-                        <th>Turma</th>
-                        <th>Horário</th>
-                        <th>Status</th>
+                        <th>Aula / Turma</th>
+                        <th>Situação</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var p in Model.Presencas)
+                    @foreach (var p in presencasVisiveis)
                     {
                         <tr>
                             <td>@p.Data</td>
-                            <td>@p.TurmaNome</td>
-                            <td>@p.HoraInicio – @p.HoraFim</td>
+                            <td>
+                                <strong>@p.TurmaNome</strong>
+                                <span class="bfa-aluno-frequencia-table-meta">@p.HoraInicio – @p.HoraFim</span>
+                            </td>
                             <td>
                                 <span class="bfa-admin-badge @(p.Status == "Presente" ? "is-active" : null)">
                                     @p.Status
@@ -66,7 +86,7 @@
         </div>
 
         <div class="bfa-admin-mobile-list">
-            @foreach (var p in Model.Presencas)
+            @foreach (var p in presencasVisiveis)
             {
                 <div class="bfa-admin-mobile-list__item">
                     <div class="bfa-admin-mobile-list__header">
@@ -82,5 +102,162 @@
                 </div>
             }
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="bfa-aluno-frequencia-empty" role="status">
+            <span class="bfa-aluno-frequencia-empty__icon" aria-hidden="true">✓</span>
+            <div>
+                <strong>Ainda não há registros de frequência neste período.</strong>
+                <p>Quando houver aulas realizadas, elas aparecerão neste histórico.</p>
+            </div>
+        </div>
+    }
+</section>
+
+@section Styles {
+<style>
+    .bfa-aluno-frequencia-periodo {
+        margin: 0.35rem 0 0;
+        color: var(--bfa-text-secondary);
+        font-size: 0.92rem;
+    }
+
+    .bfa-aluno-frequencia-resumo,
+    .bfa-aluno-frequencia-historico {
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .bfa-aluno-frequencia-resumo__header,
+    .bfa-aluno-frequencia-historico__header {
+        align-items: flex-start;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .bfa-aluno-frequencia-eyebrow {
+        color: var(--bfa-accent);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        margin: 0 0 0.35rem;
+        text-transform: uppercase;
+    }
+
+    .bfa-aluno-frequencia-resumo__periodo {
+        color: var(--bfa-text-secondary);
+        font-size: 0.82rem;
+        padding-top: 0.2rem;
+        text-align: right;
+    }
+
+    .bfa-aluno-frequencia-kpis {
+        display: grid;
+        gap: 0.85rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .bfa-aluno-frequencia-kpi {
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid var(--bfa-border);
+        border-radius: 0.7rem;
+        display: grid;
+        gap: 0.35rem;
+        min-width: 0;
+        padding: 1rem;
+    }
+
+    .bfa-aluno-frequencia-kpi--accent {
+        border-color: rgba(224, 177, 61, 0.45);
+        background: rgba(224, 177, 61, 0.08);
+    }
+
+    .bfa-aluno-frequencia-kpi__label {
+        color: var(--bfa-text-secondary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-aluno-frequencia-kpi__value {
+        color: var(--bfa-text-primary);
+        font-size: clamp(1.35rem, 3vw, 1.9rem);
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+    }
+
+    .bfa-aluno-frequencia-kpi--accent .bfa-aluno-frequencia-kpi__value {
+        color: var(--bfa-accent);
+    }
+
+    .bfa-aluno-frequencia-table-meta {
+        color: var(--bfa-text-secondary);
+        display: block;
+        font-size: 0.82rem;
+        margin-top: 0.2rem;
+    }
+
+    .bfa-aluno-frequencia-empty {
+        align-items: center;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px dashed var(--bfa-border);
+        border-radius: 0.7rem;
+        display: flex;
+        gap: 0.85rem;
+        padding: 1.1rem;
+    }
+
+    .bfa-aluno-frequencia-empty__icon {
+        align-items: center;
+        background: rgba(224, 177, 61, 0.12);
+        border-radius: 50%;
+        color: var(--bfa-accent);
+        display: inline-flex;
+        flex: 0 0 2rem;
+        height: 2rem;
+        justify-content: center;
+    }
+
+    .bfa-aluno-frequencia-empty strong {
+        color: var(--bfa-text-primary);
+    }
+
+    .bfa-aluno-frequencia-empty p {
+        color: var(--bfa-text-secondary);
+        margin: 0.25rem 0 0;
+    }
+
+    @@media (max-width: 58rem) {
+        .bfa-aluno-frequencia-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 42.5rem) {
+        .bfa-aluno-frequencia-resumo__header,
+        .bfa-aluno-frequencia-historico__header {
+            flex-direction: column;
+        }
+
+        .bfa-aluno-frequencia-resumo__periodo {
+            padding-top: 0;
+            text-align: left;
+        }
+
+        .bfa-aluno-frequencia-kpis {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .bfa-aluno-frequencia-kpi {
+            padding: 0.85rem;
+        }
+
+        .bfa-aluno-frequencia-empty {
+            align-items: flex-start;
+        }
+    }
+</style>
 }

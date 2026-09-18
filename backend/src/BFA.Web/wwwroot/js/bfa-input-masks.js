@@ -75,6 +75,35 @@
         return `(${ddd}) ${numero.slice(0, tamanhoPrefixo)}-${numero.slice(tamanhoPrefixo)}`;
     };
 
+    const obterTelefoneNacional = (valor) => {
+        const texto = String(valor ?? "").trim();
+        const digitos = somenteDigitos(valor);
+        const possuiDdiExplicito = /^\+?\s*55(?:\s|\(|$)/.test(texto);
+        return (possuiDdiExplicito || digitos.length >= 12) && digitos.startsWith("55")
+            ? digitos.slice(2, 13)
+            : digitos.slice(0, 11);
+    };
+
+    const formatarTelefoneLocal = (valor) => {
+        const digitos = obterTelefoneNacional(valor);
+
+        if (digitos.length === 0) return "";
+        if (digitos.length === 1) return `(${digitos}`;
+        if (digitos.length === 2) return `(${digitos})`;
+
+        const ddd = digitos.slice(0, 2);
+        const numero = digitos.slice(2);
+        if (digitos.length < 10) return `(${ddd}) ${numero}`;
+
+        const tamanhoPrefixo = digitos.length === 11 ? 5 : 4;
+        return `(${ddd}) ${numero.slice(0, tamanhoPrefixo)}-${numero.slice(tamanhoPrefixo)}`;
+    };
+
+    const formatarTelefoneWhatsapp = (valor) => {
+        const nacional = formatarTelefoneLocal(valor);
+        return nacional ? `+55 ${nacional}` : "";
+    };
+
     const formatarCep = (valor) => {
         const digitos = somenteDigitos(valor).slice(0, 8);
         return digitos.length <= 5
@@ -94,6 +123,10 @@
         switch (input.dataset.bfaMask) {
             case "phone":
                 return formatarTelefone;
+            case "phone-local":
+                return formatarTelefoneLocal;
+            case "phone-whatsapp":
+                return formatarTelefoneWhatsapp;
             case "cep":
                 return formatarCep;
             case "document":
@@ -106,7 +139,10 @@
     const obterCaracteresDaMascara = (input, valor) => {
         return input.dataset.bfaMask === "document" && obterTipoDocumento(input) === "cnpj"
             ? normalizarCnpj(valor)
-            : somenteDigitos(valor);
+            : input.dataset.bfaMask === "phone-local"
+                || input.dataset.bfaMask === "phone-whatsapp"
+                ? obterTelefoneNacional(valor)
+                : somenteDigitos(valor);
     };
 
     const obterPosicaoPorQuantidadeDeCaracteres = (input, valor, quantidade) => {
@@ -119,7 +155,10 @@
             && obterTipoDocumento(input) === "cnpj";
 
         for (let indice = 0; indice < valor.length; indice += 1) {
-            if (cnpj ? /[A-Z0-9]/i.test(valor[indice]) : /\d/.test(valor[indice])) {
+            if (input.dataset.bfaMask === "phone-local"
+                || input.dataset.bfaMask === "phone-whatsapp") {
+                encontrados = obterTelefoneNacional(valor.slice(0, indice + 1)).length;
+            } else if (cnpj ? /[A-Z0-9]/i.test(valor[indice]) : /\d/.test(valor[indice])) {
                 encontrados += 1;
             }
 

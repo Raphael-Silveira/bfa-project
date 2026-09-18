@@ -73,6 +73,81 @@ public sealed class AlunoController(
         return View("/Areas/Aluno/Views/Perfil.cshtml", PerfilAlunoViewModel.Mapear(perfil));
     }
 
+    [HttpGet("aluno/{unidadeId:guid}/perfil/editar")]
+    public async Task<IActionResult> EditarPerfil(
+        Guid unidadeId,
+        CancellationToken cancellationToken)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId is null) return Forbid();
+
+        var unidade = await unidadesUsuarioConsulta.ObterAlunoAsync(
+            usuarioId.Value, unidadeId, cancellationToken);
+        if (unidade is null) return Forbid();
+
+        var perfil = await alunoAreaServico.ObterPerfilAsync(
+            usuarioId.Value, unidadeId, cancellationToken);
+        if (perfil is null) return NotFound();
+
+        ViewData["AlunoNome"] = perfil.NomeCompleto;
+        return View("/Areas/Aluno/Views/EditarPerfil.cshtml",
+            EditarPerfilAlunoViewModel.Mapear(perfil));
+    }
+
+    [HttpPost("aluno/{unidadeId:guid}/perfil/editar")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditarPerfil(
+        Guid unidadeId,
+        EditarPerfilAlunoViewModel model,
+        CancellationToken cancellationToken)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId is null) return Forbid();
+
+        var unidade = await unidadesUsuarioConsulta.ObterAlunoAsync(
+            usuarioId.Value, unidadeId, cancellationToken);
+        if (unidade is null) return Forbid();
+
+        var perfil = await alunoAreaServico.ObterPerfilAsync(
+            usuarioId.Value, unidadeId, cancellationToken);
+        if (perfil is null) return NotFound();
+
+        model.AplicarDadosSomenteLeitura(perfil);
+        ViewData["AlunoNome"] = perfil.NomeCompleto;
+
+        if (!ModelState.IsValid)
+        {
+            return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
+        }
+
+        var resultado = await alunoAreaServico.AtualizarPerfilAsync(
+            usuarioId.Value,
+            unidadeId,
+            model.Telefone,
+            model.Email,
+            cancellationToken);
+
+        if (resultado == ResultadoAtualizacaoPerfilAluno.EmailInvalido)
+        {
+            ModelState.AddModelError(nameof(model.Email), "Informe um e-mail válido.");
+            return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
+        }
+
+        if (resultado == ResultadoAtualizacaoPerfilAluno.TelefoneInvalido)
+        {
+            ModelState.AddModelError(nameof(model.Telefone), "Informe um telefone brasileiro válido com DDD.");
+            return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
+        }
+
+        if (resultado != ResultadoAtualizacaoPerfilAluno.Sucesso)
+        {
+            return Forbid();
+        }
+
+        TempData["Sucesso"] = "Dados cadastrais atualizados com sucesso.";
+        return RedirectToAction(nameof(Perfil), new { unidadeId });
+    }
+
     [HttpGet("aluno/{unidadeId:guid}/matriculas")]
     public async Task<IActionResult> Matriculas(
         Guid unidadeId,
@@ -154,22 +229,70 @@ public sealed class AlunoController(
     [HttpGet("aluno/{unidadeId:guid}/financeiro")]
     public async Task<IActionResult> Financeiro(
         Guid unidadeId,
+        string? periodo,
+        string? dataInicio,
+        string? dataFim,
         CancellationToken cancellationToken)
     {
         var usuarioId = ObterUsuarioId();
         if (usuarioId is null) return Forbid();
+
+        if (!TentarObterPeriodoFinanceiro(periodo, dataInicio, dataFim, out var inicio, out var fim))
+            return BadRequest("Informe um período válido para consultar o financeiro.");
 
         var unidade = await unidadesUsuarioConsulta.ObterAlunoAsync(
             usuarioId.Value, unidadeId, cancellationToken);
         if (unidade is null) return Forbid();
 
         var financeiro = await alunoAreaServico.ObterFinanceiroAsync(
-            usuarioId.Value, unidadeId, cancellationToken);
+            usuarioId.Value, unidadeId, inicio, fim, cancellationToken);
 
         if (financeiro is null) return NotFound();
 
         await ConfigurarContextoAsync(usuarioId.Value, unidadeId, cancellationToken);
-        return View("/Areas/Aluno/Views/Financeiro.cshtml", FinanceiroAlunoViewModel.Mapear(financeiro));
+        return View("/Areas/Aluno/Views/Financeiro.cshtml",
+            FinanceiroAlunoViewModel.Mapear(financeiro, periodo ?? "todos", inicio, fim));
+    }
+
+    private static bool TentarObterPeriodoFinanceiro(
+        string? periodo,
+        string? dataInicioTexto,
+        string? dataFimTexto,
+        out DateOnly? dataInicio,
+        out DateOnly? dataFim)
+    {
+        dataInicio = null;
+        dataFim = null;
+        periodo = string.IsNullOrWhiteSpace(periodo) ? "todos" : periodo.Trim().ToLowerInvariant();
+
+        if (periodo == "todos") return true;
+
+        var hoje = DateOnly.FromDateTime(DateTime.Today);
+        if (periodo == "hoje")
+        {
+            dataInicio = hoje;
+            dataFim = hoje;
+            return true;
+        }
+
+        if (periodo == "mes")
+        {
+            dataInicio = new DateOnly(hoje.Year, hoje.Month, 1);
+            dataFim = dataInicio.Value.AddMonths(1).AddDays(-1);
+            return true;
+        }
+
+        if (periodo != "personalizado"
+            || !DateOnly.TryParseExact(dataInicioTexto, "dd/MM/yyyy", out var inicio)
+            || !DateOnly.TryParseExact(dataFimTexto, "dd/MM/yyyy", out var fim)
+            || inicio > fim)
+        {
+            return false;
+        }
+
+        dataInicio = inicio;
+        dataFim = fim;
+        return true;
     }
 
     [HttpPost("aluno/{unidadeId:guid}/aulas/{aulaId:guid}/confirmar")]

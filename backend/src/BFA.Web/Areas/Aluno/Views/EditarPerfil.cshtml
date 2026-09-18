@@ -1,0 +1,67 @@
+@model EditarPerfilAlunoViewModel
+@{
+    ViewData["Title"] = "Atualizar cadastro";
+    Layout = "_AlunoLayout";
+}
+
+<header class="bfa-admin-page-header" aria-labelledby="titulo-editar-perfil-aluno">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Perfil</p>
+        <h1 class="bfa-admin-page-header__title" id="titulo-editar-perfil-aluno">Atualizar cadastro</h1>
+        <p class="bfa-admin-page-header__description">Mantenha seus dados de contato atualizados.</p>
+    </div>
+</header>
+
+<section class="bfa-admin-card bfa-aluno-profile-form-card" aria-labelledby="titulo-dados-cadastrais">
+    <h2 class="bfa-admin-card__title" id="titulo-dados-cadastrais">Dados cadastrais</h2>
+
+    <form class="bfa-form" method="post" asp-area="Aluno" asp-controller="Aluno"
+          asp-action="EditarPerfil"
+          asp-route-unidadeId="@Context.Request.RouteValues["unidadeId"]">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+
+        <div class="bfa-aluno-profile-readonly-grid">
+            <div class="bfa-form-field">
+                <span class="bfa-form-label">Nome completo</span>
+                <div class="bfa-aluno-profile-readonly-value">@Model.NomeCompleto</div>
+            </div>
+            <div class="bfa-form-field">
+                <span class="bfa-form-label">CPF</span>
+                <div class="bfa-aluno-profile-readonly-value">@Model.CpfFormatado</div>
+            </div>
+            <div class="bfa-form-field">
+                <span class="bfa-form-label">Data de nascimento</span>
+                <div class="bfa-aluno-profile-readonly-value">@Model.DataNascimento (@Model.Idade)</div>
+            </div>
+        </div>
+
+        <div class="bfa-aluno-profile-edit-grid">
+            <div class="bfa-form-field">
+                <label asp-for="Email" class="bfa-form-label"></label>
+                <input asp-for="Email" class="form-control bfa-form-control" type="email" autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="bfa-form-field">
+                <label asp-for="Telefone" class="bfa-form-label"></label>
+                <div class="bfa-phone-input">
+                    <span class="bfa-phone-input__country" aria-hidden="true">+55</span>
+                    <input asp-for="Telefone" class="bfa-phone-input__number" type="tel" inputmode="tel" autocomplete="tel" maxlength="15" placeholder="(11) 99999-9999" data-bfa-mask="phone-local" />
+                </div>
+                <span asp-validation-for="Telefone" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="bfa-form-actions">
+            <button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar alterações</button>
+            <a class="bfa-btn-secondary bfa-admin-button"
+               asp-area="Aluno" asp-controller="Aluno" asp-action="Perfil"
+               asp-route-unidadeId="@Context.Request.RouteValues["unidadeId"]">Cancelar</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/bfa-input-masks.js" asp-append-version="true"></script>
+}
