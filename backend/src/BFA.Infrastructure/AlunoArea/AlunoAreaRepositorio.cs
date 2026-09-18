@@ -78,6 +78,48 @@ public sealed class AlunoAreaRepositorio(BfaDbContext dbContext)
         return true;
     }
 
+    public async Task<bool> AtualizarPerfilCompletoAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid alunoId,
+        string? apelido,
+        string? telefone,
+        string? email,
+        string? cep,
+        int? estadoCodigoIbge,
+        int? municipioCodigoIbge,
+        string? bairro,
+        string? logradouro,
+        string? numero,
+        string? complemento,
+        string? fotoPerfilChave,
+        string? fotoPerfilContentType,
+        DateTime? fotoPerfilAtualizadaEmUtc,
+        DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken)
+    {
+        var aluno = await dbContext.Alunos.FirstOrDefaultAsync(aluno =>
+            aluno.Id == alunoId
+            && aluno.OrganizacaoId == organizacaoId
+            && aluno.Ativo
+            && dbContext.Unidades.Any(unidade => unidade.Id == unidadeId
+                && unidade.OrganizacaoId == organizacaoId && unidade.Ativa)
+            && aluno.UsuarioId != null
+            && dbContext.VinculosAcesso.Any(vinculo => vinculo.UsuarioId == aluno.UsuarioId
+                && vinculo.OrganizacaoId == organizacaoId && vinculo.UnidadeId == unidadeId
+                && vinculo.Perfil == PerfilAcesso.Aluno && vinculo.Ativo), cancellationToken);
+
+        if (aluno is null) return false;
+
+        aluno.AtualizarContato(telefone, email, atualizadoEmUtc);
+        aluno.AtualizarPerfil(
+            apelido, cep, estadoCodigoIbge, municipioCodigoIbge, bairro, logradouro,
+            numero, complemento, fotoPerfilChave, fotoPerfilContentType,
+            fotoPerfilAtualizadaEmUtc, atualizadoEmUtc);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(
         Guid organizacaoId,
         Guid unidadeId,

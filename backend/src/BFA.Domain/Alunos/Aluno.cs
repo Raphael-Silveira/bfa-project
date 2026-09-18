@@ -6,6 +6,15 @@ public sealed class Aluno
     public const int CpfTamanho = 11;
     public const int TelefoneTamanhoMaximo = 30;
     public const int EmailTamanhoMaximo = 256;
+    public const int ApelidoTamanhoMaximo = 80;
+    public const int CepTamanho = 8;
+    public const int EstadoCodigoIbgeTamanho = 7;
+    public const int BairroTamanhoMaximo = 120;
+    public const int LogradouroTamanhoMaximo = 180;
+    public const int NumeroTamanhoMaximo = 20;
+    public const int ComplementoTamanhoMaximo = 120;
+    public const int FotoPerfilChaveTamanhoMaximo = 300;
+    public const int FotoPerfilContentTypeTamanhoMaximo = 50;
     public const int IdadeMaioridade = 18;
 
     private Aluno()
@@ -59,6 +68,28 @@ public sealed class Aluno
     public string? Telefone { get; private set; }
 
     public string? Email { get; private set; }
+
+    public string? Apelido { get; private set; }
+
+    public string? Cep { get; private set; }
+
+    public int? EstadoCodigoIbge { get; private set; }
+
+    public int? MunicipioCodigoIbge { get; private set; }
+
+    public string? Bairro { get; private set; }
+
+    public string? Logradouro { get; private set; }
+
+    public string? Numero { get; private set; }
+
+    public string? Complemento { get; private set; }
+
+    public string? FotoPerfilChave { get; private set; }
+
+    public string? FotoPerfilContentType { get; private set; }
+
+    public DateTime? FotoPerfilAtualizadaEmUtc { get; private set; }
 
     public bool Ativo { get; private set; }
 
@@ -117,6 +148,44 @@ public sealed class Aluno
 
         Telefone = TelefoneBrasileiro.Normalizar(telefone);
         Email = NormalizarOpcional(email, EmailTamanhoMaximo, nameof(email));
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
+    public void AtualizarPerfil(
+        string? apelido,
+        string? cep,
+        int? estadoCodigoIbge,
+        int? municipioCodigoIbge,
+        string? bairro,
+        string? logradouro,
+        string? numero,
+        string? complemento,
+        string? fotoPerfilChave,
+        string? fotoPerfilContentType,
+        DateTime? fotoPerfilAtualizadaEmUtc,
+        DateTime atualizadoEmUtc)
+    {
+        ValidarDataUtc(atualizadoEmUtc, nameof(atualizadoEmUtc));
+        if (fotoPerfilAtualizadaEmUtc is { } fotoData)
+            ValidarDataUtc(fotoData, nameof(fotoPerfilAtualizadaEmUtc));
+
+        if (municipioCodigoIbge.HasValue && !estadoCodigoIbge.HasValue)
+            throw new ArgumentException("O Estado deve ser informado quando o Município for informado.", nameof(estadoCodigoIbge));
+
+        Apelido = NormalizarOpcionalComEspacos(apelido, ApelidoTamanhoMaximo, nameof(apelido));
+        Cep = NormalizarCep(cep);
+        EstadoCodigoIbge = estadoCodigoIbge;
+        MunicipioCodigoIbge = municipioCodigoIbge;
+        Bairro = NormalizarOpcional(bairro, BairroTamanhoMaximo, nameof(bairro));
+        Logradouro = NormalizarOpcional(logradouro, LogradouroTamanhoMaximo, nameof(logradouro));
+        Numero = NormalizarOpcional(numero, NumeroTamanhoMaximo, nameof(numero));
+        Complemento = NormalizarOpcional(complemento, ComplementoTamanhoMaximo, nameof(complemento));
+        if (!string.IsNullOrWhiteSpace(fotoPerfilChave))
+        {
+            FotoPerfilChave = NormalizarOpcional(fotoPerfilChave, FotoPerfilChaveTamanhoMaximo, nameof(fotoPerfilChave));
+            FotoPerfilContentType = NormalizarOpcional(fotoPerfilContentType, FotoPerfilContentTypeTamanhoMaximo, nameof(fotoPerfilContentType));
+            FotoPerfilAtualizadaEmUtc = fotoPerfilAtualizadaEmUtc ?? FotoPerfilAtualizadaEmUtc;
+        }
         AtualizadoEmUtc = atualizadoEmUtc;
     }
 
@@ -240,6 +309,33 @@ public sealed class Aluno
         }
 
         return valorNormalizado;
+    }
+
+    private static string? NormalizarOpcionalComEspacos(
+        string? valor,
+        int tamanhoMaximo,
+        string nomeParametro)
+    {
+        if (string.IsNullOrWhiteSpace(valor))
+            return null;
+
+        var normalizado = string.Join(' ', valor.Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        if (normalizado.Length > tamanhoMaximo)
+            throw new ArgumentException($"O valor deve possuir no maximo {tamanhoMaximo} caracteres.", nomeParametro);
+        if (normalizado.Any(c => char.IsControl(c)))
+            throw new ArgumentException("O valor informado possui caracteres invalidos.", nomeParametro);
+        return normalizado;
+    }
+
+    private static string? NormalizarCep(string? cep)
+    {
+        if (string.IsNullOrWhiteSpace(cep))
+            return null;
+
+        var digitos = new string(cep.Where(char.IsDigit).ToArray());
+        if (digitos.Length != CepTamanho || cep.Any(c => !char.IsDigit(c) && c is not ' ' and not '-' and not '.'))
+            throw new ArgumentException("O CEP deve possuir 8 digitos.", nameof(cep));
+        return digitos;
     }
 
     private static void ValidarDataUtc(DateTime data, string nomeParametro)

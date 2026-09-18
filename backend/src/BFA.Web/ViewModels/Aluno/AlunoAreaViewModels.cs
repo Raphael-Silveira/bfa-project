@@ -57,6 +57,15 @@ public sealed class PerfilAlunoViewModel
     public string? Email { get; init; }
     public required string DataNascimento { get; init; }
     public required string Idade { get; init; }
+    public string? Apelido { get; init; }
+    public string? Cep { get; init; }
+    public string? Estado { get; init; }
+    public string? Municipio { get; init; }
+    public string? Bairro { get; init; }
+    public string? Logradouro { get; init; }
+    public string? Numero { get; init; }
+    public string? Complemento { get; init; }
+    public bool PossuiFoto { get; init; }
 
     public static PerfilAlunoViewModel Mapear(PerfilAlunoDto dto)
     {
@@ -73,8 +82,20 @@ public sealed class PerfilAlunoViewModel
             Email = dto.Email,
             DataNascimento = dto.DataNascimento.ToString("dd/MM/yyyy"),
             Idade = $"{idade} anos"
+            ,Apelido = dto.Apelido
+            ,Cep = FormatCep(dto.Cep)
+            ,Estado = dto.EstadoSigla is null ? null : $"{dto.EstadoNome} ({dto.EstadoSigla})"
+            ,Municipio = dto.MunicipioNome
+            ,Bairro = dto.Bairro
+            ,Logradouro = dto.Logradouro
+            ,Numero = dto.Numero
+            ,Complemento = dto.Complemento
+            ,PossuiFoto = !string.IsNullOrWhiteSpace(dto.FotoPerfilChave)
         };
     }
+
+    private static string? FormatCep(string? cep) =>
+        cep is { Length: 8 } ? $"{cep[..5]}-{cep[5..]}" : cep;
 
     private static string? FormatCpf(string? cpf)
     {
@@ -99,6 +120,32 @@ public sealed class EditarPerfilAlunoViewModel
     [BindNever]
     public string Idade { get; private set; } = string.Empty;
 
+    [StringLength(Aluno.ApelidoTamanhoMaximo, ErrorMessage = "O apelido deve possuir no máximo {1} caracteres.")]
+    public string? Apelido { get; set; }
+
+    [StringLength(Aluno.CepTamanho + 1, ErrorMessage = "Informe um CEP válido.")]
+    public string? Cep { get; set; }
+
+    public int? EstadoCodigoIbge { get; set; }
+    public int? MunicipioCodigoIbge { get; set; }
+
+    [StringLength(Aluno.BairroTamanhoMaximo)]
+    public string? Bairro { get; set; }
+
+    [StringLength(Aluno.LogradouroTamanhoMaximo)]
+    public string? Logradouro { get; set; }
+
+    [StringLength(Aluno.NumeroTamanhoMaximo)]
+    public string? Numero { get; set; }
+
+    [StringLength(Aluno.ComplementoTamanhoMaximo)]
+    public string? Complemento { get; set; }
+
+    public IFormFile? FotoPerfil { get; set; }
+    public string? FotoPerfilUrl { get; set; }
+    public IReadOnlyList<LocalidadeOpcaoViewModel> Estados { get; set; } = [];
+    public IReadOnlyList<LocalidadeOpcaoViewModel> Municipios { get; set; } = [];
+
     [Required(ErrorMessage = "Informe um e-mail.")]
     [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
     public string Email { get; set; } = string.Empty;
@@ -112,6 +159,15 @@ public sealed class EditarPerfilAlunoViewModel
         CpfFormatado = FormatCpf(dto.Cpf) ?? "Não informado",
         DataNascimento = dto.DataNascimento.ToString("dd/MM/yyyy"),
         Idade = CalcularIdade(dto.DataNascimento),
+        Apelido = dto.Apelido,
+        Cep = FormatCep(dto.Cep),
+        EstadoCodigoIbge = dto.EstadoCodigoIbge,
+        MunicipioCodigoIbge = dto.MunicipioCodigoIbge,
+        Bairro = dto.Bairro,
+        Logradouro = dto.Logradouro,
+        Numero = dto.Numero,
+        Complemento = dto.Complemento,
+        FotoPerfilUrl = null,
         Email = dto.Email ?? string.Empty,
         Telefone = TelefoneBrasileiro.FormatarLocal(dto.Telefone)
     };
@@ -136,7 +192,12 @@ public sealed class EditarPerfilAlunoViewModel
         string.IsNullOrWhiteSpace(cpf) || cpf.Length != 11
             ? cpf
             : $"{cpf[..3]}.{cpf[3..6]}.{cpf[6..9]}-{cpf[9..]}";
+
+    private static string? FormatCep(string? cep) =>
+        cep is { Length: 8 } ? $"{cep[..5]}-{cep[5..]}" : cep;
 }
+
+public sealed record LocalidadeOpcaoViewModel(int CodigoIbge, string Nome, string? Sigla = null);
 
 public sealed class MatriculaAlunoViewModel
 {

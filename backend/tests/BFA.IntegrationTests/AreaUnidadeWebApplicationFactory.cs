@@ -21,6 +21,11 @@ public sealed class AreaUnidadeWebApplicationFactory : LoginWebApplicationFactor
         "bfa-area-unidade-documentos",
         Guid.NewGuid().ToString("N"));
 
+    public string DiretorioFotos { get; } = Path.Combine(
+        Path.GetTempPath(),
+        "bfa-area-unidade-fotos",
+        Guid.NewGuid().ToString("N"));
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting(
@@ -29,6 +34,9 @@ public sealed class AreaUnidadeWebApplicationFactory : LoginWebApplicationFactor
         builder.UseSetting(
             "Armazenamento:Documentos:TamanhoMaximoBytes",
             (20 * 1024 * 1024).ToString());
+        builder.UseSetting(
+            "Armazenamento:FotosAluno:DiretorioBase",
+            DiretorioFotos);
         base.ConfigureWebHost(builder);
 
         builder.ConfigureServices(services =>

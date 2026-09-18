@@ -51,6 +51,11 @@ public sealed class AlunosPersistenceModelTests
             "varchar(256)",
             Aluno.EmailTamanhoMaximo,
             true);
+        AssertColumn(entityType, nameof(Aluno.Apelido), "apelido", "varchar(80)", Aluno.ApelidoTamanhoMaximo, true);
+        AssertColumn(entityType, nameof(Aluno.Cep), "cep", "varchar(8)", Aluno.CepTamanho, true);
+        AssertColumn(entityType, nameof(Aluno.EstadoCodigoIbge), "estado_codigo_ibge", "integer", isNullable: true);
+        AssertColumn(entityType, nameof(Aluno.MunicipioCodigoIbge), "municipio_codigo_ibge", "integer", isNullable: true);
+        AssertColumn(entityType, nameof(Aluno.FotoPerfilChave), "foto_perfil_chave", "varchar(300)", Aluno.FotoPerfilChaveTamanhoMaximo, true);
 
         var indexes = entityType.GetIndexes().ToDictionary(index => index.GetDatabaseName()!);
         AssertIndex(
@@ -83,7 +88,7 @@ public sealed class AlunosPersistenceModelTests
             foreignKeys["fk_alunos_usuario"],
             typeof(UsuarioIdentity),
             nameof(Aluno.UsuarioId));
-        Assert.Equal(5, entityType.GetCheckConstraints().Count());
+        Assert.Equal(7, entityType.GetCheckConstraints().Count());
         Assert.Contains(
             entityType.GetDeclaredTriggers(),
             trigger => trigger.ModelName == "trg_proteger_aluno");

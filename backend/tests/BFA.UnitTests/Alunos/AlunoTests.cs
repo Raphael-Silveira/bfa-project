@@ -115,6 +115,46 @@ public sealed class AlunoTests
         Assert.Equal(atualizadoEmUtc, aluno.AtualizadoEmUtc);
     }
 
+    [Fact]
+    public void Atualizar_perfil_normaliza_apelido_cep_e_endereco()
+    {
+        var aluno = CriarAluno();
+
+        aluno.AtualizarPerfil(
+            "  Alice   BFA ", "18531-150", 35, 3552205,
+            " Centro ", " Rua BFA ", " 10 ", " Apto 2 ",
+            null, null, null, CriadoEmUtc.AddMinutes(1));
+
+        Assert.Equal("Alice BFA", aluno.Apelido);
+        Assert.Equal("18531150", aluno.Cep);
+        Assert.Equal(35, aluno.EstadoCodigoIbge);
+        Assert.Equal(3552205, aluno.MunicipioCodigoIbge);
+        Assert.Equal("Centro", aluno.Bairro);
+        Assert.Equal("Rua BFA", aluno.Logradouro);
+        Assert.Equal("10", aluno.Numero);
+        Assert.Equal("Apto 2", aluno.Complemento);
+    }
+
+    [Fact]
+    public void Atualizacao_administrativa_de_dados_basicos_preserva_perfil_completo()
+    {
+        var aluno = CriarAluno();
+        aluno.AtualizarPerfil(
+            "Alice", "18531150", 35, 3552205, "Centro", "Rua BFA", "10", null,
+            "alunos/foto.webp", "image/webp", CriadoEmUtc, CriadoEmUtc.AddMinutes(1));
+
+        aluno.AtualizarDados(
+            "Novo Nome", aluno.DataNascimento, DataCivilAtual, aluno.Cpf,
+            "(11) 99999-1111", "novo@bfa.com", CriadoEmUtc.AddMinutes(2));
+
+        Assert.Equal("Alice", aluno.Apelido);
+        Assert.Equal("18531150", aluno.Cep);
+        Assert.Equal(35, aluno.EstadoCodigoIbge);
+        Assert.Equal(3552205, aluno.MunicipioCodigoIbge);
+        Assert.Equal("alunos/foto.webp", aluno.FotoPerfilChave);
+        Assert.Equal("image/webp", aluno.FotoPerfilContentType);
+    }
+
     [Theory]
     [InlineData("+55 (11) 99268-2235", "5511992682235")]
     [InlineData("11992682235", "5511992682235")]

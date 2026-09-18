@@ -1,4 +1,5 @@
 using BFA.Application.AlunoArea;
+using BFA.Application.Localidades;
 using BFA.Domain.Alunos;
 using BFA.Domain.Cobrancas;
 using BFA.Domain.Matriculas;
@@ -107,6 +108,43 @@ public sealed class AlunoAreaServicoSegurancaTests
     }
 
     [Fact]
+    public async Task Atualizacao_invalida_com_foto_nao_processa_nem_persiste_nova_foto()
+    {
+        var repositorio = new RepositorioFake(
+            Guid.NewGuid(),
+            Array.Empty<(DateOnly, string, string, string, string, string?)>());
+        var fotos = new FotosFake();
+        var servico = new AlunoAreaServico(
+            repositorio,
+            NullLogger<AlunoAreaServico>.Instance,
+            TimeProvider.System,
+            TimeZoneInfo.Utc,
+            new LocalidadesFake(),
+            fotos);
+
+        await using var conteudo = new MemoryStream("imagem"u8.ToArray());
+        var resultado = await servico.AtualizarPerfilCompletoAsync(
+            repositorio.UsuarioId,
+            repositorio.UnidadeId,
+            "Aluno",
+            "(11) 99999-0000",
+            "aluno@exemplo.com",
+            "18530-000",
+            35,
+            9999999,
+            "Centro",
+            "Rua Principal",
+            "1",
+            null,
+            new FotoPerfilUpload(conteudo, "image/jpeg", conteudo.Length),
+            CancellationToken.None);
+
+        Assert.Equal(ResultadoAtualizacaoPerfilAluno.EnderecoInvalido, resultado);
+        Assert.Equal(0, fotos.QuantidadeDeProcessamentos);
+        Assert.Null(repositorio.UltimoAlunoAtualizado);
+    }
+
+    [Fact]
     public async Task Financeiro_preserva_tipo_da_cobranca_e_periodo_consultado()
     {
         var repositorio = new RepositorioFake(
@@ -195,6 +233,16 @@ public sealed class AlunoAreaServicoSegurancaTests
             return Task.FromResult(true);
         }
 
+        public Task<bool> AtualizarPerfilCompletoAsync(
+            Guid organizacaoId, Guid unidadeId, Guid alunoId, string? apelido,
+            string? telefone, string? email, string? cep, int? estadoCodigoIbge,
+            int? municipioCodigoIbge, string? bairro, string? logradouro, string? numero,
+            string? complemento, string? fotoPerfilChave, string? fotoPerfilContentType,
+            DateTime? fotoPerfilAtualizadaEmUtc, DateTime atualizadoEmUtc,
+            CancellationToken cancellationToken)
+            => AtualizarPerfilAsync(organizacaoId, unidadeId, alunoId, telefone, email,
+                atualizadoEmUtc, cancellationToken);
+
         public Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, CancellationToken cancellationToken)
             => Task.FromResult<IReadOnlyList<MatriculaAlunoConsulta>>([]);
 
@@ -240,5 +288,41 @@ public sealed class AlunoAreaServicoSegurancaTests
 
         public Task<bool> CancelarConfirmacaoAulaAsync(Guid organizacaoId, Guid unidadeId, Guid aulaId, Guid alunoId, DateTime agoraUtc, CancellationToken cancellationToken)
             => Task.FromResult(true);
+    }
+
+    private sealed class LocalidadesFake : ILocalidadesConsulta
+    {
+        public Task<IReadOnlyList<EstadoLocalidadeResumo>> ListarEstadosAtivosAsync(
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<EstadoLocalidadeResumo>>(
+                [new(35, "SP", "São Paulo")]);
+
+        public Task<IReadOnlyList<MunicipioLocalidadeResumo>> ListarMunicipiosAtivosAsync(
+            int estadoCodigoIbge,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<MunicipioLocalidadeResumo>>(
+                [new(3554508, "Tietê")]);
+    }
+
+    private sealed class FotosFake : IFotoPerfilAluno
+    {
+        public int QuantidadeDeProcessamentos { get; private set; }
+
+        public Task<FotoPerfilArmazenada> ValidarProcessarSalvarAsync(
+            Guid organizacaoId,
+            Guid alunoId,
+            FotoPerfilUpload upload,
+            CancellationToken cancellationToken)
+        {
+            QuantidadeDeProcessamentos++;
+            return Task.FromResult(new FotoPerfilArmazenada(
+                "alunos/foto.webp", "image/webp", DateTime.UtcNow));
+        }
+
+        public Task<Stream?> AbrirAsync(string chave, CancellationToken cancellationToken) =>
+            Task.FromResult<Stream?>(null);
+
+        public Task ExcluirAsync(string chave, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 }

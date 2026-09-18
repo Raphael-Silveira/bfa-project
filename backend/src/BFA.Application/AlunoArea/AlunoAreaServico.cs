@@ -3,6 +3,7 @@ using BFA.Domain.Aulas;
 using BFA.Domain.Cobrancas;
 using BFA.Domain.Matriculas;
 using BFA.Domain.Alunos;
+using BFA.Application.Localidades;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -13,7 +14,9 @@ public sealed class AlunoAreaServico(
     IAlunoAreaRepositorio repositorio,
     ILogger<AlunoAreaServico> logger,
     TimeProvider timeProvider,
-    TimeZoneInfo timeZoneInfo)
+    TimeZoneInfo timeZoneInfo,
+    ILocalidadesConsulta? localidades = null,
+    IFotoPerfilAluno? fotos = null)
     : IAlunoAreaServico
 {
     public async Task<DashboardAlunoDto?> ObterDashboardAsync(
@@ -92,7 +95,20 @@ public sealed class AlunoAreaServico(
                 aluno.Aluno.Telefone,
                 aluno.Aluno.Email,
                 aluno.Aluno.DataNascimento,
-                aluno.Aluno.Ativo),
+                aluno.Aluno.Ativo,
+                aluno.Aluno.Apelido,
+                aluno.Aluno.Cep,
+                aluno.Aluno.EstadoCodigoIbge,
+                null,
+                null,
+                aluno.Aluno.MunicipioCodigoIbge,
+                null,
+                aluno.Aluno.Bairro,
+                aluno.Aluno.Logradouro,
+                aluno.Aluno.Numero,
+                aluno.Aluno.Complemento,
+                aluno.Aluno.FotoPerfilChave,
+                aluno.Aluno.FotoPerfilContentType),
             nomeUnidade ?? "Unidade",
             proximaAula.Data != default
                 ? $"{proximaAula.Data:dd/MM} - {proximaAula.TurmaNome} ({proximaAula.HoraInicio}–{proximaAula.HoraFim})"
@@ -124,14 +140,170 @@ public sealed class AlunoAreaServico(
             return null;
         }
 
-        return new PerfilAlunoDto(
+        var perfil = new PerfilAlunoDto(
             aluno.Aluno.Id,
             aluno.Aluno.NomeCompleto,
             aluno.Aluno.Cpf,
             aluno.Aluno.Telefone,
             aluno.Aluno.Email,
             aluno.Aluno.DataNascimento,
-            aluno.Aluno.Ativo);
+            aluno.Aluno.Ativo,
+            aluno.Aluno.Apelido,
+            aluno.Aluno.Cep,
+            aluno.Aluno.EstadoCodigoIbge,
+            null,
+            null,
+            aluno.Aluno.MunicipioCodigoIbge,
+            null,
+            aluno.Aluno.Bairro,
+            aluno.Aluno.Logradouro,
+            aluno.Aluno.Numero,
+            aluno.Aluno.Complemento,
+            aluno.Aluno.FotoPerfilChave,
+            aluno.Aluno.FotoPerfilContentType);
+
+        if (localidades is null)
+            return perfil;
+
+        var estados = await localidades.ListarEstadosAtivosAsync(cancellationToken);
+        var estado = perfil.EstadoCodigoIbge is { } estadoId
+            ? estados.FirstOrDefault(item => item.CodigoIbge == estadoId)
+            : null;
+        var municipios = perfil.EstadoCodigoIbge is { } codigoEstado
+            ? await localidades.ListarMunicipiosAtivosAsync(codigoEstado, cancellationToken)
+            : [];
+        var municipio = perfil.MunicipioCodigoIbge is { } municipioId
+            ? municipios.FirstOrDefault(item => item.CodigoIbge == municipioId)
+            : null;
+
+        return perfil with
+        {
+            EstadoSigla = estado?.Sigla,
+            EstadoNome = estado?.Nome,
+            MunicipioNome = municipio?.Nome
+        };
+    }
+
+    public async Task<ResultadoAtualizacaoPerfilAluno> AtualizarPerfilCompletoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        string? apelido,
+        string? telefone,
+        string? email,
+        string? cep,
+        int? estadoCodigoIbge,
+        int? municipioCodigoIbge,
+        string? bairro,
+        string? logradouro,
+        string? numero,
+        string? complemento,
+        FotoPerfilUpload? foto,
+        CancellationToken cancellationToken)
+    {
+        if (apelido is not null && (apelido.Trim().Length > Aluno.ApelidoTamanhoMaximo
+            || apelido.Any(char.IsControl)))
+            return ResultadoAtualizacaoPerfilAluno.ApelidoInvalido;
+
+        var emailNormalizado = email?.Trim();
+        if (string.IsNullOrWhiteSpace(emailNormalizado)
+            || emailNormalizado.Length > 256
+            || !new EmailAddressAttribute().IsValid(emailNormalizado))
+            return ResultadoAtualizacaoPerfilAluno.EmailInvalido;
+
+        string? telefoneNormalizado;
+        try { telefoneNormalizado = TelefoneBrasileiro.Normalizar(telefone); }
+        catch (ArgumentException) { return ResultadoAtualizacaoPerfilAluno.TelefoneInvalido; }
+
+        if (cep is not null && cep.Any(c => !char.IsDigit(c) && c is not ' ' and not '-' and not '.')
+            || cep is not null && new string(cep.Where(char.IsDigit).ToArray()) is var cepDigitos && cepDigitos.Length is not 0 and not 8)
+            return ResultadoAtualizacaoPerfilAluno.CepInvalido;
+
+        if (estadoCodigoIbge is null && municipioCodigoIbge is not null)
+            return ResultadoAtualizacaoPerfilAluno.EnderecoInvalido;
+
+        if (localidades is not null && estadoCodigoIbge is { } estadoId)
+        {
+            var estados = await localidades.ListarEstadosAtivosAsync(cancellationToken);
+            if (estados.All(item => item.CodigoIbge != estadoId))
+                return ResultadoAtualizacaoPerfilAluno.EnderecoInvalido;
+            if (municipioCodigoIbge is { } municipioId)
+            {
+                var municipios = await localidades.ListarMunicipiosAtivosAsync(estadoId, cancellationToken);
+                if (municipios.All(item => item.CodigoIbge != municipioId))
+                    return ResultadoAtualizacaoPerfilAluno.EnderecoInvalido;
+            }
+        }
+
+        var aluno = await repositorio.ObterAlunoPorUsuarioAsync(usuarioId, unidadeId, cancellationToken);
+        if (aluno is null) return ResultadoAtualizacaoPerfilAluno.NaoEncontrado;
+
+        FotoPerfilArmazenada? novaFoto = null;
+        try
+        {
+            if (foto is not null)
+            {
+                if (fotos is null) return ResultadoAtualizacaoPerfilAluno.FotoInvalida;
+                novaFoto = await fotos.ValidarProcessarSalvarAsync(
+                    aluno.OrganizacaoId, aluno.Aluno.Id, foto, cancellationToken);
+            }
+
+            var atualizado = await repositorio.AtualizarPerfilCompletoAsync(
+                aluno.OrganizacaoId, unidadeId, aluno.Aluno.Id, apelido, telefoneNormalizado,
+                emailNormalizado, cep, estadoCodigoIbge, municipioCodigoIbge, bairro,
+                logradouro, numero, complemento, novaFoto?.Chave, novaFoto?.ContentType,
+                novaFoto?.AtualizadaEmUtc, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+            if (!atualizado)
+            {
+                if (novaFoto is not null && fotos is not null)
+                    await fotos.ExcluirAsync(novaFoto.Chave, cancellationToken);
+                return ResultadoAtualizacaoPerfilAluno.NaoEncontrado;
+            }
+
+            if (novaFoto is not null && fotos is not null && aluno.Aluno.FotoPerfilChave is not null)
+                await fotos.ExcluirAsync(aluno.Aluno.FotoPerfilChave, cancellationToken);
+
+            return ResultadoAtualizacaoPerfilAluno.Sucesso;
+        }
+        catch (ArgumentException) when (foto is not null)
+        {
+            await ExcluirFotoCompensatoriaAsync(novaFoto);
+            return ResultadoAtualizacaoPerfilAluno.FotoInvalida;
+        }
+        catch (Exception exception) when (novaFoto is not null)
+        {
+            await ExcluirFotoCompensatoriaAsync(novaFoto);
+            logger.LogError(exception,
+                "AtualizarPerfilCompleto falhou após preparar a nova foto para {UsuarioId} na unidade {UnidadeId}",
+                usuarioId, unidadeId);
+            throw;
+        }
+    }
+
+    private async Task ExcluirFotoCompensatoriaAsync(FotoPerfilArmazenada? foto)
+    {
+        if (foto is null || fotos is null)
+            return;
+
+        try
+        {
+            await fotos.ExcluirAsync(foto.Chave, CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception,
+                "Não foi possível remover arquivo temporário de perfil após falha de atualização");
+        }
+    }
+
+    public async Task<(Stream Conteudo, string ContentType)?> AbrirFotoPerfilAsync(
+        Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
+    {
+        if (fotos is null) return null;
+        var aluno = await repositorio.ObterAlunoPorUsuarioAsync(usuarioId, unidadeId, cancellationToken);
+        if (aluno?.Aluno.FotoPerfilChave is null || aluno.Aluno.FotoPerfilContentType is null)
+            return null;
+        var stream = await fotos.AbrirAsync(aluno.Aluno.FotoPerfilChave, cancellationToken);
+        return stream is null ? null : (stream, aluno.Aluno.FotoPerfilContentType);
     }
 
     public async Task<ResultadoAtualizacaoPerfilAluno> AtualizarPerfilAsync(

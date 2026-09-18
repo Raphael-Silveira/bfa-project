@@ -25,6 +25,26 @@ public interface IAlunoAreaRepositorio
         DateTime atualizadoEmUtc,
         CancellationToken cancellationToken);
 
+    Task<bool> AtualizarPerfilCompletoAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid alunoId,
+        string? apelido,
+        string? telefone,
+        string? email,
+        string? cep,
+        int? estadoCodigoIbge,
+        int? municipioCodigoIbge,
+        string? bairro,
+        string? logradouro,
+        string? numero,
+        string? complemento,
+        string? fotoPerfilChave,
+        string? fotoPerfilContentType,
+        DateTime? fotoPerfilAtualizadaEmUtc,
+        DateTime atualizadoEmUtc,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(
         Guid organizacaoId,
         Guid unidadeId,

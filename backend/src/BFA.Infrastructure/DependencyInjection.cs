@@ -103,6 +103,9 @@ public static class DependencyInjection
                 ArmazenamentoDocumentosContratoOptions.SecaoConfiguracao));
         services.AddScoped<IArmazenamentoDocumentosContrato,
             ArmazenamentoLocalDocumentosContrato>();
+        services.Configure<ArmazenamentoFotosAlunoOptions>(
+            configuration.GetSection(ArmazenamentoFotosAlunoOptions.SecaoConfiguracao));
+        services.AddScoped<IFotoPerfilAluno, ArmazenamentoLocalFotosAluno>();
         services.AddScoped<IAcessoUsuarioConsulta, AcessoUsuarioConsulta>();
         services.AddScoped<UnidadesUsuarioConsulta>();
         services.AddScoped<IUnidadesUsuarioConsulta>(serviceProvider =>

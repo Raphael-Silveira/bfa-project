@@ -15,11 +15,36 @@
 <section class="bfa-admin-card bfa-aluno-profile-form-card" aria-labelledby="titulo-dados-cadastrais">
     <h2 class="bfa-admin-card__title" id="titulo-dados-cadastrais">Dados cadastrais</h2>
 
-    <form class="bfa-form" method="post" asp-area="Aluno" asp-controller="Aluno"
+    <form class="bfa-form" method="post" enctype="multipart/form-data" asp-area="Aluno" asp-controller="Aluno"
           asp-action="EditarPerfil"
           asp-route-unidadeId="@Context.Request.RouteValues["unidadeId"]">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="bfa-admin-notice bfa-admin-form-summary" role="alert"></div>
+
+        <fieldset class="bfa-profile-form-section bfa-profile-form-section--first">
+            <legend>Foto de perfil</legend>
+            <div class="bfa-profile-photo-field">
+                @if (!string.IsNullOrWhiteSpace(Model.FotoPerfilUrl))
+                {
+                    <img id="foto-perfil-preview" class="bfa-aluno-profile-avatar" src="@Model.FotoPerfilUrl" alt="Foto de perfil atual" />
+                }
+                else
+                {
+                    <span id="foto-perfil-fallback" class="bfa-aluno-profile-avatar bfa-aluno-profile-avatar--fallback" title="Avatar padrão" aria-label="Avatar padrão">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <circle cx="12" cy="8" r="3.25" />
+                            <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+                        </svg>
+                    </span>
+                }
+                <div>
+                    <label asp-for="FotoPerfil" class="bfa-form-label">Alterar foto</label>
+                    <input asp-for="FotoPerfil" id="FotoPerfil" class="form-control bfa-form-control" type="file" accept="image/jpeg,image/png,image/webp" data-foto-perfil-input />
+                    <small>JPEG, PNG ou WebP, até 2 MB.</small>
+                    <span asp-validation-for="FotoPerfil" class="text-danger"></span>
+                </div>
+            </div>
+        </fieldset>
 
         <div class="bfa-aluno-profile-readonly-grid">
             <div class="bfa-form-field">
@@ -38,6 +63,11 @@
 
         <div class="bfa-aluno-profile-edit-grid">
             <div class="bfa-form-field">
+                <label asp-for="Apelido" class="bfa-form-label"></label>
+                <input asp-for="Apelido" class="form-control bfa-form-control" maxlength="80" autocomplete="nickname" />
+                <span asp-validation-for="Apelido" class="text-danger"></span>
+            </div>
+            <div class="bfa-form-field">
                 <label asp-for="Email" class="bfa-form-label"></label>
                 <input asp-for="Email" class="form-control bfa-form-control" type="email" autocomplete="email" />
                 <span asp-validation-for="Email" class="text-danger"></span>
@@ -52,6 +82,43 @@
             </div>
         </div>
 
+        <fieldset class="bfa-profile-form-section">
+            <legend>Endereço</legend>
+            <div class="bfa-aluno-profile-edit-grid">
+                <div class="bfa-form-field">
+                    <label asp-for="Cep" class="bfa-form-label"></label>
+                    <input asp-for="Cep" class="form-control bfa-form-control" inputmode="numeric" maxlength="9" data-bfa-mask="cep" placeholder="00000-000" />
+                    <span asp-validation-for="Cep" class="text-danger"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="EstadoCodigoIbge" class="bfa-form-label">Estado</label>
+                    <select asp-for="EstadoCodigoIbge" class="form-select bfa-form-control" data-bfa-combobox data-aluno-estado data-placeholder="Pesquise ou selecione um Estado" data-municipio-url="@Url.Action("Municipios", "Aluno", new { area = "Aluno", unidadeId = Context.Request.RouteValues["unidadeId"] })">
+                        <option value="">Pesquise ou selecione um Estado</option>
+                        @foreach (var estado in Model.Estados)
+                        {
+                            <option value="@estado.CodigoIbge">@estado.Nome (@estado.Sigla)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="EstadoCodigoIbge" class="text-danger"></span>
+                </div>
+                <div class="bfa-form-field">
+                    <label asp-for="MunicipioCodigoIbge" class="bfa-form-label">Cidade</label>
+                    <select asp-for="MunicipioCodigoIbge" class="form-select bfa-form-control" data-bfa-combobox data-aluno-municipio data-placeholder="@(Model.EstadoCodigoIbge.HasValue ? "Pesquise ou selecione uma Cidade" : "Selecione um Estado primeiro")" disabled="@(!Model.EstadoCodigoIbge.HasValue)">
+                        <option value="">@(Model.EstadoCodigoIbge.HasValue ? "Pesquise ou selecione uma Cidade" : "Selecione um Estado primeiro")</option>
+                        @foreach (var municipio in Model.Municipios)
+                        {
+                            <option value="@municipio.CodigoIbge">@municipio.Nome</option>
+                        }
+                    </select>
+                    <span asp-validation-for="MunicipioCodigoIbge" class="text-danger"></span>
+                </div>
+                <div class="bfa-form-field"><label asp-for="Bairro" class="bfa-form-label"></label><input asp-for="Bairro" class="form-control bfa-form-control" /></div>
+                <div class="bfa-form-field"><label asp-for="Logradouro" class="bfa-form-label"></label><input asp-for="Logradouro" class="form-control bfa-form-control" /></div>
+                <div class="bfa-form-field"><label asp-for="Numero" class="bfa-form-label"></label><input asp-for="Numero" class="form-control bfa-form-control" /></div>
+                <div class="bfa-form-field"><label asp-for="Complemento" class="bfa-form-label"></label><input asp-for="Complemento" class="form-control bfa-form-control" /></div>
+            </div>
+        </fieldset>
+
         <div class="bfa-form-actions">
             <button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar alterações</button>
             <a class="bfa-btn-secondary bfa-admin-button"
@@ -64,4 +131,6 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/bfa-input-masks.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-searchable-combobox.js" asp-append-version="true"></script>
+    <script src="~/js/bfa-aluno-perfil.js" asp-append-version="true"></script>
 }

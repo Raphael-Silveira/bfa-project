@@ -213,7 +213,7 @@ internal static class MatriculasViewModelMapper
             matricula.NomeAluno,
             FormatarData(matricula.DataNascimentoAluno),
             FormatarCpfMascarado(matricula.CpfAluno),
-            InformadoOuPadrao(matricula.TelefoneAluno),
+            InformadoOuPadrao(TelefoneBrasileiro.FormatarLocal(matricula.TelefoneAluno)),
             InformadoOuPadrao(matricula.EmailAluno),
             NomeStatus(matricula.Status),
             matricula.Status == StatusMatricula.Ativa,
@@ -305,7 +305,7 @@ internal static class MatriculasViewModelMapper
         ResponsavelMatriculaResumo responsavel) => new(
             responsavel.NomeCompleto,
             NomeRelacao(responsavel.TipoRelacao, responsavel.DescricaoRelacao),
-            InformadoOuPadrao(responsavel.Telefone),
+            InformadoOuPadrao(TelefoneBrasileiro.FormatarLocal(responsavel.Telefone)),
             InformadoOuPadrao(responsavel.Email),
             responsavel.PrincipalContato,
             responsavel.ResponsavelFinanceiro,

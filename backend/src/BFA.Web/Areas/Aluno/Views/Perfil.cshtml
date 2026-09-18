@@ -5,9 +5,28 @@
 }
 
 <header class="bfa-admin-page-header bfa-aluno-profile-header" aria-labelledby="titulo-perfil-aluno">
+    <div class="bfa-aluno-profile-identity">
+        @if (Model.PossuiFoto)
+        {
+            <img class="bfa-aluno-profile-avatar" src="@Url.Action("FotoPerfil", "Aluno", new { area = "Aluno", unidadeId = Context.Request.RouteValues["unidadeId"] })" alt="Foto de perfil de @Model.NomeCompleto" />
+        }
+        else
+        {
+            <span class="bfa-aluno-profile-avatar bfa-aluno-profile-avatar--fallback" title="Avatar padrão" aria-label="Avatar padrão">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="8" r="3.25" />
+                    <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+                </svg>
+            </span>
+        }
+    </div>
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Perfil</p>
         <h1 class="bfa-admin-page-header__title" id="titulo-perfil-aluno">@Model.NomeCompleto</h1>
+        @if (!string.IsNullOrWhiteSpace(Model.Apelido))
+        {
+            <p class="bfa-admin-page-header__description">@Model.Apelido</p>
+        }
     </div>
     <a class="bfa-btn-primary bfa-admin-button bfa-aluno-profile-header__action"
        asp-area="Aluno" asp-controller="Aluno" asp-action="EditarPerfil"
@@ -16,9 +35,13 @@
     </a>
 </header>
 
-<div class="bfa-admin-card">
+<div class="bfa-admin-card bfa-aluno-profile-card">
     <h2 class="bfa-admin-card__title">Dados Cadastrais</h2>
     <dl class="bfa-unidade-contract-grid">
+        <div>
+            <dt>Apelido</dt>
+            <dd>@(Model.Apelido ?? "Não informado")</dd>
+        </div>
         <div>
             <dt>Nome completo</dt>
             <dd>@Model.NomeCompleto</dd>
@@ -39,6 +62,19 @@
             <dt>Data de nascimento</dt>
             <dd>@Model.DataNascimento (@Model.Idade)</dd>
         </div>
+    </dl>
+</div>
+
+<div class="bfa-admin-card bfa-aluno-profile-card">
+    <h2 class="bfa-admin-card__title">Endereço</h2>
+    <dl class="bfa-unidade-contract-grid">
+        <div><dt>CEP</dt><dd>@(Model.Cep ?? "Não informado")</dd></div>
+        <div><dt>Logradouro</dt><dd>@(Model.Logradouro ?? "Não informado")</dd></div>
+        <div><dt>Número</dt><dd>@(Model.Numero ?? "Não informado")</dd></div>
+        <div><dt>Complemento</dt><dd>@(Model.Complemento ?? "Não informado")</dd></div>
+        <div><dt>Bairro</dt><dd>@(Model.Bairro ?? "Não informado")</dd></div>
+        <div><dt>Cidade</dt><dd>@(Model.Municipio ?? "Não informado")</dd></div>
+        <div><dt>Estado</dt><dd>@(Model.Estado ?? "Não informado")</dd></div>
     </dl>
 </div>
 

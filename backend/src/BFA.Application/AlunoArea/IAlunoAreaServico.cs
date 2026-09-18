@@ -11,14 +11,31 @@ public sealed record PerfilAlunoDto(
     string? Telefone,
     string? Email,
     DateOnly DataNascimento,
-    bool Ativo);
+    bool Ativo,
+    string? Apelido = null,
+    string? Cep = null,
+    int? EstadoCodigoIbge = null,
+    string? EstadoSigla = null,
+    string? EstadoNome = null,
+    int? MunicipioCodigoIbge = null,
+    string? MunicipioNome = null,
+    string? Bairro = null,
+    string? Logradouro = null,
+    string? Numero = null,
+    string? Complemento = null,
+    string? FotoPerfilChave = null,
+    string? FotoPerfilContentType = null);
 
 public enum ResultadoAtualizacaoPerfilAluno
 {
     Sucesso,
     NaoEncontrado,
     EmailInvalido,
-    TelefoneInvalido
+    TelefoneInvalido,
+    ApelidoInvalido,
+    CepInvalido,
+    EnderecoInvalido,
+    FotoInvalida
 }
 
 public sealed record MatriculaAlunoDto(
@@ -146,6 +163,27 @@ public interface IAlunoAreaServico
         Guid unidadeId,
         string? telefone,
         string? email,
+        CancellationToken cancellationToken);
+
+    Task<ResultadoAtualizacaoPerfilAluno> AtualizarPerfilCompletoAsync(
+        Guid usuarioId,
+        Guid unidadeId,
+        string? apelido,
+        string? telefone,
+        string? email,
+        string? cep,
+        int? estadoCodigoIbge,
+        int? municipioCodigoIbge,
+        string? bairro,
+        string? logradouro,
+        string? numero,
+        string? complemento,
+        FotoPerfilUpload? foto,
+        CancellationToken cancellationToken);
+
+    Task<(Stream Conteudo, string ContentType)?> AbrirFotoPerfilAsync(
+        Guid usuarioId,
+        Guid unidadeId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<MatriculaAlunoDto>> ObterMatriculasAsync(

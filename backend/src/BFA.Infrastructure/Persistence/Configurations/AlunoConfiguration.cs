@@ -29,6 +29,12 @@ public sealed class AlunoConfiguration : IEntityTypeConfiguration<Aluno>
             tableBuilder.HasCheckConstraint(
                 "ck_alunos_email_nao_vazio",
                 "email IS NULL OR btrim(email) <> ''");
+            tableBuilder.HasCheckConstraint(
+                "ck_alunos_cep_formato",
+                "cep IS NULL OR cep ~ '^[0-9]{8}$'");
+            tableBuilder.HasCheckConstraint(
+                "ck_alunos_municipio_estado_consistente",
+                "municipio_codigo_ibge IS NULL OR estado_codigo_ibge IS NOT NULL");
         });
 
         builder.HasKey(aluno => aluno.Id)
@@ -78,6 +84,69 @@ public sealed class AlunoConfiguration : IEntityTypeConfiguration<Aluno>
             .HasMaxLength(Aluno.EmailTamanhoMaximo)
             .IsRequired(false);
 
+        builder.Property(aluno => aluno.Apelido)
+            .HasColumnName("apelido")
+            .HasColumnType("varchar(80)")
+            .HasMaxLength(Aluno.ApelidoTamanhoMaximo)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.Cep)
+            .HasColumnName("cep")
+            .HasColumnType("varchar(8)")
+            .HasMaxLength(Aluno.CepTamanho)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.EstadoCodigoIbge)
+            .HasColumnName("estado_codigo_ibge")
+            .HasColumnType("integer")
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.MunicipioCodigoIbge)
+            .HasColumnName("municipio_codigo_ibge")
+            .HasColumnType("integer")
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.Bairro)
+            .HasColumnName("bairro")
+            .HasColumnType("varchar(120)")
+            .HasMaxLength(Aluno.BairroTamanhoMaximo)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.Logradouro)
+            .HasColumnName("logradouro")
+            .HasColumnType("varchar(180)")
+            .HasMaxLength(Aluno.LogradouroTamanhoMaximo)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.Numero)
+            .HasColumnName("numero")
+            .HasColumnType("varchar(20)")
+            .HasMaxLength(Aluno.NumeroTamanhoMaximo)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.Complemento)
+            .HasColumnName("complemento")
+            .HasColumnType("varchar(120)")
+            .HasMaxLength(Aluno.ComplementoTamanhoMaximo)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.FotoPerfilChave)
+            .HasColumnName("foto_perfil_chave")
+            .HasColumnType("varchar(300)")
+            .HasMaxLength(Aluno.FotoPerfilChaveTamanhoMaximo)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.FotoPerfilContentType)
+            .HasColumnName("foto_perfil_content_type")
+            .HasColumnType("varchar(50)")
+            .HasMaxLength(Aluno.FotoPerfilContentTypeTamanhoMaximo)
+            .IsRequired(false);
+
+        builder.Property(aluno => aluno.FotoPerfilAtualizadaEmUtc)
+            .HasColumnName("foto_perfil_atualizada_em_utc")
+            .HasColumnType("timestamp with time zone")
+            .IsRequired(false);
+
         builder.Property(aluno => aluno.Ativo)
             .HasColumnName("ativo")
             .HasColumnType("boolean")
@@ -123,5 +192,17 @@ public sealed class AlunoConfiguration : IEntityTypeConfiguration<Aluno>
             .HasForeignKey(aluno => aluno.UsuarioId)
             .OnDelete(DeleteBehavior.Restrict)
             .HasConstraintName("fk_alunos_usuario");
+
+        builder.HasOne<BFA.Domain.Localidades.Estado>()
+            .WithMany()
+            .HasForeignKey(aluno => aluno.EstadoCodigoIbge)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_alunos_estado");
+
+        builder.HasOne<BFA.Domain.Localidades.Municipio>()
+            .WithMany()
+            .HasForeignKey(aluno => aluno.MunicipioCodigoIbge)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_alunos_municipio");
     }
 }

@@ -1,5 +1,6 @@
 using BFA.Application.AlunoArea;
 using BFA.Application.Unidades;
+using BFA.Application.Localidades;
 using BFA.Web.Authorization;
 using BFA.Web.ViewModels.AlunoArea;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +14,7 @@ public sealed class AlunoController(
     IAlunoAreaServico alunoAreaServico,
     IConfirmacaoAulaAlunoServico confirmacaoAulaAlunoServico,
     IUnidadesUsuarioConsulta unidadesUsuarioConsulta,
+    ILocalidadesConsulta localidadesConsulta,
     ILogger<AlunoController> logger)
     : Controller
 {
@@ -90,8 +92,12 @@ public sealed class AlunoController(
         if (perfil is null) return NotFound();
 
         ViewData["AlunoNome"] = perfil.NomeCompleto;
-        return View("/Areas/Aluno/Views/EditarPerfil.cshtml",
-            EditarPerfilAlunoViewModel.Mapear(perfil));
+        var model = EditarPerfilAlunoViewModel.Mapear(perfil);
+        model.FotoPerfilUrl = perfil.FotoPerfilChave is null
+            ? null
+            : Url.Action(nameof(FotoPerfil), new { unidadeId });
+        await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
+        return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
     }
 
     [HttpPost("aluno/{unidadeId:guid}/perfil/editar")]
@@ -113,39 +119,126 @@ public sealed class AlunoController(
         if (perfil is null) return NotFound();
 
         model.AplicarDadosSomenteLeitura(perfil);
+        model.FotoPerfilUrl = perfil.FotoPerfilChave is null
+            ? null
+            : Url.Action(nameof(FotoPerfil), new { unidadeId });
         ViewData["AlunoNome"] = perfil.NomeCompleto;
 
         if (!ModelState.IsValid)
         {
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
             return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
         }
 
-        var resultado = await alunoAreaServico.AtualizarPerfilAsync(
+        await using var fotoStream = model.FotoPerfil?.OpenReadStream();
+        FotoPerfilUpload? foto = model.FotoPerfil is null || fotoStream is null
+            ? null
+            : new FotoPerfilUpload(fotoStream, model.FotoPerfil.ContentType, model.FotoPerfil.Length);
+        var resultado = await alunoAreaServico.AtualizarPerfilCompletoAsync(
             usuarioId.Value,
             unidadeId,
+            model.Apelido,
             model.Telefone,
             model.Email,
+            model.Cep,
+            model.EstadoCodigoIbge,
+            model.MunicipioCodigoIbge,
+            model.Bairro,
+            model.Logradouro,
+            model.Numero,
+            model.Complemento,
+            foto,
             cancellationToken);
 
         if (resultado == ResultadoAtualizacaoPerfilAluno.EmailInvalido)
         {
             ModelState.AddModelError(nameof(model.Email), "Informe um e-mail válido.");
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
             return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
         }
 
         if (resultado == ResultadoAtualizacaoPerfilAluno.TelefoneInvalido)
         {
             ModelState.AddModelError(nameof(model.Telefone), "Informe um telefone brasileiro válido com DDD.");
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
+            return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
+        }
+
+        if (resultado == ResultadoAtualizacaoPerfilAluno.CepInvalido)
+        {
+            ModelState.AddModelError(nameof(model.Cep), "Informe um CEP válido.");
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
+            return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
+        }
+
+        if (resultado == ResultadoAtualizacaoPerfilAluno.EnderecoInvalido)
+        {
+            ModelState.AddModelError(string.Empty, "Revise Estado e Município.");
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
+            return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
+        }
+
+        if (resultado == ResultadoAtualizacaoPerfilAluno.ApelidoInvalido)
+        {
+            ModelState.AddModelError(nameof(model.Apelido), "Informe um apelido válido.");
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
+            return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
+        }
+
+        if (resultado == ResultadoAtualizacaoPerfilAluno.FotoInvalida)
+        {
+            ModelState.AddModelError(nameof(model.FotoPerfil), "Envie uma imagem JPEG, PNG ou WebP válida de até 2 MB.");
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
             return View("/Areas/Aluno/Views/EditarPerfil.cshtml", model);
         }
 
         if (resultado != ResultadoAtualizacaoPerfilAluno.Sucesso)
         {
+            await PrepararLocalidadesAsync(model, unidadeId, model.EstadoCodigoIbge, cancellationToken);
             return Forbid();
         }
 
         TempData["Sucesso"] = "Dados cadastrais atualizados com sucesso.";
         return RedirectToAction(nameof(Perfil), new { unidadeId });
+    }
+
+    [HttpGet("aluno/{unidadeId:guid}/perfil/municipios")]
+    public async Task<IActionResult> Municipios(
+        Guid unidadeId,
+        int estadoCodigoIbge,
+        CancellationToken cancellationToken)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId is null || await unidadesUsuarioConsulta.ObterAlunoAsync(usuarioId.Value, unidadeId, cancellationToken) is null)
+            return Forbid();
+        var municipios = await localidadesConsulta.ListarMunicipiosAtivosAsync(estadoCodigoIbge, cancellationToken);
+        return Json(municipios);
+    }
+
+    [HttpGet("aluno/{unidadeId:guid}/perfil/foto")]
+    public async Task<IActionResult> FotoPerfil(Guid unidadeId, CancellationToken cancellationToken)
+    {
+        var usuarioId = ObterUsuarioId();
+        if (usuarioId is null) return Forbid();
+        var foto = await alunoAreaServico.AbrirFotoPerfilAsync(usuarioId.Value, unidadeId, cancellationToken);
+        return foto is null ? NotFound() : File(foto.Value.Conteudo, foto.Value.ContentType);
+    }
+
+    private async Task PrepararLocalidadesAsync(
+        EditarPerfilAlunoViewModel model,
+        Guid unidadeId,
+        int? estadoCodigoIbge,
+        CancellationToken cancellationToken)
+    {
+        model.Estados = (await localidadesConsulta.ListarEstadosAtivosAsync(cancellationToken))
+            .Select(item => new LocalidadeOpcaoViewModel(item.CodigoIbge, item.Nome, item.Sigla))
+            .ToArray();
+        if (estadoCodigoIbge is { } estado)
+        {
+            model.Municipios = (await localidadesConsulta.ListarMunicipiosAtivosAsync(estado, cancellationToken))
+                .Select(item => new LocalidadeOpcaoViewModel(item.CodigoIbge, item.Nome))
+                .ToArray();
+        }
     }
 
     [HttpGet("aluno/{unidadeId:guid}/matriculas")]

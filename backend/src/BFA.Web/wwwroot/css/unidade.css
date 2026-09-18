@@ -715,6 +715,46 @@
   flex: 0 0 auto;
 }
 
+.bfa-aluno-profile-identity { flex: 0 0 auto; }
+.bfa-aluno-profile-avatar {
+  width: 4.25rem;
+  height: 4.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--bfa-surface);
+  color: var(--bfa-accent);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.bfa-aluno-profile-avatar--fallback { border: 1px solid var(--bfa-accent); }
+.bfa-aluno-profile-avatar--fallback svg {
+  width: 2rem;
+  height: 2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+.bfa-aluno-profile-card { margin-top: 1rem; }
+.bfa-profile-form-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-sm);
+}
+.bfa-profile-form-section--first { margin-top: 0; }
+.bfa-profile-form-section legend {
+  padding: 0 0.4rem;
+  color: var(--bfa-text-secondary);
+  font-weight: 700;
+}
+.bfa-profile-photo-field { display: flex; align-items: center; gap: 1rem; }
+.bfa-profile-photo-field small { display: block; margin-top: .4rem; color: var(--bfa-text-muted); }
+
 .bfa-aluno-profile-form-card {
   max-width: 64rem;
 }
