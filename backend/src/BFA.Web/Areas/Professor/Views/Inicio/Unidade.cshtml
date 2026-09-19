@@ -10,6 +10,33 @@
         <p class="bfa-admin-page-header__description">@Model.NomeUnidade</p>
     </div>
 </header>
+<section class="bfa-professor-upcoming" aria-labelledby="proximas-aulas-titulo">
+    <div class="bfa-professor-section-heading"><div><p>Agenda operacional</p><h2 id="proximas-aulas-titulo">Próximas aulas</h2></div><a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Ver todas as aulas</a></div>
+    @if (Model.ProximasAulas.Count == 0)
+    {
+        <div class="bfa-admin-empty-state" role="status"><h3>Nenhuma próxima aula programada.</h3></div>
+    }
+    else
+    {
+        <div class="bfa-professor-upcoming-grid">
+        @foreach (var aula in Model.ProximasAulas)
+        {
+            var cancelada = aula.Status == BFA.Domain.Aulas.StatusAula.Cancelada;
+            <article class="bfa-admin-card bfa-professor-upcoming-card @(cancelada ? "is-cancelled" : string.Empty)">
+                <p class="bfa-professor-upcoming-card__date">@aula.Data.ToString("dd/MM/yyyy")</p>
+                <div class="bfa-professor-upcoming-card__title-row">
+                    <h3>@aula.TurmaNome</h3>
+                    <span class="bfa-admin-badge @(cancelada ? "is-inactive" : "is-active")">@(cancelada ? "Cancelada" : aula.Status.ToString())</span>
+                </div>
+                <strong>@aula.HoraInicio.ToString("HH:mm") – @aula.HoraFim.ToString("HH:mm")</strong>
+                <p>@(cancelada ? "Esta aula não ocorrerá." : $"{aula.Alunos} {(aula.Alunos == 1 ? "aluno" : "alunos")} · {aula.Confirmados} confirmados")</p>
+                <a class="@(cancelada ? "bfa-btn-secondary" : "bfa-btn-primary") bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas/@aula.TurmaId/aulas/@aula.AulaId/confirmacoes">@(cancelada ? "Ver detalhes" : "Ver aula")</a>
+            </article>
+        }
+        </div>
+    }
+    <a class="bfa-btn-secondary bfa-admin-button bfa-professor-upcoming-all" href="/professor/unidade/@Model.UnidadeId/aulas">Ver todas as aulas</a>
+</section>
 <section class="bfa-admin-card bfa-professor-turmas-summary" aria-labelledby="minhas-turmas-titulo">
     <div>
         <p>Operação do professor</p>
@@ -18,3 +45,18 @@
     </div>
     <a class="bfa-btn-primary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Ver minhas turmas</a>
 </section>
+@section Styles {
+<style>
+    .bfa-professor-section-heading { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+    .bfa-professor-section-heading p, .bfa-professor-upcoming-card__date { margin:0 0 .35rem; color:var(--bfa-accent); font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+    .bfa-professor-section-heading h2 { margin:0; }
+    .bfa-professor-upcoming-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr)); gap:1rem; }
+    .bfa-professor-upcoming-card { display:grid; gap:.65rem; }
+    .bfa-professor-upcoming-card.is-cancelled { border-color: rgba(220, 130, 130, 0.35); background: linear-gradient(145deg, rgba(92, 44, 48, 0.22), rgba(29, 32, 35, 0.96)); }
+    .bfa-professor-upcoming-card__title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; }
+    .bfa-professor-upcoming-card h3, .bfa-professor-upcoming-card p { margin:0; }
+    .bfa-professor-upcoming-card .bfa-admin-button { justify-self:start; }
+    .bfa-professor-upcoming-all { display:inline-flex; margin-top:1rem; }
+    @@media(max-width:42.5rem){ .bfa-professor-section-heading{align-items:stretch; flex-direction:column;} .bfa-professor-section-heading .bfa-admin-button{align-self:start;} .bfa-professor-upcoming-card__title-row{align-items:stretch; flex-direction:column;} }
+</style>
+}

@@ -1,4 +1,7 @@
 using System.Net;
+using BFA.Domain.Alunos;
+using BFA.Domain.Aulas;
+using BFA.Domain.Matriculas;
 using BFA.Domain.Professores;
 using BFA.Domain.Turmas;
 using BFA.Infrastructure.Persistence;
@@ -176,6 +179,76 @@ public sealed partial class AreaProfessorEndpointTests
     }
 
     [Fact]
+    public async Task Detalhe_exibe_alunos_matriculados_ativos_sem_duplicar_por_horario()
+    {
+        var contexto = await ConfigurarUnidadeProfessorAsync("BFA Alunos da Turma");
+        var turma = await AdicionarTurmaAsync(
+            contexto.OrganizacaoId, contexto.UnidadeId,
+            contexto.ProfessorUnidade.Id, "Turma com alunos");
+        var horarioPrincipal = await AdicionarHorarioComIdAsync(
+            contexto.OrganizacaoId, contexto.UnidadeId,
+            turma.Id, contexto.ProfessorUnidade.Id);
+        var horarioExtra = await AdicionarHorarioComIdAsync(
+            contexto.OrganizacaoId, contexto.UnidadeId,
+            turma.Id, contexto.ProfessorUnidade.Id);
+        var alice = new Aluno(Guid.NewGuid(), contexto.OrganizacaoId, "Alice Matriculada",
+            new DateOnly(2000, 1, 1), new DateOnly(2026, 1, 1), DataCriacao,
+            telefone: "5511992682235");
+        var bruno = new Aluno(Guid.NewGuid(), contexto.OrganizacaoId, "Bruno Matriculado",
+            new DateOnly(2000, 1, 1), new DateOnly(2026, 1, 1), DataCriacao);
+        var matriculaAlice = new Matricula(Guid.NewGuid(), contexto.OrganizacaoId,
+            contexto.UnidadeId, alice.Id, Guid.NewGuid(), new DateOnly(2026, 1, 1),
+            12, 100, false, null, _application.UsuarioStore.Usuario.Id, DataCriacao);
+        var matriculaBruno = new Matricula(Guid.NewGuid(), contexto.OrganizacaoId,
+            contexto.UnidadeId, bruno.Id, Guid.NewGuid(), new DateOnly(2026, 1, 1),
+            12, 100, false, null, _application.UsuarioStore.Usuario.Id, DataCriacao);
+        await using (var scope = _application.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+            db.AddRange(alice, bruno, matriculaAlice, matriculaBruno);
+            db.AddRange(
+                new MatriculaHorario(Guid.NewGuid(), contexto.OrganizacaoId,
+                    contexto.UnidadeId, matriculaAlice.Id, horarioPrincipal.Id,
+                    new DateOnly(2026, 1, 1), _application.UsuarioStore.Usuario.Id, DataCriacao),
+                new MatriculaHorario(Guid.NewGuid(), contexto.OrganizacaoId,
+                    contexto.UnidadeId, matriculaAlice.Id, horarioExtra.Id,
+                    new DateOnly(2026, 1, 1), _application.UsuarioStore.Usuario.Id, DataCriacao),
+                new MatriculaHorario(Guid.NewGuid(), contexto.OrganizacaoId,
+                    contexto.UnidadeId, matriculaBruno.Id, horarioPrincipal.Id,
+                    new DateOnly(2026, 1, 1), _application.UsuarioStore.Usuario.Id, DataCriacao));
+            await db.SaveChangesAsync();
+        }
+
+        using var client = CriarClient();
+        using var login = await AutenticarAsync(client);
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync(
+            $"/professor/unidade/{contexto.UnidadeId:D}/turmas/{turma.Id:D}"));
+
+        Assert.Contains("Alunos da turma", html, StringComparison.Ordinal);
+        Assert.Contains("2 alunos", html, StringComparison.Ordinal);
+        Assert.Contains("Alice Matriculada", html, StringComparison.Ordinal);
+        Assert.Contains("Bruno Matriculado", html, StringComparison.Ordinal);
+        Assert.Contains("+55 (11) 99268-2235", html, StringComparison.Ordinal);
+        Assert.Contains("Telefone não informado", html, StringComparison.Ordinal);
+        Assert.Contains("https://wa.me/5511992682235", html, StringComparison.Ordinal);
+        Assert.Equal(1, CountOccurrences(html, "https://wa.me/5511992682235"));
+        Assert.Contains("Buscar aluno", html, StringComparison.Ordinal);
+        Assert.Equal(1, CountOccurrences(html, "<strong>Alice Matriculada</strong>"));
+    }
+
+    private static int CountOccurrences(string value, string search)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = value.IndexOf(search, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += search.Length;
+        }
+        return count;
+    }
+
+    [Fact]
     public async Task Vinculo_profissional_inativo_nao_acessa_minhas_turmas()
     {
         var contexto = await ConfigurarUnidadeProfessorAsync(
@@ -321,6 +394,71 @@ public sealed partial class AreaProfessorEndpointTests
         dbContext.Turmas.Add(turma);
         await dbContext.SaveChangesAsync();
         return turma;
+    }
+
+    [Fact]
+    public async Task Confirmacoes_exibe_ativos_inativos_e_preserva_somente_alunos_do_horario()
+    {
+        var contexto = await ConfigurarUnidadeProfessorAsync("BFA Confirmações");
+        var turma = await AdicionarTurmaAsync(contexto.OrganizacaoId, contexto.UnidadeId,
+            contexto.ProfessorUnidade.Id, "Turma Confirmações");
+        var horario = await AdicionarHorarioComIdAsync(contexto.OrganizacaoId, contexto.UnidadeId,
+            turma.Id, contexto.ProfessorUnidade.Id);
+        var aula = new Aula(Guid.NewGuid(), contexto.OrganizacaoId, contexto.UnidadeId,
+            turma.Id, horario.Id, new DateOnly(2026, 8, 25), new TimeOnly(18),
+            new TimeOnly(19), 12, _application.UsuarioStore.Usuario.Id, DataCriacao);
+        var alice = new Aluno(Guid.NewGuid(), contexto.OrganizacaoId, "Alice Barbosa",
+            new DateOnly(2000, 1, 1), new DateOnly(2026, 1, 1), DataCriacao);
+        var bruno = new Aluno(Guid.NewGuid(), contexto.OrganizacaoId, "Bruno Silva",
+            new DateOnly(2000, 1, 1), new DateOnly(2026, 1, 1), DataCriacao);
+        var carla = new Aluno(Guid.NewGuid(), contexto.OrganizacaoId, "Carla Souza",
+            new DateOnly(2000, 1, 1), new DateOnly(2026, 1, 1), DataCriacao);
+        var matriculas = new[] { alice, bruno, carla }.Select(aluno => new Matricula(
+            Guid.NewGuid(), contexto.OrganizacaoId, contexto.UnidadeId, aluno.Id,
+            Guid.NewGuid(), new DateOnly(2026, 1, 1), 12, 100, false, null,
+            _application.UsuarioStore.Usuario.Id, DataCriacao)).ToArray();
+        await using (var scope = _application.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+            db.AddRange(aula, alice, bruno, carla);
+            db.AddRange(matriculas);
+            db.AddRange(matriculas.Select(m => new MatriculaHorario(Guid.NewGuid(),
+                contexto.OrganizacaoId, contexto.UnidadeId, m.Id, horario.Id,
+                new DateOnly(2026, 1, 1), _application.UsuarioStore.Usuario.Id, DataCriacao)));
+            db.Add(new ConfirmacaoAulaAluno(Guid.NewGuid(), contexto.OrganizacaoId,
+                contexto.UnidadeId, aula.Id, alice.Id, DataCriacao, DataCriacao));
+            var cancelada = new ConfirmacaoAulaAluno(Guid.NewGuid(), contexto.OrganizacaoId,
+                contexto.UnidadeId, aula.Id, carla.Id, DataCriacao, DataCriacao);
+            cancelada.Cancelar(DataCriacao.AddMinutes(1));
+            db.Add(cancelada);
+            await db.SaveChangesAsync();
+        }
+
+        using var client = CriarClient();
+        using var login = await AutenticarAsync(client);
+        var url = $"/professor/unidade/{contexto.UnidadeId:D}/turmas/{turma.Id:D}/aulas/{aula.Id:D}/confirmacoes";
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync(url));
+
+        Assert.Contains("Alice Barbosa", html, StringComparison.Ordinal);
+        Assert.Contains("Confirmou", html, StringComparison.Ordinal);
+        Assert.Contains("Bruno Silva", html, StringComparison.Ordinal);
+        Assert.Contains("Carla Souza", html, StringComparison.Ordinal);
+        Assert.Contains("Não confirmou", html, StringComparison.Ordinal);
+        Assert.Contains("Confirmados", html, StringComparison.Ordinal);
+        Assert.Contains("1", html, StringComparison.Ordinal);
+    }
+
+    private async Task<TurmaHorario> AdicionarHorarioComIdAsync(Guid organizacaoId,
+        Guid unidadeId, Guid turmaId, Guid professorUnidadeId)
+    {
+        var horario = new TurmaHorario(Guid.NewGuid(), organizacaoId, unidadeId, turmaId,
+            professorUnidadeId, DiaSemana.Terca, new TimeOnly(18), new TimeOnly(19),
+            new DateOnly(2026, 1, 1), null, _application.UsuarioStore.Usuario.Id, DataCriacao);
+        await using var scope = _application.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<BfaDbContext>();
+        db.TurmasHorarios.Add(horario);
+        await db.SaveChangesAsync();
+        return horario;
     }
 
     private async Task AdicionarHorarioAsync(

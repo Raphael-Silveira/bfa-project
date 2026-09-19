@@ -55,6 +55,10 @@ else
                                 <span class="bfa-admin-badge @(aula.IsProgramada ? "is-active" : null)">
                                     @aula.Status
                                 </span>
+                                @if (aula.Status == "Cancelada" && !string.IsNullOrWhiteSpace(aula.MotivoCancelamento))
+                                {
+                                    <small class="bfa-aluno-cancelamento-motivo">@aula.MotivoCancelamento</small>
+                                }
                             </td>
                             <td class="bfa-aluno-participacao">
                                 <span class="bfa-admin-badge @(aula.ConfirmacaoAtiva ? "is-active" : null)">
@@ -95,6 +99,10 @@ else
                     <div class="bfa-admin-mobile-list__details">
                         <span>@aula.Data</span>
                         <span>@aula.HoraInicio – @aula.HoraFim</span>
+                        @if (aula.Status == "Cancelada" && !string.IsNullOrWhiteSpace(aula.MotivoCancelamento))
+                        {
+                            <span class="bfa-aluno-cancelamento-motivo">Motivo: @aula.MotivoCancelamento</span>
+                        }
                         <div class="bfa-aluno-mobile-participacao">
                             <span class="bfa-aluno-mobile-participacao__label">Participação</span>
                             <span class="bfa-admin-badge @(aula.ConfirmacaoAtiva ? "is-active" : null)">

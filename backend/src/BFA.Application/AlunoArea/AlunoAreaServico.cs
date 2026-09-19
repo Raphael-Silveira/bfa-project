@@ -442,6 +442,7 @@ public sealed class AlunoAreaServico(
             a.HoraFim,
             a.TurmaNome,
             a.Status,
+            a.MotivoCancelamento,
             a.ConfirmacaoAtiva,
             AulaAindaElegivel(a.Data, a.HoraInicio, a.Status))).ToList();
     }

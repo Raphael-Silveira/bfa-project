@@ -203,7 +203,7 @@ public sealed class AlunoAreaRepositorio(BfaDbContext dbContext)
                 }).ToArray();
     }
 
-    public async Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, bool ConfirmacaoAtiva)>> ListarAulasAsync(
+    public async Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, string? MotivoCancelamento, bool ConfirmacaoAtiva)>> ListarAulasAsync(
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,
@@ -211,7 +211,7 @@ public sealed class AlunoAreaRepositorio(BfaDbContext dbContext)
         DateOnly dataFim,
         CancellationToken cancellationToken)
     {
-        return await (from aula in dbContext.Aulas.AsNoTracking()
+        var itens = await (from aula in dbContext.Aulas.AsNoTracking()
                       join turma in dbContext.Turmas.AsNoTracking()
                           on new { aula.OrganizacaoId, aula.UnidadeId, aula.TurmaId }
                           equals new
@@ -240,20 +240,26 @@ public sealed class AlunoAreaRepositorio(BfaDbContext dbContext)
                                   && matricula.DataInicio <= aula.Data
                                   && matricula.DataFimPrevista >= aula.Data))
                       orderby aula.Data, aula.HoraInicio
-                      select new ValueTuple<Guid, string, DateOnly, string, string, string, bool>(
-                          aula.Id,
-                          turma.Nome,
-                          aula.Data,
-                          aula.HoraInicio.ToString("HH:mm"),
-                          aula.HoraFim.ToString("HH:mm"),
-                          aula.Status.ToString(),
-                          dbContext.ConfirmacoesAulaAluno.Any(confirmacao =>
+                      select new
+                      {
+                          AulaId = aula.Id,
+                          TurmaNome = turma.Nome,
+                          Data = aula.Data,
+                          HoraInicio = aula.HoraInicio.ToString("HH:mm"),
+                          HoraFim = aula.HoraFim.ToString("HH:mm"),
+                          Status = aula.Status.ToString(),
+                          MotivoCancelamento = aula.MotivoCancelamento,
+                          ConfirmacaoAtiva = dbContext.ConfirmacoesAulaAluno.Any(confirmacao =>
                               confirmacao.OrganizacaoId == organizacaoId
                               && confirmacao.UnidadeId == unidadeId
                               && confirmacao.AulaId == aula.Id
                               && confirmacao.AlunoId == alunoId
-                              && confirmacao.Ativa)))
+                              && confirmacao.Ativa)
+                      })
             .ToListAsync(cancellationToken);
+
+        return itens.Select(item => (item.AulaId, item.TurmaNome, item.Data, item.HoraInicio,
+            item.HoraFim, item.Status, (string?)item.MotivoCancelamento, item.ConfirmacaoAtiva)).ToArray();
     }
 
     public async Task<IReadOnlyList<(DateOnly Data, string TurmaNome, string HoraInicio, string HoraFim, string Status, string? Observacoes)>> ListarPresencasAsync(

@@ -177,8 +177,26 @@ public sealed class AlunoTests
     }
 
     [Theory]
+    [InlineData("(11) 91234-5678", "5511912345678")]
+    [InlineData("11912345678", "5511912345678")]
+    [InlineData("+55 (11) 91234-5678", "5511912345678")]
+    [InlineData("5511912345678", "5511912345678")]
+    [InlineData("(11) 3234-5678", "551132345678")]
+    [InlineData("1132345678", "551132345678")]
+    [InlineData("+55 (11) 3234-5678", "551132345678")]
+    [InlineData("551132345678", "551132345678")]
+    [InlineData("(11) 6123-4567", "551161234567")]
+    public void Telefone_legado_ou_local_e_normalizado_sem_restricao_de_faixa(
+        string entrada,
+        string esperado)
+    {
+        Assert.Equal(esperado, TelefoneBrasileiro.Normalizar(entrada));
+    }
+
+    [Theory]
     [InlineData("55119926822355")]
     [InlineData("+55 (00) 99268-2235")]
+    [InlineData("+351 11 91234-5678")]
     [InlineData("telefone inválido")]
     public void Telefone_brasileiro_invalido_e_rejeitado(string entrada)
     {

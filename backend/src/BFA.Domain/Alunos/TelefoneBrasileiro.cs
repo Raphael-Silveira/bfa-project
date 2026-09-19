@@ -24,9 +24,7 @@ public static class TelefoneBrasileiro
 
         var ddd = int.Parse(digitos.AsSpan(2, 2));
         var numero = digitos[4..];
-        if (ddd is < 11 or > 99
-            || (numero.Length == 8 && numero[0] is < '2' or > '5')
-            || (numero.Length == 9 && numero[0] != '9'))
+        if (ddd is < 11 or > 99 || numero.Length is not (8 or 9))
         {
             throw new ArgumentException(
                 "Informe um telefone brasileiro válido com DDD e DDI 55.",

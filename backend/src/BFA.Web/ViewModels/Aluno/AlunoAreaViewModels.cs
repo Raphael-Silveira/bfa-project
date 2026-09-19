@@ -250,6 +250,7 @@ public sealed class AulaAlunoViewModel
     public required string HoraFim { get; init; }
     public required string TurmaNome { get; init; }
     public required string Status { get; init; }
+    public string? MotivoCancelamento { get; init; }
     public bool ConfirmacaoAtiva { get; init; }
     public bool PodeAlterarConfirmacao { get; init; }
     public bool IsProgramada => Status == "Programada";
@@ -264,6 +265,7 @@ public sealed class AulaAlunoViewModel
             HoraFim = dto.HoraFim,
             TurmaNome = dto.TurmaNome,
             Status = dto.Status,
+            MotivoCancelamento = dto.MotivoCancelamento,
             ConfirmacaoAtiva = dto.ConfirmacaoAtiva,
             PodeAlterarConfirmacao = dto.PodeAlterarConfirmacao
         };

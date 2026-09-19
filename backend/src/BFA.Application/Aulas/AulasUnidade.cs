@@ -538,7 +538,7 @@ public sealed class AulasServico(
             agora,
             existente.Observacoes);
 
-        aula.Cancelar(usuarioId, agora);
+        aula.Cancelar(usuarioId, agora, "Cancelamento administrativo");
 
         var sucesso = await repositorio.AtualizarAsync(aula, cancellationToken);
 

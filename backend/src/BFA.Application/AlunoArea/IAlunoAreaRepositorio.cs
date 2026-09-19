@@ -51,7 +51,7 @@ public interface IAlunoAreaRepositorio
         Guid alunoId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, bool ConfirmacaoAtiva)>> ListarAulasAsync(
+    Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, string? MotivoCancelamento, bool ConfirmacaoAtiva)>> ListarAulasAsync(
         Guid organizacaoId,
         Guid unidadeId,
         Guid alunoId,

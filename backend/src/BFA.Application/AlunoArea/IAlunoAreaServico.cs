@@ -73,6 +73,7 @@ public sealed record AulaAlunoDto(
     string HoraFim,
     string TurmaNome,
     string Status,
+    string? MotivoCancelamento,
     bool ConfirmacaoAtiva,
     bool PodeAlterarConfirmacao);
 

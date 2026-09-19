@@ -10,15 +10,6 @@ public static class CpfIdentificador
             return false;
         }
 
-        foreach (var caractere in valor)
-        {
-            if (!char.IsDigit(caractere)
-                && caractere is not ('.' or '-' or ' '))
-            {
-                return false;
-            }
-        }
-
         var digitos = new string(valor.Where(char.IsDigit).ToArray());
         if (digitos.Length != 11)
         {

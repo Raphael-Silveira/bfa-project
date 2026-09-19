@@ -3,6 +3,7 @@ namespace BFA.Domain.Aulas;
 public sealed class Aula
 {
     public const int ObservacoesTamanhoMaximo = 500;
+    public const int MotivoCancelamentoTamanhoMaximo = 500;
 
     private Aula()
     {
@@ -23,7 +24,10 @@ public sealed class Aula
         Guid criadoPorUsuarioId,
         DateTime criadoEmUtc,
         Guid atualizadoPorUsuarioId,
-        DateTime atualizadoEmUtc)
+        DateTime atualizadoEmUtc,
+        string? motivoCancelamento = null,
+        DateTime? canceladaEmUtc = null,
+        Guid? canceladaPorUsuarioId = null)
     {
         ValidarIdentificador(id, nameof(id));
         ValidarIdentificador(organizacaoId, nameof(organizacaoId));
@@ -34,6 +38,7 @@ public sealed class Aula
         ValidarIdentificador(atualizadoPorUsuarioId, nameof(atualizadoPorUsuarioId));
         ValidarDataUtc(criadoEmUtc, nameof(criadoEmUtc));
         ValidarDataUtc(atualizadoEmUtc, nameof(atualizadoEmUtc));
+        ValidarCancelamento(status, motivoCancelamento, canceladaEmUtc, canceladaPorUsuarioId);
         ValidarIntervalo(horaInicio, horaFim);
         ValidarCapacidade(capacidade);
 
@@ -53,7 +58,10 @@ public sealed class Aula
             CriadoPorUsuarioId = criadoPorUsuarioId,
             CriadoEmUtc = criadoEmUtc,
             AtualizadoPorUsuarioId = atualizadoPorUsuarioId,
-            AtualizadoEmUtc = atualizadoEmUtc
+            AtualizadoEmUtc = atualizadoEmUtc,
+            MotivoCancelamento = NormalizarMotivoCancelamento(motivoCancelamento),
+            CanceladaEmUtc = canceladaEmUtc,
+            CanceladaPorUsuarioId = canceladaPorUsuarioId
         };
     }
 
@@ -128,6 +136,12 @@ public sealed class Aula
 
     public DateTime AtualizadoEmUtc { get; private set; }
 
+    public string? MotivoCancelamento { get; private set; }
+
+    public DateTime? CanceladaEmUtc { get; private set; }
+
+    public Guid? CanceladaPorUsuarioId { get; private set; }
+
     public void Concluir(Guid atualizadoPorUsuarioId, DateTime atualizadoEmUtc)
     {
         ValidarAtualizacao(atualizadoPorUsuarioId, atualizadoEmUtc);
@@ -143,7 +157,8 @@ public sealed class Aula
         AtualizadoEmUtc = atualizadoEmUtc;
     }
 
-    public void Cancelar(Guid atualizadoPorUsuarioId, DateTime atualizadoEmUtc)
+    public void Cancelar(Guid atualizadoPorUsuarioId, DateTime atualizadoEmUtc,
+        string motivoCancelamento)
     {
         ValidarAtualizacao(atualizadoPorUsuarioId, atualizadoEmUtc);
 
@@ -153,9 +168,16 @@ public sealed class Aula
                 "Apenas aulas programadas podem ser canceladas.");
         }
 
+        var motivo = NormalizarMotivoCancelamento(motivoCancelamento);
+        if (motivo is null)
+            throw new ArgumentException("O motivo do cancelamento deve ser informado.", nameof(motivoCancelamento));
+
         Status = StatusAula.Cancelada;
         AtualizadoPorUsuarioId = atualizadoPorUsuarioId;
         AtualizadoEmUtc = atualizadoEmUtc;
+        MotivoCancelamento = motivo;
+        CanceladaEmUtc = atualizadoEmUtc;
+        CanceladaPorUsuarioId = atualizadoPorUsuarioId;
     }
 
     public void AtualizarObservacoes(
@@ -186,6 +208,29 @@ public sealed class Aula
         }
 
         return observacoesNormalizadas;
+    }
+
+    private static string? NormalizarMotivoCancelamento(string? motivo)
+    {
+        if (string.IsNullOrWhiteSpace(motivo)) return null;
+        var normalizado = motivo.Trim();
+        if (normalizado.Length > MotivoCancelamentoTamanhoMaximo)
+            throw new ArgumentException(
+                $"O motivo do cancelamento deve possuir no maximo {MotivoCancelamentoTamanhoMaximo} caracteres.",
+                nameof(motivo));
+        return normalizado;
+    }
+
+    private static void ValidarCancelamento(StatusAula status, string? motivo,
+        DateTime? canceladaEmUtc, Guid? canceladaPorUsuarioId)
+    {
+        if (status != StatusAula.Cancelada) return;
+        if (NormalizarMotivoCancelamento(motivo) is null
+            || canceladaEmUtc is null
+            || canceladaPorUsuarioId is null
+            || canceladaPorUsuarioId == Guid.Empty)
+            throw new ArgumentException("A auditoria do cancelamento deve ser completa.");
+        ValidarDataUtc(canceladaEmUtc.Value, nameof(canceladaEmUtc));
     }
 
     private static void ValidarIntervalo(TimeOnly horaInicio, TimeOnly horaFim)

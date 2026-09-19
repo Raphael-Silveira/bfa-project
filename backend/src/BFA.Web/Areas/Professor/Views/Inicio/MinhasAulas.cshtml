@@ -1,0 +1,116 @@
+@model BFA.Web.ViewModels.Professor.ProfessorMinhasAulasViewModel
+@using BFA.Domain.Aulas
+@{
+    ViewData["Title"] = "Minhas Aulas";
+    Layout = "_ProfessorLayout";
+    var statusTexto = Model.Status switch
+    {
+        StatusAula.Programada => "Programadas",
+        StatusAula.Concluida => "Concluídas",
+        StatusAula.Cancelada => "Canceladas",
+        _ => "Todas"
+    };
+}
+
+<header class="bfa-admin-page-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Agenda do Professor</p>
+        <h1 class="bfa-admin-page-header__title">Minhas aulas</h1>
+        <p class="bfa-admin-page-header__description">Acompanhe sua agenda, chamadas e aulas canceladas.</p>
+    </div>
+</header>
+
+<section class="bfa-admin-card bfa-professor-lessons-filters" aria-labelledby="filtros-aulas">
+    <div class="bfa-professor-section-heading">
+        <div><p>Consulta</p><h2 id="filtros-aulas">Filtrar aulas</h2></div>
+        <span class="bfa-professor-filter-summary">@Model.Pagina.TotalItens aulas</span>
+    </div>
+    <form method="get" action="/professor/unidade/@Model.UnidadeId/aulas" class="bfa-professor-lessons-filter-form">
+        <label>Status<select name="status">
+            <option value="Programada" selected="@(Model.Status == StatusAula.Programada && !Model.Todas ? "selected" : null)">Programadas</option>
+            <option value="Concluida" selected="@(Model.Status == StatusAula.Concluida ? "selected" : null)">Concluídas</option>
+            <option value="Cancelada" selected="@(Model.Status == StatusAula.Cancelada ? "selected" : null)">Canceladas</option>
+            <option value="Todas" selected="@(Model.Todas ? "selected" : null)">Todas</option>
+        </select></label>
+        <label>Data inicial<div class="bfa-admin-date-field" data-bfa-date-field><input class="form-control bfa-form-control" type="text" name="dataInicial" value="@Model.DataInicial" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" data-bfa-date-input /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data inicial" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button></div></label>
+        <span class="bfa-professor-date-separator">até</span>
+        <label>Data final<div class="bfa-admin-date-field" data-bfa-date-field><input class="form-control bfa-form-control" type="text" name="dataFinal" value="@Model.DataFinal" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" data-bfa-date-input /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data final" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1 1V6a1 1 0 0 1 1-1Z"></path></svg></button></div></label>
+        <div class="bfa-professor-filter-actions"><button class="bfa-btn-primary bfa-admin-button" type="submit">Filtrar</button><a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/aulas">Limpar</a></div>
+    </form>
+    <div class="bfa-professor-quick-filters" aria-label="Filtros rápidos">
+        <a href="/professor/unidade/@Model.UnidadeId/aulas?status=Programada&dataInicial=@Model.DataInicial&dataFinal=@Model.DataFinal" class="@(Model.Status == StatusAula.Programada && !Model.Todas ? "is-active" : null)">Programadas</a>
+        <a href="/professor/unidade/@Model.UnidadeId/aulas?status=Cancelada&dataInicial=@Model.DataInicial&dataFinal=@Model.DataFinal" class="@(Model.Status == StatusAula.Cancelada ? "is-active" : null)">Canceladas</a>
+        <a href="/professor/unidade/@Model.UnidadeId/aulas?status=Concluida&dataInicial=@Model.DataInicial&dataFinal=@Model.DataFinal" class="@(Model.Status == StatusAula.Concluida ? "is-active" : null)">Concluídas</a>
+        <a href="/professor/unidade/@Model.UnidadeId/aulas?status=Todas&dataInicial=@Model.DataInicial&dataFinal=@Model.DataFinal" class="@(Model.Todas ? "is-active" : null)">Todas</a>
+    </div>
+</section>
+
+@if (Model.Pagina.Aulas.Count == 0)
+{
+    <section class="bfa-admin-empty-state" role="status"><h2>Nenhuma aula encontrada.</h2><p>Não há aulas @statusTexto.ToLowerInvariant() para os filtros selecionados.</p></section>
+}
+else
+{
+    <section class="bfa-professor-lessons-grid" aria-label="Lista de minhas aulas">
+        @foreach (var aula in Model.Pagina.Aulas)
+        {
+            var cancelada = aula.Status == StatusAula.Cancelada;
+            var concluida = aula.Status == StatusAula.Concluida;
+            var textoStatus = cancelada ? "Cancelada" : concluida ? "Concluída" : "Programada";
+            <article class="bfa-admin-card bfa-professor-lesson-card @(cancelada ? "is-cancelled" : null)">
+                <div class="bfa-professor-lesson-card__top"><p>@aula.Data.ToString("dd/MM/yyyy")</p><span class="bfa-admin-badge @(cancelada ? "is-inactive" : concluida ? null : "is-active")">@textoStatus</span></div>
+                <h2>@aula.TurmaNome</h2>
+                <strong>@aula.HoraInicio.ToString("HH:mm") – @aula.HoraFim.ToString("HH:mm")</strong>
+                @if (cancelada)
+                {
+                    <div class="bfa-professor-lesson-card__reason"><strong>Motivo:</strong> @(aula.MotivoCancelamento ?? "Não informado") @if (aula.CanceladaEmUtc is { } canceladaEm) { <small>Cancelada em @canceladaEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</small> }</div>
+                }
+                <div class="bfa-professor-lesson-card__actions">
+                    <a class="@(cancelada ? "bfa-btn-secondary" : "bfa-btn-primary") bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas/@aula.TurmaId/aulas/@aula.AulaId/confirmacoes">@(cancelada ? "Ver detalhes" : "Ver aula")</a>
+                    <a class="bfa-professor-lesson-card__secondary-action" href="/professor/unidade/@Model.UnidadeId/turmas/@aula.TurmaId">Detalhes da turma</a>
+                </div>
+            </article>
+        }
+    </section>
+    @if (Model.Pagina.TotalPaginas > 1)
+    {
+        <nav class="bfa-professor-pagination" aria-label="Paginação das aulas">
+            @for (var pagina = 1; pagina <= Model.Pagina.TotalPaginas; pagina++)
+            {
+                <a class="@(pagina == Model.Pagina.PaginaAtual ? "is-active" : null)" href="/professor/unidade/@Model.UnidadeId/aulas?status=@(Model.Todas ? "Todas" : Model.Status)&dataInicial=@Model.DataInicial&dataFinal=@Model.DataFinal&pagina=@pagina">@pagina</a>
+            }
+        </nav>
+    }
+}
+
+@section Styles {
+<style>
+    .bfa-professor-lessons-filters { display:grid; gap:1rem; margin-bottom:1.25rem; }
+    .bfa-professor-filter-summary { color:var(--bfa-text-secondary); font-size:.85rem; }
+    .bfa-professor-lessons-filter-form { display:grid; grid-template-columns:1.2fr 1fr auto 1fr auto; align-items:end; gap:.75rem; }
+    .bfa-professor-lessons-filter-form label { display:grid; gap:.35rem; color:var(--bfa-text-secondary); font-size:.78rem; font-weight:700; }
+    .bfa-professor-lessons-filter-form input, .bfa-professor-lessons-filter-form select { min-height:2.75rem; padding:.55rem .7rem; border:1px solid var(--bfa-border); border-radius:.5rem; color:var(--bfa-text); background:rgba(255,255,255,.03); }
+    .bfa-professor-date-separator { align-self:center; padding-top:1.25rem; color:var(--bfa-text-secondary); }
+    .bfa-professor-filter-actions { display:flex; gap:.5rem; }
+    .bfa-professor-quick-filters { display:flex; flex-wrap:wrap; gap:.5rem; }
+    .bfa-professor-quick-filters a, .bfa-professor-pagination a { padding:.4rem .7rem; border:1px solid var(--bfa-border); border-radius:999px; color:var(--bfa-text-secondary); text-decoration:none; }
+    .bfa-professor-quick-filters a.is-active, .bfa-professor-pagination a.is-active { border-color:var(--bfa-accent); color:var(--bfa-text); background:rgba(255,193,7,.12); }
+    .bfa-professor-lessons-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr)); gap:1rem; }
+    .bfa-professor-lesson-card { display:grid; gap:.65rem; }
+    .bfa-professor-lesson-card.is-cancelled { border-color:rgba(220,130,130,.35); background:linear-gradient(145deg,rgba(92,44,48,.22),rgba(29,32,35,.96)); }
+    .bfa-professor-lesson-card__top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; }
+    .bfa-professor-lesson-card__top p, .bfa-professor-lesson-card h2 { margin:0; }
+    .bfa-professor-lesson-card__top p { color:var(--bfa-accent); font-weight:700; }
+    .bfa-professor-lesson-card__reason { display:grid; gap:.3rem; color:var(--bfa-text-secondary); font-size:.88rem; line-height:1.4; }
+    .bfa-professor-lesson-card__reason small { color:var(--bfa-text-muted); }
+    .bfa-professor-lesson-card__actions { display:flex; align-items:center; flex-wrap:wrap; gap:.7rem; margin-top:.25rem; }
+    .bfa-professor-lesson-card__secondary-action { color:var(--bfa-text-secondary); font-size:.85rem; font-weight:700; text-decoration:underline; text-underline-offset:.2rem; }
+    .bfa-professor-lesson-card__secondary-action:hover { color:var(--bfa-text); }
+    .bfa-professor-pagination { display:flex; justify-content:center; flex-wrap:wrap; gap:.45rem; margin-top:1.25rem; }
+    @@media(max-width:52rem) { .bfa-professor-lessons-filter-form { grid-template-columns:1fr 1fr; } .bfa-professor-date-separator { display:none; } .bfa-professor-filter-actions { grid-column:1/-1; } }
+    @@media(max-width:38rem) { .bfa-professor-lessons-filter-form { grid-template-columns:1fr; } .bfa-professor-filter-actions { grid-column:auto; } .bfa-professor-filter-actions .bfa-admin-button { flex:1; } }
+</style>
+}
+@section Scripts {
+    <script src="~/js/bfa-date-field.js" asp-append-version="true"></script>
+}

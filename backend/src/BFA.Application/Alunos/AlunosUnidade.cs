@@ -1,4 +1,5 @@
 using BFA.Application.Unidades;
+using BFA.Application.Identidade;
 using BFA.Domain.Alunos;
 using BFA.Domain.Matriculas;
 using Microsoft.Extensions.Logging;
@@ -15,10 +16,21 @@ public enum EstadoAlunosUnidade
     DataNascimentoInvalida,
     MenorSemResponsavel,
     DadosInvalidos,
+    CpfDuplicado,
+    UsuarioIncompativel,
     ResponsavelNaoEncontrado,
     ResponsavelJaVinculado,
     VinculoJaInativo,
     VinculoJaAtivo,
+    Falha
+}
+
+public enum EstadoPersistenciaAtualizacaoAluno
+{
+    Sucesso,
+    CpfDuplicado,
+    CpfNaoInformado,
+    UsuarioIncompativel,
     Falha
 }
 
@@ -103,6 +115,7 @@ public sealed record ResultadoAlunosUnidade<T>(
 
 public sealed record AlunoDadosEdicao(
     Guid AlunoId,
+    Guid? UsuarioId,
     string NomeCompleto,
     DateOnly DataNascimento,
     string? Cpf,
@@ -149,7 +162,8 @@ public interface IAlunosRepositorio
         Guid organizacaoId, Guid unidadeId, Guid alunoId,
         CancellationToken cancellationToken);
 
-    Task<bool> PersistirAtualizacaoAsync(Aluno aluno, CancellationToken cancellationToken);
+    Task<EstadoPersistenciaAtualizacaoAluno> PersistirAtualizacaoAsync(
+        Aluno aluno, Guid? usuarioId, CancellationToken cancellationToken);
 
     // Responsavel CRUD
     Task<IReadOnlyList<ResponsavelAlunoResumo>> ListarResponsaveisAlunoAsync(
@@ -387,6 +401,19 @@ public sealed class AlunosServico(
             }
         }
 
+        if (!CpfIdentificador.TentarNormalizar(cpf, out var cpfNormalizado)
+            && !string.IsNullOrWhiteSpace(cpf))
+        {
+            logger.LogWarning("AtualizarDados rejeitado: CPF inválido");
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+        }
+
+        if (dadosExistentes.Aluno.UsuarioId.HasValue && cpfNormalizado.Length == 0)
+        {
+            logger.LogWarning("AtualizarDados rejeitado: CPF obrigatório para aluno com Portal");
+            return new(EstadoAlunosUnidade.DadosInvalidos);
+        }
+
         var alunoParaAtualizar = new Aluno(
             alunoId,
             contexto.Valor.OrganizacaoId,
@@ -394,21 +421,30 @@ public sealed class AlunosServico(
             dataNascimento,
             dataCivilAtual,
             agoraUtc,
-            cpf: cpf,
+            cpf: cpfNormalizado.Length == 0 ? null : cpfNormalizado,
             telefone: telefone,
             email: email);
 
-        var sucesso = await repositorio.PersistirAtualizacaoAsync(
-            alunoParaAtualizar, cancellationToken);
+        var persistencia = await repositorio.PersistirAtualizacaoAsync(
+            alunoParaAtualizar, dadosExistentes.Aluno.UsuarioId, cancellationToken);
 
-        if (sucesso)
+        if (persistencia == EstadoPersistenciaAtualizacaoAluno.Sucesso)
         {
             logger.LogInformation("AtualizarDados concluído para aluno {AlunoId}", alunoId);
         }
 
-        return sucesso
-            ? new(EstadoAlunosUnidade.Sucesso, alunoId, contexto.Valor)
-            : new(EstadoAlunosUnidade.Falha);
+        return persistencia switch
+        {
+            EstadoPersistenciaAtualizacaoAluno.Sucesso =>
+                new(EstadoAlunosUnidade.Sucesso, alunoId, contexto.Valor),
+            EstadoPersistenciaAtualizacaoAluno.CpfDuplicado =>
+                new(EstadoAlunosUnidade.CpfDuplicado),
+            EstadoPersistenciaAtualizacaoAluno.CpfNaoInformado =>
+                new(EstadoAlunosUnidade.DadosInvalidos),
+            EstadoPersistenciaAtualizacaoAluno.UsuarioIncompativel =>
+                new(EstadoAlunosUnidade.UsuarioIncompativel),
+            _ => new(EstadoAlunosUnidade.Falha)
+        };
     }
 
     public async Task<ResultadoAlunosUnidade<IReadOnlyList<ResponsavelAlunoResumo>>> ListarResponsaveisAsync(

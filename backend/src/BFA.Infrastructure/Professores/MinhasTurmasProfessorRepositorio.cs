@@ -1,6 +1,8 @@
 using BFA.Application.Professores.Turmas;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using BFA.Domain.Aulas;
+using BFA.Domain.Matriculas;
 
 namespace BFA.Infrastructure.Professores;
 
@@ -111,9 +113,83 @@ public sealed class MinhasTurmasProfessorRepositorio(BfaDbContext dbContext)
             .Select(item => item.Horario).ToArray();
         var historico = horarios.Where(item => !EhAtual(item.Horario))
             .Select(item => item.Horario).ToArray();
+        var horarioIds = atuais.Select(item => item.Id).ToArray();
+        var alunos = new List<(Guid Id, string NomeCompleto, string? Apelido, string? Telefone)>();
+        if (horarioIds.Length > 0)
+        {
+            var alunosRows = await (from horario in dbContext.MatriculasHorarios.AsNoTracking()
+                                    join matricula in dbContext.Matriculas.AsNoTracking()
+                                        on horario.MatriculaId equals matricula.Id
+                                    join aluno in dbContext.Alunos.AsNoTracking()
+                                        on matricula.AlunoId equals aluno.Id
+                                    where horario.OrganizacaoId == organizacaoId
+                                        && horario.UnidadeId == unidadeId
+                                        && horario.VigenciaFim == null
+                                        && horarioIds.Contains(horario.TurmaHorarioId)
+                                        && matricula.OrganizacaoId == organizacaoId
+                                        && matricula.UnidadeId == unidadeId
+                                        && matricula.Status == StatusMatricula.Ativa
+                                        && matricula.DataInicio <= dataAtual
+                                        && matricula.DataFimPrevista >= dataAtual
+                                        && aluno.OrganizacaoId == organizacaoId
+                                    select new { aluno.Id, aluno.NomeCompleto, aluno.Apelido, aluno.Telefone })
+                .ToArrayAsync(cancellationToken);
+            alunos.AddRange(alunosRows.Select(item =>
+                (item.Id, item.NomeCompleto, (string?)item.Apelido, (string?)item.Telefone)));
+        }
+        var alunosResumo = alunos
+            .GroupBy(item => item.Id)
+            .Select(grupo => grupo.First())
+            .OrderBy(item => item.NomeCompleto)
+            .ThenBy(item => item.Id)
+            .Select(item => new AlunoTurmaProfessorResumo(
+                item.Id, item.NomeCompleto, item.Apelido, item.Telefone))
+            .ToArray();
         return new TurmaProfessorDetalhe(
             turma.Id, turma.Nome, turma.Capacidade, turma.Ativo,
-            turma.NomeProfessor, atuais, historico);
+            turma.NomeProfessor, atuais, historico, alunosResumo);
+    }
+
+    public async Task<IReadOnlyList<AulaProfessorResumo>> ListarProximasAulasAsync(
+        Guid organizacaoId, Guid unidadeId, Guid professorUnidadeId,
+        DateOnly dataAtual, int limite, CancellationToken cancellationToken)
+    {
+        var aulas = await (from aula in dbContext.Aulas.AsNoTracking()
+                           join turma in dbContext.Turmas.AsNoTracking() on aula.TurmaId equals turma.Id
+                           where aula.OrganizacaoId == organizacaoId && aula.UnidadeId == unidadeId
+                               && turma.OrganizacaoId == organizacaoId && turma.UnidadeId == unidadeId
+                               && turma.ProfessorUnidadeId == professorUnidadeId
+                               && aula.Data >= dataAtual && aula.Status == StatusAula.Programada
+                           orderby aula.Data, aula.HoraInicio
+                           select new { aula.Id, aula.TurmaId, aula.TurmaHorarioId, turma.Nome,
+                               aula.Data, aula.HoraInicio, aula.HoraFim, aula.Status })
+            .Take(limite).ToArrayAsync(cancellationToken);
+        if (aulas.Length == 0) return [];
+
+        var horarioIds = aulas.Select(item => item.TurmaHorarioId).Distinct().ToArray();
+        var matriculas = await (from horario in dbContext.MatriculasHorarios.AsNoTracking()
+                                join matricula in dbContext.Matriculas.AsNoTracking()
+                                    on horario.MatriculaId equals matricula.Id
+                                where horario.OrganizacaoId == organizacaoId && horario.UnidadeId == unidadeId
+                                    && horario.VigenciaFim == null && horarioIds.Contains(horario.TurmaHorarioId)
+                                    && matricula.OrganizacaoId == organizacaoId && matricula.UnidadeId == unidadeId
+                                    && matricula.Status == StatusMatricula.Ativa
+                                select new { horario.TurmaHorarioId, matricula.AlunoId,
+                                    matricula.DataInicio, matricula.DataFimPrevista }).ToArrayAsync(cancellationToken);
+        var confirmacoes = await dbContext.ConfirmacoesAulaAluno.AsNoTracking()
+            .Where(item => item.OrganizacaoId == organizacaoId && item.UnidadeId == unidadeId
+                && aulas.Select(aula => aula.Id).Contains(item.AulaId) && item.Ativa)
+            .Select(item => new { item.AulaId, item.AlunoId }).ToArrayAsync(cancellationToken);
+
+        return aulas.Select(aula =>
+        {
+            var ids = matriculas.Where(item => item.TurmaHorarioId == aula.TurmaHorarioId
+                && item.DataInicio <= aula.Data && item.DataFimPrevista >= aula.Data)
+                .Select(item => item.AlunoId).Distinct().ToHashSet();
+            var confirmados = confirmacoes.Count(item => item.AulaId == aula.Id && ids.Contains(item.AlunoId));
+            return new AulaProfessorResumo(aula.Id, aula.TurmaId, aula.Nome, aula.Data,
+                aula.HoraInicio, aula.HoraFim, ids.Count, confirmados, aula.Status);
+        }).ToArray();
     }
 
     private async Task<IReadOnlyList<HorarioComTurma>> ConsultarHorariosAsync(

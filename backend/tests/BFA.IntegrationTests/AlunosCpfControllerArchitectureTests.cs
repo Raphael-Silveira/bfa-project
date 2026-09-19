@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using BFA.Web.Areas.Unidade.Controllers;
 using BFA.Web.ViewModels.Unidade;
 using Microsoft.AspNetCore.Authorization;
@@ -82,6 +83,42 @@ public sealed class AlunosCpfControllerArchitectureTests
         Assert.Contains("CpfIdentificador.TentarNormalizar", repositorio, StringComparison.Ordinal);
         Assert.Contains("a.Cpf == cpf", repositorio, StringComparison.Ordinal);
         Assert.Contains("a.NomeCompleto.ToUpper().Contains(termo)", repositorio, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Edicao_de_CPF_normaliza_antes_de_persistir_e_sincroniza_o_portal()
+    {
+        var servico = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(),
+            "backend",
+            "src",
+            "BFA.Application",
+            "Alunos",
+            "AlunosUnidade.cs"));
+        var repositorio = File.ReadAllText(Path.Combine(
+            FindRepositoryRoot(),
+            "backend",
+            "src",
+            "BFA.Infrastructure",
+            "Alunos",
+            "AlunosRepositorio.cs"));
+
+        Assert.Contains("CpfIdentificador.TentarNormalizar", servico, StringComparison.Ordinal);
+        Assert.Contains("cpfNormalizado", servico, StringComparison.Ordinal);
+        Assert.Contains("SetUserNameAsync", repositorio, StringComparison.Ordinal);
+        Assert.Contains("BeginTransactionAsync", repositorio, StringComparison.Ordinal);
+        Assert.Contains("FindByNameAsync", repositorio, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Campo_de_edicao_de_CPF_aceita_a_mascara_visual_sem_relaxar_o_limite()
+    {
+        var viewModel = typeof(EditarAlunoViewModel);
+        var cpf = viewModel.GetProperty(nameof(EditarAlunoViewModel.Cpf));
+        var limite = Assert.Single(cpf!.GetCustomAttributes(
+            typeof(StringLengthAttribute), inherit: true).Cast<StringLengthAttribute>());
+
+        Assert.Equal(14, limite.MaximumLength);
     }
 
     [Fact]

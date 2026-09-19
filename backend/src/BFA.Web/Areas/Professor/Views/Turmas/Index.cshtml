@@ -36,7 +36,7 @@ else
                 <dl class="bfa-minhas-turmas-card__meta">
                     <div>
                         <dt>Capacidade</dt>
-                        <dd>@turma.Capacidade @(turma.Capacidade == 1 ? "aluno" : "alunos")</dd>
+                        <dd>Capacidade: @turma.Capacidade @(turma.Capacidade == 1 ? "vaga" : "vagas")</dd>
                     </div>
                 </dl>
 
@@ -48,7 +48,25 @@ else
                     }
                     else
                     {
-                        <partial name="_Horarios" model="turma.HorariosAtuais" />
+                        @foreach (var horario in turma.HorariosAtuais.Take(2))
+                        {
+                            var dia = horario.DiaSemana switch
+                            {
+                                BFA.Domain.Turmas.DiaSemana.Segunda => "Segunda-feira",
+                                BFA.Domain.Turmas.DiaSemana.Terca => "Terça-feira",
+                                BFA.Domain.Turmas.DiaSemana.Quarta => "Quarta-feira",
+                                BFA.Domain.Turmas.DiaSemana.Quinta => "Quinta-feira",
+                                BFA.Domain.Turmas.DiaSemana.Sexta => "Sexta-feira",
+                                BFA.Domain.Turmas.DiaSemana.Sabado => "Sábado",
+                                BFA.Domain.Turmas.DiaSemana.Domingo => "Domingo",
+                                _ => horario.DiaSemana.ToString()
+                            };
+                            <div>@dia · @horario.HoraInicio.ToString("HH:mm") às @horario.HoraFim.ToString("HH:mm") <small>Desde @horario.VigenciaInicio.ToString("dd/MM/yyyy")</small></div>
+                        }
+                        @if (turma.HorariosAtuais.Count > 2)
+                        {
+                            <div class="bfa-minhas-turmas-muted">+ @(turma.HorariosAtuais.Count - 2) horários</div>
+                        }
                     }
                 </section>
 

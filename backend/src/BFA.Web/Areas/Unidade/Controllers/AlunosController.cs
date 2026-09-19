@@ -317,6 +317,13 @@ public sealed class AlunosController(
         model.Email = Request.Form["Email"].FirstOrDefault();
         model.Cpf = Request.Form["Cpf"].FirstOrDefault();
 
+        // O modelo foi reconstruído com os valores autorizados do cadastro e os
+        // valores postados. O ModelState original pode conter falhas do binder
+        // para DateOnly/máscara; revalidar o modelo final evita interromper o
+        // fluxo antes da normalização server-side do CPF.
+        ModelState.Clear();
+        TryValidateModel(model);
+
         if (!ModelState.IsValid)
             return View(model);
 
@@ -351,6 +358,18 @@ public sealed class AlunosController(
         {
             ModelState.AddModelError(string.Empty,
                 "Revise os dados informados.");
+            return View(model);
+        }
+        if (resultado.Estado == EstadoAlunosUnidade.CpfDuplicado)
+        {
+            ModelState.AddModelError(nameof(model.Cpf),
+                "Já existe outro aluno com este CPF na Organização.");
+            return View(model);
+        }
+        if (resultado.Estado == EstadoAlunosUnidade.UsuarioIncompativel)
+        {
+            ModelState.AddModelError(string.Empty,
+                "Não foi possível sincronizar o CPF com o acesso ao Portal do aluno.");
             return View(model);
         }
         if (resultado.Estado == EstadoAlunosUnidade.MenorSemResponsavel)

@@ -8,7 +8,7 @@
         <p class="bfa-admin-page-header__description">Detalhes da turma em @Model.NomeUnidade.</p>
     </div>
     <div class="bfa-admin-page-header__actions">
-        <a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Voltar às turmas</a>
+        <a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/aulas">Voltar para Minhas Aulas</a>
     </div>
 </header>
 
@@ -24,15 +24,86 @@
 </section>
 
 <div class="bfa-professor-detail-grid">
-    <section class="bfa-admin-card bfa-professor-detail-card">
-        <p class="bfa-professor-detail-card__eyebrow">Resumo</p>
-        <dl class="bfa-professor-detail-card__meta">
-            <div><dt>Professor responsável</dt><dd>@Model.Turma.NomeProfessor</dd></div>
-            <div><dt>Capacidade</dt><dd>@Model.Turma.Capacidade @(Model.Turma.Capacidade == 1 ? "aluno" : "alunos")</dd></div>
+    <section class="bfa-admin-card bfa-professor-class-summary" aria-labelledby="resumo-turma">
+        <div class="bfa-professor-section-heading">
+            <div>
+                <p class="bfa-professor-detail-card__eyebrow">Resumo da turma</p>
+                <h2 id="resumo-turma" class="bfa-professor-detail-card__title">Visão geral</h2>
+            </div>
+        </div>
+        <dl class="bfa-professor-class-summary__items">
+            <div>
+                <dt>Professor responsável</dt>
+                <dd>@Model.Turma.NomeProfessor</dd>
+            </div>
+            <div>
+                <dt>Alunos matriculados</dt>
+                <dd>@Model.Turma.Alunos.Count</dd>
+            </div>
+            <div>
+                <dt>Capacidade</dt>
+                <dd>@Model.Turma.Capacidade vagas</dd>
+            </div>
         </dl>
     </section>
 
-    <section class="bfa-admin-card bfa-professor-detail-card" aria-labelledby="horarios-atuais">
+    <section class="bfa-admin-card bfa-professor-students-card" aria-labelledby="alunos-da-turma">
+        <div class="bfa-professor-section-heading">
+            <div>
+                <p class="bfa-professor-detail-card__eyebrow">Composição atual</p>
+                <h2 id="alunos-da-turma" class="bfa-professor-detail-card__title">Alunos da turma</h2>
+            </div>
+            <span class="bfa-professor-student-count">@Model.Alunos.Count @(Model.Alunos.Count == 1 ? "aluno" : "alunos")</span>
+        </div>
+        @if (Model.Alunos.Count > 0)
+        {
+            <div class="bfa-professor-student-search">
+                <label for="buscar-aluno">Buscar aluno</label>
+                <input id="buscar-aluno" class="bfa-admin-input" type="search"
+                       placeholder="Digite o nome do aluno" autocomplete="off" />
+            </div>
+            <div id="lista-alunos" class="bfa-professor-students-list">
+                @foreach (var aluno in Model.Alunos)
+                {
+                    <article class="bfa-professor-student-item" data-student-name="@(aluno.NomeCompleto) @(aluno.Apelido)">
+                        <span class="bfa-professor-student-item__avatar" aria-hidden="true">@aluno.NomeCompleto[0]</span>
+                        <div class="bfa-professor-student-item__copy">
+                            <div class="bfa-professor-student-item__name">@aluno.NomeCompleto</div>
+                            @if (!string.IsNullOrWhiteSpace(aluno.Apelido))
+                            {
+                                <span class="bfa-professor-student-item__nickname">@aluno.Apelido</span>
+                            }
+                            <div class="bfa-professor-student-item__phone">
+                                @(aluno.TelefoneFormatado ?? "Telefone não informado")
+                            </div>
+                        </div>
+                        @if (aluno.TelefoneWhatsApp is not null)
+                        {
+                            <a class="bfa-professor-student-item__whatsapp"
+                               href="https://wa.me/@aluno.TelefoneWhatsApp"
+                               target="_blank" rel="noopener noreferrer"
+                               aria-label="Abrir WhatsApp de @aluno.NomeCompleto"
+                               title="Abrir conversa no WhatsApp">
+                                <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                                    <path d="M20.5 3.5A11.8 11.8 0 0 0 12.1 0C5.6 0 .3 5.3.3 11.8c0 2.1.6 4.1 1.6 5.8L.2 24l6.6-1.7a11.8 11.8 0 0 0 5.3 1.3h.1c6.5 0 11.8-5.3 11.8-11.8 0-3.2-1.2-6.1-3.5-8.3Zm-8.4 18.1h-.1c-1.7 0-3.4-.5-4.8-1.4l-.3-.2-3.9 1 1-3.8-.2-.3a9.8 9.8 0 1 1 8.3 4.7Zm5.4-7.3c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.5-1.6-.9-.8-1.6-1.8-1.8-2.1-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.2-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5H7c-.2 0-.5.1-.7.3-.2.2-1 1-1 2.5s1 2.9 1.1 3.1c.2.2 2 3.1 4.8 4.3.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.1-.3-.2-.6-.3Z" />
+                                </svg>
+                            </a>
+                        }
+                    </article>
+                }
+            </div>
+            <p id="alunos-sem-resultado" class="bfa-minhas-turmas-muted" hidden>Nenhum aluno encontrado.</p>
+        }
+        else
+        {
+            <div class="bfa-professor-empty-state">
+                <strong>Nenhum aluno matriculado no momento.</strong>
+                <span>A composição da turma aparecerá aqui quando houver uma matrícula ativa.</span>
+            </div>
+        }
+    </section>
+
+    <section class="bfa-admin-card bfa-professor-detail-card bfa-professor-current-schedules" aria-labelledby="horarios-atuais">
         <p class="bfa-professor-detail-card__eyebrow">Recorrência vigente</p>
         <h2 id="horarios-atuais" class="bfa-professor-detail-card__title">Horários atuais</h2>
         @if (Model.Turma.HorariosAtuais.Count == 0)
@@ -101,8 +172,182 @@
 
     .bfa-professor-detail-grid {
         display: grid;
+        width: 100%;
+        min-width: 0;
         gap: 1rem;
     }
+
+    .bfa-professor-class-summary,
+    .bfa-professor-students-card,
+    .bfa-professor-detail-card {
+        display: grid;
+        min-width: 0;
+        max-width: 100%;
+        gap: 1rem;
+    }
+
+    .bfa-professor-section-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .bfa-professor-class-summary__items {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin: 0;
+    }
+
+    .bfa-professor-class-summary__items > div {
+        min-width: 0;
+        padding: 0.9rem;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.025);
+    }
+
+    .bfa-professor-class-summary__items dt,
+    .bfa-professor-student-search label {
+        color: var(--bfa-text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .bfa-professor-class-summary__items dd {
+        margin: 0.3rem 0 0;
+        overflow-wrap: anywhere;
+        color: var(--bfa-text-primary);
+        font-weight: 700;
+    }
+
+    .bfa-professor-student-count {
+        flex: 0 0 auto;
+        padding: 0.35rem 0.65rem;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 999px;
+        color: var(--bfa-accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .bfa-professor-student-search { display: grid; gap: 0.4rem; }
+    .bfa-professor-student-search .bfa-admin-input { width: 100%; }
+
+    .bfa-professor-students-list {
+        display: grid;
+        align-content: start;
+        grid-auto-rows: max-content;
+        width: 100%;
+        min-width: 0;
+        gap: 0.55rem;
+        max-height: 28rem;
+        overflow-y: auto;
+        padding-right: 0.2rem;
+        scrollbar-gutter: stable;
+    }
+
+    .bfa-professor-student-item {
+        display: grid;
+        grid-template-columns: 2.2rem minmax(0, 1fr) auto;
+        grid-template-areas: "avatar copy action";
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        align-items: center;
+        column-gap: 0.8rem;
+        min-height: 0;
+        padding: 0.5rem 0.8rem;
+        overflow: hidden;
+        border: 1px solid var(--bfa-border);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .bfa-professor-student-item__avatar {
+        display: grid;
+        grid-area: avatar;
+        width: 2.2rem;
+        height: 2.2rem;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(255, 193, 7, 0.14);
+        color: var(--bfa-accent);
+        font-weight: 800;
+    }
+
+    .bfa-professor-student-item__copy {
+        display: flex;
+        flex-direction: column;
+        align-self: center;
+        grid-area: copy;
+        gap: 0.2rem;
+        min-width: 0;
+        overflow: hidden;
+    }
+    .bfa-professor-student-item__name,
+    .bfa-professor-student-item__phone,
+    .bfa-professor-student-item__nickname {
+        min-width: 0;
+        margin: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-height: 1.25;
+    }
+
+    .bfa-professor-student-item__name {
+        color: var(--bfa-text-primary);
+        font-weight: 700;
+    }
+
+    .bfa-professor-student-item__phone,
+    .bfa-professor-student-item__nickname {
+        color: var(--bfa-text-muted);
+        font-size: 0.82rem;
+    }
+    .bfa-professor-student-item__nickname { color: var(--bfa-text-secondary) !important; }
+    .bfa-professor-student-item__phone { color: var(--bfa-text-secondary) !important; }
+
+    .bfa-professor-student-item__whatsapp {
+        display: grid;
+        grid-area: action;
+        width: 2.25rem;
+        height: 2.25rem;
+        min-width: 2.25rem;
+        max-width: 2.25rem;
+        place-items: center;
+        padding: 0;
+        border: 1px solid rgba(37, 211, 102, 0.45);
+        border-radius: 999px;
+        color: #7af0a2;
+        white-space: nowrap;
+    }
+
+    .bfa-professor-student-item__whatsapp svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        fill: currentColor;
+        text-decoration: none;
+    }
+
+    .bfa-professor-student-item__whatsapp:hover,
+    .bfa-professor-student-item__whatsapp:focus-visible {
+        background: rgba(37, 211, 102, 0.12);
+        color: #a3f7bd;
+    }
+
+    .bfa-professor-empty-state {
+        display: grid;
+        gap: 0.35rem;
+        padding: 1rem;
+        border: 1px dashed var(--bfa-border);
+        border-radius: var(--radius-md);
+        color: var(--bfa-text-muted);
+    }
+    .bfa-professor-empty-state strong { color: var(--bfa-text-primary); }
 
     .bfa-professor-detail-card {
         display: grid;
@@ -129,20 +374,87 @@
         font-weight: 700;
     }
 
-    @@media (min-width: 64rem) {
+    @@media (min-width: 72rem) {
         .bfa-professor-detail-grid {
-            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+            grid-template-columns: minmax(0, 7fr) minmax(20rem, 5fr);
         }
 
-        .bfa-professor-detail-grid > .bfa-professor-detail-card:nth-child(3) {
+        .bfa-professor-class-summary {
             grid-column: 1 / -1;
         }
+
+        .bfa-professor-students-card,
+        .bfa-professor-current-schedules {
+            align-self: start;
+        }
+
+        .bfa-professor-students-card { grid-column: 1; }
+        .bfa-professor-current-schedules { grid-column: 2; }
+
+        .bfa-professor-detail-grid > .bfa-professor-detail-card[aria-labelledby="historico-horarios"] {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @@media (max-width: 48rem) {
+        .bfa-professor-class-summary__items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @@media (max-width: 42.5rem) {
         .bfa-professor-detail-hero {
             flex-direction: column;
         }
+
+        .bfa-professor-class-summary__items { grid-template-columns: 1fr; }
+        .bfa-professor-section-heading { align-items: flex-start; }
+        .bfa-professor-student-item {
+            grid-template-columns: 2.2rem minmax(0, 1fr) 2.25rem;
+            grid-template-areas: "avatar copy action";
+            align-items: center;
+            column-gap: 0.8rem;
+        }
+
+        .bfa-professor-student-item__avatar {
+            grid-area: avatar;
+        }
+
+        .bfa-professor-student-item__copy {
+            grid-area: copy;
+            width: 100%;
+        }
+
+        .bfa-professor-student-item__name,
+        .bfa-professor-student-item__copy span {
+            overflow-wrap: anywhere;
+        }
+
+        .bfa-professor-student-item__whatsapp {
+            grid-area: action;
+            justify-self: end;
+        }
     }
 </style>
+}
+
+@section Scripts {
+<script>
+    (() => {
+        const input = document.getElementById('buscar-aluno');
+        const list = document.getElementById('lista-alunos');
+        const empty = document.getElementById('alunos-sem-resultado');
+        if (!input || !list || !empty) return;
+
+        const items = [...list.querySelectorAll('[data-student-name]')];
+        input.addEventListener('input', () => {
+            const term = input.value.trim().toLocaleLowerCase('pt-BR');
+            let visible = 0;
+            for (const item of items) {
+                const matches = item.dataset.studentName?.toLocaleLowerCase('pt-BR').includes(term) ?? false;
+                item.hidden = !matches;
+                if (matches) visible++;
+            }
+            empty.hidden = visible > 0;
+        });
+    })();
+</script>
 }

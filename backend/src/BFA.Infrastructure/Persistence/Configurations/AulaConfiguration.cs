@@ -110,6 +110,22 @@ public sealed class AulaConfiguration : IEntityTypeConfiguration<Aula>
             .HasColumnType("timestamp with time zone")
             .IsRequired();
 
+        builder.Property(aula => aula.MotivoCancelamento)
+            .HasColumnName("motivo_cancelamento")
+            .HasColumnType("varchar(500)")
+            .HasMaxLength(500)
+            .IsRequired(false);
+
+        builder.Property(aula => aula.CanceladaEmUtc)
+            .HasColumnName("cancelada_em_utc")
+            .HasColumnType("timestamp with time zone")
+            .IsRequired(false);
+
+        builder.Property(aula => aula.CanceladaPorUsuarioId)
+            .HasColumnName("cancelada_por_usuario_id")
+            .HasColumnType("uuid")
+            .IsRequired(false);
+
         builder.HasAlternateKey(aula => new
             {
                 aula.OrganizacaoId,
@@ -156,6 +172,9 @@ public sealed class AulaConfiguration : IEntityTypeConfiguration<Aula>
 
         builder.HasIndex(aula => aula.AtualizadoPorUsuarioId)
             .HasDatabaseName("ix_aulas_atualizado_por_usuario_id");
+
+        builder.HasIndex(aula => aula.CanceladaPorUsuarioId)
+            .HasDatabaseName("ix_aulas_cancelada_por_usuario_id");
 
         builder.HasOne<Organizacao>()
             .WithMany()
@@ -215,5 +234,11 @@ public sealed class AulaConfiguration : IEntityTypeConfiguration<Aula>
             .HasForeignKey(aula => aula.AtualizadoPorUsuarioId)
             .OnDelete(DeleteBehavior.Restrict)
             .HasConstraintName("fk_aulas_atualizado_por_usuario_id");
+
+        builder.HasOne<UsuarioIdentity>()
+            .WithMany()
+            .HasForeignKey(aula => aula.CanceladaPorUsuarioId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("fk_aulas_cancelada_por_usuario_id");
     }
 }

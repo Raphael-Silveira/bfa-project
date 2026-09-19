@@ -8,6 +8,8 @@ using BFA.Infrastructure.Alunos;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BFA.IntegrationTests;
@@ -17,8 +19,9 @@ public sealed class AlunosPortalStatusTests
     [Fact]
     public async Task Lista_marca_portal_somente_com_identity_e_vinculo_aluno_ativo_na_unidade()
     {
+        var nomeBanco = $"bfa-portal-status-{Guid.NewGuid():N}";
         var options = new DbContextOptionsBuilder<BfaDbContext>()
-            .UseInMemoryDatabase($"bfa-portal-status-{Guid.NewGuid():N}")
+            .UseInMemoryDatabase(nomeBanco)
             .Options;
         await using var db = new BfaDbContext(options);
         var agora = new DateTime(2026, 9, 17, 10, 0, 0, DateTimeKind.Utc);
@@ -79,8 +82,15 @@ public sealed class AlunosPortalStatusTests
         db.AddRange(vinculos);
         await db.SaveChangesAsync();
 
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddDbContext<BfaDbContext>(builder => builder.UseInMemoryDatabase(nomeBanco));
+        services.AddIdentityCore<UsuarioIdentity>()
+            .AddEntityFrameworkStores<BfaDbContext>();
+        await using var serviceProvider = services.BuildServiceProvider();
         var repositorio = new AlunosRepositorio(
             db,
+            serviceProvider.GetRequiredService<UserManager<UsuarioIdentity>>(),
             NullLogger<AlunosRepositorio>.Instance);
         var resultado = await repositorio.ListarAsync(
             organizacao.Id, unidade.Id, null, CancellationToken.None);

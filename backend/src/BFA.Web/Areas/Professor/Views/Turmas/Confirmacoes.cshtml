@@ -1,0 +1,282 @@
+@model ProfessorConfirmacoesViewModel
+@using BFA.Domain.Aulas
+@{
+    ViewData["Title"] = "Gestão da aula";
+    Layout = "_ProfessorLayout";
+    var aula = Model.Detalhe.Aula;
+    var cancelada = aula.Status == StatusAula.Cancelada;
+}
+
+<header class="bfa-admin-page-header bfa-professor-lesson-header">
+    <div class="bfa-admin-page-header__copy">
+        <p class="bfa-admin-page-header__eyebrow">Gestão da aula</p>
+        <h1 class="bfa-admin-page-header__title">@aula.TurmaNome</h1>
+        <p class="bfa-admin-page-header__description">
+            @aula.Data.ToString("dd/MM/yyyy") · @aula.HoraInicio.ToString("HH:mm") – @aula.HoraFim.ToString("HH:mm")
+        </p>
+    </div>
+</header>
+
+<section class="bfa-admin-card bfa-professor-lesson-status" aria-labelledby="titulo-status-aula">
+    <div>
+        <p class="bfa-professor-section-eyebrow">Status da aula</p>
+        <h2 id="titulo-status-aula">@(cancelada ? "Aula cancelada" : "Aula em andamento")</h2>
+        @if (cancelada)
+        {
+            <p class="bfa-professor-lesson-status__message">
+                <strong>Motivo:</strong> @(aula.MotivoCancelamento ?? "Não informado")
+            </p>
+            @if (aula.CanceladaEmUtc is { } canceladaEm)
+            {
+                <p class="bfa-professor-lesson-status__meta">
+                    Cancelada em @canceladaEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                </p>
+            }
+        }
+        else
+        {
+            <p class="bfa-professor-lesson-status__message">A chamada pode ser atualizada enquanto a aula estiver programada.</p>
+        }
+    </div>
+    <span class="bfa-admin-badge @(cancelada ? "is-inactive" : "is-active")">
+        @(cancelada ? "Cancelada" : aula.Status.ToString())
+    </span>
+    @if (!cancelada)
+    {
+        <button class="bfa-btn-secondary bfa-admin-button" type="button"
+                data-bs-toggle="modal" data-bs-target="#modal-cancelar-aula">
+            Cancelar aula
+        </button>
+    }
+</section>
+
+<section class="bfa-admin-card bfa-professor-lesson-summary" aria-labelledby="titulo-resumo-aula">
+    <div class="bfa-professor-section-heading">
+        <div>
+            <p class="bfa-professor-section-eyebrow">Resumo</p>
+            <h2 id="titulo-resumo-aula">Acompanhamento da turma</h2>
+        </div>
+    </div>
+    <div class="bfa-professor-summary-grid">
+        <div class="bfa-professor-summary-item"><span>Alunos</span><strong>@Model.Detalhe.TotalAlunos</strong></div>
+        <div class="bfa-professor-summary-item"><span>Confirmados</span><strong>@Model.Detalhe.TotalConfirmados</strong></div>
+        <div class="bfa-professor-summary-item"><span>Não confirmados</span><strong>@(Model.Detalhe.TotalAlunos - Model.Detalhe.TotalConfirmados)</strong></div>
+        <div class="bfa-professor-summary-item"><span>Presentes</span><strong>@Model.Detalhe.TotalPresentes</strong></div>
+        <div class="bfa-professor-summary-item"><span>Ausentes</span><strong>@Model.Detalhe.TotalAusentes</strong></div>
+        <div class="bfa-professor-summary-item"><span>Não marcados</span><strong>@Model.Detalhe.TotalNaoMarcados</strong></div>
+    </div>
+</section>
+
+<section class="bfa-admin-card bfa-professor-attendance" aria-labelledby="titulo-chamada">
+    <div class="bfa-professor-section-heading">
+        <div>
+            <p class="bfa-professor-section-eyebrow">Chamada oficial</p>
+            <h2 id="titulo-chamada">Participação e presença</h2>
+            <p>Use a chamada para registrar a presença real. A participação é apenas informativa.</p>
+        </div>
+        @if (!cancelada && Model.Detalhe.Alunos.Count > 0)
+        {
+            <button class="bfa-btn-primary bfa-admin-button bfa-professor-save-top" type="submit" form="form-chamada">
+                Salvar chamada
+            </button>
+        }
+    </div>
+
+    @if (Model.Detalhe.Alunos.Count == 0)
+    {
+        <div class="bfa-admin-empty-state bfa-professor-empty-state" role="status">
+            <h3>Nenhum aluno válido para esta aula.</h3>
+            <p>A lista considera somente matrículas ativas vinculadas ao horário da turma.</p>
+        </div>
+    }
+    else
+    {
+        <form id="form-chamada" method="post"
+              action="/professor/unidade/@Model.UnidadeId/turmas/@Model.TurmaId/aulas/@aula.AulaId/confirmacoes/chamada">
+            @Html.AntiForgeryToken()
+            <div class="bfa-professor-student-list">
+                @for (var i = 0; i < Model.Detalhe.Alunos.Count; i++)
+                {
+                    var aluno = Model.Detalhe.Alunos[i];
+                    <article class="bfa-professor-student-row">
+                        <input type="hidden" name="Registros[@i].AlunoId" value="@aluno.AlunoId" />
+                        <div class="bfa-professor-student-identity">
+                            <strong>@aluno.NomeCompleto</strong>
+                            <span class="bfa-professor-participation @(aluno.Confirmou ? "is-confirmed" : "is-not-confirmed")">
+                                Participação: @(aluno.Confirmou ? "Confirmou" : "Não confirmou")
+                            </span>
+                        </div>
+                        <fieldset class="bfa-professor-attendance-fieldset" @(cancelada ? "disabled" : null)>
+                            <legend>Chamada</legend>
+                            <div class="bfa-professor-attendance-options">
+                                <label class="bfa-professor-attendance-option is-present">
+                                    <input type="radio" name="Registros[@i].Status" value="Presente"
+                                           @(aluno.Presenca == StatusPresenca.Presente ? "checked" : null) />
+                                    <span>Presente</span>
+                                </label>
+                                <label class="bfa-professor-attendance-option is-absent">
+                                    <input type="radio" name="Registros[@i].Status" value="Ausente"
+                                           @(aluno.Presenca == StatusPresenca.Ausente ? "checked" : null) />
+                                    <span>Ausente</span>
+                                </label>
+                                <label class="bfa-professor-attendance-option is-pending">
+                                    <input type="radio" name="Registros[@i].Status" value=""
+                                           @(aluno.Presenca is null ? "checked" : null) />
+                                    <span>Não marcado</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                    </article>
+                }
+            </div>
+            @if (!cancelada)
+            {
+                <div class="bfa-professor-save-bar">
+                    <span>Você pode salvar parcialmente e completar a chamada depois.</span>
+                    <button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar chamada</button>
+                </div>
+            }
+        </form>
+    }
+</section>
+
+@if (!cancelada)
+{
+    <div class="modal fade" id="modal-cancelar-aula" tabindex="-1" aria-labelledby="titulo-modal-cancelar">
+        <div class="modal-dialog modal-dialog-centered bfa-professor-cancel-dialog"><div class="modal-content bfa-professor-cancel-modal">
+            <form method="post" action="/professor/unidade/@Model.UnidadeId/turmas/@Model.TurmaId/aulas/@aula.AulaId/confirmacoes/cancelar">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bfa-professor-cancel-modal__header">
+                    <div>
+                        <p class="bfa-professor-section-eyebrow">Gestão da aula</p>
+                        <h2 id="titulo-modal-cancelar" class="modal-title">Cancelar aula</h2>
+                        <p class="bfa-professor-cancel-modal__intro">Informe o motivo para registrar o cancelamento desta aula.</p>
+                    </div>
+                    <button type="button" class="btn-close bfa-professor-cancel-modal__close" data-bs-dismiss="modal" aria-label="Fechar modal"></button>
+                </div>
+                <div class="modal-body bfa-professor-cancel-modal__body">
+                    <div class="bfa-professor-cancel-modal__field">
+                        <label for="motivo-cancelamento">Motivo do cancelamento</label>
+                        <textarea id="motivo-cancelamento" name="MotivoCancelamento" maxlength="500" minlength="1" required
+                                  placeholder="Ex.: chuva forte, manutenção do espaço ou indisponibilidade do professor."></textarea>
+                        <p class="bfa-professor-cancel-modal__hint">O motivo ficará disponível no histórico da aula.</p>
+                        <p id="motivo-cancelamento-erro" class="bfa-professor-cancel-modal__error" role="alert" hidden>Informe o motivo do cancelamento.</p>
+                    </div>
+                </div>
+                <div class="modal-footer bfa-professor-cancel-modal__footer">
+                    <button class="bfa-btn-secondary bfa-admin-button" type="button" data-bs-dismiss="modal">Voltar</button>
+                    <button class="bfa-btn-danger bfa-admin-button" id="confirmar-cancelamento" type="submit" disabled>Confirmar cancelamento</button>
+                </div>
+            </form>
+        </div></div>
+    </div>
+}
+
+@section Styles {
+<style>
+    .bfa-professor-lesson-header { margin-bottom: 1.25rem; }
+    .bfa-professor-lesson-status,
+    .bfa-professor-lesson-summary,
+    .bfa-professor-attendance { display: grid; gap: 1.25rem; margin-bottom: 1.25rem; }
+    .bfa-professor-lesson-status { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
+    .bfa-professor-lesson-status h2,
+    .bfa-professor-section-heading h2 { margin: 0; color: var(--bfa-text); font-size: 1.35rem; }
+    .bfa-professor-section-eyebrow { margin: 0 0 0.35rem; color: var(--bfa-accent); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+    .bfa-professor-lesson-status__message,
+    .bfa-professor-lesson-status__meta,
+    .bfa-professor-section-heading p { margin: 0.45rem 0 0; color: var(--bfa-text-secondary); }
+    .bfa-professor-lesson-status__meta { font-size: 0.82rem; }
+    .bfa-professor-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .bfa-professor-summary-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.75rem; }
+    .bfa-professor-summary-item { display: grid; gap: 0.35rem; min-height: 5.25rem; padding: 0.9rem; border: 1px solid var(--bfa-border); border-radius: var(--radius-md); background: rgba(255,255,255,0.025); }
+    .bfa-professor-summary-item span { color: var(--bfa-text-secondary); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .bfa-professor-summary-item strong { color: var(--bfa-text); font-size: 1.7rem; line-height: 1; }
+    .bfa-professor-student-list { display: grid; gap: 0.65rem; margin-top: 1.25rem; }
+    .bfa-professor-student-row { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(22rem, 1.15fr); align-items: center; gap: 1.25rem; padding: 1rem 1.1rem; border: 1px solid var(--bfa-border); border-radius: var(--radius-md); background: rgba(255,255,255,0.018); }
+    .bfa-professor-student-identity { display: grid; gap: 0.45rem; min-width: 0; }
+    .bfa-professor-student-identity strong { overflow: hidden; color: var(--bfa-text); text-overflow: ellipsis; white-space: nowrap; }
+    .bfa-professor-participation { width: fit-content; padding: 0.28rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+    .bfa-professor-participation.is-confirmed { color: #8ee7bc; background: rgba(35, 170, 112, 0.16); }
+    .bfa-professor-participation.is-not-confirmed { color: var(--bfa-text-secondary); background: rgba(255,255,255,0.06); }
+    .bfa-professor-attendance-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+    .bfa-professor-attendance-fieldset legend { margin-bottom: 0.45rem; color: var(--bfa-text-secondary); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .bfa-professor-attendance-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+    .bfa-professor-attendance-option { position: relative; display: block; margin: 0; cursor: pointer; }
+    .bfa-professor-attendance-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .bfa-professor-attendance-option span { display: flex; min-height: 2.75rem; align-items: center; justify-content: center; padding: 0.55rem 0.75rem; border: 1px solid var(--bfa-border); border-radius: 0.55rem; color: var(--bfa-text-secondary); font-size: 0.86rem; font-weight: 700; text-align: center; transition: border-color .15s ease, background .15s ease, color .15s ease; }
+    .bfa-professor-attendance-option:hover span { border-color: var(--bfa-accent); color: var(--bfa-text); }
+    .bfa-professor-attendance-option input:focus-visible + span { outline: 2px solid var(--bfa-accent); outline-offset: 2px; }
+    .bfa-professor-attendance-option input:checked + span { border-color: var(--bfa-accent); color: var(--bfa-text); background: rgba(255,193,7,0.13); box-shadow: inset 0 0 0 1px rgba(255,193,7,0.2); }
+    .bfa-professor-attendance-option.is-present input:checked + span { border-color: #39c98a; color: #a8f0cb; background: rgba(35,170,112,0.16); }
+    .bfa-professor-attendance-option.is-absent input:checked + span { border-color: #d9a0a0; color: #f1c4c4; background: rgba(170,65,65,0.16); }
+    .bfa-professor-attendance-fieldset:disabled { opacity: 0.65; }
+    .bfa-professor-save-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--bfa-border); color: var(--bfa-text-secondary); font-size: 0.85rem; }
+    .bfa-professor-save-top { flex: 0 0 auto; }
+    .bfa-professor-empty-state { margin-top: 1.25rem; }
+    .bfa-professor-cancel-dialog { max-width: 38rem; }
+    .bfa-professor-cancel-modal { overflow: hidden; border: 1px solid rgba(255,255,255,0.14); border-radius: 1rem; background: #1b1e21; box-shadow: 0 1.5rem 4rem rgba(0,0,0,0.48); }
+    .bfa-professor-cancel-modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.5rem 1.6rem 1.25rem; border-bottom: 1px solid var(--bfa-border); background: linear-gradient(135deg, rgba(255,193,7,0.08), transparent 60%); }
+    .bfa-professor-cancel-modal__header .modal-title { color: var(--bfa-text); font-size: 1.5rem; font-weight: 800; }
+    .bfa-professor-cancel-modal__intro { max-width: 30rem; margin: 0.45rem 0 0; color: var(--bfa-text-secondary); line-height: 1.5; }
+    .bfa-professor-cancel-modal__close { flex: 0 0 auto; margin: 0.1rem 0 0; filter: invert(1) grayscale(1); opacity: 0.8; }
+    .bfa-professor-cancel-modal__close:hover { opacity: 1; }
+    .bfa-professor-cancel-modal__body { padding: 1.5rem 1.6rem 1.25rem; }
+    .bfa-professor-cancel-modal__field { display: grid; gap: 0.55rem; }
+    .bfa-professor-cancel-modal__field label { color: var(--bfa-text); font-weight: 800; }
+    .bfa-professor-cancel-modal__field textarea { width: 100%; min-height: 9rem; resize: vertical; padding: 0.85rem 0.95rem; border: 1px solid rgba(255,255,255,0.16); border-radius: 0.65rem; color: var(--bfa-text); background: rgba(0,0,0,0.18); line-height: 1.5; }
+    .bfa-professor-cancel-modal__field textarea::placeholder { color: rgba(220,225,230,0.58); }
+    .bfa-professor-cancel-modal__field textarea:focus { border-color: var(--bfa-accent); outline: 2px solid rgba(255,193,7,0.2); outline-offset: 1px; }
+    .bfa-professor-cancel-modal__field textarea.is-invalid { border-color: #df8585; }
+    .bfa-professor-cancel-modal__hint { margin: 0; color: var(--bfa-text-secondary); font-size: 0.82rem; }
+    .bfa-professor-cancel-modal__error { margin: 0; color: #f1b1b1; font-size: 0.82rem; }
+    .bfa-professor-cancel-modal__footer { justify-content: flex-end; gap: 0.7rem; padding: 1rem 1.6rem 1.5rem; border-top: 1px solid var(--bfa-border); }
+    .bfa-btn-danger { border: 1px solid rgba(239,125,125,0.7); color: #fff0f0; background: #9a4148; }
+    .bfa-btn-danger:hover:not(:disabled), .bfa-btn-danger:focus-visible:not(:disabled) { border-color: #f1a0a0; background: #b45159; }
+    .bfa-btn-danger:disabled { cursor: not-allowed; opacity: 0.48; }
+    @@media (max-width: 38rem) { .bfa-professor-cancel-dialog { margin: 0.75rem; } .bfa-professor-cancel-modal__header, .bfa-professor-cancel-modal__body { padding-right: 1.15rem; padding-left: 1.15rem; } .bfa-professor-cancel-modal__footer { align-items: stretch; flex-direction: column-reverse; padding-right: 1.15rem; padding-left: 1.15rem; } .bfa-professor-cancel-modal__footer .bfa-admin-button { width: 100%; } }
+    @@media (max-width: 60rem) { .bfa-professor-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .bfa-professor-student-row { grid-template-columns: 1fr; gap: 0.85rem; } }
+    @@media (max-width: 38rem) { .bfa-professor-lesson-status { grid-template-columns: 1fr auto; } .bfa-professor-lesson-status > button { grid-column: 1 / -1; width: 100%; } .bfa-professor-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bfa-professor-summary-item { min-height: 4.75rem; } .bfa-professor-summary-item strong { font-size: 1.45rem; } .bfa-professor-attendance-options { grid-template-columns: 1fr; } .bfa-professor-attendance-option span { min-height: 3rem; } .bfa-professor-save-bar { align-items: stretch; flex-direction: column; } .bfa-professor-save-bar .bfa-admin-button { width: 100%; } }
+</style>
+}
+
+@section Scripts {
+<script>
+    (() => {
+        const modal = document.getElementById('modal-cancelar-aula');
+        if (!modal) return;
+
+        const form = modal.querySelector('form');
+        const motivo = document.getElementById('motivo-cancelamento');
+        const erro = document.getElementById('motivo-cancelamento-erro');
+        const confirmar = document.getElementById('confirmar-cancelamento');
+        if (!form || !motivo || !erro || !confirmar) return;
+
+        const atualizarEstado = () => {
+            const valido = motivo.value.trim().length > 0;
+            confirmar.disabled = !valido;
+            motivo.classList.toggle('is-invalid', !valido && motivo.dataset.touched === 'true');
+            erro.hidden = valido || motivo.dataset.touched !== 'true';
+        };
+
+        motivo.addEventListener('input', atualizarEstado);
+        motivo.addEventListener('blur', () => {
+            motivo.dataset.touched = 'true';
+            atualizarEstado();
+        });
+        form.addEventListener('submit', (event) => {
+            motivo.dataset.touched = 'true';
+            atualizarEstado();
+            if (confirmar.disabled) {
+                event.preventDefault();
+                motivo.focus();
+            }
+        });
+        modal.addEventListener('shown.bs.modal', () => {
+            motivo.dataset.touched = 'false';
+            motivo.focus();
+            atualizarEstado();
+        });
+        atualizarEstado();
+    })();
+</script>
+}

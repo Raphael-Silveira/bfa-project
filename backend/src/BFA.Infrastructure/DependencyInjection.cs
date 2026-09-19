@@ -16,6 +16,7 @@ using BFA.Application.Localidades;
 using BFA.Application.Matriculas;
 using BFA.Application.Planos;
 using BFA.Application.Professores.Turmas;
+using BFA.Application.Professores.Confirmacoes;
 using BFA.Application.Relatorios;
 using BFA.Application.Unidades;
 using BFA.Application.Unidades.Contratos;
@@ -130,6 +131,10 @@ public static class DependencyInjection
             MinhasTurmasProfessorRepositorio>();
         services.AddScoped<IMinhasTurmasProfessorConsulta,
             MinhasTurmasProfessorConsulta>();
+        services.AddScoped<IConfirmacoesParticipacaoProfessorRepositorio,
+            ConfirmacoesParticipacaoProfessorRepositorio>();
+        services.AddScoped<IConfirmacoesParticipacaoProfessorConsulta,
+            ConfirmacoesParticipacaoProfessorConsulta>();
         services.AddScoped<ITurmasUnidadeRepositorio, TurmasUnidadeRepositorio>();
         services.AddScoped<TurmasUnidadeServico>();
         services.AddScoped<ITurmasUnidadeConsulta>(provider =>

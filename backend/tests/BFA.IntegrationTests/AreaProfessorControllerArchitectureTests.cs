@@ -1,4 +1,5 @@
 using BFA.Application.Professores.Turmas;
+using BFA.Application.Professores.Confirmacoes;
 using BFA.Infrastructure.Persistence;
 using BFA.Web.Areas.Professor.Controllers;
 using Microsoft.AspNetCore.Authorization;
@@ -34,6 +35,7 @@ public sealed class AreaProfessorControllerArchitectureTests
             .ToArray();
 
         Assert.Contains(typeof(IMinhasTurmasProfessorConsulta), dependencias);
+        Assert.Contains(typeof(IConfirmacoesParticipacaoProfessorConsulta), dependencias);
         Assert.Contains(typeof(IAuthorizationService), dependencias);
         Assert.DoesNotContain(typeof(
             BFA.Application.Unidades.Turmas.IAjusteHorariosTurmaServico), dependencias);

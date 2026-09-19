@@ -3,13 +3,18 @@ using BFA.Application.Identidade;
 using BFA.Domain.Acessos;
 using BFA.Domain.Alunos;
 using BFA.Domain.Matriculas;
+using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 
 namespace BFA.Infrastructure.Alunos;
 
-public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepositorio> logger) : IAlunosRepositorio
+public sealed class AlunosRepositorio(
+    BfaDbContext dbContext,
+    UserManager<UsuarioIdentity> userManager,
+    ILogger<AlunosRepositorio> logger) : IAlunosRepositorio
 {
     public async Task<IReadOnlyList<AlunoListaItem>> ListarAsync(
         Guid organizacaoId, Guid unidadeId, string? texto,
@@ -256,6 +261,7 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
 
         var dados = new AlunoDadosEdicao(
             aluno.Id,
+            aluno.UsuarioId,
             aluno.NomeCompleto,
             aluno.DataNascimento,
             aluno.Cpf,
@@ -311,38 +317,85 @@ public sealed class AlunosRepositorio(BfaDbContext dbContext, ILogger<AlunosRepo
                 cancellationToken);
     }
 
-    public async Task<bool> PersistirAtualizacaoAsync(
-        Aluno aluno, CancellationToken cancellationToken)
+    public async Task<EstadoPersistenciaAtualizacaoAluno> PersistirAtualizacaoAsync(
+        Aluno aluno, Guid? usuarioId, CancellationToken cancellationToken)
     {
         var existente = await dbContext.Alunos
             .FirstOrDefaultAsync(
                 a => a.Id == aluno.Id && a.OrganizacaoId == aluno.OrganizacaoId,
                 cancellationToken);
         if (existente is null)
-            return false;
+            return EstadoPersistenciaAtualizacaoAluno.Falha;
 
-        existente.AtualizarDados(
-            aluno.NomeCompleto,
-            aluno.DataNascimento,
-            DateOnly.FromDateTime(DateTime.Today),
-            aluno.Cpf,
-            aluno.Telefone,
-            aluno.Email,
-            DateTime.UtcNow);
+        if (aluno.Cpf is not null
+            && await dbContext.Alunos.AsNoTracking().AnyAsync(item =>
+                item.OrganizacaoId == aluno.OrganizacaoId
+                && item.Id != aluno.Id
+                && item.Cpf == aluno.Cpf, cancellationToken))
+        {
+            return EstadoPersistenciaAtualizacaoAluno.CpfDuplicado;
+        }
+
+        if (usuarioId.HasValue && aluno.Cpf is null)
+        {
+            return EstadoPersistenciaAtualizacaoAluno.CpfNaoInformado;
+        }
+
+        await using var transacao = await dbContext.Database.BeginTransactionAsync(
+            cancellationToken);
 
         try
         {
+            UsuarioIdentity? usuario = null;
+            if (usuarioId is { } id)
+            {
+                usuario = await userManager.FindByIdAsync(id.ToString());
+                if (usuario is null)
+                    return EstadoPersistenciaAtualizacaoAluno.UsuarioIncompativel;
+
+                var usuarioComCpf = await userManager.FindByNameAsync(aluno.Cpf!);
+                if (usuarioComCpf is not null && usuarioComCpf.Id != usuario.Id)
+                    return EstadoPersistenciaAtualizacaoAluno.UsuarioIncompativel;
+
+                if (!string.Equals(usuario.UserName, aluno.Cpf, StringComparison.Ordinal))
+                {
+                    var resultadoNome = await userManager.SetUserNameAsync(usuario, aluno.Cpf);
+                    if (!resultadoNome.Succeeded)
+                        return EstadoPersistenciaAtualizacaoAluno.UsuarioIncompativel;
+                }
+            }
+
+            existente.AtualizarDados(
+                aluno.NomeCompleto,
+                aluno.DataNascimento,
+                DateOnly.FromDateTime(DateTime.Today),
+                aluno.Cpf,
+                aluno.Telefone,
+                aluno.Email,
+                DateTime.UtcNow);
+
             await dbContext.SaveChangesAsync(cancellationToken);
+            await transacao.CommitAsync(cancellationToken);
+        }
+        catch (ArgumentException)
+        {
+            return EstadoPersistenciaAtualizacaoAluno.Falha;
+        }
+        catch (DbUpdateException exception)
+        {
+            logger.LogError(exception,
+                "Falha de banco ao persistir atualizacao do aluno {AlunoId}", aluno.Id);
+            return EstadoPersistenciaAtualizacaoAluno.Falha;
         }
         catch (Exception exception)
         {
             logger.LogError(exception,
                 "Falha ao persistir atualizacao do aluno {AlunoId} na organizacao {OrganizacaoId}",
                 aluno.Id, aluno.OrganizacaoId);
-            throw;
+            return EstadoPersistenciaAtualizacaoAluno.Falha;
         }
 
-        return true;
+        return EstadoPersistenciaAtualizacaoAluno.Sucesso;
     }
 
     public async Task<IReadOnlyList<ResponsavelAlunoResumo>> ListarResponsaveisAlunoAsync(

@@ -379,7 +379,7 @@ public sealed class EditarAlunoViewModel : IUnidadeContextoViewModel
     public string? Email { get; set; }
 
     [Display(Name = "CPF")]
-    [StringLength(Aluno.CpfTamanho, ErrorMessage = "O CPF deve possuir exatamente {1} dígitos.")]
+    [StringLength(14, ErrorMessage = "O CPF deve possuir no máximo 14 caracteres.")]
     public string? Cpf { get; set; }
 }
 

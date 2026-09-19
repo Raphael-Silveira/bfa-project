@@ -2,6 +2,7 @@ using BFA.Application.Acessos;
 using BFA.Application.Unidades;
 using BFA.Domain.Acessos;
 using BFA.Domain.Turmas;
+using BFA.Domain.Aulas;
 using Microsoft.Extensions.Logging;
 
 namespace BFA.Application.Professores.Turmas;
@@ -14,6 +15,12 @@ public sealed record HorarioTurmaProfessorResumo(
     DateOnly VigenciaInicio,
     DateOnly? VigenciaFim,
     bool Ativo);
+
+public sealed record AlunoTurmaProfessorResumo(
+    Guid Id,
+    string NomeCompleto,
+    string? Apelido,
+    string? Telefone);
 
 public sealed record TurmaProfessorResumo(
     Guid Id,
@@ -29,7 +36,13 @@ public sealed record TurmaProfessorDetalhe(
     bool Ativo,
     string NomeProfessor,
     IReadOnlyList<HorarioTurmaProfessorResumo> HorariosAtuais,
-    IReadOnlyList<HorarioTurmaProfessorResumo> HistoricoHorarios);
+    IReadOnlyList<HorarioTurmaProfessorResumo> HistoricoHorarios,
+    IReadOnlyList<AlunoTurmaProfessorResumo> Alunos);
+
+public sealed record AulaProfessorResumo(
+    Guid AulaId, Guid TurmaId, string TurmaNome, DateOnly Data,
+    TimeOnly HoraInicio, TimeOnly HoraFim, int Alunos, int Confirmados,
+    StatusAula Status);
 
 public enum EstadoMinhasTurmasProfessor
 {
@@ -71,6 +84,10 @@ public interface IMinhasTurmasProfessorRepositorio
         Guid turmaId,
         DateOnly dataAtual,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<AulaProfessorResumo>> ListarProximasAulasAsync(
+        Guid organizacaoId, Guid unidadeId, Guid professorUnidadeId,
+        DateOnly dataAtual, int limite, CancellationToken cancellationToken);
 }
 
 public interface IMinhasTurmasProfessorConsulta
@@ -90,6 +107,9 @@ public interface IMinhasTurmasProfessorConsulta
         Guid unidadeId,
         Guid turmaId,
         CancellationToken cancellationToken);
+
+    Task<ResultadoMinhasTurmasProfessor<IReadOnlyList<AulaProfessorResumo>>> ListarProximasAulasAsync(
+        Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken);
 }
 
 public sealed class MinhasTurmasProfessorConsulta(
@@ -144,6 +164,17 @@ public sealed class MinhasTurmasProfessorConsulta(
         return turma is null
             ? new(EstadoMinhasTurmasProfessor.TurmaNaoEncontrada)
             : new(EstadoMinhasTurmasProfessor.Sucesso, turma);
+    }
+
+    public async Task<ResultadoMinhasTurmasProfessor<IReadOnlyList<AulaProfessorResumo>>>
+        ListarProximasAulasAsync(Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
+    {
+        var contexto = await ResolverContextoAsync(usuarioId, unidadeId, cancellationToken);
+        if (contexto.Estado != EstadoMinhasTurmasProfessor.Sucesso)
+            return new(contexto.Estado);
+        return new(EstadoMinhasTurmasProfessor.Sucesso,
+            await repositorio.ListarProximasAulasAsync(contexto.OrganizacaoId, unidadeId,
+                contexto.ProfessorUnidadeId, Hoje(), 4, cancellationToken));
     }
 
     private async Task<ContextoProfessorTurmas> ResolverContextoAsync(

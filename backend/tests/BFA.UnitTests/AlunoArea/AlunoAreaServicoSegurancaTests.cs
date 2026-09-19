@@ -246,8 +246,8 @@ public sealed class AlunoAreaServicoSegurancaTests
         public Task<IReadOnlyList<MatriculaAlunoConsulta>> ListarMatriculasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, CancellationToken cancellationToken)
             => Task.FromResult<IReadOnlyList<MatriculaAlunoConsulta>>([]);
 
-        public Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, bool ConfirmacaoAtiva)>> ListarAulasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, DateOnly dataInicio, DateOnly dataFim, CancellationToken cancellationToken)
-            => Task.FromResult<IReadOnlyList<(Guid, string, DateOnly, string, string, string, bool)>>([]);
+        public Task<IReadOnlyList<(Guid AulaId, string TurmaNome, DateOnly Data, string HoraInicio, string HoraFim, string Status, string? MotivoCancelamento, bool ConfirmacaoAtiva)>> ListarAulasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, DateOnly dataInicio, DateOnly dataFim, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyList<(Guid, string, DateOnly, string, string, string, string?, bool)>>([]);
 
         public Task<IReadOnlyList<(DateOnly Data, string TurmaNome, string HoraInicio, string HoraFim, string Status, string? Observacoes)>> ListarPresencasAsync(Guid organizacaoId, Guid unidadeId, Guid alunoId, DateOnly dataInicio, DateOnly dataFim, CancellationToken cancellationToken)
         {
