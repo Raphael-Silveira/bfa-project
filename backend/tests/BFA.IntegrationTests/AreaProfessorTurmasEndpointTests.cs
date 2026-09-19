@@ -233,7 +233,8 @@ public sealed partial class AreaProfessorEndpointTests
         Assert.Contains("https://wa.me/5511992682235", html, StringComparison.Ordinal);
         Assert.Equal(1, CountOccurrences(html, "https://wa.me/5511992682235"));
         Assert.Contains("Buscar aluno", html, StringComparison.Ordinal);
-        Assert.Equal(1, CountOccurrences(html, "<strong>Alice Matriculada</strong>"));
+        Assert.Equal(1, CountOccurrences(html,
+            "bfa-professor-student-item__name\">Alice Matriculada</div>"));
     }
 
     private static int CountOccurrences(string value, string search)
