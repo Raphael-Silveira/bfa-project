@@ -445,22 +445,10 @@
 .bfa-turma-card__actions { display: flex; margin-top: 1.25rem; padding-top: 1rem; justify-content: flex-end; border-top: 1px solid var(--bfa-border); }
 .bfa-turma-readonly-grid { display: grid; margin: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 
-.bfa-professor-turmas-summary {
-  display: flex;
-  width: 100%;
-  max-width: 48rem;
-  padding: clamp(1.25rem, 3vw, 1.75rem);
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-}
-.bfa-professor-turmas-summary p,
 .bfa-minhas-turmas-card header p,
 .bfa-minhas-turmas-detail header p { margin: 0 0 0.3rem; color: var(--bfa-accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.bfa-professor-turmas-summary h2,
 .bfa-minhas-turmas-card h2,
 .bfa-minhas-turmas-detail h2 { margin: 0; }
-.bfa-professor-turmas-summary strong { display: block; margin-top: 0.65rem; color: var(--bfa-text-muted); }
 .bfa-minhas-turmas-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
 .bfa-minhas-turmas-card,
 .bfa-minhas-turmas-detail { padding: clamp(1.25rem, 3vw, 1.75rem);  }
@@ -1109,8 +1097,6 @@
 }
 
 @media (max-width: 30rem) {
-  .bfa-professor-turmas-summary { align-items: stretch; flex-direction: column; }
-  .bfa-professor-turmas-summary .bfa-admin-button,
   .bfa-minhas-turmas-card footer .bfa-admin-button { width: 100%; }
   .bfa-minhas-turmas-card dl,
   .bfa-minhas-turmas-detail dl { grid-template-columns: 1fr; }

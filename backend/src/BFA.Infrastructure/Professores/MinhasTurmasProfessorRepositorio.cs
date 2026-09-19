@@ -26,18 +26,6 @@ public sealed class MinhasTurmasProfessorRepositorio(BfaDbContext dbContext)
          select (Guid?)vinculo.Id)
         .SingleOrDefaultAsync(cancellationToken);
 
-    public Task<int> ContarAtivasAsync(
-        Guid organizacaoId,
-        Guid unidadeId,
-        Guid professorUnidadeId,
-        CancellationToken cancellationToken) =>
-        dbContext.Turmas.AsNoTracking().CountAsync(turma =>
-            turma.OrganizacaoId == organizacaoId
-            && turma.UnidadeId == unidadeId
-            && turma.ProfessorUnidadeId == professorUnidadeId
-            && turma.Ativo,
-            cancellationToken);
-
     public async Task<IReadOnlyList<TurmaProfessorResumo>> ListarAsync(
         Guid organizacaoId,
         Guid unidadeId,
@@ -150,46 +138,83 @@ public sealed class MinhasTurmasProfessorRepositorio(BfaDbContext dbContext)
             turma.NomeProfessor, atuais, historico, alunosResumo);
     }
 
-    public async Task<IReadOnlyList<AulaProfessorResumo>> ListarProximasAulasAsync(
-        Guid organizacaoId, Guid unidadeId, Guid professorUnidadeId,
-        DateOnly dataAtual, int limite, CancellationToken cancellationToken)
+    public async Task<ProfessorDashboardDados> ObterDadosDashboardAsync(
+        Guid organizacaoId,
+        Guid unidadeId,
+        Guid professorUnidadeId,
+        DateOnly dataAtual,
+        CancellationToken cancellationToken)
     {
-        var aulas = await (from aula in dbContext.Aulas.AsNoTracking()
-                           join turma in dbContext.Turmas.AsNoTracking() on aula.TurmaId equals turma.Id
-                           where aula.OrganizacaoId == organizacaoId && aula.UnidadeId == unidadeId
-                               && turma.OrganizacaoId == organizacaoId && turma.UnidadeId == unidadeId
-                               && turma.ProfessorUnidadeId == professorUnidadeId
-                               && aula.Data >= dataAtual && aula.Status == StatusAula.Programada
-                           orderby aula.Data, aula.HoraInicio
-                           select new { aula.Id, aula.TurmaId, aula.TurmaHorarioId, turma.Nome,
-                               aula.Data, aula.HoraInicio, aula.HoraFim, aula.Status })
-            .Take(limite).ToArrayAsync(cancellationToken);
-        if (aulas.Length == 0) return [];
+        var turmas = dbContext.Turmas.AsNoTracking()
+            .Where(turma => turma.OrganizacaoId == organizacaoId
+                && turma.UnidadeId == unidadeId
+                && turma.ProfessorUnidadeId == professorUnidadeId
+                && turma.Ativo);
 
-        var horarioIds = aulas.Select(item => item.TurmaHorarioId).Distinct().ToArray();
-        var matriculas = await (from horario in dbContext.MatriculasHorarios.AsNoTracking()
-                                join matricula in dbContext.Matriculas.AsNoTracking()
-                                    on horario.MatriculaId equals matricula.Id
-                                where horario.OrganizacaoId == organizacaoId && horario.UnidadeId == unidadeId
-                                    && horario.VigenciaFim == null && horarioIds.Contains(horario.TurmaHorarioId)
-                                    && matricula.OrganizacaoId == organizacaoId && matricula.UnidadeId == unidadeId
-                                    && matricula.Status == StatusMatricula.Ativa
-                                select new { horario.TurmaHorarioId, matricula.AlunoId,
-                                    matricula.DataInicio, matricula.DataFimPrevista }).ToArrayAsync(cancellationToken);
-        var confirmacoes = await dbContext.ConfirmacoesAulaAluno.AsNoTracking()
-            .Where(item => item.OrganizacaoId == organizacaoId && item.UnidadeId == unidadeId
-                && aulas.Select(aula => aula.Id).Contains(item.AulaId) && item.Ativa)
-            .Select(item => new { item.AulaId, item.AlunoId }).ToArrayAsync(cancellationToken);
+        var quantidadeTurmas = await turmas.CountAsync(cancellationToken);
+        var quantidadeAulasHoje = await (
+            from aula in dbContext.Aulas.AsNoTracking()
+            join turma in dbContext.Turmas.AsNoTracking() on aula.TurmaId equals turma.Id
+            where aula.OrganizacaoId == organizacaoId
+                && aula.UnidadeId == unidadeId
+                && aula.Data == dataAtual
+                && aula.Status == StatusAula.Programada
+                && turma.OrganizacaoId == organizacaoId
+                && turma.UnidadeId == unidadeId
+                && turma.ProfessorUnidadeId == professorUnidadeId
+                && turma.Ativo
+            select aula.Id).CountAsync(cancellationToken);
 
-        return aulas.Select(aula =>
-        {
-            var ids = matriculas.Where(item => item.TurmaHorarioId == aula.TurmaHorarioId
-                && item.DataInicio <= aula.Data && item.DataFimPrevista >= aula.Data)
-                .Select(item => item.AlunoId).Distinct().ToHashSet();
-            var confirmados = confirmacoes.Count(item => item.AulaId == aula.Id && ids.Contains(item.AlunoId));
-            return new AulaProfessorResumo(aula.Id, aula.TurmaId, aula.Nome, aula.Data,
-                aula.HoraInicio, aula.HoraFim, ids.Count, confirmados, aula.Status);
-        }).ToArray();
+        var alunosRows = await (
+            from matriculaHorario in dbContext.MatriculasHorarios.AsNoTracking()
+            join matricula in dbContext.Matriculas.AsNoTracking()
+                on matriculaHorario.MatriculaId equals matricula.Id
+            join turmaHorario in dbContext.TurmasHorarios.AsNoTracking()
+                on matriculaHorario.TurmaHorarioId equals turmaHorario.Id
+            join turma in dbContext.Turmas.AsNoTracking()
+                on turmaHorario.TurmaId equals turma.Id
+            join aluno in dbContext.Alunos.AsNoTracking()
+                on matricula.AlunoId equals aluno.Id
+            where matriculaHorario.OrganizacaoId == organizacaoId
+                && matriculaHorario.UnidadeId == unidadeId
+                && matriculaHorario.VigenciaInicio <= dataAtual
+                && (matriculaHorario.VigenciaFim == null
+                    || matriculaHorario.VigenciaFim >= dataAtual)
+                && matricula.OrganizacaoId == organizacaoId
+                && matricula.UnidadeId == unidadeId
+                && matricula.Status == StatusMatricula.Ativa
+                && matricula.DataInicio <= dataAtual
+                && matricula.DataFimPrevista >= dataAtual
+                && turmaHorario.OrganizacaoId == organizacaoId
+                && turmaHorario.UnidadeId == unidadeId
+                && turmaHorario.ProfessorUnidadeId == professorUnidadeId
+                && turmaHorario.Ativo
+                && turmaHorario.VigenciaInicio <= dataAtual
+                && (turmaHorario.VigenciaFim == null
+                    || turmaHorario.VigenciaFim >= dataAtual)
+                && turma.OrganizacaoId == organizacaoId
+                && turma.UnidadeId == unidadeId
+                && turma.ProfessorUnidadeId == professorUnidadeId
+                && turma.Ativo
+                && aluno.OrganizacaoId == organizacaoId
+                && aluno.Ativo
+            select new
+            {
+                AlunoId = aluno.Id,
+                Nome = aluno.NomeCompleto,
+                aluno.DataNascimento
+            })
+            .ToArrayAsync(cancellationToken);
+
+        var alunos = alunosRows
+            .DistinctBy(aluno => aluno.AlunoId)
+            .OrderBy(aluno => aluno.Nome)
+            .ThenBy(aluno => aluno.AlunoId)
+            .Select(aluno => new ProfessorDashboardAlunoResumo(
+                aluno.AlunoId, aluno.Nome, aluno.DataNascimento))
+            .ToArray();
+
+        return new(quantidadeTurmas, quantidadeAulasHoje, alunos);
     }
 
     private async Task<IReadOnlyList<HorarioComTurma>> ConsultarHorariosAsync(

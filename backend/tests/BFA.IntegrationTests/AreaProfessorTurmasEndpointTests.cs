@@ -293,7 +293,9 @@ public sealed partial class AreaProfessorEndpointTests
         var html = WebUtility.HtmlDecode(await client.GetStringAsync(
             $"/professor/unidade/{contexto.UnidadeId:D}"));
 
-        Assert.Contains("2 turmas ativas", html, StringComparison.Ordinal);
+        Assert.Contains("Turmas", html, StringComparison.Ordinal);
+        Assert.Contains(">2<", html, StringComparison.Ordinal);
+        Assert.Contains("Aulas hoje", html, StringComparison.Ordinal);
     }
 
     [Fact]

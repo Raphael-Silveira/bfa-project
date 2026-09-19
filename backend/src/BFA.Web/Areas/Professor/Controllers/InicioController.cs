@@ -77,18 +77,29 @@ public sealed class InicioController(
             usuarioId, cancellationToken);
         var nome = await usuarioApresentacaoConsulta.ObterNomeCompletoAsync(
             usuarioId, cancellationToken);
-        var turmas = await minhasTurmasConsulta.ContarAtivasAsync(
+        var dashboard = await minhasTurmasConsulta.ObterDadosDashboardAsync(
             usuarioId, unidadeId, cancellationToken);
-        var proximasAulas = await minhasTurmasConsulta.ListarProximasAulasAsync(
-            usuarioId, unidadeId, cancellationToken);
-        if (turmas.Estado is EstadoMinhasTurmasProfessor.SemAcesso
+        if (dashboard.Estado is EstadoMinhasTurmasProfessor.SemAcesso
             or EstadoMinhasTurmasProfessor.VinculoProfissionalNaoEncontrado)
         {
             return Forbid();
         }
+        var dados = dashboard.Valor!;
+        var aniversarios = ProfessorDashboardAniversarios.Calcular(
+                dados.Alunos,
+                DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime))
+            .Select(item => new AniversarioProfessorViewModel(
+                item.AlunoId,
+                item.Nome,
+                item.Data.ToString("dd/MM", CultureInfo.InvariantCulture),
+                item.DiasAteAniversario))
+            .ToArray();
         return View(new ProfessorInicioViewModel(
             unidadeId, unidade.Nome, todas.Count > 1, PrimeiroNome(nome),
-            turmas.Valor, proximasAulas.Valor ?? []));
+            dados.QuantidadeTurmas,
+            dados.Alunos.Count,
+            dados.QuantidadeAulasHoje,
+            aniversarios));
     }
 
     [HttpGet("unidade/{unidadeId:guid}/aulas")]

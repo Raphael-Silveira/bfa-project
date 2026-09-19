@@ -3,6 +3,7 @@
     ViewData["Title"] = "Área do Professor";
     Layout = "_ProfessorLayout";
 }
+
 <header class="bfa-admin-page-header">
     <div class="bfa-admin-page-header__copy">
         <p class="bfa-admin-page-header__eyebrow">Área do Professor</p>
@@ -10,53 +11,121 @@
         <p class="bfa-admin-page-header__description">@Model.NomeUnidade</p>
     </div>
 </header>
-<section class="bfa-professor-upcoming" aria-labelledby="proximas-aulas-titulo">
-    <div class="bfa-professor-section-heading"><div><p>Agenda operacional</p><h2 id="proximas-aulas-titulo">Próximas aulas</h2></div><a class="bfa-btn-secondary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Ver todas as aulas</a></div>
-    @if (Model.ProximasAulas.Count == 0)
+
+<section class="bfa-professor-dashboard-summary" aria-labelledby="resumo-professor">
+    <div class="bfa-professor-section-heading">
+        <div>
+            <p>Resumo</p>
+            <h2 id="resumo-professor">Visão geral da sua operação</h2>
+        </div>
+    </div>
+    <div class="bfa-professor-dashboard-kpis">
+        <article class="bfa-professor-dashboard-kpi">
+            <span>Turmas</span>
+            <strong>@Model.QuantidadeTurmas</strong>
+            <small>ativas</small>
+        </article>
+        <article class="bfa-professor-dashboard-kpi">
+            <span>Alunos</span>
+            <strong>@Model.QuantidadeAlunos</strong>
+            <small>atendidos</small>
+        </article>
+        <article class="bfa-professor-dashboard-kpi">
+            <span>Aulas hoje</span>
+            <strong>@Model.QuantidadeAulasHoje</strong>
+            <small>programadas</small>
+        </article>
+        <article class="bfa-professor-dashboard-kpi">
+            <span>Aniversários</span>
+            <strong>@Model.ProximosAniversarios.Count</strong>
+            <small>próximos 30 dias</small>
+        </article>
+    </div>
+</section>
+
+<section class="bfa-admin-card bfa-professor-dashboard-birthdays" aria-labelledby="aniversarios-professor">
+    <div class="bfa-professor-section-heading">
+        <div>
+            <p>Relacionamento</p>
+            <h2 id="aniversarios-professor">Próximos aniversários</h2>
+        </div>
+        <span class="bfa-professor-dashboard-window">Próximos 30 dias</span>
+    </div>
+    @if (Model.ProximosAniversarios.Count == 0)
     {
-        <div class="bfa-admin-empty-state" role="status"><h3>Nenhuma próxima aula programada.</h3></div>
+        <div class="bfa-professor-dashboard-empty" role="status">
+            <strong>Nenhum aniversário nos próximos 30 dias.</strong>
+        </div>
     }
     else
     {
-        <div class="bfa-professor-upcoming-grid">
-        @foreach (var aula in Model.ProximasAulas)
-        {
-            var cancelada = aula.Status == BFA.Domain.Aulas.StatusAula.Cancelada;
-            <article class="bfa-admin-card bfa-professor-upcoming-card @(cancelada ? "is-cancelled" : string.Empty)">
-                <p class="bfa-professor-upcoming-card__date">@aula.Data.ToString("dd/MM/yyyy")</p>
-                <div class="bfa-professor-upcoming-card__title-row">
-                    <h3>@aula.TurmaNome</h3>
-                    <span class="bfa-admin-badge @(cancelada ? "is-inactive" : "is-active")">@(cancelada ? "Cancelada" : aula.Status.ToString())</span>
+        <div class="bfa-professor-birthday-list">
+            @foreach (var aniversario in Model.ProximosAniversarios)
+            {
+                var proximidade = aniversario.DiasAteAniversario switch
+                {
+                    0 => "Hoje",
+                    1 => "Amanhã",
+                    _ => $"em {aniversario.DiasAteAniversario} dias"
+                };
+                <div class="bfa-professor-birthday-item">
+                    <div>
+                        <strong>@aniversario.Nome</strong>
+                        <span>@aniversario.DiaMes</span>
+                    </div>
+                    <small>@proximidade</small>
                 </div>
-                <strong>@aula.HoraInicio.ToString("HH:mm") – @aula.HoraFim.ToString("HH:mm")</strong>
-                <p>@(cancelada ? "Esta aula não ocorrerá." : $"{aula.Alunos} {(aula.Alunos == 1 ? "aluno" : "alunos")} · {aula.Confirmados} confirmados")</p>
-                <a class="@(cancelada ? "bfa-btn-secondary" : "bfa-btn-primary") bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas/@aula.TurmaId/aulas/@aula.AulaId/confirmacoes">@(cancelada ? "Ver detalhes" : "Ver aula")</a>
-            </article>
-        }
+            }
         </div>
     }
-    <a class="bfa-btn-secondary bfa-admin-button bfa-professor-upcoming-all" href="/professor/unidade/@Model.UnidadeId/aulas">Ver todas as aulas</a>
 </section>
-<section class="bfa-admin-card bfa-professor-turmas-summary" aria-labelledby="minhas-turmas-titulo">
+
+<section class="bfa-admin-card bfa-professor-dashboard-action" aria-labelledby="acao-professor">
     <div>
-        <p>Operação do professor</p>
-        <h2 id="minhas-turmas-titulo">Minhas turmas</h2>
-        <strong>@Model.QuantidadeTurmasAtivas @(Model.QuantidadeTurmasAtivas == 1 ? "turma ativa" : "turmas ativas")</strong>
+        <p>Agenda operacional</p>
+        <h2 id="acao-professor">Acompanhe suas aulas</h2>
+        <span>Consulte períodos, chamadas, confirmações e cancelamentos em Minhas Aulas.</span>
     </div>
-    <a class="bfa-btn-primary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/turmas">Ver minhas turmas</a>
+    <a class="bfa-btn-primary bfa-admin-button" href="/professor/unidade/@Model.UnidadeId/aulas">Ir para Minhas Aulas</a>
 </section>
+
 @section Styles {
 <style>
-    .bfa-professor-section-heading { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
-    .bfa-professor-section-heading p, .bfa-professor-upcoming-card__date { margin:0 0 .35rem; color:var(--bfa-accent); font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
-    .bfa-professor-section-heading h2 { margin:0; }
-    .bfa-professor-upcoming-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr)); gap:1rem; }
-    .bfa-professor-upcoming-card { display:grid; gap:.65rem; }
-    .bfa-professor-upcoming-card.is-cancelled { border-color: rgba(220, 130, 130, 0.35); background: linear-gradient(145deg, rgba(92, 44, 48, 0.22), rgba(29, 32, 35, 0.96)); }
-    .bfa-professor-upcoming-card__title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; }
-    .bfa-professor-upcoming-card h3, .bfa-professor-upcoming-card p { margin:0; }
-    .bfa-professor-upcoming-card .bfa-admin-button { justify-self:start; }
-    .bfa-professor-upcoming-all { display:inline-flex; margin-top:1rem; }
-    @@media(max-width:42.5rem){ .bfa-professor-section-heading{align-items:stretch; flex-direction:column;} .bfa-professor-section-heading .bfa-admin-button{align-self:start;} .bfa-professor-upcoming-card__title-row{align-items:stretch; flex-direction:column;} }
+    .bfa-professor-dashboard-summary,
+    .bfa-professor-dashboard-birthdays,
+    .bfa-professor-dashboard-action { display: grid; gap: 1rem; margin-bottom: 1.25rem; }
+    .bfa-professor-section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+    .bfa-professor-section-heading p,
+    .bfa-professor-dashboard-action p { margin: 0 0 0.35rem; color: var(--bfa-accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+    .bfa-professor-section-heading h2,
+    .bfa-professor-dashboard-action h2 { margin: 0; }
+    .bfa-professor-dashboard-summary { padding: 1.125rem; }
+    .bfa-professor-dashboard-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+    .bfa-professor-dashboard-kpi { display: grid; min-width: 0; gap: 0.2rem; padding: 1rem; border: 1px solid var(--bfa-border); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.025); }
+    .bfa-professor-dashboard-kpi span { color: var(--bfa-text-muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .bfa-professor-dashboard-kpi strong { color: var(--bfa-text-primary); font-size: clamp(1.8rem, 3vw, 2.25rem); line-height: 1; }
+    .bfa-professor-dashboard-kpi small { color: var(--bfa-text-secondary); font-size: 0.78rem; }
+    .bfa-professor-dashboard-window { color: var(--bfa-text-secondary); font-size: 0.82rem; }
+    .bfa-professor-birthday-list { display: grid; gap: 0.55rem; }
+    .bfa-professor-birthday-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 1rem; border: 1px solid var(--bfa-border); border-radius: var(--radius-md); background: rgba(255, 255, 255, 0.02); }
+    .bfa-professor-birthday-item > div { display: grid; min-width: 0; gap: 0.2rem; }
+    .bfa-professor-birthday-item strong { overflow-wrap: anywhere; color: var(--bfa-text-primary); }
+    .bfa-professor-birthday-item span,
+    .bfa-professor-birthday-item small { color: var(--bfa-text-secondary); }
+    .bfa-professor-birthday-item small { flex: 0 0 auto; }
+    .bfa-professor-dashboard-empty { padding: 1rem; border: 1px dashed var(--bfa-border); border-radius: var(--radius-md); color: var(--bfa-text-secondary); }
+    .bfa-professor-dashboard-action { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .bfa-professor-dashboard-action > div { display: grid; min-width: 0; gap: 0.3rem; }
+    .bfa-professor-dashboard-action > div > span { color: var(--bfa-text-secondary); }
+    @@media (max-width: 52rem) {
+        .bfa-professor-dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @@media (max-width: 38rem) {
+        .bfa-professor-section-heading,
+        .bfa-professor-dashboard-action { align-items: stretch; flex-direction: column; }
+        .bfa-professor-dashboard-kpis { grid-template-columns: 1fr; }
+        .bfa-professor-dashboard-action .bfa-admin-button { width: 100%; }
+        .bfa-professor-birthday-item { align-items: flex-start; flex-direction: column; gap: 0.35rem; }
+    }
 </style>
 }

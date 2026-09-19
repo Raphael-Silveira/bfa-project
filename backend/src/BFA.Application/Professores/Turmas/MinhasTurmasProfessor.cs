@@ -39,10 +39,63 @@ public sealed record TurmaProfessorDetalhe(
     IReadOnlyList<HorarioTurmaProfessorResumo> HistoricoHorarios,
     IReadOnlyList<AlunoTurmaProfessorResumo> Alunos);
 
-public sealed record AulaProfessorResumo(
-    Guid AulaId, Guid TurmaId, string TurmaNome, DateOnly Data,
-    TimeOnly HoraInicio, TimeOnly HoraFim, int Alunos, int Confirmados,
-    StatusAula Status);
+public sealed record ProfessorDashboardAlunoResumo(
+    Guid AlunoId,
+    string Nome,
+    DateOnly DataNascimento);
+
+public sealed record ProfessorDashboardDados(
+    int QuantidadeTurmas,
+    int QuantidadeAulasHoje,
+    IReadOnlyList<ProfessorDashboardAlunoResumo> Alunos);
+
+public sealed record ProfessorDashboardAniversario(
+    Guid AlunoId,
+    string Nome,
+    DateOnly Data,
+    int DiasAteAniversario);
+
+public static class ProfessorDashboardAniversarios
+{
+    public static IReadOnlyList<ProfessorDashboardAniversario> Calcular(
+        IReadOnlyList<ProfessorDashboardAlunoResumo> alunos,
+        DateOnly hoje,
+        int janelaDias = 30)
+    {
+        ArgumentNullException.ThrowIfNull(alunos);
+        if (janelaDias < 0) throw new ArgumentOutOfRangeException(nameof(janelaDias));
+
+        var limite = hoje.AddDays(janelaDias);
+        return alunos
+            .Select(aluno => CriarAniversario(aluno, hoje))
+            .Where(aniversario => aniversario.Data >= hoje && aniversario.Data <= limite)
+            .OrderBy(aniversario => aniversario.Data)
+            .ThenBy(aniversario => aniversario.Nome)
+            .ToArray();
+    }
+
+    private static ProfessorDashboardAniversario CriarAniversario(
+        ProfessorDashboardAlunoResumo aluno,
+        DateOnly hoje)
+    {
+        var data = CriarDataSegura(hoje.Year, aluno.DataNascimento.Month,
+            aluno.DataNascimento.Day);
+        if (data < hoje)
+        {
+            data = CriarDataSegura(hoje.Year + 1, aluno.DataNascimento.Month,
+                aluno.DataNascimento.Day);
+        }
+
+        return new(aluno.AlunoId, aluno.Nome, data, data.DayNumber - hoje.DayNumber);
+    }
+
+    private static DateOnly CriarDataSegura(int ano, int mes, int dia)
+    {
+        if (mes == 2 && dia == 29 && !DateTime.IsLeapYear(ano))
+            dia = 28;
+        return new DateOnly(ano, mes, dia);
+    }
+}
 
 public enum EstadoMinhasTurmasProfessor
 {
@@ -64,12 +117,6 @@ public interface IMinhasTurmasProfessorRepositorio
         Guid unidadeId,
         CancellationToken cancellationToken);
 
-    Task<int> ContarAtivasAsync(
-        Guid organizacaoId,
-        Guid unidadeId,
-        Guid professorUnidadeId,
-        CancellationToken cancellationToken);
-
     Task<IReadOnlyList<TurmaProfessorResumo>> ListarAsync(
         Guid organizacaoId,
         Guid unidadeId,
@@ -85,18 +132,13 @@ public interface IMinhasTurmasProfessorRepositorio
         DateOnly dataAtual,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<AulaProfessorResumo>> ListarProximasAulasAsync(
+    Task<ProfessorDashboardDados> ObterDadosDashboardAsync(
         Guid organizacaoId, Guid unidadeId, Guid professorUnidadeId,
-        DateOnly dataAtual, int limite, CancellationToken cancellationToken);
+        DateOnly dataAtual, CancellationToken cancellationToken);
 }
 
 public interface IMinhasTurmasProfessorConsulta
 {
-    Task<ResultadoMinhasTurmasProfessor<int>> ContarAtivasAsync(
-        Guid usuarioId,
-        Guid unidadeId,
-        CancellationToken cancellationToken);
-
     Task<ResultadoMinhasTurmasProfessor<IReadOnlyList<TurmaProfessorResumo>>> ListarAsync(
         Guid usuarioId,
         Guid unidadeId,
@@ -108,7 +150,7 @@ public interface IMinhasTurmasProfessorConsulta
         Guid turmaId,
         CancellationToken cancellationToken);
 
-    Task<ResultadoMinhasTurmasProfessor<IReadOnlyList<AulaProfessorResumo>>> ListarProximasAulasAsync(
+    Task<ResultadoMinhasTurmasProfessor<ProfessorDashboardDados>> ObterDadosDashboardAsync(
         Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken);
 }
 
@@ -119,20 +161,6 @@ public sealed class MinhasTurmasProfessorConsulta(
     TimeProvider timeProvider,
     ILogger<MinhasTurmasProfessorConsulta> logger) : IMinhasTurmasProfessorConsulta
 {
-    public async Task<ResultadoMinhasTurmasProfessor<int>> ContarAtivasAsync(
-        Guid usuarioId,
-        Guid unidadeId,
-        CancellationToken cancellationToken)
-    {
-        var contexto = await ResolverContextoAsync(usuarioId, unidadeId, cancellationToken);
-        if (contexto.Estado != EstadoMinhasTurmasProfessor.Sucesso)
-            return new(contexto.Estado);
-        return new(EstadoMinhasTurmasProfessor.Sucesso,
-            await repositorio.ContarAtivasAsync(
-                contexto.OrganizacaoId, unidadeId, contexto.ProfessorUnidadeId,
-                cancellationToken));
-    }
-
     public async Task<ResultadoMinhasTurmasProfessor<IReadOnlyList<TurmaProfessorResumo>>>
         ListarAsync(
             Guid usuarioId,
@@ -166,15 +194,20 @@ public sealed class MinhasTurmasProfessorConsulta(
             : new(EstadoMinhasTurmasProfessor.Sucesso, turma);
     }
 
-    public async Task<ResultadoMinhasTurmasProfessor<IReadOnlyList<AulaProfessorResumo>>>
-        ListarProximasAulasAsync(Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
+    public async Task<ResultadoMinhasTurmasProfessor<ProfessorDashboardDados>>
+        ObterDadosDashboardAsync(Guid usuarioId, Guid unidadeId, CancellationToken cancellationToken)
     {
         var contexto = await ResolverContextoAsync(usuarioId, unidadeId, cancellationToken);
         if (contexto.Estado != EstadoMinhasTurmasProfessor.Sucesso)
             return new(contexto.Estado);
-        return new(EstadoMinhasTurmasProfessor.Sucesso,
-            await repositorio.ListarProximasAulasAsync(contexto.OrganizacaoId, unidadeId,
-                contexto.ProfessorUnidadeId, Hoje(), 4, cancellationToken));
+
+        var dados = await repositorio.ObterDadosDashboardAsync(
+            contexto.OrganizacaoId, unidadeId, contexto.ProfessorUnidadeId,
+            Hoje(), cancellationToken);
+        logger.LogDebug(
+            "ProfessorDashboard: resumo carregado para {UsuarioId} na Unidade {UnidadeId}",
+            usuarioId, unidadeId);
+        return new(EstadoMinhasTurmasProfessor.Sucesso, dados);
     }
 
     private async Task<ContextoProfessorTurmas> ResolverContextoAsync(

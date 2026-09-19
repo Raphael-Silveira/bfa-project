@@ -45,9 +45,14 @@ public sealed partial class AreaProfessorEndpointTests : IClassFixture<AreaProfe
         Assert.DoesNotContain("bfa-admin-nav__link", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Contrato<", html, StringComparison.Ordinal);
         Assert.DoesNotContain(">Professores<", html, StringComparison.Ordinal);
-        Assert.Contains("Minhas turmas", html, StringComparison.Ordinal);
-        Assert.Contains("0 turmas ativas", html, StringComparison.Ordinal);
-        Assert.Contains($"/professor/unidade/{unidadeId:D}/turmas", html,
+        Assert.Contains("Turmas", html, StringComparison.Ordinal);
+        Assert.Contains("Alunos", html, StringComparison.Ordinal);
+        Assert.Contains("Aulas hoje", html, StringComparison.Ordinal);
+        Assert.Contains("Aniversários", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Próximas aulas", html, StringComparison.Ordinal);
+        Assert.Contains("Nenhum aniversário nos próximos 30 dias.", html,
+            StringComparison.Ordinal);
+        Assert.Contains($"/professor/unidade/{unidadeId:D}/aulas", html,
             StringComparison.Ordinal);
         Assert.NotEqual(Guid.Empty, organizacaoId);
     }

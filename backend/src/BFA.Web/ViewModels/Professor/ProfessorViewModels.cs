@@ -21,8 +21,16 @@ public sealed record ProfessorInicioViewModel(
     string NomeUnidade,
     bool PodeTrocarUnidade,
     string? PrimeiroNome,
-    int QuantidadeTurmasAtivas,
-    IReadOnlyList<AulaProfessorResumo> ProximasAulas) : IProfessorContextoViewModel;
+    int QuantidadeTurmas,
+    int QuantidadeAlunos,
+    int QuantidadeAulasHoje,
+    IReadOnlyList<AniversarioProfessorViewModel> ProximosAniversarios) : IProfessorContextoViewModel;
+
+public sealed record AniversarioProfessorViewModel(
+    Guid AlunoId,
+    string Nome,
+    string DiaMes,
+    int DiasAteAniversario);
 
 public sealed record MinhasTurmasProfessorViewModel(
     Guid UnidadeId,
