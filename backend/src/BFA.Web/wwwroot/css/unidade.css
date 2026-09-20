@@ -2901,3 +2901,213 @@
   color: var(--bfa-accent);
   font-size: .8rem;
 }
+
+.bfa-day-use-mobile-list { display: none; }
+
+.bfa-day-use-page-header { align-items: flex-end; display: flex; gap: 1.5rem; justify-content: space-between; }
+.bfa-day-use-page-header .bfa-btn-primary { flex: 0 0 auto; }
+.bfa-day-use-config-card { align-items: center; background: var(--bfa-surface, #1b1d20); border: 1px solid var(--bfa-border); border-radius: var(--radius-lg); display: flex; gap: 1.5rem; justify-content: space-between; margin: 1.5rem 0; padding: 1.1rem 1.35rem; }
+.bfa-day-use-config-card h2, .bfa-day-use-list-card h2 { font-size: 1.25rem; margin: .2rem 0; }
+.bfa-day-use-config-card span, .bfa-list-card__head span { color: var(--bfa-text-secondary); font-size: .86rem; }
+.bfa-day-use-config-card__value { align-items: center; display: flex; flex: 0 0 auto; gap: 1rem; }
+.bfa-day-use-config-card__value strong { color: var(--bfa-text-primary, #fff); font-size: 1.4rem; white-space: nowrap; }
+.bfa-day-use-config-card__value strong.is-muted { color: var(--bfa-text-secondary); font-size: 1rem; }
+.bfa-btn-compact { min-height: 2.35rem; padding: .45rem .8rem; white-space: nowrap; }
+.bfa-list-card__head { align-items: center; display: flex; gap: 1rem; justify-content: space-between; }
+.bfa-list-card__head-action { align-items: center; display: flex; flex: 0 0 auto; gap: 1rem; }
+.bfa-day-use-filters { align-items: end; border-bottom: 1px solid var(--bfa-border); display: grid; gap: 1rem; grid-template-columns: minmax(8rem, 1fr) minmax(8rem, 1fr) minmax(12rem, 1.5fr) auto; margin: 1.25rem 0 0; padding: 1rem 1.25rem 1.25rem; }
+.bfa-day-use-field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.bfa-day-use-field label, .bfa-day-use-form label, .bfa-day-use-form legend, .bfa-day-use-config-form > label { color: var(--bfa-text-secondary); font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.bfa-day-use-field input, .bfa-day-use-field select, .bfa-day-use-form input, .bfa-day-use-form select, .bfa-day-use-config-form input { background: rgba(255,255,255,.025); border: 1px solid var(--bfa-border); border-radius: .55rem; color: var(--bfa-text-primary, #fff); min-height: 2.7rem; padding: .55rem .7rem; width: 100%; }
+.bfa-day-use-field input:focus, .bfa-day-use-field select:focus, .bfa-day-use-form input:focus, .bfa-day-use-form select:focus, .bfa-day-use-config-form input:focus { border-color: var(--bfa-accent); box-shadow: 0 0 0 3px rgba(255,193,7,.12); outline: 0; }
+.bfa-day-use-filter-actions { display: flex; gap: .5rem; }
+.bfa-day-use-filter-actions > * { align-items: center; display: inline-flex; justify-content: center; }
+.bfa-day-use-table th, .bfa-day-use-table td { white-space: nowrap; }
+.bfa-day-use-badge { border: 1px solid transparent; border-radius: 999px; display: inline-flex; font-size: .72rem; font-weight: 700; line-height: 1.2; padding: .32rem .55rem; }
+.bfa-day-use-badge--neutral { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); color: var(--bfa-text-secondary); }
+.bfa-day-use-badge--success { background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.24); color: #6ee7b7; }
+.bfa-day-use-badge--warning { background: rgba(255,193,7,.1); border-color: rgba(255,193,7,.22); color: var(--bfa-accent); }
+.bfa-day-use-badge--muted { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.1); color: var(--bfa-text-secondary); }
+.bfa-day-use-empty-action { color: var(--bfa-text-secondary); }
+
+.bfa-day-use-dialog { background: transparent; border: 0; margin: auto; max-height: calc(100vh - 2rem); max-width: calc(100vw - 2rem); overflow: visible; padding: 0; width: min(32rem, calc(100vw - 2rem)); }
+.bfa-day-use-dialog::backdrop { background: rgba(5,6,8,.78); backdrop-filter: blur(3px); }
+.bfa-day-use-dialog__surface { background: #1b1d20; border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius-lg); box-shadow: 0 1.5rem 4rem rgba(0,0,0,.55); color: var(--bfa-text-primary, #fff); max-height: calc(100vh - 2rem); overflow-y: auto; }
+.bfa-day-use-dialog__header { align-items: flex-start; border-bottom: 1px solid var(--bfa-border); display: flex; gap: 1rem; justify-content: space-between; padding: 1.35rem 1.5rem 1rem; }
+.bfa-day-use-dialog__header h2 { font-size: 1.35rem; margin: .2rem 0 .35rem; }
+.bfa-day-use-dialog__header p:last-child { color: var(--bfa-text-secondary); font-size: .85rem; margin: 0; }
+.bfa-day-use-dialog__close { background: transparent; border: 1px solid var(--bfa-border); border-radius: .5rem; color: var(--bfa-text-secondary); cursor: pointer; font-size: 1.45rem; line-height: 1; min-height: 2.25rem; min-width: 2.25rem; }
+.bfa-day-use-dialog__close:hover, .bfa-day-use-dialog__close:focus-visible { border-color: var(--bfa-accent); color: var(--bfa-accent); outline: 0; }
+.bfa-day-use-form { padding: 1.25rem 1.5rem 0; }
+.bfa-day-use-form__section { border: 0; margin: 0 0 1.15rem; padding: 0; }
+.bfa-day-use-form__section legend { margin-bottom: .55rem; padding: 0; }
+.bfa-day-use-segmented { background: rgba(255,255,255,.04); border: 1px solid var(--bfa-border); border-radius: .65rem; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
+.bfa-day-use-segment { background: transparent; border: 0; color: var(--bfa-text-secondary); cursor: pointer; min-height: 2.65rem; padding: .55rem .8rem; }
+.bfa-day-use-segment.is-active { background: rgba(255,193,7,.13); color: var(--bfa-accent); font-weight: 700; }
+.bfa-day-use-form__fields { display: grid; gap: 1rem; }
+.bfa-day-use-form__fields--two { grid-template-columns: 1fr 1fr; }
+.bfa-day-use-field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.bfa-day-use-field__hint { color: var(--bfa-text-secondary); font-size: .68rem; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.bfa-day-use-money-input { align-items: center; display: flex; }
+.bfa-day-use-money-input span { background: rgba(255,255,255,.05); border: 1px solid var(--bfa-border); border-right: 0; border-radius: .55rem 0 0 .55rem; color: var(--bfa-text-secondary); min-height: 2.7rem; padding: .65rem .55rem; }
+.bfa-day-use-money-input input { border-radius: 0 .55rem .55rem 0; }
+.bfa-day-use-suggested-value { align-items: baseline; background: rgba(255,255,255,.035); border: 1px solid var(--bfa-border); border-radius: .55rem; display: flex; gap: .6rem; margin-top: 1rem; padding: .7rem .8rem; }
+.bfa-day-use-suggested-value span { color: var(--bfa-text-secondary); font-size: .78rem; }
+.bfa-day-use-suggested-value strong { font-size: 1rem; }
+.bfa-day-use-suggested-value small { color: var(--bfa-text-secondary); font-size: .72rem; margin-left: auto; }
+.bfa-day-use-paid { align-items: center; display: flex; gap: .55rem; margin-top: 1rem; text-transform: none!important; }
+.bfa-day-use-paid input { accent-color: var(--bfa-accent); min-height: auto; width: 1rem; }
+.bfa-day-use-dialog__footer { background: rgba(0,0,0,.14); border-top: 1px solid var(--bfa-border); display: flex; gap: .65rem; justify-content: flex-end; margin: 1.25rem -1.5rem 0; padding: 1rem 1.5rem; }
+.bfa-day-use-config-form { padding: 1.25rem 1.5rem 0; }
+.bfa-day-use-config-form > label { display: block; margin-bottom: .4rem; }
+
+@media (max-width: 767px) {
+  .bfa-day-use-page-header { align-items: stretch; flex-direction: column; gap: 1rem; }
+  .bfa-day-use-page-header .bfa-btn-primary { width: 100%; }
+  .bfa-day-use-config-card, .bfa-list-card__head { align-items: stretch; flex-direction: column; }
+  .bfa-day-use-config-card__value, .bfa-list-card__head-action { justify-content: space-between; }
+  .bfa-day-use-filters { grid-template-columns: 1fr 1fr; }
+  .bfa-day-use-filter-actions { grid-column: 1 / -1; }
+  .bfa-day-use-filter-actions > * { flex: 1; }
+  .bfa-day-use-table { min-width: 54rem; }
+  .bfa-day-use-mobile-list { display: grid; gap: .75rem; margin-top: 1rem; }
+  .bfa-day-use-table + .bfa-day-use-mobile-list { margin-top: 0; }
+  .bfa-data-table-wrapper { display: none; }
+  .bfa-day-use-mobile-card { background: rgba(255,255,255,.025); border: 1px solid var(--bfa-border); border-radius: var(--radius-lg); padding: 1rem; }
+  .bfa-day-use-mobile-card__header { align-items: flex-start; display: flex; gap: .75rem; justify-content: space-between; }
+  .bfa-day-use-mobile-card__header > div { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+  .bfa-day-use-mobile-card__header strong { overflow-wrap: anywhere; }
+  .bfa-day-use-mobile-card dl { display: grid; gap: .65rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1rem 0; }
+  .bfa-day-use-mobile-card dt { color: var(--bfa-text-secondary); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; }
+  .bfa-day-use-mobile-card dd { margin: .15rem 0 0; overflow-wrap: anywhere; }
+  .bfa-day-use-mobile-card form, .bfa-day-use-mobile-card button { width: 100%; }
+  .bfa-day-use-mobile-card form[data-day-use-delete-form] { width: auto; }
+  .bfa-day-use-mobile-card button.bfa-btn-danger-secondary--icon { width: 2.5rem; }
+  .bfa-day-use-dialog { max-width: calc(100vw - 1rem); width: calc(100vw - 1rem); }
+  .bfa-day-use-dialog__surface { border-radius: .85rem; max-height: calc(100vh - 1rem); }
+  .bfa-day-use-dialog__header, .bfa-day-use-form { padding-left: 1rem; padding-right: 1rem; }
+  .bfa-day-use-form__fields--two { grid-template-columns: 1fr; }
+  .bfa-day-use-suggested-value { flex-wrap: wrap; }
+  .bfa-day-use-suggested-value small { margin-left: 0; width: 100%; }
+  .bfa-day-use-dialog__footer { flex-direction: column-reverse; margin-left: -1rem; margin-right: -1rem; padding-left: 1rem; padding-right: 1rem; }
+  .bfa-day-use-dialog__footer button { width: 100%; }
+}
+
+/* Day Use: reuse the shared date, money and combobox components without
+   changing the feature's existing layout. */
+.bfa-day-use-filters .bfa-admin-date-field,
+.bfa-day-use-form .bfa-admin-date-field {
+  min-width: 0;
+  width: 100%;
+}
+
+.bfa-day-use-filters .bfa-admin-date-field .bfa-form-control,
+.bfa-day-use-form .bfa-admin-date-field .bfa-form-control {
+  min-width: 0;
+}
+
+[data-day-use-root] .bfa-admin-date-field__trigger {
+  color: var(--bfa-accent);
+  opacity: 1;
+}
+
+[data-day-use-root] .bfa-admin-date-field__trigger svg {
+  fill: none;
+  height: 1.25rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 1.25rem;
+}
+
+[data-day-use-root] .bfa-admin-date-field:focus-within .bfa-admin-date-field__trigger {
+  background: var(--bfa-accent-subtle);
+  color: var(--bfa-accent);
+}
+
+[data-day-use-root] .bfa-admin-date-field__trigger:disabled {
+  opacity: .55;
+}
+
+.bfa-day-use-dialog .bfa-admin-combobox {
+  position: relative;
+  z-index: 2;
+}
+
+.bfa-day-use-dialog .bfa-admin-combobox__list {
+  z-index: 1100;
+}
+
+.bfa-day-use-empty-state {
+  align-items: flex-start;
+  background: rgba(255,255,255,.025);
+  border: 1px dashed var(--bfa-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-top: 1.25rem;
+  padding: 1.35rem 1.25rem;
+}
+
+.bfa-day-use-empty-state strong { color: var(--bfa-text-primary, #fff); }
+.bfa-day-use-empty-state span { color: var(--bfa-text-secondary); font-size: .9rem; }
+
+.bfa-day-use-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .5rem; }
+.bfa-day-use-actions form { display: inline-flex; margin: 0; }
+.bfa-btn-danger-secondary { background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.35); border-radius: var(--radius-md, .5rem); color: #fca5a5; cursor: pointer; font: inherit; font-weight: 600; min-height: 2.5rem; padding: .5rem .8rem; }
+.bfa-btn-danger-secondary:hover, .bfa-btn-danger-secondary:focus-visible { background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.65); color: #fff; }
+.bfa-btn-danger-secondary:focus-visible { outline: 2px solid #ef4444; outline-offset: 2px; }
+.bfa-btn-danger-secondary--icon { align-items: center; display: inline-grid; height: 2.5rem; justify-content: center; min-width: 2.5rem; padding: 0; width: 2.5rem; }
+.bfa-btn-danger-secondary--icon svg { height: 1.15rem; width: 1.15rem; }
+.bfa-day-use-table .bfa-day-use-actions { min-width: 12rem; }
+
+@media (max-width: 390px) {
+  .bfa-day-use-filters { grid-template-columns: 1fr; }
+  .bfa-day-use-filter-actions { grid-column: auto; flex-direction: column; }
+}
+
+.bfa-data-table-wrapper {
+  overflow-x: auto;
+  margin-top: 1.25rem;
+  border: 1px solid var(--bfa-border);
+  border-radius: var(--radius-lg);
+}
+
+.bfa-data-table {
+  width: 100%;
+  min-width: 48rem;
+  border-collapse: collapse;
+}
+
+.bfa-data-table th,
+.bfa-data-table td {
+  padding: .9rem 1rem;
+  border-bottom: 1px solid var(--bfa-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.bfa-data-table th {
+  color: var(--bfa-text-secondary);
+  font-size: .74rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+  .bfa-data-table-wrapper { display: none; }
+  .bfa-day-use-mobile-list { display: grid; gap: .75rem; margin-top: 1rem; }
+  .bfa-day-use-mobile-card { background: rgba(255,255,255,.025); border: 1px solid var(--bfa-border); border-radius: var(--radius-lg); padding: 1rem; }
+  .bfa-day-use-mobile-card__header { align-items: baseline; display: flex; gap: .75rem; justify-content: space-between; }
+  .bfa-day-use-mobile-card__header strong { min-width: 0; overflow-wrap: anywhere; }
+  .bfa-day-use-mobile-card__header span { color: var(--bfa-text-secondary); flex: 0 0 auto; font-size: .85rem; }
+  .bfa-day-use-mobile-card dl { display: grid; gap: .55rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1rem 0; }
+  .bfa-day-use-mobile-card dl div { min-width: 0; }
+  .bfa-day-use-mobile-card dt { color: var(--bfa-text-secondary); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; }
+  .bfa-day-use-mobile-card dd { margin: .15rem 0 0; overflow-wrap: anywhere; }
+  .bfa-day-use-mobile-card form, .bfa-day-use-mobile-card button { width: 100%; }
+  .bfa-day-use-mobile-card form[data-day-use-delete-form] { width: auto; }
+  .bfa-day-use-mobile-card button.bfa-btn-danger-secondary--icon { width: 2.5rem; }
+}

@@ -50,6 +50,8 @@ public sealed class Unidade
 
     public bool Ativa { get; private set; }
 
+    public decimal? ValorDayUseSugerido { get; private set; }
+
     public DateTime CriadoEmUtc { get; private set; }
 
     public DateTime AtualizadoEmUtc { get; private set; }
@@ -73,6 +75,16 @@ public sealed class Unidade
     {
         ValidarDataAtualizacao(atualizadoEmUtc);
         Ativa = false;
+        AtualizadoEmUtc = atualizadoEmUtc;
+    }
+
+    public void ConfigurarValorDayUseSugerido(decimal? valor, DateTime atualizadoEmUtc)
+    {
+        ValidarDataAtualizacao(atualizadoEmUtc);
+        if (valor is < 0)
+            throw new ArgumentOutOfRangeException(nameof(valor), "O valor sugerido nao pode ser negativo.");
+
+        ValorDayUseSugerido = valor;
         AtualizadoEmUtc = atualizadoEmUtc;
     }
 

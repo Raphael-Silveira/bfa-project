@@ -73,6 +73,8 @@
         const entrada = campo.querySelector("[data-bfa-date-input]");
         const gatilho = campo.querySelector("[data-bfa-date-trigger]");
         if (!entrada || !gatilho) return;
+        const usarPortal = campo.hasAttribute("data-bfa-date-portal");
+        const manterAbaixo = campo.dataset.bfaDatePlacement === "bottom-start";
         const dataMinima = analisarDataIso(entrada.dataset.bfaDateMin);
 
         const calendario = document.createElement("div");
@@ -86,6 +88,7 @@
         calendario.setAttribute("aria-modal", "false");
         calendario.setAttribute("aria-labelledby", tituloId);
         gatilho.setAttribute("aria-controls", calendarioId);
+        if (usarPortal) calendario.classList.add("bfa-admin-calendar--portal");
 
         const cabecalho = document.createElement("div");
         cabecalho.className = "bfa-admin-calendar__header";
@@ -119,7 +122,9 @@
         botaoHoje.textContent = "Hoje";
         rodape.append(botaoHoje);
         calendario.append(cabecalho, semana, grade, rodape);
-        campo.append(calendario);
+        const dialogoAnfitriao = campo.closest("dialog");
+        if (usarPortal) (dialogoAnfitriao || document.body).append(calendario);
+        else campo.append(calendario);
 
         const inicial = analisarData(entrada.value) ?? hoje();
         let mesExibido = inicial.mes;
@@ -131,9 +136,22 @@
             campo.classList.remove("opens-up", "aligns-right");
             calendario.style.removeProperty("--bfa-calendar-offset-x");
             calendario.style.removeProperty("--bfa-calendar-offset-y");
+            calendario.style.removeProperty("left");
+            calendario.style.removeProperty("top");
+            calendario.style.removeProperty("max-height");
+            if (calendarioAberto?.reposition) {
+                window.removeEventListener("resize", calendarioAberto.reposition);
+                window.removeEventListener("scroll", calendarioAberto.reposition, true);
+                window.visualViewport?.removeEventListener("resize", calendarioAberto.reposition);
+                window.visualViewport?.removeEventListener("scroll", calendarioAberto.reposition);
+            }
             if (calendarioAberto?.calendario === calendario) calendarioAberto = null;
             if (devolverFoco) gatilho.focus();
         };
+
+        dialogoAnfitriao?.addEventListener("close", () => {
+            if (calendarioAberto?.calendario === calendario) fechar();
+        });
 
         const selecionar = (data) => {
             entrada.value = formatarData(data);
@@ -205,7 +223,43 @@
 
         if (dataMinima && compararDatas(hoje(), dataMinima) < 0) botaoHoje.disabled = true;
 
+        const posicionarNoPortal = () => {
+            const campoRect = gatilho.getBoundingClientRect();
+            const viewport = window.visualViewport;
+            const alturaViewport = viewport?.height ?? window.innerHeight;
+            const larguraViewport = viewport?.width ?? window.innerWidth;
+            const deslocamentoViewportX = viewport?.offsetLeft ?? 0;
+            const deslocamentoViewportY = viewport?.offsetTop ?? 0;
+            const margem = 8;
+            const gap = 8;
+            const alturaNatural = calendario.scrollHeight;
+            let top = campoRect.bottom + deslocamentoViewportY + gap;
+            let espacoDisponivel = deslocamentoViewportY + alturaViewport - top - margem;
+
+            const viewportPequena = larguraViewport <= 768;
+            if ((!manterAbaixo || viewportPequena)
+                && espacoDisponivel < Math.min(alturaNatural, 180)
+                && campoRect.top + deslocamentoViewportY > espacoDisponivel) {
+                top = Math.max(deslocamentoViewportY + margem, campoRect.top + deslocamentoViewportY - gap - alturaNatural);
+                espacoDisponivel = campoRect.top + deslocamentoViewportY - top - gap;
+            }
+
+            calendario.style.maxHeight = `${Math.max(80, Math.min(alturaNatural, Math.max(80, espacoDisponivel)))}px`;
+            const larguraCalendario = calendario.getBoundingClientRect().width;
+            const left = Math.max(deslocamentoViewportX + margem,
+                Math.min(campoRect.left + deslocamentoViewportX,
+                    deslocamentoViewportX + larguraViewport - larguraCalendario - margem));
+            calendario.style.left = `${left}px`;
+            calendario.style.top = `${Math.max(deslocamentoViewportY + margem,
+                Math.min(top, deslocamentoViewportY + alturaViewport - margem - 80))}px`;
+        };
+
         const posicionar = () => {
+            if (usarPortal) {
+                posicionarNoPortal();
+                return;
+            }
+
             campo.classList.remove("opens-up", "aligns-right");
             calendario.style.setProperty("--bfa-calendar-offset-x", "0px");
             calendario.style.setProperty("--bfa-calendar-offset-y", "0px");
@@ -241,7 +295,13 @@
             renderizar();
             calendario.hidden = false;
             gatilho.setAttribute("aria-expanded", "true");
-            calendarioAberto = { calendario, fechar };
+            calendarioAberto = { calendario, campo, fechar, reposition: posicionar };
+            if (usarPortal) {
+                window.addEventListener("resize", posicionar);
+                window.addEventListener("scroll", posicionar, true);
+                window.visualViewport?.addEventListener("resize", posicionar);
+                window.visualViewport?.addEventListener("scroll", posicionar);
+            }
             globalThis.requestAnimationFrame(posicionar);
         };
 
@@ -297,7 +357,9 @@
         instalarValidacaoPtBr();
         document.querySelectorAll("[data-bfa-date-field]").forEach(iniciarCampo);
         document.addEventListener("pointerdown", (evento) => {
-            if (calendarioAberto && !calendarioAberto.calendario.parentElement.contains(evento.target)) {
+            if (calendarioAberto
+                && !calendarioAberto.calendario.contains(evento.target)
+                && !calendarioAberto.campo.contains(evento.target)) {
                 calendarioAberto.fechar();
             }
         });

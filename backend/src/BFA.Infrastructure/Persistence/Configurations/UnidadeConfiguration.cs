@@ -52,6 +52,11 @@ public sealed class UnidadeConfiguration : IEntityTypeConfiguration<Unidade>
             .HasColumnType("boolean")
             .IsRequired();
 
+        builder.Property(unidade => unidade.ValorDayUseSugerido)
+            .HasColumnName("valor_day_use_sugerido")
+            .HasColumnType("numeric(12,2)")
+            .IsRequired(false);
+
         builder.Property(unidade => unidade.CriadoEmUtc)
             .HasColumnName("criado_em_utc")
             .HasColumnType("timestamp with time zone")

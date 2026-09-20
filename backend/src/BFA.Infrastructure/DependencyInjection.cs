@@ -4,6 +4,7 @@ using BFA.Application.Acessos;
 using BFA.Application.Aulas;
 using BFA.Application.Bootstrap;
 using BFA.Application.Cobrancas;
+using BFA.Application.DayUses;
 using BFA.Application.Contratos;
 using BFA.Application.Franqueadora;
 using BFA.Application.Franqueadora.AcessosUnidade;
@@ -30,6 +31,7 @@ using BFA.Infrastructure.Aulas;
 using BFA.Infrastructure.Bootstrap;
 using BFA.Infrastructure.Armazenamento;
 using BFA.Infrastructure.Cobrancas;
+using BFA.Infrastructure.DayUses;
 using BFA.Infrastructure.Franqueadora;
 using BFA.Infrastructure.Identity;
 using BFA.Infrastructure.Localidades;
@@ -206,6 +208,8 @@ public static class DependencyInjection
         services.AddScoped<IAlunoAreaRepositorio, AlunoAreaRepositorio>();
         services.AddScoped<IAlunoAreaServico, AlunoAreaServico>();
         services.AddScoped<IConfirmacaoAulaAlunoServico, ConfirmacaoAulaAlunoServico>();
+        services.AddScoped<IDayUsesRepositorio, DayUsesRepositorio>();
+        services.AddScoped<IDayUsesServico, DayUsesServico>();
         services.AddScoped<IAcessoAlunoServico, AcessoAlunoServico>();
         services.AddHttpClient<IIbgeLocalidadesClient, IbgeLocalidadesClient>(httpClient =>
         {

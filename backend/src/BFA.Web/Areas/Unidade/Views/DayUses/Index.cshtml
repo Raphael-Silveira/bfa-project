@@ -1,0 +1,84 @@
+@using System.Globalization
+@model BFA.Web.ViewModels.DayUse.DayUseConfiguracaoViewModel
+@{
+    ViewData["Title"] = "Day Use";
+    Layout = "_UnidadeLayout";
+    ViewData["DayUseRegisterAction"] = $"/unidade/{Model.UnidadeId}/day-use/registrar";
+    var valorConfigurado = Model.ValorSugerido is not null;
+}
+
+<div data-day-use-root>
+    <header class="bfa-admin-page-header bfa-day-use-page-header">
+        <div class="bfa-admin-page-header__copy"><p class="bfa-admin-page-header__eyebrow">Operação da Unidade</p><h1 class="bfa-admin-page-header__title">Day Use</h1><p class="bfa-admin-page-header__description">Gerencie utilizações avulsas da unidade.</p></div>
+    </header>
+    @if (TempData["Sucesso"] is string sucesso) { <div class="bfa-admin-notice" role="status">@sucesso</div> }
+    <div asp-validation-summary="ModelOnly" class="bfa-validation-summary"></div>
+
+    <section class="bfa-day-use-config-card" aria-labelledby="day-use-config-title">
+        <div><p class="bfa-admin-page-header__eyebrow">Configuração da Unidade</p><h2 id="day-use-config-title">Valor sugerido do Day Use</h2><span>Valor utilizado como padrão nos novos registros.</span></div>
+        <div class="bfa-day-use-config-card__value">@if (valorConfigurado) { <strong>@Model.ValorSugerido!.Value.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</strong><button type="button" class="bfa-btn-secondary bfa-btn-compact" data-day-use-config-open>Alterar</button> } else { <strong class="is-muted">Não configurado</strong><button type="button" class="bfa-btn-secondary bfa-btn-compact" data-day-use-config-open>Configurar valor</button> }</div>
+    </section>
+
+    <section class="bfa-list-card bfa-day-use-list-card" aria-labelledby="day-use-history-title">
+        <header class="bfa-list-card__head"><div><p class="bfa-admin-page-header__eyebrow">Histórico</p><h2 id="day-use-history-title">Day Uses</h2><span>Registros da operação da unidade.</span></div><div class="bfa-list-card__head-action"><strong>@Model.Pagina.TotalItens registro(s)</strong><button type="button" class="bfa-btn-primary bfa-admin-button" data-day-use-open>+ Registrar Day Use</button></div></header>
+        <form method="get" class="bfa-day-use-filters" aria-label="Filtros do histórico de Day Use">
+            <div class="bfa-day-use-field"><label for="day-use-data-inicial">Data inicial</label><div class="bfa-admin-date-field" data-bfa-date-field data-bfa-date-portal data-bfa-date-placement="bottom-start"><input id="day-use-data-inicial" name="dataInicial" value="@Model.DataInicial" class="form-control bfa-form-control" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" data-bfa-date-input /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data inicial" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></button></div></div>
+            <div class="bfa-day-use-field"><label for="day-use-data-final">Data final</label><div class="bfa-admin-date-field" data-bfa-date-field data-bfa-date-portal data-bfa-date-placement="bottom-start"><input id="day-use-data-final" name="dataFinal" value="@Model.DataFinal" class="form-control bfa-form-control" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" data-bfa-date-input /><button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data final" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></button></div></div>
+            <div class="bfa-day-use-field"><label for="day-use-participante">Participante</label><input id="day-use-participante" name="participante" value="@Model.Participante" class="form-control bfa-form-control" placeholder="Nome do participante" /></div>
+            <div class="bfa-day-use-filter-actions"><button class="bfa-btn-secondary bfa-admin-button" type="submit">Filtrar</button><a class="bfa-btn-secondary bfa-admin-button" href="/unidade/@Model.UnidadeId/day-use">Limpar</a></div>
+        </form>
+        @if (Model.Pagina.Itens.Count == 0)
+        {
+            <div class="bfa-day-use-empty-state" role="status"><strong>Nenhum Day Use encontrado.</strong><span>Registre o primeiro Day Use ou altere os filtros.</span></div>
+        }
+        else
+        {
+            <div class="bfa-data-table-wrapper">
+                <table class="bfa-data-table bfa-day-use-table">
+                    <thead><tr><th>Data</th><th>Participante</th><th>Tipo</th><th>Valor sugerido</th><th>Valor cobrado</th><th>Situação</th><th>Registrado por</th><th>Ações</th></tr></thead>
+                    <tbody>
+                    @foreach (var item in Model.Pagina.Itens)
+                    {
+                        <tr>
+                            <td>@item.DataUso.ToString("dd/MM/yyyy")</td><td><strong>@item.Participante</strong></td>
+                            <td><span class="bfa-day-use-badge bfa-day-use-badge--neutral">@(item.EhAluno ? "Aluno" : "Avulso")</span></td>
+                            <td>@item.ValorSugerido.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</td><td>@item.ValorCobrado.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</td>
+                            <td><span class="bfa-day-use-badge @(item.ValorCobrado == 0 ? "bfa-day-use-badge--muted" : item.Pago ? "bfa-day-use-badge--success" : "bfa-day-use-badge--warning")">@(item.ValorCobrado == 0 ? "Cortesia" : item.Pago ? "Pago" : "Pendente")</span></td>
+                            <td>@item.NomeRegistrador</td>
+                            <td class="bfa-day-use-actions">
+                                @if (item.ValorCobrado > 0 && !item.Pago) { <form method="post" action="/unidade/@Model.UnidadeId/day-use/@item.DayUseId/pago">@Html.AntiForgeryToken()<button class="bfa-btn-secondary bfa-btn-compact" type="submit">Marcar como pago</button></form> }
+                                <form method="post" action="/unidade/@Model.UnidadeId/day-use/@item.DayUseId/excluir" data-day-use-delete-form>
+                                    @Html.AntiForgeryToken()<input type="hidden" name="dataInicial" value="@Model.DataInicial" /><input type="hidden" name="dataFinal" value="@Model.DataFinal" /><input type="hidden" name="participante" value="@Model.Participante" /><input type="hidden" name="pagina" value="@Model.Pagina.PaginaAtual" />
+                                    <button class="bfa-btn-danger-secondary bfa-btn-compact bfa-btn-danger-secondary--icon" type="button" aria-label="Excluir Day Use de @item.Participante" title="Excluir Day Use" data-day-use-delete data-participante="@item.Participante" data-data="@item.DataUso.ToString("dd/MM/yyyy")" data-valor="@item.ValorCobrado.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 5v5m4-5v5" /></svg></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div class="bfa-day-use-mobile-list">
+                @foreach (var item in Model.Pagina.Itens)
+                {
+                    <article class="bfa-day-use-mobile-card">
+                        <div class="bfa-day-use-mobile-card__header"><div><strong>@item.Participante</strong><span class="bfa-day-use-badge bfa-day-use-badge--neutral">@(item.EhAluno ? "Aluno" : "Avulso")</span></div><span class="bfa-day-use-badge @(item.ValorCobrado == 0 ? "bfa-day-use-badge--muted" : item.Pago ? "bfa-day-use-badge--success" : "bfa-day-use-badge--warning")">@(item.ValorCobrado == 0 ? "Cortesia" : item.Pago ? "Pago" : "Pendente")</span></div>
+                        <dl><div><dt>Data de uso</dt><dd>@item.DataUso.ToString("dd/MM/yyyy")</dd></div><div><dt>Valor sugerido</dt><dd>@item.ValorSugerido.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</dd></div><div><dt>Valor cobrado</dt><dd>@item.ValorCobrado.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</dd></div><div><dt>Registrado por</dt><dd>@item.NomeRegistrador</dd></div></dl>
+                        <div class="bfa-day-use-actions">
+                            @if (item.ValorCobrado > 0 && !item.Pago) { <form method="post" action="/unidade/@Model.UnidadeId/day-use/@item.DayUseId/pago">@Html.AntiForgeryToken()<button class="bfa-btn-secondary" type="submit">Marcar como pago</button></form> }
+                            <form method="post" action="/unidade/@Model.UnidadeId/day-use/@item.DayUseId/excluir" data-day-use-delete-form>
+                                @Html.AntiForgeryToken()<input type="hidden" name="dataInicial" value="@Model.DataInicial" /><input type="hidden" name="dataFinal" value="@Model.DataFinal" /><input type="hidden" name="participante" value="@Model.Participante" /><input type="hidden" name="pagina" value="@Model.Pagina.PaginaAtual" />
+                                <button class="bfa-btn-danger-secondary bfa-btn-danger-secondary--icon" type="button" aria-label="Excluir Day Use de @item.Participante" title="Excluir Day Use" data-day-use-delete data-participante="@item.Participante" data-data="@item.DataUso.ToString("dd/MM/yyyy")" data-valor="@item.ValorCobrado.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m5 5v5m4-5v5" /></svg></button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <dialog class="bfa-day-use-dialog bfa-day-use-config-dialog" data-day-use-config-dialog aria-labelledby="day-use-config-dialog-title"><div class="bfa-day-use-dialog__surface"><header class="bfa-day-use-dialog__header"><div><p class="bfa-admin-page-header__eyebrow">Configuração</p><h2 id="day-use-config-dialog-title">Valor sugerido do Day Use</h2><p>Esse valor será carregado nos novos registros.</p></div><button type="button" class="bfa-day-use-dialog__close" data-day-use-config-close aria-label="Fechar configuração" title="Fechar">×</button></header><form method="post" action="/unidade/@Model.UnidadeId/day-use/configuracao" class="bfa-day-use-config-form">@Html.AntiForgeryToken()<label for="day-use-valor-config">Valor sugerido</label><div class="bfa-day-use-money-input"><span>R$</span><input id="day-use-valor-config" name="valor" class="form-control bfa-form-control" type="text" inputmode="decimal" data-bfa-number="money" data-bfa-number-min="0" value="@(Model.ValorSugerido?.ToString("0.00", CultureInfo.InvariantCulture))" required /></div><footer class="bfa-day-use-dialog__footer"><button type="button" class="bfa-btn-secondary bfa-admin-button" data-day-use-config-close>Cancelar</button><button class="bfa-btn-primary bfa-admin-button" type="submit">Salvar valor</button></footer></form></div></dialog>
+
+    @await Html.PartialAsync("~/Views/Shared/_DayUseRegistroModal.cshtml", Model.Formulario)
+</div>
+
+@section Scripts { <script src="~/js/bfa-number-field.js" asp-append-version="true"></script><script src="~/js/bfa-date-field.js" asp-append-version="true"></script><script src="~/js/bfa-searchable-combobox.js" asp-append-version="true"></script><script src="~/js/bfa-confirm-modal.js" asp-append-version="true"></script><script src="~/js/bfa-day-use.js" asp-append-version="true"></script> }

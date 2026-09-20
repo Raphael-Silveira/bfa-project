@@ -10,6 +10,7 @@
     var rotaPlanos = $"{rotaUnidade}/planos";
     var rotaMatriculas = $"{rotaUnidade}/matriculas";
     var rotaFinanceiro = $"{rotaUnidade}/cobrancas";
+    var rotaDayUse = $"{rotaUnidade}/day-use";
     var rotaRelatorios = $"{rotaUnidade}/relatorios";
     var rotaRelatoriosFinanceiro = $"{rotaRelatorios}/financeiro";
     var rotaRelatoriosInadimplencia = $"{rotaRelatorios}/inadimplencia";
@@ -24,6 +25,7 @@
     var planosAtivo = caminhoAtual.StartsWith(rotaPlanos, StringComparison.OrdinalIgnoreCase);
     var matriculasAtivo = caminhoAtual.StartsWith(rotaMatriculas, StringComparison.OrdinalIgnoreCase);
     var financeiroAtivo = caminhoAtual.StartsWith(rotaFinanceiro, StringComparison.OrdinalIgnoreCase);
+    var dayUseAtivo = caminhoAtual.StartsWith(rotaDayUse, StringComparison.OrdinalIgnoreCase);
     var relatoriosPainelAtivo = string.Equals(caminhoAtual, rotaRelatorios, StringComparison.OrdinalIgnoreCase);
     var relatoriosFinanceiroAtivo = caminhoAtual.StartsWith(rotaRelatoriosFinanceiro, StringComparison.OrdinalIgnoreCase);
     var relatoriosInadimplenciaAtivo = caminhoAtual.StartsWith(rotaRelatoriosInadimplencia, StringComparison.OrdinalIgnoreCase);
@@ -120,6 +122,11 @@
         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
     </svg>
     <span>Financeiro</span>
+</a>
+
+<a class="bfa-admin-nav-link @(dayUseAtivo ? "is-active" : null)" href="@rotaDayUse" aria-current="@(dayUseAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    <span>Day Use</span>
 </a>
 
 <details class="bfa-admin-nav-group" @(relatoriosAtivo ? "open" : null)>

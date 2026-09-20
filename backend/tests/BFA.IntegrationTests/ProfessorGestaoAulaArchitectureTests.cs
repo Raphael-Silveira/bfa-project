@@ -5,13 +5,15 @@ namespace BFA.IntegrationTests;
 public sealed class ProfessorGestaoAulaArchitectureTests
 {
     [Fact]
-    public void V024_adiciona_auditoria_nullable_e_nao_cria_v025()
+    public void V024_adiciona_auditoria_nullable_e_V025_preserva_escopo()
     {
         var raiz = RepositoryDirectory();
         var migrations = Path.Combine(raiz, "database", "migrations");
         var files = Directory.GetFiles(migrations, "V*.sql");
-        Assert.DoesNotContain(files, item => Path.GetFileName(item)
-            .StartsWith("V025", StringComparison.Ordinal));
+        Assert.Contains(files, item => Path.GetFileName(item)
+            .Equals("V025__criar_day_use.sql", StringComparison.Ordinal));
+        Assert.Contains(files, item => Path.GetFileName(item)
+            .Equals("V026__permitir_exclusao_day_use.sql", StringComparison.Ordinal));
 
         var sql = File.ReadAllText(Path.Combine(
             migrations, "V024__adicionar_auditoria_cancelamento_aula.sql"));

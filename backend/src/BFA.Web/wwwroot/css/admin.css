@@ -1085,6 +1085,14 @@
   transform: translate(var(--bfa-calendar-offset-x, 0), var(--bfa-calendar-offset-y, 0));
 }
 
+.bfa-admin-calendar--portal {
+  position: fixed;
+  z-index: 1080;
+  inset: auto;
+  overflow-y: auto;
+  transform: none;
+}
+
 .bfa-admin-calendar[hidden] {
   display: none;
 }

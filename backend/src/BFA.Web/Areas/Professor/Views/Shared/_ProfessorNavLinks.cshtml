@@ -2,10 +2,12 @@
 @{
     var caminhoAtual = Context.Request.Path.Value?.TrimEnd('/') ?? string.Empty;
     var rotaInicio = $"/professor/unidade/{Model.UnidadeId:D}";
-    var rotaAulas = $"{rotaInicio}/aulas";
+var rotaAulas = $"{rotaInicio}/aulas";
+    var rotaDayUse = $"{rotaInicio}/day-use";
     var aulasAtiva = caminhoAtual.Equals(rotaAulas, StringComparison.OrdinalIgnoreCase);
     var inicioAtivo = !aulasAtiva && caminhoAtual.Equals(
         rotaInicio, StringComparison.OrdinalIgnoreCase);
+    var dayUseAtivo = caminhoAtual.StartsWith(rotaDayUse, StringComparison.OrdinalIgnoreCase);
 }
 <a class="bfa-admin-nav-link @(inicioAtivo ? "is-active" : null)"
    href="/professor/unidade/@Model.UnidadeId"
@@ -17,6 +19,11 @@
         <path d="M14 14h6v6h-6z"></path>
     </svg>
     <span>Visão Geral</span>
+</a>
+
+<a class="bfa-admin-nav-link @(dayUseAtivo ? "is-active" : null)" href="@rotaDayUse" aria-current="@(dayUseAtivo ? "page" : null)">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    <span>Day Use</span>
 </a>
 
 <a class="bfa-admin-nav-link @(aulasAtiva ? "is-active" : null)"

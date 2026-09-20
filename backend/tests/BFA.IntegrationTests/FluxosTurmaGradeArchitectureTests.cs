@@ -41,8 +41,10 @@ public sealed class FluxosTurmaGradeArchitectureTests
         var migrations = Path.Combine(RepositoryDirectory(), "database", "migrations");
         var files = Directory.GetFiles(migrations, "V*.sql")
             .Select(Path.GetFileName).OrderBy(name => name, StringComparer.Ordinal).ToArray();
-        Assert.True(files.Length == 24, $"Esperadas 24 migrations, encontradas {files.Length}.");
+        Assert.True(files.Length == 26, $"Esperadas 26 migrations, encontradas {files.Length}.");
         Assert.Contains("V024__adicionar_auditoria_cancelamento_aula.sql", files);
+        Assert.Contains("V025__criar_day_use.sql", files);
+        Assert.Contains("V026__permitir_exclusao_day_use.sql", files);
         Assert.Contains("V014__corrigir_validacao_de_unidade_na_matricula.sql", files);
 
         var content = File.ReadAllText(Path.Combine(

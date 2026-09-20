@@ -2,6 +2,7 @@ using BFA.Domain.Acessos;
 using BFA.Domain.Alunos;
 using BFA.Domain.Aulas;
 using BFA.Domain.Cobrancas;
+using BFA.Domain.DayUses;
 using BFA.Domain.Contratos;
 using BFA.Domain.Franqueados;
 using BFA.Domain.Localidades;
@@ -84,6 +85,8 @@ public sealed class BfaDbContext(DbContextOptions<BfaDbContext> options)
     public DbSet<Cobranca> Cobrancas => Set<Cobranca>();
 
     public DbSet<Pagamento> Pagamentos => Set<Pagamento>();
+
+    public DbSet<DayUse> DayUses => Set<DayUse>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

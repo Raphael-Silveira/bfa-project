@@ -1,0 +1,88 @@
+@using System.Globalization
+@model BFA.Web.ViewModels.DayUse.DayUseFormViewModel
+@{
+    var registerAction = ViewData["DayUseRegisterAction"] as string ?? "#";
+    var isAvulso = Model.TipoParticipante == "Avulso";
+}
+
+<dialog class="bfa-day-use-dialog" data-day-use-dialog aria-labelledby="day-use-dialog-title">
+    <div class="bfa-day-use-dialog__surface">
+        <header class="bfa-day-use-dialog__header">
+            <div>
+                <p class="bfa-admin-page-header__eyebrow">Novo registro</p>
+                <h2 id="day-use-dialog-title">Registrar Day Use</h2>
+                <p>Informe o participante, a data e o valor cobrado.</p>
+            </div>
+            <button type="button" class="bfa-day-use-dialog__close" data-day-use-close aria-label="Fechar registro de Day Use" title="Fechar">×</button>
+        </header>
+
+        <form method="post" action="@registerAction" class="bfa-day-use-form" data-day-use-form>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="UnidadeId" value="@Model.UnidadeId" />
+            <input type="hidden" name="TipoParticipante" value="@Model.TipoParticipante" data-day-use-type-value />
+
+            <fieldset class="bfa-day-use-form__section">
+                <legend>Participante</legend>
+                <div class="bfa-day-use-segmented" role="group" aria-label="Tipo de participante">
+                    <button type="button" class="bfa-day-use-segment @(isAvulso ? null : "is-active")" data-day-use-type="Aluno" aria-pressed="@(!isAvulso ? "true" : "false")">Aluno cadastrado</button>
+                    <button type="button" class="bfa-day-use-segment @(isAvulso ? "is-active" : null)" data-day-use-type="Avulso" aria-pressed="@(isAvulso ? "true" : "false")">Avulso</button>
+                </div>
+            </fieldset>
+
+            <div class="bfa-day-use-form__fields">
+                <div class="bfa-day-use-field" data-day-use-aluno>
+                    <label for="day-use-aluno">Aluno</label>
+                    <select id="day-use-aluno" name="AlunoId" data-bfa-combobox data-placeholder="Digite para buscar aluno..." class="form-control bfa-form-control">
+                        <option value="">Buscar aluno...</option>
+                        @foreach (var aluno in Model.Alunos)
+                        {
+                            <option value="@aluno.AlunoId" selected="@(Model.AlunoId == aluno.AlunoId ? "selected" : null)">@aluno.Nome</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="bfa-day-use-field" data-day-use-avulso>
+                    <label for="day-use-nome-avulso">Nome <span aria-hidden="true">*</span></label>
+                        <input id="day-use-nome-avulso" name="NomeAvulso" value="@Model.NomeAvulso" maxlength="150" class="form-control bfa-form-control" />
+                </div>
+
+                <div class="bfa-day-use-form__fields bfa-day-use-form__fields--two" data-day-use-avulso>
+                    <div class="bfa-day-use-field">
+                        <label for="day-use-telefone">Telefone <span class="bfa-day-use-field__hint">opcional</span></label>
+                        <input id="day-use-telefone" name="TelefoneAvulso" value="@Model.TelefoneAvulso" inputmode="tel" class="form-control bfa-form-control" />
+                    </div>
+                    <div class="bfa-day-use-field">
+                        <label for="day-use-email">E-mail <span class="bfa-day-use-field__hint">opcional</span></label>
+                        <input id="day-use-email" name="EmailAvulso" type="email" value="@Model.EmailAvulso" class="form-control bfa-form-control" />
+                    </div>
+                </div>
+
+                <div class="bfa-day-use-form__fields bfa-day-use-form__fields--two">
+                    <div class="bfa-day-use-field">
+                        <label for="day-use-data">Data de uso</label>
+                        <div class="bfa-admin-date-field" data-bfa-date-field data-bfa-date-portal data-bfa-date-placement="bottom-start">
+                            <input id="day-use-data" name="DataUso" value="@Model.DataUso" class="form-control bfa-form-control" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" maxlength="10" data-bfa-date-input data-bfa-date-required="true" required />
+                            <button class="bfa-admin-date-field__trigger" type="button" aria-label="Abrir calendário da data de uso" data-bfa-date-trigger><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"></path></svg></button>
+                        </div>
+                    </div>
+                    <div class="bfa-day-use-field">
+                        <label for="day-use-valor-cobrado">Valor cobrado</label>
+                        <div class="bfa-day-use-money-input"><span>R$</span><input id="day-use-valor-cobrado" name="ValorCobrado" class="form-control bfa-form-control" type="text" inputmode="decimal" data-bfa-number="money" data-bfa-number-min="0" value="@Model.ValorCobrado.ToString("0.00", CultureInfo.InvariantCulture)" required /></div>
+                    </div>
+                </div>
+
+                <div class="bfa-day-use-suggested-value">
+                    <span>Valor sugerido</span>
+                    <strong>@Model.ValorSugerido.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</strong>
+                    <small>padrão da Unidade</small>
+                </div>
+                <label class="bfa-day-use-paid"><input name="Pago" type="checkbox" value="true" checked="@(Model.Pago ? "checked" : null)" /> <span>Registrar como pago</span></label>
+            </div>
+
+            <footer class="bfa-day-use-dialog__footer">
+                <button type="button" class="bfa-btn-secondary bfa-admin-button" data-day-use-close>Cancelar</button>
+                <button type="submit" class="bfa-btn-primary bfa-admin-button">Registrar Day Use</button>
+            </footer>
+        </form>
+    </div>
+</dialog>
