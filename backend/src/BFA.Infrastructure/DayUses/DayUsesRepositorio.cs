@@ -98,6 +98,17 @@ public sealed class DayUsesRepositorio(BfaDbContext dbContext, ILogger<DayUsesRe
             .Where(aluno => aluno.OrganizacaoId == organizacaoId && alunoIds.Contains(aluno.Id))
             .ToDictionaryAsync(aluno => aluno.Id, cancellationToken);
         var criadorIds = registros.Select(item => item.CriadoPorUsuarioId).Distinct().ToArray();
+        var nomesProfessores = await (
+            from vinculo in dbContext.ProfessoresUnidades.AsNoTracking()
+            join professor in dbContext.Professores.AsNoTracking()
+                on new { vinculo.OrganizacaoId, vinculo.ProfessorId }
+                equals new { professor.OrganizacaoId, ProfessorId = professor.Id }
+            where vinculo.OrganizacaoId == organizacaoId
+                && vinculo.UnidadeId == unidadeId
+                && professor.UsuarioId.HasValue
+                && criadorIds.Contains(professor.UsuarioId.Value)
+            select new { UsuarioId = professor.UsuarioId!.Value, professor.NomeCompleto })
+            .ToDictionaryAsync(item => item.UsuarioId, item => item.NomeCompleto, cancellationToken);
         var nomesCriadores = await dbContext.PerfisUsuario.AsNoTracking()
             .Where(perfil => criadorIds.Contains(perfil.UsuarioId))
             .ToDictionaryAsync(perfil => perfil.UsuarioId, perfil => perfil.NomeCompleto, cancellationToken);
@@ -108,7 +119,9 @@ public sealed class DayUsesRepositorio(BfaDbContext dbContext, ILogger<DayUsesRe
                 aluno?.NomeCompleto ?? item.NomeAvulso!, aluno is not null,
                 aluno?.Telefone ?? item.TelefoneAvulso, aluno?.Email ?? item.EmailAvulso,
                 item.ValorSugerido, item.ValorCobrado, item.Pago, item.CriadoPorUsuarioId,
-                nomesCriadores.GetValueOrDefault(item.CriadoPorUsuarioId, "Usuário"));
+                nomesProfessores.GetValueOrDefault(item.CriadoPorUsuarioId)
+                    ?? nomesCriadores.GetValueOrDefault(item.CriadoPorUsuarioId)
+                    ?? "Usuário não identificado");
         }).ToArray();
         return new(itens, pagina, totalPaginas, total);
     }

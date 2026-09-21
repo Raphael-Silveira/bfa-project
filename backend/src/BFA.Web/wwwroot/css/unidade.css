@@ -3056,12 +3056,14 @@
 
 .bfa-day-use-actions { align-items: center; display: flex; flex-wrap: wrap; gap: .5rem; }
 .bfa-day-use-actions form { display: inline-flex; margin: 0; }
+.bfa-day-use-feedback { display: block; margin: .75rem 0 1rem; padding: .65rem 1rem; }
 .bfa-btn-danger-secondary { background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.35); border-radius: var(--radius-md, .5rem); color: #fca5a5; cursor: pointer; font: inherit; font-weight: 600; min-height: 2.5rem; padding: .5rem .8rem; }
 .bfa-btn-danger-secondary:hover, .bfa-btn-danger-secondary:focus-visible { background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.65); color: #fff; }
 .bfa-btn-danger-secondary:focus-visible { outline: 2px solid #ef4444; outline-offset: 2px; }
 .bfa-btn-danger-secondary--icon { align-items: center; display: inline-grid; height: 2.5rem; justify-content: center; min-width: 2.5rem; padding: 0; width: 2.5rem; }
 .bfa-btn-danger-secondary--icon svg { height: 1.15rem; width: 1.15rem; }
-.bfa-day-use-table .bfa-day-use-actions { min-width: 12rem; }
+.bfa-day-use-table .bfa-day-use-actions-cell { vertical-align: middle; width: 13rem; }
+.bfa-day-use-table .bfa-day-use-actions-cell > .bfa-day-use-actions { flex-wrap: nowrap; min-width: 0; }
 
 @media (max-width: 390px) {
   .bfa-day-use-filters { grid-template-columns: 1fr; }

@@ -56,6 +56,20 @@ public sealed class DayUsesServicoTests
     }
 
     [Fact]
+    public async Task Registro_do_professor_preserva_identidade_autenticada_como_criador_tecnico()
+    {
+        var repositorio = new RepositorioFake { Unidade = Unidade(50m), AlunoValido = true };
+        var servico = Criar(repositorio, professor: true);
+
+        var estado = await servico.RegistrarAsync(_usuarioId, _unidadeId,
+            PerfilOperacaoDayUse.Professor,
+            new(_alunoId, null, null, null, new DateOnly(2026, 9, 22), 50m, false), CancellationToken.None);
+
+        Assert.Equal(EstadoDayUse.Sucesso, estado);
+        Assert.Equal(_usuarioId, Assert.Single(repositorio.Registros).CriadoPorUsuarioId);
+    }
+
+    [Fact]
     public async Task Avulso_com_cortesia_e_aceito_sem_deduplicar_por_dados_pessoais()
     {
         var repositorio = new RepositorioFake { Unidade = Unidade(50m) };
